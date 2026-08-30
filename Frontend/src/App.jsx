@@ -1,7 +1,7 @@
-import PilotDashboard from './pages/PilotDashboard'
+import PaymentScreen from './pages/PaymentScreen'
 
 function App() {
-  return <PilotDashboard />
+  return <PaymentScreen />
 }
 
 export default App
