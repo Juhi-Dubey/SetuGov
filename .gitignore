@@ -29,3 +29,5 @@ build/
 
 # Frontend / Next.js
 .next/
+.pgdata/
+*.log
