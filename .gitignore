@@ -1,9 +1,31 @@
 .env
 .env.local
 .env.*.local
+
 node_modules/
+
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Python packaging
 dist/
 build/
+*.egg-info/
+
+# Frontend / Next.js
 .next/
