@@ -1,0 +1,54 @@
+services:
+  # -------------------------------------------------------------
+  # PostgreSQL 17 Database with pgvector Extension
+  # -------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: setugov_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: setugov_db
+    ports:
+      - "5432:5432" # Exposed on host port 5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d setugov_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------------------
+  # SetuGov Express.js REST API Backend
+  # -------------------------------------------------------------
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: setugov_backend
+    restart: unless-stopped
+    environment:
+      PORT: 5000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/setugov_db?schema=public
+      JWT_SECRET: setugov_super_secret_jwt_key_2026
+      JWT_EXPIRES_IN: 7d
+      AI_SERVICE_URL: http://ai:8000
+      AI_MOCK_MODE: "true"
+      NODE_ENV: development
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./Backend/src:/app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "npx prisma db push &&
+             node prisma/seed.js &&
+             npm run dev"
+
+volumes:
+  pgdata:
+    driver: local

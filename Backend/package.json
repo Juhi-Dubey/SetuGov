@@ -1,0 +1,51 @@
+{
+  "name": "setugov-backend",
+  "version": "1.0.0",
+  "description": "SetuGov - Government Innovation Procurement Lifecycle Platform REST API",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "node prisma/seed.js",
+    "prisma:studio": "prisma studio",
+    "test": "node src/tests/e2e.test.js",
+    "test:health": "node src/tests/health.test.js",
+    "test:phase2": "node src/tests/phase2.test.js",
+    "test:phase3": "node src/tests/phase3.test.js",
+    "test:phase4_5": "node src/tests/phase4_5.test.js",
+    "test:phase6": "node src/tests/phase6.test.js",
+    "test:e2e": "node src/tests/e2e.test.js"
+  },
+  "keywords": [
+    "setugov",
+    "procurement",
+    "innovation",
+    "govtech",
+    "express",
+    "prisma",
+    "postgresql",
+    "pgvector"
+  ],
+  "author": "SetuGov Team",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.4.1",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.0",
+    "zod": "^4.5.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "prisma": "^6.4.1"
+  }
+}
