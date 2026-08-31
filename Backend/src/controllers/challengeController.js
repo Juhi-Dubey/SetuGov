@@ -87,7 +87,7 @@ export const getChallengeApplications = async (req, res, next) => {
 export const getChallengeMatches = async (req, res, next) => {
   try {
     const challengeId = req.params.challenge_id || req.params.id;
-    const matches = await challengeService.getChallengeMatches(challengeId);
+    const matches = await challengeService.getChallengeMatches(challengeId, req.user);
     return successResponse(res, { matches }, 'Challenge matches retrieved', 200);
   } catch (error) {
     next(error);
@@ -97,7 +97,7 @@ export const getChallengeMatches = async (req, res, next) => {
 export const getChallengePilot = async (req, res, next) => {
   try {
     const challengeId = req.params.challenge_id || req.params.id;
-    const pilot = await challengeService.getChallengePilot(challengeId);
+    const pilot = await challengeService.getChallengePilot(challengeId, req.user);
     return successResponse(res, { pilot }, 'Challenge pilot retrieved', 200);
   } catch (error) {
     next(error);

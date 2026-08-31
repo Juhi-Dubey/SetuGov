@@ -15,7 +15,7 @@ export const createPayment = async (req, res, next) => {
 export const getPilotPayments = async (req, res, next) => {
   try {
     const pilotId = req.params.pilot_id || req.params.id;
-    const payments = await paymentService.getPilotPayments(pilotId);
+    const payments = await paymentService.getPilotPayments(pilotId, req.user);
     return successResponse(res, { payments }, 'Pilot payments retrieved successfully', 200);
   } catch (error) {
     next(error);
@@ -25,7 +25,7 @@ export const getPilotPayments = async (req, res, next) => {
 export const getPaymentById = async (req, res, next) => {
   try {
     const paymentId = req.params.payment_id || req.params.id;
-    const payment = await paymentService.getPaymentById(paymentId);
+    const payment = await paymentService.getPaymentById(paymentId, req.user);
     return successResponse(res, { payment }, 'Payment details retrieved successfully', 200);
   } catch (error) {
     next(error);

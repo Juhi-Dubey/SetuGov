@@ -53,7 +53,7 @@ export const createStartup = async (data, user, ip_address = null) => {
   return startup;
 };
 
-export const getStartups = async (query = {}) => {
+export const getStartups = async (query = {}, user = null) => {
   const {
     domain,
     verification_status,
@@ -73,8 +73,10 @@ export const getStartups = async (query = {}) => {
     ];
   }
 
-  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
-  const take = parseInt(limit, 10);
+  const safePage = Math.max(1, parseInt(page, 10) || 1);
+  const safeLimit = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+  const skip = (safePage - 1) * safeLimit;
+  const take = safeLimit;
 
   const [total, startups] = await Promise.all([
     prisma.startup.count({ where }),
@@ -99,14 +101,14 @@ export const getStartups = async (query = {}) => {
     startups,
     pagination: {
       total,
-      page: parseInt(page, 10),
-      limit: take,
-      totalPages: Math.ceil(total / take)
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit)
     }
   };
 };
 
-export const getStartupById = async (id) => {
+export const getStartupById = async (id, user = null) => {
   const startup = await prisma.startup.findUnique({
     where: { id },
     include: {
@@ -131,6 +133,18 @@ export const getStartupById = async (id) => {
     throw new NotFoundError(`Startup with ID ${id} not found.`);
   }
 
+  // If another startup is querying this startup, filter out private user email and unverified documents
+  if (user && user.role === 'STARTUP' && startup.user_id !== user.id) {
+    return {
+      ...startup,
+      user: {
+        id: startup.user.id,
+        name: startup.user.name
+      },
+      documents: startup.documents.filter(d => d.verification_status === 'VERIFIED')
+    };
+  }
+
   return startup;
 };
 
@@ -144,12 +158,30 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
     throw new ForbiddenError('You can only update your own startup profile.');
   }
 
-  const updateData = { ...data };
-  if (data.company_name || data.domain || data.description || data.technologies) {
-    const name = data.company_name || startup.company_name;
-    const dom = data.domain || startup.domain;
-    const desc = data.description || startup.description;
-    const techs = data.technologies || startup.technologies;
+  // Whitelist allowable update fields (P1-6: Eliminate mass assignment)
+  const allowedFields = [
+    'company_name',
+    'description',
+    'domain',
+    'technologies',
+    'readiness_level',
+    'years_experience',
+    'previous_deployments',
+    'location'
+  ];
+
+  const updateData = {};
+  for (const field of allowedFields) {
+    if (data[field] !== undefined) {
+      updateData[field] = typeof data[field] === 'string' ? data[field].trim() : data[field];
+    }
+  }
+
+  if (updateData.company_name || updateData.domain || updateData.description || updateData.technologies) {
+    const name = updateData.company_name || startup.company_name;
+    const dom = updateData.domain || startup.domain;
+    const desc = updateData.description || startup.description;
+    const techs = updateData.technologies || startup.technologies;
     updateData.embedding = generateMockEmbedding(`${name} ${dom} ${desc} ${techs.join(' ')}`);
   }
 
@@ -204,10 +236,14 @@ export const addStartupDocument = async (startupId, data, user, ip_address = nul
   return document;
 };
 
-export const getStartupDocuments = async (startupId) => {
+export const getStartupDocuments = async (startupId, user = null) => {
   const startup = await prisma.startup.findUnique({ where: { id: startupId } });
   if (!startup) {
     throw new NotFoundError(`Startup with ID ${startupId} not found.`);
+  }
+
+  if (user && user.role === 'STARTUP' && startup.user_id !== user.id) {
+    throw new ForbiddenError('You can only view documents for your own startup profile.');
   }
 
   const documents = await prisma.startupDocument.findMany({

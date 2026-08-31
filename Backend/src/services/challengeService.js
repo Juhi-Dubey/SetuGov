@@ -5,10 +5,31 @@ import { generateMockEmbedding } from '../utils/vector.js';
 import { createAuditLog } from './auditService.js';
 
 export const createChallenge = async (data, user, ip_address = null) => {
-  // Determine department
-  const department_id = data.department_id || user.department_id;
-  if (!department_id) {
-    throw new BadRequestError('A valid department_id must be assigned to the challenge.');
+  let department_id;
+
+  if (user.role === 'ADMIN') {
+    department_id = data.department_id || user.department_id;
+    if (!department_id) {
+      throw new BadRequestError('A valid department_id must be assigned to the challenge.');
+    }
+  } else if (user.role === 'GOVERNMENT') {
+    if (!user.department_id) {
+      throw new ForbiddenError('Government official must be assigned to a department to create challenges.');
+    }
+    if (data.department_id && data.department_id !== user.department_id) {
+      throw new ForbiddenError('Government officials are only authorized to create challenges for their own assigned department.');
+    }
+    department_id = user.department_id;
+  } else {
+    throw new ForbiddenError('Only government officials and administrators can create challenges.');
+  }
+
+  // Verify department exists
+  const department = await prisma.department.findUnique({
+    where: { id: department_id }
+  });
+  if (!department) {
+    throw new BadRequestError(`Department with ID ${department_id} does not exist.`);
   }
 
   // Generate semantic embedding vector for challenge
@@ -82,8 +103,10 @@ export const getChallenges = async (query = {}) => {
     ];
   }
 
-  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
-  const take = parseInt(limit, 10);
+  const safePage = Math.max(1, parseInt(page, 10) || 1);
+  const safeLimit = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+  const skip = (safePage - 1) * safeLimit;
+  const take = safeLimit;
 
   const [total, challenges] = await Promise.all([
     prisma.challenge.count({ where }),
@@ -104,7 +127,7 @@ export const getChallenges = async (query = {}) => {
           select: {
             id: true,
             name: true,
-            email: true
+            role: true
           }
         },
         _count: {
@@ -122,9 +145,9 @@ export const getChallenges = async (query = {}) => {
     challenges,
     pagination: {
       total,
-      page: parseInt(page, 10),
-      limit: take,
-      totalPages: Math.ceil(total / take)
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit)
     }
   };
 };
@@ -145,7 +168,6 @@ export const getChallengeById = async (id) => {
         select: {
           id: true,
           name: true,
-          email: true,
           role: true
         }
       },
@@ -172,9 +194,15 @@ export const updateChallenge = async (id, data, user, ip_address = null) => {
     throw new NotFoundError(`Challenge with ID ${id} not found.`);
   }
 
-  // Only creator or admin can update challenge
-  if (user.role !== 'ADMIN' && challenge.created_by !== user.id) {
-    throw new ForbiddenError('You can only update challenges created by your department.');
+  // Authorization: ADMIN or GOVERNMENT within the same department
+  if (user.role === 'ADMIN') {
+    // Admin has cross-department management authorization
+  } else if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only update challenges belonging to your assigned department.');
+    }
+  } else {
+    throw new ForbiddenError('You are not authorized to update this challenge.');
   }
 
   // Cannot modify closed or completed challenge
@@ -182,12 +210,31 @@ export const updateChallenge = async (id, data, user, ip_address = null) => {
     throw new BadRequestError(`Cannot update challenge in ${challenge.status} status.`);
   }
 
-  const updateData = { ...data };
-  if (data.title || data.problem_description || data.required_technologies) {
-    const title = data.title || challenge.title;
-    const desc = data.problem_description || challenge.problem_description;
-    const outcome = data.desired_outcome || challenge.desired_outcome;
-    const techs = data.required_technologies || challenge.required_technologies;
+  // Whitelist allowable update fields (P1-6: Eliminate mass assignment)
+  const allowedFields = [
+    'title',
+    'problem_description',
+    'current_baseline',
+    'desired_outcome',
+    'location',
+    'budget_min',
+    'budget_max',
+    'pilot_duration_days',
+    'required_technologies'
+  ];
+
+  const updateData = {};
+  for (const field of allowedFields) {
+    if (data[field] !== undefined) {
+      updateData[field] = typeof data[field] === 'string' ? data[field].trim() : data[field];
+    }
+  }
+
+  if (updateData.title || updateData.problem_description || updateData.required_technologies || updateData.desired_outcome) {
+    const title = updateData.title || challenge.title;
+    const desc = updateData.problem_description || challenge.problem_description;
+    const outcome = updateData.desired_outcome || challenge.desired_outcome;
+    const techs = updateData.required_technologies || challenge.required_technologies;
     updateData.embedding = generateMockEmbedding(`${title} ${desc} ${outcome} ${techs.join(' ')}`);
   }
 
@@ -217,8 +264,15 @@ export const deleteChallenge = async (id, user, ip_address = null) => {
     throw new NotFoundError(`Challenge with ID ${id} not found.`);
   }
 
-  if (user.role !== 'ADMIN' && challenge.created_by !== user.id) {
-    throw new ForbiddenError('You can only delete challenges created by yourself.');
+  // Authorization: ADMIN or GOVERNMENT within the same department
+  if (user.role === 'ADMIN') {
+    // Admin has cross-department management authorization
+  } else if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only delete challenges belonging to your assigned department.');
+    }
+  } else {
+    throw new ForbiddenError('You are not authorized to delete this challenge.');
   }
 
   if (challenge.status !== 'DRAFT') {
@@ -245,8 +299,15 @@ export const publishChallenge = async (id, user, ip_address = null) => {
     throw new NotFoundError(`Challenge with ID ${id} not found.`);
   }
 
-  if (user.role !== 'ADMIN' && challenge.created_by !== user.id) {
-    throw new ForbiddenError('You can only publish challenges created by yourself.');
+  // Authorization: ADMIN or GOVERNMENT within the same department
+  if (user.role === 'ADMIN') {
+    // Admin has cross-department management authorization
+  } else if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only publish challenges belonging to your assigned department.');
+    }
+  } else {
+    throw new ForbiddenError('You are not authorized to publish this challenge.');
   }
 
   // Validate state transition DRAFT -> PUBLISHED
@@ -278,8 +339,15 @@ export const closeChallenge = async (id, user, ip_address = null) => {
     throw new NotFoundError(`Challenge with ID ${id} not found.`);
   }
 
-  if (user.role !== 'ADMIN' && challenge.created_by !== user.id) {
-    throw new ForbiddenError('You can only close challenges created by yourself.');
+  // Authorization: ADMIN or GOVERNMENT within the same department
+  if (user.role === 'ADMIN') {
+    // Admin has cross-department management authorization
+  } else if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only close challenges belonging to your assigned department.');
+    }
+  } else {
+    throw new ForbiddenError('You are not authorized to close this challenge.');
   }
 
   // Validate state transition -> CLOSED
@@ -306,9 +374,20 @@ export const closeChallenge = async (id, user, ip_address = null) => {
 };
 
 export const getChallengeApplications = async (challengeId, user) => {
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'GOVERNMENT')) {
+    throw new ForbiddenError('You are not authorized to view applications for this challenge.');
+  }
+
   const challenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
   if (!challenge) {
     throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
+  }
+
+  // P1-5: GOVERNMENT can only view applications for challenges in their own department
+  if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only view applications for challenges belonging to your assigned department.');
+    }
   }
 
   const applications = await prisma.application.findMany({
@@ -338,10 +417,17 @@ export const getChallengeApplications = async (challengeId, user) => {
   return applications;
 };
 
-export const getChallengeMatches = async (challengeId) => {
+export const getChallengeMatches = async (challengeId, user = null) => {
   const challenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
   if (!challenge) {
     throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
+  }
+
+  // P1-8: Consistent tenant check on matches
+  if (user && user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only view match scores for challenges in your assigned department.');
+    }
   }
 
   const matches = await prisma.matchScore.findMany({
@@ -367,13 +453,19 @@ export const getChallengeMatches = async (challengeId) => {
   return matches;
 };
 
-export const getChallengePilot = async (challengeId) => {
+export const getChallengePilot = async (challengeId, user = null) => {
+  const challenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
+  if (!challenge) {
+    throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
+  }
+
   const pilot = await prisma.pilot.findFirst({
     where: { challenge_id: challengeId },
     include: {
       startup: {
         select: {
           id: true,
+          user_id: true,
           company_name: true,
           domain: true
         }
@@ -382,6 +474,23 @@ export const getChallengePilot = async (challengeId) => {
       milestones: true
     }
   });
+
+  if (!pilot) {
+    return null;
+  }
+
+  // P1-8: Authorization for challenge pilot view
+  if (user) {
+    if (user.role === 'GOVERNMENT') {
+      if (!user.department_id || challenge.department_id !== user.department_id) {
+        throw new ForbiddenError('You can only view pilots for challenges in your assigned department.');
+      }
+    } else if (user.role === 'STARTUP') {
+      if (pilot.startup.user_id !== user.id) {
+        throw new ForbiddenError('You can only view your own startup\'s pilot project.');
+      }
+    }
+  }
 
   return pilot;
 };

@@ -2,7 +2,7 @@ import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
 
-export const getUsers = async (query = {}) => {
+export const getUsers = async (query = {}, currentUser = null) => {
   const {
     role,
     department_id,
@@ -16,8 +16,17 @@ export const getUsers = async (query = {}) => {
   if (department_id) where.department_id = department_id;
   if (is_active !== undefined) where.is_active = is_active === 'true' || is_active === true;
 
-  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
-  const take = parseInt(limit, 10);
+  // Government users can only view users in their department
+  if (currentUser && currentUser.role === 'GOVERNMENT') {
+    if (currentUser.department_id) {
+      where.department_id = currentUser.department_id;
+    }
+  }
+
+  const safePage = Math.max(1, parseInt(page, 10) || 1);
+  const safeLimit = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+  const skip = (safePage - 1) * safeLimit;
+  const take = safeLimit;
 
   const [total, users] = await Promise.all([
     prisma.user.count({ where }),
@@ -57,14 +66,21 @@ export const getUsers = async (query = {}) => {
     users,
     pagination: {
       total,
-      page: parseInt(page, 10),
-      limit: take,
-      totalPages: Math.ceil(total / take)
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit)
     }
   };
 };
 
-export const getUserById = async (id) => {
+export const getUserById = async (id, currentUser = null) => {
+  // P1-9: Check authorization: Non-admin users cannot inspect other profiles indiscriminately
+  if (currentUser && currentUser.role !== 'ADMIN' && currentUser.id !== id) {
+    if (currentUser.role !== 'GOVERNMENT') {
+      throw new ForbiddenError('You are only authorized to view your own profile.');
+    }
+  }
+
   const user = await prisma.user.findUnique({
     where: { id },
     select: {
@@ -99,6 +115,13 @@ export const getUserById = async (id) => {
     throw new NotFoundError(`User with ID ${id} not found.`);
   }
 
+  // If Government user views another user, ensure they belong to the same department
+  if (currentUser && currentUser.role === 'GOVERNMENT' && currentUser.id !== id) {
+    if (!currentUser.department_id || user.department_id !== currentUser.department_id) {
+      throw new ForbiddenError('You are not authorized to view profiles of users in other departments.');
+    }
+  }
+
   return user;
 };
 
@@ -106,6 +129,11 @@ export const updateUser = async (id, data, currentUser) => {
   // Check authorization: Admin can update anyone; others can only update their own profile
   if (currentUser.role !== 'ADMIN' && currentUser.id !== id) {
     throw new ForbiddenError('You can only update your own user profile.');
+  }
+
+  // P2-4: Reject unauthorized department_id updates
+  if (currentUser.role !== 'ADMIN' && data.department_id !== undefined) {
+    throw new ForbiddenError('Only administrators can reassign user departments.');
   }
 
   const existing = await prisma.user.findUnique({ where: { id } });

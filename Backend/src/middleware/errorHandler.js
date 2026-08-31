@@ -53,6 +53,20 @@ export const errorHandler = (err, req, res, next) => {
         400
       );
     }
+    if (err.code === 'P2023') {
+      return errorResponse(
+        res,
+        'BAD_REQUEST',
+        'Inconsistent or invalid column data provided.',
+        err.meta,
+        400
+      );
+    }
+  }
+
+  // Handle Prisma Validation Errors (e.g. malformed UUID or query arguments)
+  if (err instanceof Prisma.PrismaClientValidationError) {
+    return errorResponse(res, 'BAD_REQUEST', 'Invalid request parameter or schema data.', null, 400);
   }
 
   // Handle JWT Errors

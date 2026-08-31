@@ -187,11 +187,21 @@ export const updateEvaluation = async (id, data, user, ip_address = null) => {
   return updated;
 };
 
-export const getChallengeEvaluationSummary = async (challengeId) => {
+export const getChallengeEvaluationSummary = async (challengeId, user = null) => {
+  if (user) {
+    if (user.role === 'STARTUP') {
+      throw new ForbiddenError('Startups are not authorized to view aggregated evaluation summaries.');
+    }
+  }
+
   const challenge = await prisma.challenge.findUnique({
     where: { id: challengeId },
     include: {
+      department: true,
       applications: {
+        where: {
+          status: { in: ['SUBMITTED', 'SHORTLISTED', 'SELECTED', 'REJECTED'] }
+        },
         include: {
           startup: {
             select: {
@@ -208,7 +218,7 @@ export const getChallengeEvaluationSummary = async (challengeId) => {
                 select: {
                   id: true,
                   name: true,
-                  email: true
+                  role: true
                 }
               }
             }
@@ -222,9 +232,19 @@ export const getChallengeEvaluationSummary = async (challengeId) => {
     throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
   }
 
+  // P1-4: GOVERNMENT user can only view summaries for their department's challenges
+  if (user && user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only view evaluation summaries for challenges belonging to your assigned department.');
+    }
+  }
+
+  const requiredQuorum = 2; // Configurable default evaluation quorum
+
   const applicationSummaries = challenge.applications.map(app => {
     const evals = app.evaluations;
     const totalEvals = evals.length;
+    const quorumMet = totalEvals >= requiredQuorum;
 
     let avgTechnical = 0;
     let avgInnovation = 0;
@@ -255,6 +275,8 @@ export const getChallengeEvaluationSummary = async (challengeId) => {
       status: app.status,
       submitted_at: app.submitted_at,
       evaluation_count: totalEvals,
+      required_quorum: requiredQuorum,
+      quorum_met: quorumMet,
       average_scores: {
         technical_feasibility: avgTechnical,
         innovation: avgInnovation,
@@ -267,8 +289,22 @@ export const getChallengeEvaluationSummary = async (challengeId) => {
     };
   });
 
-  // Sort descending by overall_total
-  applicationSummaries.sort((a, b) => b.average_scores.overall_total - a.average_scores.overall_total);
+  // Deterministic multi-attribute sort descending by overall_total with tie-breaking
+  applicationSummaries.sort((a, b) => {
+    if (b.average_scores.overall_total !== a.average_scores.overall_total) {
+      return b.average_scores.overall_total - a.average_scores.overall_total;
+    }
+    if (b.average_scores.technical_feasibility !== a.average_scores.technical_feasibility) {
+      return b.average_scores.technical_feasibility - a.average_scores.technical_feasibility;
+    }
+    if (b.average_scores.expected_impact !== a.average_scores.expected_impact) {
+      return b.average_scores.expected_impact - a.average_scores.expected_impact;
+    }
+    if (b.average_scores.innovation !== a.average_scores.innovation) {
+      return b.average_scores.innovation - a.average_scores.innovation;
+    }
+    return a.application_id.localeCompare(b.application_id);
+  });
 
   // Assign rankings
   applicationSummaries.forEach((app, idx) => {
@@ -278,6 +314,7 @@ export const getChallengeEvaluationSummary = async (challengeId) => {
   return {
     challenge_id: challengeId,
     challenge_title: challenge.title,
+    required_quorum: requiredQuorum,
     total_applications: challenge.applications.length,
     ranked_applications: applicationSummaries
   };

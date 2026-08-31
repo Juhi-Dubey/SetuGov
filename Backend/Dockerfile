@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
-# Install openssl for Prisma binary engine compatibility
-RUN apk add --no-cache openssl
+# Install openssl for Prisma binary engine compatibility and curl for healthchecks
+RUN apk add --no-cache openssl curl
 
 WORKDIR /app
 
@@ -17,6 +17,9 @@ RUN npx prisma generate
 COPY . .
 
 EXPOSE 5000
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5000/api/v1/health || exit 1
 
 # Default command starts development server with hot-reloading
 CMD ["npm", "run", "dev"]

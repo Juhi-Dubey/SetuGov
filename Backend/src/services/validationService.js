@@ -1,11 +1,17 @@
 import { prisma } from '../config/prisma.js';
 import { NotFoundError } from '../utils/errors.js';
+import { validateTransition } from '../utils/lifecycle.js';
+import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
 
 export const createValidation = async (pilotId, data, user, ip_address = null) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id: pilotId } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
+  // P0-3: Verify user has VALIDATION_MANAGE access to this pilot
+  const pilot = await verifyPilotAccess(pilotId, user, 'VALIDATION_MANAGE');
+
+  // P2-9: Canonical lifecycle transition verification
+  // Derive allowed state transitions strictly from the canonical state machine in lifecycle.js
+  if (pilot.status !== 'VALIDATION') {
+    validateTransition('PILOT', pilot.status, 'VALIDATION');
   }
 
   const validation = await prisma.validation.create({
@@ -41,11 +47,10 @@ export const createValidation = async (pilotId, data, user, ip_address = null) =
      data.user_satisfaction_score * 0.15)
   ).toFixed(2));
 
-  // If pilot is RUNNING, transition to VALIDATION state
   await prisma.pilot.update({
     where: { id: pilotId },
     data: {
-      status: pilot.status === 'RUNNING' || pilot.status === 'AT_RISK' ? 'VALIDATION' : pilot.status,
+      status: 'VALIDATION',
       overall_score: overallValidationScore
     }
   });
@@ -62,10 +67,9 @@ export const createValidation = async (pilotId, data, user, ip_address = null) =
   return validation;
 };
 
-export const getPilotValidations = async (pilotId) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id: pilotId } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
+export const getPilotValidations = async (pilotId, user = null) => {
+  if (user) {
+    await verifyPilotAccess(pilotId, user, 'READ');
   }
 
   const validations = await prisma.validation.findMany({
@@ -92,9 +96,30 @@ export const updateValidation = async (id, data, user, ip_address = null) => {
     throw new NotFoundError(`Validation report with ID ${id} not found.`);
   }
 
+  // P0-3: Verify user has VALIDATION_MANAGE access to parent pilot
+  await verifyPilotAccess(validation.pilot_id, user, 'VALIDATION_MANAGE');
+
+  // P1-6: Whitelist allowable update fields
+  const allowedFields = [
+    'performance_score',
+    'kpi_achievement_score',
+    'evidence_quality_score',
+    'technical_stability_score',
+    'user_satisfaction_score',
+    'comments',
+    'status'
+  ];
+
+  const updateData = {};
+  for (const field of allowedFields) {
+    if (data[field] !== undefined) {
+      updateData[field] = typeof data[field] === 'string' ? data[field].trim() : data[field];
+    }
+  }
+
   const updated = await prisma.validation.update({
     where: { id },
-    data,
+    data: updateData,
     include: {
       validator: {
         select: {
@@ -111,7 +136,7 @@ export const updateValidation = async (id, data, user, ip_address = null) => {
     action: 'PILOT_VALIDATION_UPDATED',
     entity_type: 'VALIDATION',
     entity_id: id,
-    details: { changes: data },
+    details: { changes: updateData },
     ip_address
   });
 

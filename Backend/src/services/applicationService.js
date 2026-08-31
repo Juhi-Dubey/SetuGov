@@ -1,12 +1,14 @@
 import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError, ConflictError } from '../utils/errors.js';
 import { validateTransition } from '../utils/lifecycle.js';
+import { evaluateEligibility } from '../utils/eligibility.js';
 import { createAuditLog } from './auditService.js';
 
 export const createApplication = async (challengeId, data, user, ip_address = null) => {
   // 1. Verify Challenge exists and is PUBLISHED
   const challenge = await prisma.challenge.findUnique({
-    where: { id: challengeId }
+    where: { id: challengeId },
+    include: { department: true }
   });
 
   if (!challenge) {
@@ -24,6 +26,14 @@ export const createApplication = async (challengeId, data, user, ip_address = nu
 
   if (!startup) {
     throw new BadRequestError('You must create a startup profile before applying to government challenges.');
+  }
+
+  // Mandatory Eligibility Evaluation (Verification, Domain, Capabilities, TRL)
+  const eligibility = evaluateEligibility(challenge, startup);
+  if (!eligibility.is_eligible) {
+    throw new ForbiddenError(
+      `Your startup is not eligible to apply for this challenge: ${eligibility.ineligibility_reasons.join('; ')}`
+    );
   }
 
   // 3. Prevent duplicate applications
@@ -133,6 +143,13 @@ export const getApplicationById = async (id, user) => {
     throw new ForbiddenError('You do not have permission to view another startup\'s application.');
   }
 
+  // Access check: GOVERNMENT can only view applications for their department's challenges
+  if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || application.challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You do not have permission to view applications outside your assigned department.');
+    }
+  }
+
   return application;
 };
 
@@ -154,9 +171,30 @@ export const updateApplication = async (id, data, user, ip_address = null) => {
     throw new BadRequestError('Submitted applications cannot be modified. Only DRAFT applications can be edited.');
   }
 
+  // Whitelist allowable update fields (P1-6: Eliminate mass assignment)
+  const allowedFields = [
+    'proposal',
+    'technical_approach',
+    'expected_impact',
+    'estimated_cost',
+    'timeline',
+    'status'
+  ];
+
+  const updateData = {};
+  for (const field of allowedFields) {
+    if (data[field] !== undefined) {
+      updateData[field] = typeof data[field] === 'string' ? data[field].trim() : data[field];
+    }
+  }
+
+  if (updateData.status === 'SUBMITTED' && application.status === 'DRAFT') {
+    updateData.submitted_at = new Date();
+  }
+
   const updated = await prisma.application.update({
     where: { id },
-    data,
+    data: updateData,
     include: {
       challenge: true,
       startup: true
@@ -168,7 +206,7 @@ export const updateApplication = async (id, data, user, ip_address = null) => {
     action: 'APPLICATION_UPDATED',
     entity_type: 'APPLICATION',
     entity_id: id,
-    details: { changes: data },
+    details: { changes: updateData },
     ip_address
   });
 
@@ -222,6 +260,13 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
   // Only GOVERNMENT or ADMIN can transition application status
   if (user.role !== 'ADMIN' && user.role !== 'GOVERNMENT') {
     throw new ForbiddenError('Only Government officials or Administrators can change application status.');
+  }
+
+  // P1-5: GOVERNMENT can only transition applications for challenges in their assigned department
+  if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || application.challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only update status of applications for challenges in your assigned department.');
+    }
   }
 
   // Validate state machine transition

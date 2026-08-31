@@ -58,13 +58,11 @@ const runPhase6Tests = async () => {
     const timestamp = Date.now();
 
     // 1. Setup Admin, Department, Government & Challenge
-    const adminReg = await request('POST', '/api/v1/auth/register', {
-      name: 'Admin P6',
-      email: `admin.p6.${timestamp}@setugov.in`,
-      password: 'AdminPassword123!',
-      role: 'ADMIN'
+    const adminLogin = await request('POST', '/api/v1/auth/login', {
+      email: 'admin@setugov.in',
+      password: 'Password123!'
     });
-    const adminToken = adminReg.body.data.token;
+    const adminToken = adminLogin.body.data.token;
 
     const depRes = await request('POST', '/api/v1/departments', {
       name: `Dept of Health P6 ${timestamp}`,

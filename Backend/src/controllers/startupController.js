@@ -13,7 +13,7 @@ export const createStartup = async (req, res, next) => {
 
 export const getStartups = async (req, res, next) => {
   try {
-    const result = await startupService.getStartups(req.query);
+    const result = await startupService.getStartups(req.query, req.user);
     return successResponse(res, result, 'Startups retrieved successfully', 200);
   } catch (error) {
     next(error);
@@ -23,7 +23,7 @@ export const getStartups = async (req, res, next) => {
 export const getStartupById = async (req, res, next) => {
   try {
     const startupId = req.params.startup_id || req.params.id;
-    const startup = await startupService.getStartupById(startupId);
+    const startup = await startupService.getStartupById(startupId, req.user);
     return successResponse(res, { startup }, 'Startup retrieved successfully', 200);
   } catch (error) {
     next(error);
@@ -55,7 +55,7 @@ export const addStartupDocument = async (req, res, next) => {
 export const getStartupDocuments = async (req, res, next) => {
   try {
     const startupId = req.params.startup_id || req.params.id;
-    const documents = await startupService.getStartupDocuments(startupId);
+    const documents = await startupService.getStartupDocuments(startupId, req.user);
     return successResponse(res, { documents }, 'Startup documents retrieved', 200);
   } catch (error) {
     next(error);

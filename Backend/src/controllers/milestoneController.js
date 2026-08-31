@@ -15,7 +15,7 @@ export const createMilestone = async (req, res, next) => {
 export const getPilotMilestones = async (req, res, next) => {
   try {
     const pilotId = req.params.pilot_id || req.params.id;
-    const milestones = await milestoneService.getPilotMilestones(pilotId);
+    const milestones = await milestoneService.getPilotMilestones(pilotId, req.user);
     return successResponse(res, { milestones }, 'Pilot milestones retrieved', 200);
   } catch (error) {
     next(error);
@@ -25,7 +25,7 @@ export const getPilotMilestones = async (req, res, next) => {
 export const getMilestoneById = async (req, res, next) => {
   try {
     const milestoneId = req.params.milestone_id || req.params.id;
-    const milestone = await milestoneService.getMilestoneById(milestoneId);
+    const milestone = await milestoneService.getMilestoneById(milestoneId, req.user);
     return successResponse(res, { milestone }, 'Milestone retrieved successfully', 200);
   } catch (error) {
     next(error);

@@ -1,12 +1,11 @@
 import { prisma } from '../config/prisma.js';
 import { NotFoundError } from '../utils/errors.js';
+import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
 
 export const createMilestone = async (pilotId, data, user, ip_address = null) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id: pilotId } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
-  }
+  // P0-3: Verify user has MILESTONE_MANAGE access to this pilot
+  await verifyPilotAccess(pilotId, user, 'MILESTONE_MANAGE');
 
   const milestone = await prisma.milestone.create({
     data: {
@@ -33,10 +32,9 @@ export const createMilestone = async (pilotId, data, user, ip_address = null) =>
   return milestone;
 };
 
-export const getPilotMilestones = async (pilotId) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id: pilotId } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
+export const getPilotMilestones = async (pilotId, user = null) => {
+  if (user) {
+    await verifyPilotAccess(pilotId, user, 'READ');
   }
 
   const milestones = await prisma.milestone.findMany({
@@ -50,7 +48,7 @@ export const getPilotMilestones = async (pilotId) => {
   return milestones;
 };
 
-export const getMilestoneById = async (id) => {
+export const getMilestoneById = async (id, user = null) => {
   const milestone = await prisma.milestone.findUnique({
     where: { id },
     include: {
@@ -63,6 +61,10 @@ export const getMilestoneById = async (id) => {
     throw new NotFoundError(`Milestone with ID ${id} not found.`);
   }
 
+  if (user) {
+    await verifyPilotAccess(milestone.pilot_id, user, 'READ');
+  }
+
   return milestone;
 };
 
@@ -72,9 +74,33 @@ export const updateMilestone = async (id, data, user, ip_address = null) => {
     throw new NotFoundError(`Milestone with ID ${id} not found.`);
   }
 
-  const updateData = { ...data };
-  if (data.due_date) updateData.due_date = new Date(data.due_date);
-  if (data.completion_percentage === 100 && !data.status) {
+  // P0-3: Verify user has MILESTONE_MANAGE access to parent pilot
+  await verifyPilotAccess(milestone.pilot_id, user, 'MILESTONE_MANAGE');
+
+  // P1-6: Whitelist allowable update fields
+  const allowedFields = [
+    'name',
+    'description',
+    'due_date',
+    'completion_percentage',
+    'payment_percentage',
+    'evidence_url'
+  ];
+
+  const updateData = {};
+  for (const field of allowedFields) {
+    if (data[field] !== undefined) {
+      if (field === 'due_date') {
+        updateData.due_date = new Date(data.due_date);
+      } else if (typeof data[field] === 'string') {
+        updateData[field] = data[field].trim();
+      } else {
+        updateData[field] = data[field];
+      }
+    }
+  }
+
+  if (updateData.completion_percentage === 100) {
     updateData.status = 'COMPLETED';
   }
 
@@ -88,7 +114,7 @@ export const updateMilestone = async (id, data, user, ip_address = null) => {
     action: 'PILOT_MILESTONE_UPDATED',
     entity_type: 'MILESTONE',
     entity_id: id,
-    details: { changes: data },
+    details: { changes: updateData },
     ip_address
   });
 

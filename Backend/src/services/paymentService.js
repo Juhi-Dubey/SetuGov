@@ -1,12 +1,11 @@
 import { prisma } from '../config/prisma.js';
 import { NotFoundError } from '../utils/errors.js';
+import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
 
 export const createPayment = async (pilotId, data, user, ip_address = null) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id: pilotId } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
-  }
+  // P0-3: Verify user has PAYMENT_MANAGE access to this pilot
+  await verifyPilotAccess(pilotId, user, 'PAYMENT_MANAGE');
 
   const payment = await prisma.payment.create({
     data: {
@@ -34,10 +33,9 @@ export const createPayment = async (pilotId, data, user, ip_address = null) => {
   return payment;
 };
 
-export const getPilotPayments = async (pilotId) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id: pilotId } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
+export const getPilotPayments = async (pilotId, user = null) => {
+  if (user) {
+    await verifyPilotAccess(pilotId, user, 'READ');
   }
 
   const payments = await prisma.payment.findMany({
@@ -58,7 +56,7 @@ export const getPilotPayments = async (pilotId) => {
   return payments;
 };
 
-export const getPaymentById = async (id) => {
+export const getPaymentById = async (id, user = null) => {
   const payment = await prisma.payment.findUnique({
     where: { id },
     include: {
@@ -71,6 +69,10 @@ export const getPaymentById = async (id) => {
     throw new NotFoundError(`Payment with ID ${id} not found.`);
   }
 
+  if (user) {
+    await verifyPilotAccess(payment.pilot_id, user, 'READ');
+  }
+
   return payment;
 };
 
@@ -79,6 +81,9 @@ export const updatePaymentStatus = async (id, status, paymentDate = null, user, 
   if (!payment) {
     throw new NotFoundError(`Payment with ID ${id} not found.`);
   }
+
+  // P0-3: Verify user has PAYMENT_MANAGE access to parent pilot
+  await verifyPilotAccess(payment.pilot_id, user, 'PAYMENT_MANAGE');
 
   const updated = await prisma.payment.update({
     where: { id },

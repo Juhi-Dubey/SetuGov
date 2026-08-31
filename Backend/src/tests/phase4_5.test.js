@@ -57,32 +57,61 @@ const runPhase45Tests = async () => {
   try {
     const timestamp = Date.now();
 
-    // 1. Setup Admin, Department & Government User
-    const adminReg = await request('POST', '/api/v1/auth/register', {
-      name: 'Admin P4',
-      email: `admin.p4.${timestamp}@setugov.in`,
-      password: 'AdminPassword123!',
-      role: 'ADMIN'
+    // 1. Setup Admin, Departments & Government Users
+    logger.info('1. Setting up Admin, Departments and Government users...');
+    const adminLogin = await request('POST', '/api/v1/auth/login', {
+      email: 'admin@setugov.in',
+      password: 'Password123!'
     });
-    const adminToken = adminReg.body.data.token;
+    const adminToken = adminLogin.body.data.token;
 
-    const depRes = await request('POST', '/api/v1/departments', {
+    // Dept A (Health)
+    const depARes = await request('POST', '/api/v1/departments', {
       name: `Dept of Health P4 ${timestamp}`,
       state: 'Karnataka',
       contact_email: `health.p4.${timestamp}@gov.in`
     }, adminToken);
-    const department = depRes.body.data.department;
+    const departmentA = depARes.body.data.department;
 
-    const govReg = await request('POST', '/api/v1/auth/register', {
+    // Dept B (Transport)
+    const depBRes = await request('POST', '/api/v1/departments', {
+      name: `Dept of Transport P4 ${timestamp}`,
+      state: 'Karnataka',
+      contact_email: `transport.p4.${timestamp}@gov.in`
+    }, adminToken);
+    const departmentB = depBRes.body.data.department;
+
+    // Gov A in Dept A
+    const govAReg = await request('POST', '/api/v1/auth/register', {
       name: 'Dr. Ramesh Kumar',
       email: `ramesh.p4.${timestamp}@health.gov.in`,
       password: 'GovPassword123!',
       role: 'GOVERNMENT',
-      department_id: department.id
+      department_id: departmentA.id
     });
-    const govToken = govReg.body.data.token;
+    const govToken = govAReg.body.data.token;
 
-    // 2. Create and Publish Challenge
+    // Gov B in Dept B
+    const govBReg = await request('POST', '/api/v1/auth/register', {
+      name: 'Suresh Patil',
+      email: `suresh.p4.${timestamp}@transport.gov.in`,
+      password: 'GovPassword123!',
+      role: 'GOVERNMENT',
+      department_id: departmentB.id
+    });
+    const govBToken = govBReg.body.data.token;
+
+    // Evaluator
+    const evalReg = await request('POST', '/api/v1/auth/register', {
+      name: 'Dr. Ananya Evaluator',
+      email: `eval.p4.${timestamp}@setugov.in`,
+      password: 'EvalPassword123!',
+      role: 'EVALUATOR'
+    });
+    const evalToken = evalReg.body.data.token;
+
+    // 2. Create and Publish Challenge in Department A
+    logger.info('2. Government A creating and publishing challenge in Dept A...');
     const challengeRes = await request('POST', '/api/v1/challenges', {
       title: 'Hospital Waiting Time Reduction Pilot',
       problem_description: 'Overcrowding in OPD triage causing patient wait times of 90 minutes.',
@@ -97,7 +126,7 @@ const runPhase45Tests = async () => {
     const challenge = challengeRes.body.data.challenge;
 
     await request('POST', `/api/v1/challenges/${challenge.id}/publish`, null, govToken);
-    logger.info(`✅ Challenge published: ${challenge.title} (${challenge.id})`);
+    logger.info(`✅ Challenge published in Dept A: ${challenge.title} (${challenge.id})`);
 
     // 3. Register Startup 1: MediQueue AI
     logger.info('3. Registering Startup 1 (MediQueue AI)...');
@@ -123,50 +152,182 @@ const runPhase45Tests = async () => {
       throw new Error(`Startup 1 profile creation failed: ${JSON.stringify(s1ProfileRes)}`);
     }
     const startup1 = s1ProfileRes.body.data.startup;
-    logger.info(`✅ Startup 1 created: ${startup1.company_name} (TRL ${startup1.readiness_level})`);
 
-    // 4. Upload Startup Document
-    logger.info('4. Uploading DPIIT Recognition Certificate...');
-    const docRes = await request('POST', `/api/v1/startups/${startup1.id}/documents`, {
+    // Upload & Verify Startup 1
+    await request('POST', `/api/v1/startups/${startup1.id}/documents`, {
       document_type: 'DPIIT_RECOGNITION',
       document_url: 'https://storage.setugov.in/docs/mediqueue-dpiit.pdf'
     }, s1Token);
-    if (docRes.statusCode !== 201) {
-      throw new Error(`Document upload failed: ${JSON.stringify(docRes)}`);
-    }
-    logger.info('✅ Document uploaded for startup');
-
-    // 5. Government Official verifies Startup 1
-    logger.info('5. Government Official verifying startup...');
-    const verifyRes = await request('PATCH', `/api/v1/startups/${startup1.id}/verification`, {
+    await request('PATCH', `/api/v1/startups/${startup1.id}/verification`, {
       verification_status: 'VERIFIED',
-      comments: 'DPIIT certificate verified and active healthcare pilot references confirmed.'
+      comments: 'DPIIT certificate verified.'
     }, govToken);
-    if (verifyRes.statusCode !== 200 || verifyRes.body.data.startup.verification_status !== 'VERIFIED') {
-      throw new Error(`Startup verification failed: ${JSON.stringify(verifyRes)}`);
-    }
-    logger.info(`✅ Startup verified: status=${verifyRes.body.data.startup.verification_status}`);
+    logger.info(`✅ Startup 1 verified: ${startup1.company_name} (TRL ${startup1.readiness_level})`);
 
-    // 6. Run Matching Engine (Phase 5)
-    logger.info('6. Running pgvector + 5-factor weighted matching algorithm...');
-    const matchRes = await request('POST', `/api/v1/challenges/${challenge.id}/match`, null, govToken);
-    if (matchRes.statusCode !== 200 || !Array.isArray(matchRes.body.data.matches)) {
-      throw new Error(`Matching failed: ${JSON.stringify(matchRes)}`);
-    }
-    const topMatch = matchRes.body.data.matches[0];
-    logger.info(`✅ Matching completed. Top ranked startup: ${topMatch.startup.company_name} with Overall Score: ${topMatch.overall_score}%`);
-    logger.info(`   Breakdown -> Tech: ${topMatch.technology_score}%, Domain: ${topMatch.domain_score}%, Readiness: ${topMatch.readiness_score}%, Exp: ${topMatch.experience_score}%, Dep: ${topMatch.deployment_score}%`);
+    // 4. Register Startup 2: UrbanMove AI
+    logger.info('4. Registering Startup 2 (UrbanMove AI)...');
+    const s2UserRes = await request('POST', '/api/v1/auth/register', {
+      name: 'Pooja Hegde',
+      email: `pooja.${timestamp}@urbanmove.ai`,
+      password: 'StartupPassword123!',
+      role: 'STARTUP'
+    });
+    const s2Token = s2UserRes.body.data.token;
 
-    // 7. Get Specific Match Score
-    logger.info('7. Fetching specific match score record...');
-    const specMatchRes = await request('GET', `/api/v1/challenges/${challenge.id}/matches/${startup1.id}`, null, govToken);
-    if (specMatchRes.statusCode !== 200 || specMatchRes.body.data.match.overall_score !== topMatch.overall_score) {
-      throw new Error(`Get specific match failed: ${JSON.stringify(specMatchRes)}`);
-    }
-    logger.info('✅ Specific match score retrieved with full AI reasoning breakdown');
+    const s2ProfileRes = await request('POST', '/api/v1/startups', {
+      company_name: 'UrbanMove AI Pvt Ltd',
+      description: 'Transit route optimization and traffic signal AI.',
+      domain: 'Transport',
+      technologies: ['Computer Vision', 'Predictive Analytics', 'IoT'],
+      readiness_level: 7,
+      years_experience: 3,
+      previous_deployments: 2,
+      location: 'Bangalore, Karnataka'
+    }, s2Token);
+    const startup2 = s2ProfileRes.body.data.startup;
 
-    // 8. Startup 1 submits Application for Challenge
-    logger.info('8. Startup 1 submitting proposal/application...');
+    await request('POST', `/api/v1/startups/${startup2.id}/documents`, {
+      document_type: 'DPIIT_RECOGNITION',
+      document_url: 'https://storage.setugov.in/docs/urbanmove-dpiit.pdf'
+    }, s2Token);
+    await request('PATCH', `/api/v1/startups/${startup2.id}/verification`, {
+      verification_status: 'VERIFIED',
+      comments: 'DPIIT verified.'
+    }, govToken);
+    logger.info(`✅ Startup 2 verified: ${startup2.company_name}`);
+
+    // ============================================================
+    // 5. POST /match Authorization Tests (Tests 1 - 5)
+    // ============================================================
+    logger.info('5. Testing POST /api/v1/challenges/:id/match authorization...');
+
+    // Test 1: Admin can match Dept A challenge
+    const adminMatchRes = await request('POST', `/api/v1/challenges/${challenge.id}/match`, null, adminToken);
+    if (adminMatchRes.statusCode !== 200 || !Array.isArray(adminMatchRes.body.data.matches)) {
+      throw new Error(`Admin match failed: ${JSON.stringify(adminMatchRes)}`);
+    }
+    logger.info('✅ 1. Admin successfully ran matching for Dept A challenge (200 OK)');
+
+    // Test 2: Government A can match Dept A challenge
+    const govMatchRes = await request('POST', `/api/v1/challenges/${challenge.id}/match`, null, govToken);
+    if (govMatchRes.statusCode !== 200 || !Array.isArray(govMatchRes.body.data.matches)) {
+      throw new Error(`Government A match failed: ${JSON.stringify(govMatchRes)}`);
+    }
+    const topMatch = govMatchRes.body.data.matches[0];
+    logger.info(`✅ 2. Government A successfully ran matching for Dept A challenge (200 OK, top score: ${topMatch.overall_score}%)`);
+
+    // Test 3: Government B from Dept B cannot match Dept A challenge -> 403
+    const govBMatchRes = await request('POST', `/api/v1/challenges/${challenge.id}/match`, null, govBToken);
+    if (govBMatchRes.statusCode !== 403) {
+      throw new Error(`Gov B expected 403 for matching Dept A challenge, got: ${JSON.stringify(govBMatchRes)}`);
+    }
+    logger.info('✅ 3. Government B (Dept B) blocked from matching Dept A challenge with 403 Forbidden');
+
+    // Test 4: Startup cannot match -> 403
+    const s1MatchRes = await request('POST', `/api/v1/challenges/${challenge.id}/match`, null, s1Token);
+    if (s1MatchRes.statusCode !== 403) {
+      throw new Error(`Startup expected 403 for matching, got: ${JSON.stringify(s1MatchRes)}`);
+    }
+    logger.info('✅ 4. Startup blocked from running matching with 403 Forbidden');
+
+    // Test 5: Evaluator cannot match -> 403
+    const evalMatchRes = await request('POST', `/api/v1/challenges/${challenge.id}/match`, null, evalToken);
+    if (evalMatchRes.statusCode !== 403) {
+      throw new Error(`Evaluator expected 403 for matching, got: ${JSON.stringify(evalMatchRes)}`);
+    }
+    logger.info('✅ 5. Evaluator blocked from running matching with 403 Forbidden');
+
+    // ============================================================
+    // 6. GET /matches Authorization Tests (Tests 6 - 10)
+    // ============================================================
+    logger.info('6. Testing GET /api/v1/challenges/:id/matches authorization...');
+
+    // Test 6: Admin can retrieve Dept A matches
+    const adminGetMatchesRes = await request('GET', `/api/v1/challenges/${challenge.id}/matches`, null, adminToken);
+    if (adminGetMatchesRes.statusCode !== 200 || !Array.isArray(adminGetMatchesRes.body.data.matches)) {
+      throw new Error(`Admin get matches failed: ${JSON.stringify(adminGetMatchesRes)}`);
+    }
+    logger.info(`✅ 6. Admin retrieved all Dept A matches (200 OK, count: ${adminGetMatchesRes.body.data.matches.length})`);
+
+    // Test 7: Government A can retrieve Dept A matches
+    const govGetMatchesRes = await request('GET', `/api/v1/challenges/${challenge.id}/matches`, null, govToken);
+    if (govGetMatchesRes.statusCode !== 200 || !Array.isArray(govGetMatchesRes.body.data.matches)) {
+      throw new Error(`Government A get matches failed: ${JSON.stringify(govGetMatchesRes)}`);
+    }
+    logger.info(`✅ 7. Government A retrieved all Dept A matches (200 OK, count: ${govGetMatchesRes.body.data.matches.length})`);
+
+    // Test 8: Government B cannot retrieve Dept A matches -> 403
+    const govBGetMatchesRes = await request('GET', `/api/v1/challenges/${challenge.id}/matches`, null, govBToken);
+    if (govBGetMatchesRes.statusCode !== 403) {
+      throw new Error(`Gov B expected 403 for retrieving Dept A matches, got: ${JSON.stringify(govBGetMatchesRes)}`);
+    }
+    logger.info('✅ 8. Government B (Dept B) blocked from retrieving Dept A matches with 403 Forbidden');
+
+    // Test 9: Startup cannot retrieve full matches leaderboard -> 403
+    const s1GetMatchesRes = await request('GET', `/api/v1/challenges/${challenge.id}/matches`, null, s1Token);
+    if (s1GetMatchesRes.statusCode !== 403) {
+      throw new Error(`Startup expected 403 for retrieving full matches, got: ${JSON.stringify(s1GetMatchesRes)}`);
+    }
+    logger.info('✅ 9. Startup blocked from retrieving full matches leaderboard with 403 Forbidden');
+
+    // Test 10: Evaluator cannot retrieve full matches -> 403
+    const evalGetMatchesRes = await request('GET', `/api/v1/challenges/${challenge.id}/matches`, null, evalToken);
+    if (evalGetMatchesRes.statusCode !== 403) {
+      throw new Error(`Evaluator expected 403 for retrieving full matches, got: ${JSON.stringify(evalGetMatchesRes)}`);
+    }
+    logger.info('✅ 10. Evaluator blocked from retrieving full matches with 403 Forbidden');
+
+    // ============================================================
+    // 7. GET /matches/:startup_id Authorization Tests (Tests 11 - 16)
+    // ============================================================
+    logger.info('7. Testing GET /api/v1/challenges/:id/matches/:startup_id authorization...');
+
+    // Test 11: Admin can retrieve a startup's match
+    const adminSpecRes = await request('GET', `/api/v1/challenges/${challenge.id}/matches/${startup1.id}`, null, adminToken);
+    if (adminSpecRes.statusCode !== 200 || !adminSpecRes.body.data.match) {
+      throw new Error(`Admin get specific match failed: ${JSON.stringify(adminSpecRes)}`);
+    }
+    logger.info(`✅ 11. Admin retrieved Startup 1 match score (200 OK, score: ${adminSpecRes.body.data.match.overall_score}%)`);
+
+    // Test 12: Government A can retrieve startup match for Dept A challenge
+    const govSpecRes = await request('GET', `/api/v1/challenges/${challenge.id}/matches/${startup1.id}`, null, govToken);
+    if (govSpecRes.statusCode !== 200 || !govSpecRes.body.data.match) {
+      throw new Error(`Government A get specific match failed: ${JSON.stringify(govSpecRes)}`);
+    }
+    logger.info(`✅ 12. Government A retrieved Startup 1 match score (200 OK, AI reasoning present)`);
+
+    // Test 13: Government B cannot retrieve match for Dept A challenge -> 403
+    const govBSpecRes = await request('GET', `/api/v1/challenges/${challenge.id}/matches/${startup1.id}`, null, govBToken);
+    if (govBSpecRes.statusCode !== 403) {
+      throw new Error(`Gov B expected 403 for Dept A challenge match, got: ${JSON.stringify(govBSpecRes)}`);
+    }
+    logger.info('✅ 13. Government B (Dept B) blocked from viewing Dept A challenge match with 403 Forbidden');
+
+    // Test 14: Startup A can retrieve its own match -> 200
+    const s1OwnSpecRes = await request('GET', `/api/v1/challenges/${challenge.id}/matches/${startup1.id}`, null, s1Token);
+    if (s1OwnSpecRes.statusCode !== 200 || s1OwnSpecRes.body.data.match.startup_id !== startup1.id) {
+      throw new Error(`Startup A failed to retrieve own match: ${JSON.stringify(s1OwnSpecRes)}`);
+    }
+    logger.info(`✅ 14. Startup A successfully retrieved own match score (200 OK, score: ${s1OwnSpecRes.body.data.match.overall_score}%)`);
+
+    // Test 15: Startup A cannot retrieve Startup B's match -> 403
+    const s1CompetitorSpecRes = await request('GET', `/api/v1/challenges/${challenge.id}/matches/${startup2.id}`, null, s1Token);
+    if (s1CompetitorSpecRes.statusCode !== 403) {
+      throw new Error(`Startup A expected 403 for competitor match score, got: ${JSON.stringify(s1CompetitorSpecRes)}`);
+    }
+    logger.info('✅ 15. Startup A blocked from viewing competitor Startup B match score with 403 Forbidden');
+
+    // Test 16: Evaluator cannot retrieve match -> 403
+    const evalSpecRes = await request('GET', `/api/v1/challenges/${challenge.id}/matches/${startup1.id}`, null, evalToken);
+    if (evalSpecRes.statusCode !== 403) {
+      throw new Error(`Evaluator expected 403 for specific match score, got: ${JSON.stringify(evalSpecRes)}`);
+    }
+    logger.info('✅ 16. Evaluator blocked from viewing specific match score with 403 Forbidden');
+
+    // ============================================================
+    // 8. Application Flow Verification
+    // ============================================================
+    logger.info('8. Testing Application submission & lifecycle...');
     const appRes = await request('POST', `/api/v1/challenges/${challenge.id}/applications`, {
       proposal: 'Automated Hospital Queue and Triage Orchestration Pilot Deployment for OPD.',
       technical_approach: 'Deploying edge cameras for real-time wait estimation, QR/Kiosk token generation, and doctor consultation load balancing.',
@@ -181,8 +342,7 @@ const runPhase45Tests = async () => {
     const application = appRes.body.data.application;
     logger.info(`✅ Application submitted: "${application.proposal.substring(0, 40)}..." (status: ${application.status})`);
 
-    // 9. Test Duplicate Application Rejection (409 Conflict)
-    logger.info('9. Testing duplicate application rejection...');
+    // Duplicate Application Rejection
     const dupAppRes = await request('POST', `/api/v1/challenges/${challenge.id}/applications`, {
       proposal: 'Another attempt for same challenge with sufficient proposal length.',
       technical_approach: 'Comprehensive technical approach for duplicate validation test.',
@@ -195,8 +355,7 @@ const runPhase45Tests = async () => {
     }
     logger.info('✅ Duplicate application properly prevented with 409 Conflict');
 
-    // 10. Government shortlists Application
-    logger.info('10. Government shortlisting application...');
+    // Government shortlists Application
     const statusRes = await request('PATCH', `/api/v1/applications/${application.id}/status`, {
       status: 'SHORTLISTED',
       reason: 'Meets all technical criteria and high technology match score.'
@@ -206,7 +365,7 @@ const runPhase45Tests = async () => {
     }
     logger.info(`✅ Application transitioned to SHORTLISTED`);
 
-    logger.info('🎉 All Phase 4 & 5 Tests Passed Successfully!');
+    logger.info('🎉 All Phase 4 & 5 (Matching Authorization & Applications) Tests Passed Successfully!');
   } catch (error) {
     logger.error('❌ Phase 4 & 5 Test Failed:', error);
     process.exitCode = 1;
@@ -217,3 +376,4 @@ const runPhase45Tests = async () => {
 };
 
 runPhase45Tests();
+

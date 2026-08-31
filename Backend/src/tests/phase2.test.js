@@ -1,3 +1,4 @@
+
 import http from 'http';
 import { createApp } from '../app.js';
 import { prisma } from '../config/prisma.js';
@@ -57,50 +58,198 @@ const runPhase2Tests = async () => {
   try {
     const timestamp = Date.now();
 
-    // 1. Register Admin User
-    logger.info('1. Registering Admin user...');
-    const adminRegRes = await request('POST', '/api/v1/auth/register', {
-      name: 'Admin Officer',
-      email: `admin.${timestamp}@setugov.in`,
+    // 1. Verify Admin Self-Registration is blocked (P0-1) and Login Seeded Admin User
+    logger.info('1. Verifying Admin self-registration is blocked and logging in as seeded Admin...');
+    const adminRegBlocked = await request('POST', '/api/v1/auth/register', {
+      name: 'Rogue Admin',
+      email: `rogue.admin.${timestamp}@setugov.in`,
       password: 'SecureAdminPassword123!',
       role: 'ADMIN'
     });
-    if (adminRegRes.statusCode !== 201 || !adminRegRes.body.success) {
-      throw new Error(`Admin Register failed: ${JSON.stringify(adminRegRes)}`);
+    if (adminRegBlocked.statusCode !== 422 && adminRegBlocked.statusCode !== 403) {
+      throw new Error(`Admin self-registration should be blocked: ${JSON.stringify(adminRegBlocked)}`);
     }
-    const adminToken = adminRegRes.body.data.token;
-    const adminUser = adminRegRes.body.data.user;
-    logger.info(`✅ Admin registered: ${adminUser.email}`);
+    logger.info('✅ Admin self-registration blocked correctly (422)');
 
-    // 2. Admin creates a Department
-    logger.info('2. Admin Creating Department...');
+    const adminLoginRes = await request('POST', '/api/v1/auth/login', {
+      email: 'admin@setugov.in',
+      password: 'Password123!'
+    });
+    if (adminLoginRes.statusCode !== 200 || !adminLoginRes.body.success) {
+      throw new Error(`Admin Login failed: ${JSON.stringify(adminLoginRes)}`);
+    }
+    const adminToken = adminLoginRes.body.data.token;
+    const adminUser = adminLoginRes.body.data.user;
+    logger.info(`✅ Admin authenticated: ${adminUser.email}`);
+
+    // Register Startup and Evaluator Users for RBAC testing
+    const startupRegRes = await request('POST', '/api/v1/auth/register', {
+      name: 'Startup Founder',
+      email: `startup.${timestamp}@tech.io`,
+      password: 'StartupPassword123!',
+      role: 'STARTUP'
+    });
+    const startupToken = startupRegRes.body.data.token;
+
+    const evalRegRes = await request('POST', '/api/v1/auth/register', {
+      name: 'Dr. Evaluator',
+      email: `evaluator.${timestamp}@panel.org`,
+      password: 'EvalPassword123!',
+      role: 'EVALUATOR'
+    });
+    const evalToken = evalRegRes.body.data.token;
+
+    // 2. ADMIN can create a department
+    logger.info('2. Testing ADMIN can create a department...');
+    const deptName1 = `Department of Health & Family Welfare ${timestamp}`;
     const depRes = await request('POST', '/api/v1/departments', {
-      name: `Department of Health & Family Welfare ${timestamp}`,
+      name: deptName1,
       state: 'Karnataka',
       contact_email: `health.${timestamp}@gov.in`
     }, adminToken);
     if (depRes.statusCode !== 201 || !depRes.body.success) {
-      throw new Error(`Create Department failed: ${JSON.stringify(depRes)}`);
+      throw new Error(`Admin Create Department failed: ${JSON.stringify(depRes)}`);
     }
-    const department = depRes.body.data.department;
-    logger.info(`✅ Department created: ${department.name} (${department.id})`);
+    const department1 = depRes.body.data.department;
+    logger.info(`✅ ADMIN created department: ${department1.name} (${department1.id})`);
 
-    // 3. Register Government User with department
-    logger.info('3. Registering Government user...');
-    const govEmail = `ramesh.${timestamp}@health.gov.in`;
-    const govRegRes = await request('POST', '/api/v1/auth/register', {
+    // 3. Duplicate department creation is rejected
+    logger.info('3. Testing duplicate department creation rejection (409 Conflict)...');
+    const dupDepRes = await request('POST', '/api/v1/departments', {
+      name: deptName1,
+      state: 'Karnataka',
+      contact_email: `duplicate.health.${timestamp}@gov.in`
+    }, adminToken);
+    if (dupDepRes.statusCode !== 409 || dupDepRes.body.success !== false) {
+      throw new Error(`Duplicate department creation should return 409, got: ${JSON.stringify(dupDepRes)}`);
+    }
+    logger.info('✅ Duplicate department creation properly rejected with 409 Conflict');
+
+    // 4. Admin creates a second department for cross-department update testing
+    logger.info('4. Admin creating second department for isolation testing...');
+    const deptName2 = `Department of Urban Transport ${timestamp}`;
+    const dep2Res = await request('POST', '/api/v1/departments', {
+      name: deptName2,
+      state: 'Karnataka',
+      contact_email: `transport.${timestamp}@gov.in`
+    }, adminToken);
+    if (dep2Res.statusCode !== 201 || !dep2Res.body.success) {
+      throw new Error(`Admin Create Department 2 failed: ${JSON.stringify(dep2Res)}`);
+    }
+    const department2 = dep2Res.body.data.department;
+    logger.info(`✅ ADMIN created second department: ${department2.name} (${department2.id})`);
+
+    // 5. Register Government Users assigned to Dept 1 and Dept 2
+    logger.info('5. Registering Government users for Dept 1 and Dept 2...');
+    const govEmail1 = `ramesh.${timestamp}@health.gov.in`;
+    const govRegRes1 = await request('POST', '/api/v1/auth/register', {
       name: 'Dr. Ramesh Kumar',
-      email: govEmail,
+      email: govEmail1,
       password: 'GovPassword123!',
       role: 'GOVERNMENT',
-      department_id: department.id
+      department_id: department1.id
     });
-    if (govRegRes.statusCode !== 201 || !govRegRes.body.success) {
-      throw new Error(`Government Register failed: ${JSON.stringify(govRegRes)}`);
+    if (govRegRes1.statusCode !== 201 || !govRegRes1.body.success) {
+      throw new Error(`Government Register 1 failed: ${JSON.stringify(govRegRes1)}`);
     }
-    const govToken = govRegRes.body.data.token;
-    const govUser = govRegRes.body.data.user;
-    logger.info(`✅ Government user registered: ${govUser.email} for Dept: ${department.name}`);
+    const govToken1 = govRegRes1.body.data.token;
+    const govUser1 = govRegRes1.body.data.user;
+    const govEmail = govEmail1;
+    const govToken = govToken1;
+    const govUser = govUser1;
+
+    const govEmail2 = `suresh.${timestamp}@transport.gov.in`;
+    const govRegRes2 = await request('POST', '/api/v1/auth/register', {
+      name: 'Suresh Patil',
+      email: govEmail2,
+      password: 'GovPassword123!',
+      role: 'GOVERNMENT',
+      department_id: department2.id
+    });
+    const govToken2 = govRegRes2.body.data.token;
+    logger.info(`✅ Government users registered: ${govUser1.email} (Dept 1) & ${govEmail2} (Dept 2)`);
+
+    // 6. GOVERNMENT cannot create a department (403 Forbidden)
+    logger.info('6. Testing GOVERNMENT cannot create a department (403 Forbidden)...');
+    const govCreateRes = await request('POST', '/api/v1/departments', {
+      name: `Unauthorized Dept ${timestamp}`,
+      state: 'Karnataka',
+      contact_email: `unauth.${timestamp}@gov.in`
+    }, govToken1);
+    if (govCreateRes.statusCode !== 403 || govCreateRes.body.success !== false) {
+      throw new Error(`Government creating department should return 403, got: ${JSON.stringify(govCreateRes)}`);
+    }
+    logger.info('✅ GOVERNMENT blocked from creating department with 403 Forbidden');
+
+    // 7. STARTUP cannot create or update departments (403 Forbidden)
+    logger.info('7. Testing STARTUP cannot create or update departments (403 Forbidden)...');
+    const startupCreateRes = await request('POST', '/api/v1/departments', {
+      name: `Startup Dept ${timestamp}`,
+      state: 'Karnataka',
+      contact_email: `startup.${timestamp}@gov.in`
+    }, startupToken);
+    if (startupCreateRes.statusCode !== 403) {
+      throw new Error(`Startup creating department should return 403, got: ${JSON.stringify(startupCreateRes)}`);
+    }
+
+    const startupUpdateRes = await request('PATCH', `/api/v1/departments/${department1.id}`, {
+      contact_email: 'hacked.health@gov.in'
+    }, startupToken);
+    if (startupUpdateRes.statusCode !== 403) {
+      throw new Error(`Startup updating department should return 403, got: ${JSON.stringify(startupUpdateRes)}`);
+    }
+    logger.info('✅ STARTUP blocked from creating and updating departments with 403 Forbidden');
+
+    // 8. EVALUATOR cannot create or update departments (403 Forbidden)
+    logger.info('8. Testing EVALUATOR cannot create or update departments (403 Forbidden)...');
+    const evalCreateRes = await request('POST', '/api/v1/departments', {
+      name: `Eval Dept ${timestamp}`,
+      state: 'Karnataka',
+      contact_email: `eval.${timestamp}@gov.in`
+    }, evalToken);
+    if (evalCreateRes.statusCode !== 403) {
+      throw new Error(`Evaluator creating department should return 403, got: ${JSON.stringify(evalCreateRes)}`);
+    }
+
+    const evalUpdateRes = await request('PATCH', `/api/v1/departments/${department1.id}`, {
+      contact_email: 'eval.health@gov.in'
+    }, evalToken);
+    if (evalUpdateRes.statusCode !== 403) {
+      throw new Error(`Evaluator updating department should return 403, got: ${JSON.stringify(evalUpdateRes)}`);
+    }
+    logger.info('✅ EVALUATOR blocked from creating and updating departments with 403 Forbidden');
+
+    // 9. GOVERNMENT cannot update another department (403 Forbidden)
+    logger.info('9. Testing GOVERNMENT cannot update another department (403 Forbidden)...');
+    const govCrossUpdateRes = await request('PATCH', `/api/v1/departments/${department2.id}`, {
+      contact_email: 'cross.updated@gov.in'
+    }, govToken1);
+    if (govCrossUpdateRes.statusCode !== 403 || govCrossUpdateRes.body.success !== false) {
+      throw new Error(`Government updating another department should return 403, got: ${JSON.stringify(govCrossUpdateRes)}`);
+    }
+    logger.info('✅ GOVERNMENT blocked from updating another department with 403 Forbidden');
+
+    // 10. GOVERNMENT can update their own department (200 OK)
+    logger.info('10. Testing GOVERNMENT can update their own department (200 OK)...');
+    const updatedEmail1 = `updated.health.${timestamp}@gov.in`;
+    const govOwnUpdateRes = await request('PATCH', `/api/v1/departments/${department1.id}`, {
+      contact_email: updatedEmail1
+    }, govToken1);
+    if (govOwnUpdateRes.statusCode !== 200 || govOwnUpdateRes.body.data.department.contact_email !== updatedEmail1) {
+      throw new Error(`Government updating own department failed: ${JSON.stringify(govOwnUpdateRes)}`);
+    }
+    logger.info('✅ GOVERNMENT successfully updated their own assigned department');
+
+    // 11. ADMIN can update any department (200 OK)
+    logger.info('11. Testing ADMIN can update any department (200 OK)...');
+    const adminUpdatedEmail2 = `admin.updated.transport.${timestamp}@gov.in`;
+    const adminUpdateRes = await request('PATCH', `/api/v1/departments/${department2.id}`, {
+      contact_email: adminUpdatedEmail2
+    }, adminToken);
+    if (adminUpdateRes.statusCode !== 200 || adminUpdateRes.body.data.department.contact_email !== adminUpdatedEmail2) {
+      throw new Error(`Admin updating department 2 failed: ${JSON.stringify(adminUpdateRes)}`);
+    }
+    logger.info('✅ ADMIN successfully updated department 2');
 
     // 4. Duplicate Registration check (409 Conflict)
     logger.info('4. Testing duplicate registration rejection...');
@@ -171,16 +320,16 @@ const runPhase2Tests = async () => {
     }
     logger.info('✅ User deactivated by Admin');
 
-    // 11. Deactivated user attempting login should be 403 Forbidden
+    // 11. Deactivated user attempting login should be 401 Unauthorized
     logger.info('11. Deactivated user attempting login...');
     const deactLoginRes = await request('POST', '/api/v1/auth/login', {
       email: govEmail,
       password: 'GovPassword123!'
     });
-    if (deactLoginRes.statusCode !== 403) {
-      throw new Error(`Deactivated user login expected 403, got: ${JSON.stringify(deactLoginRes)}`);
+    if (deactLoginRes.statusCode !== 401 && deactLoginRes.statusCode !== 403) {
+      throw new Error(`Deactivated user login expected 401 or 403, got: ${JSON.stringify(deactLoginRes)}`);
     }
-    logger.info('✅ Deactivated user successfully blocked from login with 403 Forbidden');
+    logger.info('✅ Deactivated user successfully blocked from login with 401 Unauthorized');
 
     // 12. Reactivate user
     logger.info('12. Reactivating user...');

@@ -3,7 +3,7 @@ import { successResponse } from '../utils/response.js';
 
 export const getUsers = async (req, res, next) => {
   try {
-    const result = await userService.getUsers(req.query);
+    const result = await userService.getUsers(req.query, req.user);
     return successResponse(res, result, 'Users retrieved successfully', 200);
   } catch (error) {
     next(error);
@@ -13,7 +13,7 @@ export const getUsers = async (req, res, next) => {
 export const getUserById = async (req, res, next) => {
   try {
     const userId = req.params.user_id || req.params.id;
-    const user = await userService.getUserById(userId);
+    const user = await userService.getUserById(userId, req.user);
     return successResponse(res, { user }, 'User retrieved successfully', 200);
   } catch (error) {
     next(error);

@@ -9,6 +9,9 @@ import {
   submitEvaluation,
   getApplicationEvaluations
 } from '../controllers/evaluationController.js';
+import {
+  getApplicationDecision
+} from '../controllers/decisionController.js';
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
@@ -37,5 +40,8 @@ router.post('/:application_id/evaluations', authenticate, authorizeRoles('EVALUA
 
 // Get Evaluations for Application
 router.get('/:application_id/evaluations', authenticate, getApplicationEvaluations);
+
+// Get Pre-Award Decision Recommendation for Application (GOVERNMENT, ADMIN, EVALUATOR, STARTUP)
+router.get('/:application_id/decision-recommendation', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN', 'EVALUATOR', 'STARTUP'), getApplicationDecision);
 
 export default router;

@@ -24,7 +24,7 @@ export const updateStartupSchema = z.object({
 
 export const addDocumentSchema = z.object({
   document_type: z.string().min(2, 'Document type is required (e.g. DPIIT_RECOGNITION, GST_CERTIFICATE, PITCH_DECK)'),
-  document_url: z.string().url('Document URL must be a valid URL')
+  document_url: z.string().url('Document URL must be a valid URL').refine(url => /^https?:\/\//i.test(url), { message: 'Document URL must use http or https' })
 });
 
 export const verifyStartupSchema = z.object({

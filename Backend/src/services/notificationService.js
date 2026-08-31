@@ -1,4 +1,5 @@
 import { prisma } from '../config/prisma.js';
+import { logger } from '../utils/logger.js';
 import { NotFoundError } from '../utils/errors.js';
 
 export const sendNotification = async ({
@@ -21,6 +22,9 @@ export const sendNotification = async ({
     });
     return notification;
   } catch (error) {
+    logger.error(
+      `[NOTIFICATION_FAILURE] Failed to deliver notification: user_id=${user_id}, type=${type}, title="${title ? title.slice(0, 50) : ''}", error=${error?.message || error}`
+    );
     return null;
   }
 };
@@ -33,8 +37,10 @@ export const getUserNotifications = async (userId, query = {}) => {
     where.is_read = is_read === 'true' || is_read === true;
   }
 
-  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
-  const take = parseInt(limit, 10);
+  const safePage = Math.max(1, parseInt(page, 10) || 1);
+  const safeLimit = Math.min(100, Math.max(1, parseInt(limit, 10) || 30));
+  const skip = (safePage - 1) * safeLimit;
+  const take = safeLimit;
 
   const [total, unreadCount, notifications] = await Promise.all([
     prisma.notification.count({ where }),
@@ -52,9 +58,9 @@ export const getUserNotifications = async (userId, query = {}) => {
     notifications,
     pagination: {
       total,
-      page: parseInt(page, 10),
-      limit: take,
-      totalPages: Math.ceil(total / take)
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit)
     }
   };
 };

@@ -23,7 +23,9 @@ export const createAuditLog = async ({
     });
     return log;
   } catch (error) {
-    logger.error('Failed to create audit log entry:', error);
+    logger.error(
+      `[AUDIT_LOG_FAILURE] Failed to record audit log: action=${action}, entity_type=${entity_type}, entity_id=${entity_id || 'null'}, user_id=${user_id || 'anonymous'}, error=${error?.message || error}`
+    );
     // Never fail the primary transaction because of audit log failure
     return null;
   }
@@ -43,8 +45,10 @@ export const getAuditLogs = async (query = {}) => {
   if (entity_type) where.entity_type = entity_type;
   if (user_id) where.user_id = user_id;
 
-  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
-  const take = parseInt(limit, 10);
+  const safePage = Math.max(1, parseInt(page, 10) || 1);
+  const safeLimit = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
+  const skip = (safePage - 1) * safeLimit;
+  const take = safeLimit;
 
   const [total, logs] = await Promise.all([
     prisma.auditLog.count({ where }),
@@ -70,9 +74,9 @@ export const getAuditLogs = async (query = {}) => {
     logs,
     pagination: {
       total,
-      page: parseInt(page, 10),
-      limit: take,
-      totalPages: Math.ceil(total / take)
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit)
     }
   };
 };

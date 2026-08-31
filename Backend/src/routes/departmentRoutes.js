@@ -12,8 +12,8 @@ import { createDepartmentSchema, updateDepartmentSchema } from '../schemas/depar
 
 const router = Router();
 
-// Create department (Admin & Government)
-router.post('/', authenticate, authorizeRoles('ADMIN', 'GOVERNMENT'), validate(createDepartmentSchema), createDepartment);
+// Create department (Admin only)
+router.post('/', authenticate, authorizeRoles('ADMIN'), validate(createDepartmentSchema), createDepartment);
 
 // List departments (Public/Authenticated)
 router.get('/', getDepartments);

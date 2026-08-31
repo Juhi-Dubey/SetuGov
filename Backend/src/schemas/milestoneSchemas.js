@@ -6,7 +6,7 @@ export const createMilestoneSchema = z.object({
   due_date: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}/)),
   completion_percentage: z.number().min(0).max(100).default(0),
   payment_percentage: z.number().min(0).max(100).default(0),
-  evidence_url: z.string().url().optional().nullable()
+  evidence_url: z.string().url().refine(url => /^https?:\/\//i.test(url), { message: 'Evidence URL must use http or https' }).optional().nullable()
 });
 
 export const updateMilestoneSchema = z.object({
@@ -16,7 +16,7 @@ export const updateMilestoneSchema = z.object({
   status: z.string().optional(),
   completion_percentage: z.number().min(0).max(100).optional(),
   payment_percentage: z.number().min(0).max(100).optional(),
-  evidence_url: z.string().url().optional().nullable()
+  evidence_url: z.string().url().refine(url => /^https?:\/\//i.test(url), { message: 'Evidence URL must use http or https' }).optional().nullable()
 });
 
 export default {

@@ -18,6 +18,7 @@ import notificationRoutes from './notificationRoutes.js';
 import auditLogRoutes from './auditLogRoutes.js';
 import adminRoutes from './adminRoutes.js';
 import aiRoutes from './aiRoutes.js';
+import decisionRoutes from './decisionRoutes.js';
 
 const router = Router();
 
@@ -30,6 +31,7 @@ router.get('/', (req, res) => {
     documentation: '/api/v1/docs',
     endpoints: {
       health: '/api/v1/health',
+      healthAi: '/api/v1/health/ai',
       auth: '/api/v1/auth',
       users: '/api/v1/users',
       departments: '/api/v1/departments',
@@ -37,6 +39,7 @@ router.get('/', (req, res) => {
       startups: '/api/v1/startups',
       applications: '/api/v1/applications',
       evaluations: '/api/v1/evaluations',
+      decisions: '/api/v1/decisions',
       pilots: '/api/v1/pilots',
       kpis: '/api/v1/kpis',
       milestones: '/api/v1/milestones',
@@ -61,6 +64,7 @@ router.use('/challenges', challengeRoutes);
 router.use('/startups', startupRoutes);
 router.use('/applications', applicationRoutes);
 router.use('/evaluations', evaluationRoutes);
+router.use('/decisions', decisionRoutes);
 router.use('/pilots', pilotRoutes);
 router.use('/kpis', kpiRoutes);
 router.use('/milestones', milestoneRoutes);

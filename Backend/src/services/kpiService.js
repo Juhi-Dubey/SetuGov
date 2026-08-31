@@ -1,12 +1,11 @@
 import { prisma } from '../config/prisma.js';
 import { NotFoundError, BadRequestError } from '../utils/errors.js';
+import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
 
 export const createKpi = async (pilotId, data, user, ip_address = null) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id: pilotId } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
-  }
+  // P0-3: Verify user has KPI_MANAGE access to this pilot
+  await verifyPilotAccess(pilotId, user, 'KPI_MANAGE');
 
   const kpi = await prisma.pilotKpi.create({
     data: {
@@ -34,10 +33,9 @@ export const createKpi = async (pilotId, data, user, ip_address = null) => {
   return kpi;
 };
 
-export const getPilotKpis = async (pilotId) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id: pilotId } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
+export const getPilotKpis = async (pilotId, user = null) => {
+  if (user) {
+    await verifyPilotAccess(pilotId, user, 'READ');
   }
 
   const kpis = await prisma.pilotKpi.findMany({
@@ -54,7 +52,7 @@ export const getPilotKpis = async (pilotId) => {
   return kpis;
 };
 
-export const getKpiById = async (id) => {
+export const getKpiById = async (id, user = null) => {
   const kpi = await prisma.pilotKpi.findUnique({
     where: { id },
     include: {
@@ -69,6 +67,10 @@ export const getKpiById = async (id) => {
     throw new NotFoundError(`KPI with ID ${id} not found.`);
   }
 
+  if (user) {
+    await verifyPilotAccess(kpi.pilot_id, user, 'READ');
+  }
+
   return kpi;
 };
 
@@ -78,9 +80,30 @@ export const updateKpi = async (id, data, user, ip_address = null) => {
     throw new NotFoundError(`KPI with ID ${id} not found.`);
   }
 
+  // P0-3: Verify user has KPI_MANAGE access to the parent pilot
+  await verifyPilotAccess(kpi.pilot_id, user, 'KPI_MANAGE');
+
+  // P1-6: Whitelist allowable update fields
+  const allowedFields = [
+    'name',
+    'description',
+    'unit',
+    'baseline_value',
+    'target_value',
+    'actual_value',
+    'weight'
+  ];
+
+  const updateData = {};
+  for (const field of allowedFields) {
+    if (data[field] !== undefined) {
+      updateData[field] = typeof data[field] === 'string' ? data[field].trim() : data[field];
+    }
+  }
+
   const updated = await prisma.pilotKpi.update({
     where: { id },
-    data
+    data: updateData
   });
 
   await createAuditLog({
@@ -88,7 +111,7 @@ export const updateKpi = async (id, data, user, ip_address = null) => {
     action: 'PILOT_KPI_UPDATED',
     entity_type: 'PILOT_KPI',
     entity_id: id,
-    details: { changes: data },
+    details: { changes: updateData },
     ip_address
   });
 
@@ -96,10 +119,8 @@ export const updateKpi = async (id, data, user, ip_address = null) => {
 };
 
 export const createMeasurement = async (pilotId, data, user, ip_address = null) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id: pilotId } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
-  }
+  // P0-3: Verify user has MEASUREMENT_CREATE access
+  await verifyPilotAccess(pilotId, user, 'MEASUREMENT_CREATE');
 
   // Verify KPI belongs to this pilot
   const kpi = await prisma.pilotKpi.findUnique({
@@ -140,10 +161,9 @@ export const createMeasurement = async (pilotId, data, user, ip_address = null) 
   return measurement;
 };
 
-export const getPilotMeasurements = async (pilotId) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id: pilotId } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
+export const getPilotMeasurements = async (pilotId, user = null) => {
+  if (user) {
+    await verifyPilotAccess(pilotId, user, 'READ');
   }
 
   const measurements = await prisma.pilotMeasurement.findMany({

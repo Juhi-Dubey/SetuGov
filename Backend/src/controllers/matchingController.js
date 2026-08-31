@@ -15,7 +15,7 @@ export const runChallengeMatching = async (req, res, next) => {
 export const getChallengeMatches = async (req, res, next) => {
   try {
     const challengeId = req.params.challenge_id || req.params.id;
-    const matches = await matchingService.getChallengeMatches(challengeId);
+    const matches = await matchingService.getChallengeMatches(challengeId, req.user);
     return successResponse(res, { matches }, 'Challenge matches retrieved', 200);
   } catch (error) {
     next(error);
@@ -26,7 +26,7 @@ export const getSpecificMatch = async (req, res, next) => {
   try {
     const challengeId = req.params.challenge_id || req.params.id;
     const startupId = req.params.startup_id;
-    const match = await matchingService.getSpecificMatch(challengeId, startupId);
+    const match = await matchingService.getSpecificMatch(challengeId, startupId, req.user);
     return successResponse(res, { match }, 'Specific startup match score retrieved', 200);
   } catch (error) {
     next(error);

@@ -1,27 +1,73 @@
 services:
   # -------------------------------------------------------------
-  # PostgreSQL 17 Database with pgvector Extension
+  # 1. PostgreSQL 17 Database
+  # Note: pgvector native extension is deferred to future scope.
   # -------------------------------------------------------------
   postgres:
     image: pgvector/pgvector:pg17
     container_name: setugov_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: setugov_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-setugov_db}
     ports:
-      - "5432:5432" # Exposed on host port 5432
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d setugov_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-setugov_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   # -------------------------------------------------------------
-  # SetuGov Express.js REST API Backend
+  # 2. Ollama Local LLM Runtime
+  # Canonical Model: llama3.2:3b
+  # -------------------------------------------------------------
+  ollama:
+    image: ollama/ollama:0.5.7
+    container_name: setugov_ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------------------
+  # 3. SetuGov Python AI Decision-Support Service (Brain 1-5)
+  # -------------------------------------------------------------
+  ai:
+    build:
+      context: ./AI
+      dockerfile: Dockerfile
+    container_name: setugov_ai
+    restart: unless-stopped
+    environment:
+      AI_SERVICE_HOST: 0.0.0.0
+      AI_SERVICE_PORT: 8000
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
+      OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT:-120}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    ports:
+      - "8000:8000"
+    depends_on:
+      ollama:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # -------------------------------------------------------------
+  # 4. SetuGov Express.js REST API Backend
   # -------------------------------------------------------------
   backend:
     build:
@@ -31,18 +77,20 @@ services:
     restart: unless-stopped
     environment:
       PORT: 5000
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/setugov_db?schema=public
-      JWT_SECRET: setugov_super_secret_jwt_key_2026
-      JWT_EXPIRES_IN: 7d
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-setugov_db}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-setugov_super_secret_jwt_key_2026}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       AI_SERVICE_URL: http://ai:8000
-      AI_MOCK_MODE: "true"
-      NODE_ENV: development
+      AI_MOCK_MODE: ${AI_MOCK_MODE:-true}
+      NODE_ENV: ${NODE_ENV:-development}
     ports:
       - "5000:5000"
     volumes:
       - ./Backend/src:/app/src
     depends_on:
       postgres:
+        condition: service_healthy
+      ai:
         condition: service_healthy
     command: >
       sh -c "npx prisma db push &&
@@ -51,4 +99,6 @@ services:
 
 volumes:
   pgdata:
+    driver: local
+  ollama_data:
     driver: local

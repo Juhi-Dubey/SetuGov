@@ -15,7 +15,7 @@ export const createValidation = async (req, res, next) => {
 export const getPilotValidations = async (req, res, next) => {
   try {
     const pilotId = req.params.pilot_id || req.params.id;
-    const validations = await validationService.getPilotValidations(pilotId);
+    const validations = await validationService.getPilotValidations(pilotId, req.user);
     return successResponse(res, { validations }, 'Pilot validations retrieved successfully', 200);
   } catch (error) {
     next(error);

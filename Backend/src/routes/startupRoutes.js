@@ -25,11 +25,11 @@ const router = Router();
 // Create Startup Profile (STARTUP or ADMIN)
 router.post('/', authenticate, authorizeRoles('STARTUP', 'ADMIN'), validate(createStartupSchema), createStartup);
 
-// List Startups (Public / Authenticated)
-router.get('/', getStartups);
+// List Startups (Authenticated)
+router.get('/', authenticate, getStartups);
 
-// Get Startup by ID
-router.get('/:startup_id', getStartupById);
+// Get Startup by ID (Authenticated)
+router.get('/:startup_id', authenticate, getStartupById);
 
 // Update Startup Profile (Owner or ADMIN)
 router.patch('/:startup_id', authenticate, validate(updateStartupSchema), updateStartup);

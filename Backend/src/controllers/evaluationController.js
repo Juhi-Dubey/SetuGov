@@ -36,7 +36,7 @@ export const updateEvaluation = async (req, res, next) => {
 export const getChallengeEvaluationSummary = async (req, res, next) => {
   try {
     const challengeId = req.params.challenge_id || req.params.id;
-    const summary = await evaluationService.getChallengeEvaluationSummary(challengeId);
+    const summary = await evaluationService.getChallengeEvaluationSummary(challengeId, req.user);
     return successResponse(res, summary, 'Challenge evaluation summary retrieved successfully', 200);
   } catch (error) {
     next(error);

@@ -124,6 +124,7 @@ model Department {
   users         User[]
   challenges    Challenge[]
 
+  @@unique([name, state])
   @@map("departments")
 }
 

@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { validateTransition } from '../utils/lifecycle.js';
+import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
 
 export const createScaleDecision = async (pilotId, data, user, ip_address = null) => {
@@ -9,14 +10,8 @@ export const createScaleDecision = async (pilotId, data, user, ip_address = null
     throw new ForbiddenError('Only authorized Government officials or Administrators can finalize pilot scale decisions.');
   }
 
-  const pilot = await prisma.pilot.findUnique({
-    where: { id: pilotId },
-    include: { challenge: true, startup: true }
-  });
-
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
-  }
+  // P0-3: Verify tenant authorization for the pilot project
+  const pilot = await verifyPilotAccess(pilotId, user, 'SCALE_DECISION');
 
   // Determine target pilot lifecycle state
   let targetPilotStatus;
@@ -88,10 +83,9 @@ export const createScaleDecision = async (pilotId, data, user, ip_address = null
   return scaleDecision;
 };
 
-export const getScaleDecision = async (pilotId) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id: pilotId } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
+export const getScaleDecision = async (pilotId, user = null) => {
+  if (user) {
+    await verifyPilotAccess(pilotId, user, 'READ');
   }
 
   const decision = await prisma.scaleDecision.findFirst({

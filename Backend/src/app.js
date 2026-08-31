@@ -3,16 +3,24 @@ import cors from 'cors';
 import helmet from 'helmet';
 import apiRouter from './routes/index.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { apiRateLimiter } from './middleware/rateLimiter.js';
 import { NotFoundError } from './utils/errors.js';
 import { logger } from './utils/logger.js';
+import { config } from './config/env.js';
 
 export const createApp = () => {
   const app = express();
 
-  // Security Middleware
+  // Security Headers
   app.use(helmet());
+
+  // CORS Configuration (P1-7: Restrict origins)
+  const allowedOrigins = config.CORS_ORIGIN === '*'
+    ? '*'
+    : config.CORS_ORIGIN.split(',').map(s => s.trim());
+
   app.use(cors({
-    origin: '*',
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
   }));
@@ -20,6 +28,9 @@ export const createApp = () => {
   // Body Parsers
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+  // General API Rate Limiting (P2-2)
+  app.use('/api/v1', apiRateLimiter);
 
   // HTTP Request Logging
   app.use((req, res, next) => {

@@ -2,9 +2,11 @@ import http from 'http';
 import { createApp } from '../app.js';
 import { prisma } from '../config/prisma.js';
 import { logger } from '../utils/logger.js';
+import { config } from '../config/env.js';
+import { getAiHealth } from '../controllers/healthController.js';
 
 const runHealthTests = async () => {
-  logger.info('🧪 Starting Phase 1 Health & Setup Verification Tests...');
+  logger.info('🧪 Starting Phase 1 & Phase 3 Health Verification Tests...');
 
   // 1. Test Database connection
   try {
@@ -66,10 +68,87 @@ const runHealthTests = async () => {
     // Test GET /api/v1/health
     logger.info('Testing GET /api/v1/health...');
     const healthRes = await makeRequest('/api/v1/health');
-    if (healthRes.statusCode !== 200 || !healthRes.data.success || healthRes.data.data.database.status !== 'connected') {
+    if (healthRes.statusCode !== 200 || !healthRes.data.success || healthRes.data.data?.database?.status !== 'connected') {
       throw new Error(`Health test failed: ${JSON.stringify(healthRes)}`);
     }
     logger.info('✅ Health check endpoint passed:', JSON.stringify(healthRes.data, null, 2));
+
+    // Test GET /api/v1/health/ai (Phase 3 Health & AI Dependency Probing in Mock Mode)
+    logger.info('Testing GET /api/v1/health/ai (Mock mode)...');
+    const healthAiRes = await makeRequest('/api/v1/health/ai');
+    if (healthAiRes.statusCode !== 200 || !healthAiRes.data.success || healthAiRes.data.data?.mode !== 'mock') {
+      throw new Error(`AI Health test failed: ${JSON.stringify(healthAiRes)}`);
+    }
+    logger.info('✅ AI Health check (mock mode) passed:', JSON.stringify(healthAiRes.data, null, 2));
+
+    // 3. Unit test getAiHealth in Live Mode branches
+    logger.info('Testing getAiHealth controller across Live Mode scenarios...');
+    const originalFetch = global.fetch;
+    const originalMockMode = config.AI_MOCK_MODE;
+
+    // Helper for mock response objects
+    const createMockRes = () => {
+      const res = {
+        statusCode: 200,
+        body: null,
+        status(code) {
+          this.statusCode = code;
+          return this;
+        },
+        json(payload) {
+          this.body = payload;
+          return this;
+        }
+      };
+      return res;
+    };
+
+    try {
+      config.AI_MOCK_MODE = false;
+
+      // Scenario A: Live AI service healthy
+      global.fetch = async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({ status: 'ok', service: 'setugov-ai', version: '1.0.0' })
+      });
+
+      const mockResA = createMockRes();
+      await getAiHealth({}, mockResA);
+      if (mockResA.statusCode !== 200 || mockResA.body?.data?.status !== 'healthy' || mockResA.body?.data?.mode !== 'live') {
+        throw new Error(`Live AI healthy check failed: ${JSON.stringify(mockResA.body)}`);
+      }
+      logger.info('✅ getAiHealth Live Connected test passed');
+
+      // Scenario B: Live AI service returns HTTP 500
+      global.fetch = async () => ({
+        ok: false,
+        status: 500,
+        json: async () => ({ error: 'Internal Server Error' })
+      });
+
+      const mockResB = createMockRes();
+      await getAiHealth({}, mockResB);
+      if (mockResB.statusCode !== 503 || mockResB.body?.error?.code !== 'AI_SERVICE_UNHEALTHY') {
+        throw new Error(`Live AI 500 handling failed: ${JSON.stringify(mockResB.body)}`);
+      }
+      logger.info('✅ getAiHealth Live HTTP 500 handling test passed');
+
+      // Scenario C: Live AI service connection refused / network failure
+      global.fetch = async () => {
+        throw new Error('fetch failed (ECONNREFUSED)');
+      };
+
+      const mockResC = createMockRes();
+      await getAiHealth({}, mockResC);
+      if (mockResC.statusCode !== 503 || mockResC.body?.error?.code !== 'AI_SERVICE_UNAVAILABLE') {
+        throw new Error(`Live AI network failure handling failed: ${JSON.stringify(mockResC.body)}`);
+      }
+      logger.info('✅ getAiHealth Live Network Error / 503 handling test passed');
+    } finally {
+      global.fetch = originalFetch;
+      config.AI_MOCK_MODE = originalMockMode;
+    }
 
     // Test 404 handler
     logger.info('Testing 404 handler on /api/v1/non-existent-route...');
@@ -79,9 +158,9 @@ const runHealthTests = async () => {
     }
     logger.info('✅ 404 Error handler passed:', JSON.stringify(notFoundRes.data));
 
-    logger.info('🎉 All Phase 1 Verification Tests Passed Successfully!');
+    logger.info('🎉 All Health Verification Tests Passed Successfully!');
   } catch (error) {
-    logger.error('❌ Phase 1 Test Failed:', error);
+    logger.error('❌ Health Test Failed:', error);
     process.exitCode = 1;
   } finally {
     server.close();

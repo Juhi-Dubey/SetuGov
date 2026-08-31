@@ -15,6 +15,10 @@ export const register = async ({
 }) => {
   const normalizedEmail = email.trim().toLowerCase();
 
+  if (role === 'ADMIN') {
+    throw new ForbiddenError('Direct registration for the ADMIN role is not permitted.');
+  }
+
   // Check email conflict
   const existingUser = await prisma.user.findUnique({
     where: { email: normalizedEmail }
@@ -34,8 +38,8 @@ export const register = async ({
     }
   }
 
-  // Hash password
-  const password_hash = await bcrypt.hash(password, 10);
+  // Hash password with 12 bcrypt salt rounds (P1-2)
+  const password_hash = await bcrypt.hash(password, 12);
 
   // Create User
   const user = await prisma.user.create({
@@ -114,7 +118,7 @@ export const login = async ({ email, password, ip_address = null }) => {
   }
 
   if (!user.is_active) {
-    throw new ForbiddenError('User account has been deactivated. Please contact an administrator.');
+    throw new UnauthorizedError('User account has been deactivated. Please contact an administrator.');
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);

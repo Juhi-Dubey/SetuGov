@@ -15,7 +15,7 @@ export const createRisk = async (req, res, next) => {
 export const getPilotRisks = async (req, res, next) => {
   try {
     const pilotId = req.params.pilot_id || req.params.id;
-    const risks = await riskService.getPilotRisks(pilotId);
+    const risks = await riskService.getPilotRisks(pilotId, req.user);
     return successResponse(res, { risks }, 'Pilot risks retrieved successfully', 200);
   } catch (error) {
     next(error);
@@ -25,7 +25,7 @@ export const getPilotRisks = async (req, res, next) => {
 export const getRiskById = async (req, res, next) => {
   try {
     const riskId = req.params.risk_id || req.params.id;
-    const risk = await riskService.getRiskById(riskId);
+    const risk = await riskService.getRiskById(riskId, req.user);
     return successResponse(res, { risk }, 'Risk details retrieved successfully', 200);
   } catch (error) {
     next(error);

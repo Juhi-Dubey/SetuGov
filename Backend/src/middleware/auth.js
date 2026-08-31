@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/prisma.js';
 import { config } from '../config/env.js';
+import { isTokenRevoked } from '../utils/tokenRevocation.js';
 import { UnauthorizedError, ForbiddenError } from '../utils/errors.js';
 
 export const authenticate = async (req, res, next) => {
@@ -13,6 +14,11 @@ export const authenticate = async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     if (!token) {
       throw new UnauthorizedError('Authentication token missing.');
+    }
+
+    // P2-7: Check if token has been explicitly revoked
+    if (isTokenRevoked(token)) {
+      throw new UnauthorizedError('Authentication token has been revoked. Please log in again.');
     }
 
     // Verify JWT
@@ -55,7 +61,7 @@ export const authenticate = async (req, res, next) => {
     }
 
     if (!user.is_active) {
-      throw new ForbiddenError('User account has been deactivated. Please contact an administrator.');
+      throw new UnauthorizedError('User account has been deactivated. Please contact an administrator.');
     }
 
     // Attach verified user and active startup context (if startup role) to request

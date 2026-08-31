@@ -75,11 +75,19 @@ const runE2ETests = async () => {
     // ----------------------------------------------------
     logger.info('Step 2: Generating Challenge via AI & Creating Challenge...');
     const aiDraftRes = await request('POST', '/api/v1/ai/challenges/generate', {
-      problem_statement: 'Hospital OPD Waiting Time Reduction via AI Queue Triage',
-      department_name: 'Department of Health & Family Welfare',
-      state: 'Karnataka'
+      problem: {
+        title: 'Hospital OPD Waiting Time Reduction via AI Queue Triage',
+        description: 'Overcrowding in OPD triage and registration resulting in 90-minute wait times across district civil hospitals.',
+        location: 'Karnataka'
+      },
+      outcome: {
+        desired_outcome: 'Reduce average OPD wait time to under 60 minutes with automated digital triage.'
+      }
     }, govToken);
-    logger.info(`✅ AI Challenge draft generated: "${aiDraftRes.body.data.generated_draft.title}"`);
+    if (aiDraftRes.statusCode !== 200 || !aiDraftRes.body.data.problem_summary) {
+      throw new Error(`AI Challenge Copilot failed: ${JSON.stringify(aiDraftRes.body)}`);
+    }
+    logger.info(`✅ AI Challenge Copilot completed: "${aiDraftRes.body.data.problem_summary.slice(0, 80)}..."`);
 
     const challengeRes = await request('POST', '/api/v1/challenges', {
       title: 'Hospital Waiting Time Reduction E2E',
@@ -328,10 +336,10 @@ const runE2ETests = async () => {
     // ----------------------------------------------------
     logger.info('Step 15: Running AI Pilot Performance Analysis...');
     const aiPilotAnalysis = await request('POST', `/api/v1/ai/pilots/${pilot.id}/analyze`, null, govToken);
-    if (aiPilotAnalysis.statusCode !== 200 || !aiPilotAnalysis.body.data.recommendation) {
+    if (aiPilotAnalysis.statusCode !== 200 || !aiPilotAnalysis.body.data.overall_assessment || !Array.isArray(aiPilotAnalysis.body.data.kpi_analyses)) {
       throw new Error(`AI Pilot analysis failed: ${JSON.stringify(aiPilotAnalysis)}`);
     }
-    logger.info(`✅ AI Analysis Completed: Recommended Decision = '${aiPilotAnalysis.body.data.recommendation}' (Confidence: ${aiPilotAnalysis.body.data.confidence_score}%)`);
+    logger.info(`✅ AI Analysis Completed: Overall Assessment = '${aiPilotAnalysis.body.data.overall_assessment}' (KPI Analyses: ${aiPilotAnalysis.body.data.kpi_analyses.length})`);
 
     // ----------------------------------------------------
     // STEP 16: Government Completes Pilot & Finalizes Scale Decision

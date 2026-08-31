@@ -13,7 +13,7 @@ export const createPilot = async (req, res, next) => {
 
 export const getPilots = async (req, res, next) => {
   try {
-    const result = await pilotService.getPilots(req.query);
+    const result = await pilotService.getPilots(req.query, req.user);
     return successResponse(res, result, 'Pilots retrieved successfully', 200);
   } catch (error) {
     next(error);
@@ -23,7 +23,7 @@ export const getPilots = async (req, res, next) => {
 export const getPilotById = async (req, res, next) => {
   try {
     const pilotId = req.params.pilot_id || req.params.id;
-    const pilot = await pilotService.getPilotById(pilotId);
+    const pilot = await pilotService.getPilotById(pilotId, req.user);
     return successResponse(res, { pilot }, 'Pilot details retrieved successfully', 200);
   } catch (error) {
     next(error);
@@ -66,7 +66,7 @@ export const completePilot = async (req, res, next) => {
 export const getPilotDashboard = async (req, res, next) => {
   try {
     const pilotId = req.params.pilot_id || req.params.id;
-    const dashboard = await pilotService.getPilotDashboard(pilotId);
+    const dashboard = await pilotService.getPilotDashboard(pilotId, req.user);
     return successResponse(res, dashboard, 'Pilot dashboard retrieved successfully', 200);
   } catch (error) {
     next(error);

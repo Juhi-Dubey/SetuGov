@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { validateTransition } from '../utils/lifecycle.js';
+import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
 
 export const createPilot = async (data, user, ip_address = null) => {
@@ -11,6 +12,13 @@ export const createPilot = async (data, user, ip_address = null) => {
 
   if (!challenge) {
     throw new NotFoundError(`Challenge with ID ${data.challenge_id} not found.`);
+  }
+
+  // Tenant check for GOVERNMENT role
+  if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only create pilots for challenges belonging to your assigned department.');
+    }
   }
 
   // 2. Verify startup is SELECTED for this challenge
@@ -93,7 +101,7 @@ export const createPilot = async (data, user, ip_address = null) => {
   return pilot;
 };
 
-export const getPilots = async (query = {}) => {
+export const getPilots = async (query = {}, user = null) => {
   const {
     status,
     challenge_id,
@@ -107,8 +115,22 @@ export const getPilots = async (query = {}) => {
   if (challenge_id) where.challenge_id = challenge_id;
   if (startup_id) where.startup_id = startup_id;
 
-  const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
-  const take = parseInt(limit, 10);
+  // P0-4: Scope pilots by user role / tenant
+  if (user) {
+    if (user.role === 'GOVERNMENT') {
+      if (!user.department_id) {
+        throw new ForbiddenError('Government official must be assigned to a department to list pilots.');
+      }
+      where.challenge = { department_id: user.department_id };
+    } else if (user.role === 'STARTUP') {
+      where.startup = { user_id: user.id };
+    }
+  }
+
+  const safePage = Math.max(1, parseInt(page, 10) || 1);
+  const safeLimit = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+  const skip = (safePage - 1) * safeLimit;
+  const take = safeLimit;
 
   const [total, pilots] = await Promise.all([
     prisma.pilot.count({ where }),
@@ -155,14 +177,18 @@ export const getPilots = async (query = {}) => {
     pilots,
     pagination: {
       total,
-      page: parseInt(page, 10),
-      limit: take,
-      totalPages: Math.ceil(total / take)
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit)
     }
   };
 };
 
-export const getPilotById = async (id) => {
+export const getPilotById = async (id, user = null) => {
+  if (user) {
+    await verifyPilotAccess(id, user, 'READ');
+  }
+
   const pilot = await prisma.pilot.findUnique({
     where: { id },
     include: {
@@ -229,18 +255,27 @@ export const getPilotById = async (id) => {
 };
 
 export const updatePilot = async (id, data, user, ip_address = null) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${id} not found.`);
-  }
+  // P0-3: Centralized pilot access verification
+  const pilot = await verifyPilotAccess(id, user, 'PILOT_LIFECYCLE');
 
-  if (data.status && data.status !== pilot.status) {
-    validateTransition('PILOT', pilot.status, data.status);
+  // P1-6: Whitelist allowable update fields (eliminate mass assignment)
+  const allowedFields = ['location', 'start_date', 'end_date', 'budget'];
+  const updateData = {};
+  for (const field of allowedFields) {
+    if (data[field] !== undefined) {
+      if (field === 'start_date' || field === 'end_date') {
+        updateData[field] = new Date(data[field]);
+      } else if (field === 'location') {
+        updateData[field] = data[field].trim();
+      } else {
+        updateData[field] = data[field];
+      }
+    }
   }
 
   const updated = await prisma.pilot.update({
     where: { id },
-    data,
+    data: updateData,
     include: {
       challenge: true,
       startup: true
@@ -252,7 +287,7 @@ export const updatePilot = async (id, data, user, ip_address = null) => {
     action: 'PILOT_UPDATED',
     entity_type: 'PILOT',
     entity_id: id,
-    details: { changes: data },
+    details: { changes: updateData },
     ip_address
   });
 
@@ -260,10 +295,7 @@ export const updatePilot = async (id, data, user, ip_address = null) => {
 };
 
 export const startPilot = async (id, user, ip_address = null) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${id} not found.`);
-  }
+  const pilot = await verifyPilotAccess(id, user, 'PILOT_LIFECYCLE');
 
   validateTransition('PILOT', pilot.status, 'RUNNING');
 
@@ -285,10 +317,7 @@ export const startPilot = async (id, user, ip_address = null) => {
 };
 
 export const completePilot = async (id, user, ip_address = null) => {
-  const pilot = await prisma.pilot.findUnique({ where: { id } });
-  if (!pilot) {
-    throw new NotFoundError(`Pilot with ID ${id} not found.`);
-  }
+  const pilot = await verifyPilotAccess(id, user, 'PILOT_LIFECYCLE');
 
   validateTransition('PILOT', pilot.status, 'COMPLETED');
 
@@ -309,7 +338,10 @@ export const completePilot = async (id, user, ip_address = null) => {
   return updated;
 };
 
-export const getPilotDashboard = async (id) => {
+export const getPilotDashboard = async (id, user = null) => {
+  if (user) {
+    await verifyPilotAccess(id, user, 'READ');
+  }
   const pilot = await prisma.pilot.findUnique({
     where: { id },
     include: {

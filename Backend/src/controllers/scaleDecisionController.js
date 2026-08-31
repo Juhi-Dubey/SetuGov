@@ -15,7 +15,7 @@ export const createScaleDecision = async (req, res, next) => {
 export const getScaleDecision = async (req, res, next) => {
   try {
     const pilotId = req.params.pilot_id || req.params.id;
-    const decision = await scaleDecisionService.getScaleDecision(pilotId);
+    const decision = await scaleDecisionService.getScaleDecision(pilotId, req.user);
     return successResponse(res, { scaleDecision: decision }, 'Scale decision retrieved', 200);
   } catch (error) {
     next(error);
