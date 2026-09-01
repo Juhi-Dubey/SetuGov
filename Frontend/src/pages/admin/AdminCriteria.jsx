@@ -239,7 +239,7 @@ function AdminCriteria() {
         <button
           type="button"
           onClick={() =>
-            navigate("/admin")
+            navigate("/admin/dashboard")
           }
           className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
         >

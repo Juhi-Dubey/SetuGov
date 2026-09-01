@@ -7,6 +7,7 @@ import {
   Building2,
   CalendarDays,
   ArrowRight,
+  ArrowLeft,
   CheckCircle2,
   Clock3,
   AlertCircle,
@@ -75,37 +76,50 @@ function EvaluatorAssignments({ evaluations = [] }) {
       {/* HEADER                                            */}
       {/* ================================================= */}
 
-      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-              <ClipboardCheck className="h-5 w-5" />
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-8">
+        <button
+          type="button"
+          onClick={() =>
+            navigate("/evaluator/dashboard")
+          }
+          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Evaluator Dashboard
+        </button>
+
+        <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                <ClipboardCheck className="h-5 w-5" />
+              </div>
+
+              <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+                Evaluator Workspace
+              </span>
             </div>
 
-            <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-              Evaluator Workspace
-            </span>
+            <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+              Evaluation Assignments
+            </h1>
+
+            <p className="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
+              Review your assigned startup proposals,
+              manage evaluation deadlines and complete
+              independent assessments.
+            </p>
           </div>
 
-          <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-            Evaluation Assignments
-          </h1>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              Total Assignments
+            </p>
 
-          <p className="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
-            Review your assigned startup proposals,
-            manage evaluation deadlines and complete
-            independent assessments.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-            Total Assignments
-          </p>
-
-          <p className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
-            {evaluations.length}
-          </p>
+            <p className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
+              {evaluations.length}
+            </p>
+          </div>
         </div>
       </section>
 

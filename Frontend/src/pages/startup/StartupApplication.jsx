@@ -38,6 +38,27 @@ const challengeData = {
     deadline: "15 Sep 2026",
     budget: "₹35 Lakhs",
   },
+  4: {
+    title: "Agricultural Market Intelligence",
+    department: "Department of Agriculture",
+    category: "Agriculture",
+    deadline: "20 Sep 2026",
+    budget: "₹30 Lakhs",
+  },
+  5: {
+    title: "Digital Public Transport Monitoring",
+    department: "Transport Department",
+    category: "Transportation",
+    deadline: "28 Sep 2026",
+    budget: "₹50 Lakhs",
+  },
+  6: {
+    title: "Government Document Intelligence",
+    department: "Department of Administration",
+    category: "Artificial Intelligence",
+    deadline: "02 Oct 2026",
+    budget: "₹20 Lakhs",
+  },
 };
 
 const defaultChallenge = {

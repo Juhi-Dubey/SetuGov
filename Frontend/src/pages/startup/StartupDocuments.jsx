@@ -123,6 +123,8 @@ function StartupDocuments() {
         ),
         uploaded: formatCurrentDate(),
         status: "Under Review",
+        file: selectedFile,
+        fileUrl: URL.createObjectURL(selectedFile),
       };
 
       setDocuments((previous) => [
@@ -787,6 +789,42 @@ function DocumentModal({
   document,
   onClose,
 }) {
+  const handleDownload = () => {
+    if (document.fileUrl) {
+      const link = window.document.createElement("a");
+      link.href = document.fileUrl;
+      link.download = document.fileName || "document";
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      return;
+    }
+
+    if (document.file) {
+      const url = URL.createObjectURL(document.file);
+      const link = window.document.createElement("a");
+      link.href = url;
+      link.download = document.fileName || "document";
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    // Default mock documents fallback
+    const content = `Document: ${document.name}\nCategory: ${document.category}\nFile Name: ${document.fileName}\nUploaded: ${document.uploaded}\nStatus: ${document.status}\n\nSetuGov Platform Demo Document Content.`;
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = window.document.createElement("a");
+    link.href = url;
+    link.download = document.fileName || `${document.name}.txt`;
+    window.document.body.appendChild(link);
+    link.click();
+    window.document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
       <motion.div
@@ -855,11 +893,7 @@ function DocumentModal({
 
         <button
           type="button"
-          onClick={() => {
-            alert(
-              "Download action will be connected to the backend later."
-            );
-          }}
+          onClick={handleDownload}
           className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-bold text-white hover:bg-indigo-700"
         >
           <Download className="h-4 w-4" />

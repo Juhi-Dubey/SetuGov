@@ -111,7 +111,27 @@ function AppRoutes() {
       />
 
       <Route
+        path="/startup/challenges/:id"
+        element={<StartupChallenges />}
+      />
+
+      <Route
+        path="/startup/application"
+        element={<StartupApplication />}
+      />
+
+      <Route
+        path="/startup/application/:id"
+        element={<StartupApplication />}
+      />
+
+      <Route
         path="/startup/applications"
+        element={<StartupApplication />}
+      />
+
+      <Route
+        path="/startup/applications/:id"
         element={<StartupApplication />}
       />
 
@@ -156,9 +176,10 @@ function AppRoutes() {
       />
 
 
-      {/* =====================================================
-          ADMIN
-      ===================================================== */}
+      <Route
+        path="/admin"
+        element={<Navigate to="/admin/dashboard" replace />}
+      />
 
       <Route
         path="/admin/dashboard"
@@ -188,6 +209,21 @@ function AppRoutes() {
       <Route
         path="/admin/audit"
         element={<AdminAudit />}
+      />
+
+      <Route
+        path="/startup"
+        element={<Navigate to="/startup/dashboard" replace />}
+      />
+
+      <Route
+        path="/government"
+        element={<Navigate to="/government/dashboard" replace />}
+      />
+
+      <Route
+        path="/evaluator"
+        element={<Navigate to="/evaluator/dashboard" replace />}
       />
 
 
