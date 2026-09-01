@@ -48,6 +48,7 @@ import AdminCriteria from "../pages/admin/AdminCriteria";
 import AdminTemplates from "../pages/admin/AdminTemplates";
 import AdminAudit from "../pages/admin/AdminAudit";
 import AdminSettings from "../pages/admin/AdminSettings";
+import NotFound from "../pages/NotFound";
 
 import AppLayout from "../components/layout/AppLayout";
 
@@ -380,12 +381,12 @@ function AppRoutes() {
 
 
       {/* =====================================================
-          FALLBACK
+          FALLBACK (404 NOT FOUND)
       ===================================================== */}
 
       <Route
         path="*"
-        element={<Navigate to="/login" replace />}
+        element={<NotFound />}
       />
 
     </Routes>
