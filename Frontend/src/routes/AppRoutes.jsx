@@ -34,6 +34,7 @@ import StartupPilot from "../pages/startup/StartupPilot";
 
 import EvaluatorDashboard from "../pages/evaluator/EvaluatorDashboard";
 import EvaluatorAssignments from "../pages/evaluator/EvaluatorAssignments";
+import EvaluatorEvaluations from "../pages/evaluator/EvaluatorEvaluations";
 import EvaluationDetail from "../pages/evaluator/EvaluationDetail";
 
 // =====================================================
@@ -46,6 +47,9 @@ import AdminStartups from "../pages/admin/AdminStartups";
 import AdminCriteria from "../pages/admin/AdminCriteria";
 import AdminTemplates from "../pages/admin/AdminTemplates";
 import AdminAudit from "../pages/admin/AdminAudit";
+import AdminSettings from "../pages/admin/AdminSettings";
+
+import AppLayout from "../components/layout/AppLayout";
 
 function AppRoutes() {
   return (
@@ -95,6 +99,11 @@ function AppRoutes() {
         element={<ChallengePilot />}
       />
 
+        <Route  
+        path="/government/pilots"
+        element={<ChallengePilot />}
+      />
+
 
       {/* =====================================================
           STARTUP
@@ -102,57 +111,110 @@ function AppRoutes() {
 
       <Route
         path="/startup/dashboard"
-        element={<StartupDashboard />}
+        element={
+          <AppLayout role="startup">
+            <StartupDashboard />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/startup/challenges"
-        element={<StartupChallenges />}
+        element={
+          <AppLayout role="startup">
+            <StartupChallenges />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/startup/challenges/:id"
-        element={<StartupChallenges />}
+        element={
+          <AppLayout role="startup">
+            <StartupChallenges />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/startup/application"
-        element={<StartupApplication />}
+        element={
+          <AppLayout role="startup">
+            <StartupApplication />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/startup/application/:id"
-        element={<StartupApplication />}
+        element={
+          <AppLayout role="startup">
+            <StartupApplication />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/startup/applications"
-        element={<StartupApplication />}
+        element={
+          <AppLayout role="startup">
+            <StartupApplication />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/startup/applications/:id"
-        element={<StartupApplication />}
+        element={
+          <AppLayout role="startup">
+            <StartupApplication />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/startup/documents"
-        element={<StartupDocuments />}
+        element={
+          <AppLayout role="startup">
+            <StartupDocuments />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/startup/payments"
-        element={<StartupPayments />}
+        element={
+          <AppLayout role="startup">
+            <StartupPayments />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/startup/profile"
-        element={<StartupProfile />}
+        element={
+          <AppLayout role="startup">
+            <StartupProfile />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/startup/pilot"
-        element={<StartupPilot />}
+        element={
+          <AppLayout role="startup">
+            <StartupPilot />
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/startup/pilots"
+        element={
+          <AppLayout role="startup">
+            <StartupPilot />
+          </AppLayout>
+        }
       />
 
 
@@ -162,19 +224,62 @@ function AppRoutes() {
 
       <Route
         path="/evaluator/dashboard"
-        element={<EvaluatorDashboard />}
+        element={
+          <AppLayout role="evaluator">
+            <EvaluatorDashboard />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/evaluator/assignments"
-        element={<EvaluatorAssignments />}
+        element={
+          <AppLayout role="evaluator">
+            <EvaluatorAssignments />
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/evaluator/evaluation"
+        element={
+          <AppLayout role="evaluator">
+            <EvaluatorEvaluations />
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/evaluator/evaluations"
+        element={
+          <AppLayout role="evaluator">
+            <EvaluatorEvaluations />
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/evaluator/evaluation/:id"
+        element={
+          <AppLayout role="evaluator">
+            <EvaluationDetail />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/evaluator/evaluations/:id"
-        element={<EvaluationDetail />}
+        element={
+          <AppLayout role="evaluator">
+            <EvaluationDetail />
+          </AppLayout>
+        }
       />
 
+
+      {/* =====================================================
+          ADMIN
+      ===================================================== */}
 
       <Route
         path="/admin"
@@ -183,32 +288,79 @@ function AppRoutes() {
 
       <Route
         path="/admin/dashboard"
-        element={<AdminDashboard />}
+        element={
+          <AppLayout role="admin">
+            <AdminDashboard />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/admin/users"
-        element={<AdminUsers />}
+        element={
+          <AppLayout role="admin">
+            <AdminUsers />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/admin/startups"
-        element={<AdminStartups />}
+        element={
+          <AppLayout role="admin">
+            <AdminStartups />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/admin/criteria"
-        element={<AdminCriteria />}
+        element={
+          <AppLayout role="admin">
+            <AdminCriteria />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/admin/templates"
-        element={<AdminTemplates />}
+        element={
+          <AppLayout role="admin">
+            <AdminTemplates />
+          </AppLayout>
+        }
       />
 
       <Route
         path="/admin/audit"
-        element={<AdminAudit />}
+        element={
+          <AppLayout role="admin">
+            <AdminAudit />
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/admin/settings"
+        element={
+          <AppLayout role="admin">
+            <AdminSettings />
+          </AppLayout>
+        }
+      />
+
+      <Route
+        path="/admin/seetings"
+        element={<Navigate to="/admin/settings" replace />}
+      />
+
+      <Route
+        path="/government/settings"
+        element={
+          <AppLayout role="government">
+            <AdminSettings />
+          </AppLayout>
+        }
       />
 
       <Route

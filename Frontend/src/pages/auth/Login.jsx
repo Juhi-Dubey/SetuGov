@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -10,6 +10,8 @@ import {
   ArrowRight,
   ShieldCheck,
   Sparkles,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 function Login() {
@@ -23,6 +25,19 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem("theme") !== "light";
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+  }, [isDark]);
+
+  const toggleTheme = () => {
+    setIsDark((prev) => !prev);
+  };
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -95,10 +110,10 @@ function Login() {
     <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-white">
       <div className="grid min-h-screen lg:grid-cols-2">
         {/* Left Branding Section */}
-        <div className="relative hidden overflow-hidden bg-slate-900 lg:flex">
+        <div className="relative hidden overflow-hidden border-r border-slate-200 bg-slate-100/80 transition-colors duration-300 dark:border-slate-800 dark:bg-slate-900 lg:flex">
           {/* Background decorations */}
-          <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl" />
-          <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl" />
+          <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl dark:bg-indigo-500/20" />
+          <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl dark:bg-blue-500/20" />
 
           <div className="relative z-10 flex w-full flex-col justify-between p-12 xl:p-16">
             {/* Logo */}
@@ -108,16 +123,16 @@ function Login() {
               transition={{ duration: 0.5 }}
               className="flex items-center gap-3"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 backdrop-blur">
-                <Building2 className="h-6 w-6 text-white" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm backdrop-blur dark:bg-white/10 dark:text-white">
+                <Building2 className="h-6 w-6" />
               </div>
 
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-white">
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                   GovInnov
                 </h1>
 
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Innovation Procurement OS
                 </p>
               </div>
@@ -130,39 +145,39 @@ function Login() {
               transition={{ duration: 0.7, delay: 0.15 }}
               className="max-w-xl"
             >
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-                <Sparkles className="h-4 w-4" />
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
+                <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                 Innovation Procurement Platform
               </div>
 
-              <h2 className="text-4xl font-bold leading-tight text-white xl:text-5xl">
+              <h2 className="text-4xl font-bold leading-tight text-slate-900 dark:text-white xl:text-5xl">
                 Transform government challenges into
-                <span className="text-indigo-400"> innovative solutions.</span>
+                <span className="text-indigo-600 dark:text-indigo-400"> innovative solutions.</span>
               </h2>
 
-              <p className="mt-6 max-w-lg text-base leading-7 text-slate-400">
+              <p className="mt-6 max-w-lg text-base leading-7 text-slate-600 dark:text-slate-400">
                 Connect government departments, startups and evaluators through
                 a structured innovation procurement lifecycle.
               </p>
 
               <div className="mt-10 grid grid-cols-3 gap-4">
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-                  <p className="text-2xl font-bold text-white">01</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">01</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                     Create Challenges
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-                  <p className="text-2xl font-bold text-white">02</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">02</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                     Discover Startups
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
-                  <p className="text-2xl font-bold text-white">03</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+                  <p className="text-2xl font-bold text-slate-900 dark:text-white">03</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                     Scale Solutions
                   </p>
                 </div>
@@ -178,7 +193,19 @@ function Login() {
         </div>
 
         {/* Login Section */}
-        <div className="flex items-center justify-center px-6 py-12 sm:px-10 lg:px-12">
+        <div className="relative flex items-center justify-center px-6 py-12 sm:px-10 lg:px-12">
+          {/* Top Theme Switcher */}
+          <div className="absolute right-6 top-6">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+          </div>
+
           <motion.div
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}

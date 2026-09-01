@@ -15,32 +15,64 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-function EvaluatorDashboard({ evaluations = [] }) {
+const defaultEvaluations = [
+  {
+    id: 1,
+    challengeTitle: "AI-Based Citizen Grievance Management",
+    startupName: "TechNova Solutions",
+    domain: "Artificial Intelligence",
+    dueDate: "05 Sep 2026",
+    status: "Pending",
+    priority: "High",
+  },
+  {
+    id: 2,
+    challengeTitle: "Smart Waste Collection System",
+    startupName: "GreenGrid Technologies",
+    domain: "Smart City",
+    dueDate: "12 Sep 2026",
+    status: "Completed",
+    priority: "Medium",
+  },
+  {
+    id: 3,
+    challengeTitle: "Digital Healthcare Access Platform",
+    startupName: "MediPulse AI",
+    domain: "Healthcare",
+    dueDate: "15 Sep 2026",
+    status: "Pending",
+    priority: "High",
+  },
+  {
+    id: 4,
+    challengeTitle: "Agricultural Market Intelligence",
+    startupName: "AgriConnect Labs",
+    domain: "Agriculture",
+    dueDate: "20 Sep 2026",
+    status: "Completed",
+    priority: "Low",
+  },
+  {
+    id: 5,
+    challengeTitle: "Digital Public Transport Monitoring",
+    startupName: "UrbanTransit Tech",
+    domain: "Transportation",
+    dueDate: "28 Aug 2026",
+    status: "Overdue",
+    priority: "High",
+  },
+];
+
+function EvaluatorDashboard({ evaluations: propEvaluations }) {
   const navigate = useNavigate();
+
+  const evaluations =
+    propEvaluations && propEvaluations.length > 0
+      ? propEvaluations
+      : defaultEvaluations;
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-
-  /*
-   * Backend-ready data structure.
-   *
-   * evaluations will later come from:
-   * evaluationService.js
-   *
-   * Example backend object:
-   *
-   * {
-   *   id: "evaluation-id",
-   *   challengeTitle: "...",
-   *   startupName: "...",
-   *   domain: "...",
-   *   dueDate: "...",
-   *   status: "Pending",
-   *   priority: "High"
-   * }
-   *
-   * No business data is hardcoded here.
-   */
 
   const stats = useMemo(() => {
     const assigned = evaluations.length;
@@ -104,7 +136,7 @@ function EvaluatorDashboard({ evaluations = [] }) {
       className="space-y-6"
     >
       {/* ================================================= */}
-      {/* PAGE HEADER                                        */}
+      {/* PAGE HEADER                                       */}
       {/* ================================================= */}
 
       <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -119,13 +151,12 @@ function EvaluatorDashboard({ evaluations = [] }) {
             </p>
           </div>
 
-          <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+          <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
             Good morning
           </h1>
 
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Review assigned startup proposals and submit
-            independent evaluations.
+            Review assigned startup proposals and submit independent evaluations.
           </p>
         </div>
       </section>
@@ -206,19 +237,18 @@ function EvaluatorDashboard({ evaluations = [] }) {
           </div>
         </section>
 
-        <section className="rounded-3xl border border-indigo-100 bg-indigo-50/60 p-6 dark:border-indigo-500/20 dark:bg-indigo-500/5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
             <ClipboardCheck className="h-5 w-5" />
           </div>
 
           <h2 className="mt-4 text-base font-bold text-slate-900 dark:text-white">
-            Evaluation Workspace
+            Evaluation Guidelines
           </h2>
 
           <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
-            Review proposals, assess technical feasibility,
-            innovation, impact, scalability and cost
-            effectiveness.
+            Review proposals, assess technical feasibility, innovation, impact,
+            scalability and cost effectiveness against requirements.
           </p>
 
           <button

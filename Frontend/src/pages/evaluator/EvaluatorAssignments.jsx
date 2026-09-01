@@ -16,8 +16,61 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-function EvaluatorAssignments({ evaluations = [] }) {
+const defaultEvaluations = [
+  {
+    id: 1,
+    challengeTitle: "AI-Based Citizen Grievance Management",
+    startupName: "TechNova Solutions",
+    domain: "Artificial Intelligence",
+    dueDate: "05 Sep 2026",
+    status: "Pending",
+    priority: "High",
+  },
+  {
+    id: 2,
+    challengeTitle: "Smart Waste Collection System",
+    startupName: "GreenGrid Technologies",
+    domain: "Smart City",
+    dueDate: "12 Sep 2026",
+    status: "Completed",
+    priority: "Medium",
+  },
+  {
+    id: 3,
+    challengeTitle: "Digital Healthcare Access Platform",
+    startupName: "MediPulse AI",
+    domain: "Healthcare",
+    dueDate: "15 Sep 2026",
+    status: "Pending",
+    priority: "High",
+  },
+  {
+    id: 4,
+    challengeTitle: "Agricultural Market Intelligence",
+    startupName: "AgriConnect Labs",
+    domain: "Agriculture",
+    dueDate: "20 Sep 2026",
+    status: "Completed",
+    priority: "Low",
+  },
+  {
+    id: 5,
+    challengeTitle: "Digital Public Transport Monitoring",
+    startupName: "UrbanTransit Tech",
+    domain: "Transportation",
+    dueDate: "28 Aug 2026",
+    status: "Overdue",
+    priority: "High",
+  },
+];
+
+function EvaluatorAssignments({ evaluations: propEvaluations }) {
   const navigate = useNavigate();
+
+  const evaluations =
+    propEvaluations && propEvaluations.length > 0
+      ? propEvaluations
+      : defaultEvaluations;
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");

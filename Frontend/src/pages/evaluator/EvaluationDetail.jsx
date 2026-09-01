@@ -21,6 +21,78 @@ import {
   submitEvaluation,
 } from "../../services/evaluationService";
 
+const fallbackEvaluations = {
+  1: {
+    id: "1",
+    challengeTitle: "AI-Based Citizen Grievance Management",
+    startupName: "TechNova Solutions",
+    domain: "Artificial Intelligence",
+    dueDate: "05 Sep 2026",
+    status: "Pending",
+    priority: "High",
+    solutionSummary: "An NLP-powered automated routing, sentiment analysis and escalation system for citizen grievances.",
+    description: "The startup proposes an end-to-end multi-lingual AI engine that understands voice and text citizen inputs in 12 regional languages.",
+  },
+  2: {
+    id: "2",
+    challengeTitle: "Smart Waste Collection System",
+    startupName: "GreenGrid Technologies",
+    domain: "Smart City",
+    dueDate: "12 Sep 2026",
+    status: "Completed",
+    priority: "Medium",
+    solutionSummary: "IoT sensor network and dynamic route optimization algorithms for municipal garbage trucks.",
+    description: "Solar-powered ultrasonic bin fullness sensors connected over cellular LoRaWAN to optimize municipal routes.",
+    scores: {
+      technicalFeasibility: 90,
+      innovation: 85,
+      expectedImpact: 90,
+      scalability: 85,
+      costEffectiveness: 90,
+    },
+  },
+  3: {
+    id: "3",
+    challengeTitle: "Digital Healthcare Access Platform",
+    startupName: "MediPulse AI",
+    domain: "Healthcare",
+    dueDate: "15 Sep 2026",
+    status: "Pending",
+    priority: "High",
+    solutionSummary: "Telemedicine triage and edge diagnostic software for rural primary health centers.",
+    description: "Edge AI platform running on low-cost tablets with automated vitals capture and doctor teleconsultation.",
+  },
+  4: {
+    id: "4",
+    challengeTitle: "Agricultural Market Intelligence",
+    startupName: "AgriConnect Labs",
+    domain: "Agriculture",
+    dueDate: "20 Sep 2026",
+    status: "Completed",
+    priority: "Low",
+    solutionSummary: "Predictive crop pricing and cold chain logistics matching for farmers.",
+    description: "Satellite data and mandi price analytics to deliver hyper-local price alerts and buyer matching for FPOs.",
+    scores: {
+      technicalFeasibility: 95,
+      innovation: 90,
+      expectedImpact: 90,
+      scalability: 90,
+      costEffectiveness: 95,
+    },
+  },
+  5: {
+    id: "5",
+    challengeTitle: "Digital Public Transport Monitoring",
+    startupName: "UrbanTransit Tech",
+    domain: "Transportation",
+    dueDate: "28 Aug 2026",
+    status: "Overdue",
+    priority: "High",
+    solutionSummary: "Real-time bus tracking and occupancy estimation through camera vision.",
+    description: "CCTV AI analytics and GPS fleet tracking to provide real-time ETAs and crowd levels to commuters.",
+  },
+};
+
 function EvaluationDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -162,7 +234,20 @@ function EvaluationDetail() {
           err
         );
 
-        if (mounted) {
+        if (fallbackEvaluations[id]) {
+          const fallback = fallbackEvaluations[id];
+          setEvaluation(fallback);
+          if (fallback.scores) {
+            setScores(fallback.scores);
+          }
+          if (fallback.comments) {
+            setComments(fallback.comments);
+          }
+          if (fallback.status) {
+            setSubmissionState(fallback.status);
+          }
+          setError("");
+        } else if (mounted) {
           setError(
             err.message ||
               "Failed to load evaluation."

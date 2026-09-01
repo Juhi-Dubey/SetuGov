@@ -8,6 +8,10 @@ import {
   Plus,
   Trash2,
   X,
+  XCircle,
+  Scale,
+  AlertCircle,
+  Percent,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -300,7 +304,7 @@ function AdminCriteria() {
         <SummaryCard
           title="Active Weightage"
           value={`${totalWeight}%`}
-          icon={WeightIcon}
+          icon={Scale}
           type={
             totalWeight === 100
               ? "success"
@@ -329,7 +333,7 @@ function AdminCriteria() {
             {totalWeight === 100 ? (
               <CheckCircle2 className="h-5 w-5" />
             ) : (
-              <WeightIcon className="h-5 w-5" />
+              <AlertCircle className="h-5 w-5" />
             )}
           </div>
 

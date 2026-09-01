@@ -12,13 +12,20 @@ import {
   Sun,
 } from "lucide-react";
 
-function Topbar({ onMenuClick }) {
+function Topbar({ onMenuClick, role = "government" }) {
   const [profileOpen, setProfileOpen] = useState(false);
+
+  const roleNames = {
+    government: "Government Officer",
+    startup: "Startup Founder",
+    evaluator: "Expert Evaluator",
+    admin: "Platform Administrator",
+  };
 
   const user = {
     name: "Demo User",
-    email: "demo@govinnov.gov.in",
-    role: "Government Officer",
+    email: "demo@setugov.in",
+    role: roleNames[role] || "Government Officer",
   };
 
   const handleLogout = () => {
