@@ -130,7 +130,7 @@ pip install -r requirements.txt
 
 ```bash
 # Install a model (example)
-ollama pull llama3.1:8b
+ollama pull llama3.2:3b
 
 # Verify Ollama is running
 curl http://localhost:11434/api/tags
