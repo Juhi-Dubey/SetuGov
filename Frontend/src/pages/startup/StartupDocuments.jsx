@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -73,8 +73,19 @@ function StartupDocuments() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
-  const [documents, setDocuments] =
-    useState(initialDocuments);
+  const [documents, setDocuments] = useState(() => {
+    try {
+      const saved = localStorage.getItem("setugov_documents");
+      return saved ? JSON.parse(saved) : initialDocuments;
+    } catch {
+      return initialDocuments;
+    }
+  });
+
+  useEffect(() => {
+    const toSave = documents.map(({ file, fileUrl, ...rest }) => rest);
+    localStorage.setItem("setugov_documents", JSON.stringify(toSave));
+  }, [documents]);
 
   const [showUpload, setShowUpload] =
     useState(false);

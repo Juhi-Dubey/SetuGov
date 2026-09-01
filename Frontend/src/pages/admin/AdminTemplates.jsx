@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -68,8 +68,18 @@ const initialTemplates = [
 function AdminTemplates() {
   const navigate = useNavigate();
 
-  const [templates, setTemplates] =
-    useState(initialTemplates);
+  const [templates, setTemplates] = useState(() => {
+    try {
+      const saved = localStorage.getItem("setugov_templates");
+      return saved ? JSON.parse(saved) : initialTemplates;
+    } catch {
+      return initialTemplates;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("setugov_templates", JSON.stringify(templates));
+  }, [templates]);
 
   const [selectedTemplate, setSelectedTemplate] =
     useState(null);

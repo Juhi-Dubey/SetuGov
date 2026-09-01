@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -103,8 +103,18 @@ const initialUsers = [
 function AdminUsers() {
   const navigate = useNavigate();
 
-  const [users, setUsers] =
-    useState(initialUsers);
+  const [users, setUsers] = useState(() => {
+    try {
+      const saved = localStorage.getItem("setugov_users");
+      return saved ? JSON.parse(saved) : initialUsers;
+    } catch {
+      return initialUsers;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("setugov_users", JSON.stringify(users));
+  }, [users]);
 
   const [search, setSearch] =
     useState("");

@@ -66,10 +66,17 @@ const defaultEvaluations = [
 function EvaluatorDashboard({ evaluations: propEvaluations }) {
   const navigate = useNavigate();
 
-  const evaluations =
-    propEvaluations && propEvaluations.length > 0
-      ? propEvaluations
-      : defaultEvaluations;
+  const evaluations = useMemo(() => {
+    if (propEvaluations && propEvaluations.length > 0) {
+      return propEvaluations;
+    }
+    try {
+      const saved = localStorage.getItem("setugov_evaluator_assignments");
+      return saved ? JSON.parse(saved) : defaultEvaluations;
+    } catch {
+      return defaultEvaluations;
+    }
+  }, [propEvaluations]);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");

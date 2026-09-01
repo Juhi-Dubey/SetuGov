@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -103,8 +103,18 @@ const initialStartups = [
 function AdminStartups() {
   const navigate = useNavigate();
 
-  const [startups, setStartups] =
-    useState(initialStartups);
+  const [startups, setStartups] = useState(() => {
+    try {
+      const saved = localStorage.getItem("setugov_startups");
+      return saved ? JSON.parse(saved) : initialStartups;
+    } catch {
+      return initialStartups;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("setugov_startups", JSON.stringify(startups));
+  }, [startups]);
 
   const [search, setSearch] =
     useState("");

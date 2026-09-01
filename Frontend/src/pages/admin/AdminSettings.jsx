@@ -22,7 +22,7 @@ function AdminSettings() {
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState("general");
 
-  const [settings, setSettings] = useState({
+  const initialSettings = {
     platformName: "SetuGov Procurement OS",
     supportEmail: "support@setugov.gov.in",
     timezone: "IST (UTC+05:30)",
@@ -34,6 +34,15 @@ function AdminSettings() {
     challengeSubmissionAlerts: true,
     evaluationReminders: true,
     autoBackupEnabled: true,
+  };
+
+  const [settings, setSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem("setugov_admin_settings");
+      return saved ? JSON.parse(saved) : initialSettings;
+    } catch {
+      return initialSettings;
+    }
   });
 
   const handleChange = (field, value) => {
@@ -43,6 +52,7 @@ function AdminSettings() {
 
   const handleSave = (e) => {
     e.preventDefault();
+    localStorage.setItem("setugov_admin_settings", JSON.stringify(settings));
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };

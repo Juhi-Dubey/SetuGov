@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -67,10 +67,21 @@ const defaultEvaluations = [
 function EvaluatorAssignments({ evaluations: propEvaluations }) {
   const navigate = useNavigate();
 
-  const evaluations =
-    propEvaluations && propEvaluations.length > 0
-      ? propEvaluations
-      : defaultEvaluations;
+  const [evaluations, setEvaluations] = useState(() => {
+    if (propEvaluations && propEvaluations.length > 0) {
+      return propEvaluations;
+    }
+    try {
+      const saved = localStorage.getItem("setugov_evaluator_assignments");
+      return saved ? JSON.parse(saved) : defaultEvaluations;
+    } catch {
+      return defaultEvaluations;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("setugov_evaluator_assignments", JSON.stringify(evaluations));
+  }, [evaluations]);
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");

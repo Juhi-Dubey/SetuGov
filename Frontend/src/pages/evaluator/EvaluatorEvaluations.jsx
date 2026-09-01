@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText,
@@ -113,7 +113,18 @@ const initialCompletedEvaluations = [
 function EvaluatorEvaluations() {
   const navigate = useNavigate();
 
-  const [evaluations] = useState(initialCompletedEvaluations);
+  const [evaluations, setEvaluations] = useState(() => {
+    try {
+      const saved = localStorage.getItem("setugov_evaluations_history");
+      return saved ? JSON.parse(saved) : initialCompletedEvaluations;
+    } catch {
+      return initialCompletedEvaluations;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("setugov_evaluations_history", JSON.stringify(evaluations));
+  }, [evaluations]);
   const [search, setSearch] = useState("");
   const [recommendationFilter, setRecommendationFilter] = useState("All");
   const [selectedEvaluation, setSelectedEvaluation] = useState(null);

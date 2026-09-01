@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -69,8 +69,18 @@ const initialCriteria = [
 function AdminCriteria() {
   const navigate = useNavigate();
 
-  const [criteria, setCriteria] =
-    useState(initialCriteria);
+  const [criteria, setCriteria] = useState(() => {
+    try {
+      const saved = localStorage.getItem("setugov_criteria");
+      return saved ? JSON.parse(saved) : initialCriteria;
+    } catch {
+      return initialCriteria;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("setugov_criteria", JSON.stringify(criteria));
+  }, [criteria]);
 
   const [showModal, setShowModal] =
     useState(false);
