@@ -108,6 +108,23 @@ function StartupPilot() {
   const [evidenceError, setEvidenceError] = useState("");
   const [evidenceSuccess, setEvidenceSuccess] = useState("");
 
+  const completedMilestones = milestones.filter(
+    (m) => m.status === "Completed"
+  ).length;
+
+  const handleAddUpdate = () => {
+    if (!updateText.trim()) return;
+    const newUpdate = {
+      id: Date.now(),
+      date: formatCurrentDate(),
+      title: "Startup Progress Update",
+      description: updateText.trim(),
+    };
+    setUpdates((prev) => [newUpdate, ...prev]);
+    setUpdateText("");
+    setShowUpdateForm(false);
+  };
+
   // Load pilot & real evidence from Backend
   useEffect(() => {
     let mounted = true;
@@ -852,13 +869,12 @@ function Milestone({
       <button
         type="button"
         onClick={onClick}
-        className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-white dark:border-slate-950 ${
-          completed
+        className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-white dark:border-slate-950 ${completed
             ? "bg-emerald-500 text-white"
             : inProgress
-            ? "bg-indigo-600 text-white"
-            : "bg-slate-100 text-slate-400 dark:bg-slate-900"
-        }`}
+              ? "bg-indigo-600 text-white"
+              : "bg-slate-100 text-slate-400 dark:bg-slate-900"
+          }`}
         title={
           inProgress
             ? "Mark as completed"
@@ -958,8 +974,8 @@ function DetailRow({
 function EvidenceCard({ evidence }) {
   const isPdf = evidence.file_url?.toLowerCase().endsWith(".pdf");
   const isImage = evidence.file_url?.toLowerCase().endsWith(".png") ||
-                  evidence.file_url?.toLowerCase().endsWith(".jpg") ||
-                  evidence.file_url?.toLowerCase().endsWith(".jpeg");
+    evidence.file_url?.toLowerCase().endsWith(".jpg") ||
+    evidence.file_url?.toLowerCase().endsWith(".jpeg");
 
   const status = evidence.verification_status || "PENDING";
   const isVerified = status === "VERIFIED";
@@ -983,10 +999,10 @@ function EvidenceCard({ evidence }) {
 
   const formattedDate = evidence.created_at || evidence.date
     ? new Date(evidence.created_at || evidence.date).toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-      })
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    })
     : "Recently uploaded";
 
   return (
@@ -998,13 +1014,12 @@ function EvidenceCard({ evidence }) {
           </div>
 
           <span
-            className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
-              isVerified
+            className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${isVerified
                 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
                 : isRejected
-                ? "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
-                : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
-            }`}
+                  ? "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+                  : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
+              }`}
           >
             {isVerified ? "Verified" : isRejected ? "Rejected" : "Pending Review"}
           </span>

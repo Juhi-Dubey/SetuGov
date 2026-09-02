@@ -28,33 +28,82 @@ export const authenticate = async (req, res, next) => {
     }
 
     // Fetch user from database to ensure up-to-date role, department and active state
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        department_id: true,
-        is_active: true,
-        created_at: true,
-        updated_at: true,
-        department: {
+    let user = null;
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          department_id: true,
+          is_active: true,
+          created_at: true,
+          updated_at: true,
+          department: {
+            select: {
+              id: true,
+              name: true,
+              state: true
+            }
+          },
+          startups: {
+            select: {
+              id: true,
+              company_name: true,
+              verification_status: true
+            }
+          }
+        }
+      });
+    } catch (dbErr) {
+      // Retry once if serverless DB pooler connection was sleeping
+      try {
+        await new Promise((r) => setTimeout(r, 250));
+        user = await prisma.user.findUnique({
+          where: { id: decoded.userId },
           select: {
             id: true,
             name: true,
-            state: true
+            email: true,
+            role: true,
+            department_id: true,
+            is_active: true,
+            created_at: true,
+            updated_at: true,
+            department: {
+              select: {
+                id: true,
+                name: true,
+                state: true
+              }
+            },
+            startups: {
+              select: {
+                id: true,
+                company_name: true,
+                verification_status: true
+              }
+            }
           }
-        },
-        startups: {
-          select: {
-            id: true,
-            company_name: true,
-            verification_status: true
-          }
+        });
+      } catch (retryErr) {
+        // Fallback to verified JWT payload if database compute is waking up
+        if (decoded && decoded.userId) {
+          user = {
+            id: decoded.userId,
+            email: decoded.email,
+            role: decoded.role || 'GOVERNMENT',
+            department_id: decoded.department_id || null,
+            is_active: true,
+            startups: []
+          };
+        } else {
+          throw retryErr;
         }
       }
-    });
+    }
 
     if (!user) {
       throw new UnauthorizedError('User account associated with this token no longer exists.');

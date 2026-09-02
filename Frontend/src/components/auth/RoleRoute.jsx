@@ -14,10 +14,9 @@ export function RoleRoute({ children, allowedRoles = [] }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const isAllowed = hasRole(allowedRoles);
+  const isAllowed = !allowedRoles || allowedRoles.length === 0 || hasRole(allowedRoles);
 
   if (!isAllowed) {
-    // Role-specific redirect map
     const defaultDashboard = {
       GOVERNMENT: "/government/dashboard",
       STARTUP: "/startup/dashboard",
@@ -33,10 +32,15 @@ export function RoleRoute({ children, allowedRoles = [] }) {
           </div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">Access Restricted</h2>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Your role (<strong className="font-semibold text-slate-700 dark:text-slate-300">{role}</strong>) does not have permission to view this section.
+            Your role (<strong className="font-semibold text-slate-700 dark:text-slate-300">{role || 'USER'}</strong>) does not have permission to view this section.
           </p>
           <div className="mt-6 flex justify-center gap-3">
-            <Navigate to={defaultDashboard} replace />
+            <a
+              href={defaultDashboard}
+              className="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+            >
+              Return to Dashboard
+            </a>
           </div>
         </div>
       </div>

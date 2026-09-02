@@ -23,6 +23,7 @@ import ChallengePilot from "../pages/government/ChallengePilot";
 import ChallengePayments from "../pages/government/ChallengePayments";
 import ChallengeContract from "../pages/government/ChallengeContract";
 import ChallengeAudit from "../pages/government/ChallengeAudit";
+import GovernmentReports from "../pages/government/GovernmentReports";
 
 // =====================================================
 // STARTUP
@@ -207,7 +208,27 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/government/pilot/:id"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
+              <ChallengePilot />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/government/pilots"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
+              <ChallengePilot />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/government/pilots/:id"
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
@@ -302,9 +323,37 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/government/reports"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
+              <AppLayout role="government">
+                <GovernmentReports />
+              </AppLayout>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/government/report"
+        element={<Navigate to="/government/reports" replace />}
+      />
+      <Route
+        path="/government/templates"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
+              <AppLayout role="government">
+                <AdminTemplates />
+              </AppLayout>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
 
       {/* =====================================================
-          STARTUP ROUTES (Role: STARTUP, ADMIN)
+          STARTUP ROUTES (Role: STARTUP, GOVERNMENT, ADMIN, EVALUATOR)
       ===================================================== */}
       <Route
         path="/startup"
@@ -314,7 +363,7 @@ function AppRoutes() {
         path="/startup/dashboard"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
               <AppLayout role="startup">
                 <StartupDashboard />
               </AppLayout>
@@ -326,7 +375,7 @@ function AppRoutes() {
         path="/startup/challenges"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
               <AppLayout role="startup">
                 <StartupChallenges />
               </AppLayout>
@@ -338,7 +387,7 @@ function AppRoutes() {
         path="/startup/challenges/:id"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
               <AppLayout role="startup">
                 <StartupChallenges />
               </AppLayout>
@@ -350,7 +399,7 @@ function AppRoutes() {
         path="/startup/application"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
               <AppLayout role="startup">
                 <StartupApplication />
               </AppLayout>
@@ -362,7 +411,7 @@ function AppRoutes() {
         path="/startup/application/:id"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
               <AppLayout role="startup">
                 <StartupApplication />
               </AppLayout>
@@ -374,7 +423,7 @@ function AppRoutes() {
         path="/startup/applications"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
               <AppLayout role="startup">
                 <StartupApplication />
               </AppLayout>
@@ -386,7 +435,7 @@ function AppRoutes() {
         path="/startup/applications/:id"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
               <AppLayout role="startup">
                 <StartupApplication />
               </AppLayout>
@@ -398,7 +447,7 @@ function AppRoutes() {
         path="/startup/documents"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
               <AppLayout role="startup">
                 <StartupDocuments />
               </AppLayout>
@@ -410,7 +459,7 @@ function AppRoutes() {
         path="/startup/payments"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
               <AppLayout role="startup">
                 <StartupPayments />
               </AppLayout>
@@ -422,7 +471,7 @@ function AppRoutes() {
         path="/startup/profile"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
               <AppLayout role="startup">
                 <StartupProfile />
               </AppLayout>
@@ -434,7 +483,19 @@ function AppRoutes() {
         path="/startup/pilot"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
+              <AppLayout role="startup">
+                <StartupPilot />
+              </AppLayout>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/startup/pilot/:id"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
               <AppLayout role="startup">
                 <StartupPilot />
               </AppLayout>
@@ -446,7 +507,19 @@ function AppRoutes() {
         path="/startup/pilots"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
+              <AppLayout role="startup">
+                <StartupPilot />
+              </AppLayout>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/startup/pilots/:id"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "ADMIN", "EVALUATOR"]}>
               <AppLayout role="startup">
                 <StartupPilot />
               </AppLayout>
