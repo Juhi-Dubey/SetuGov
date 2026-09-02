@@ -10,107 +10,128 @@ import {
   Plus,
   Upload,
   X,
+  ExternalLink,
+  AlertCircle,
+  Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getStartups, getStartupDocuments, addStartupDocument } from "../../services/startupService.js";
 
-const initialDocuments = [
-  {
-    id: 1,
-    name: "Certificate of Incorporation",
-    category: "Company Registration",
-    fileName: "certificate-of-incorporation.pdf",
-    size: "1.8 MB",
-    uploaded: "12 Aug 2026",
-    status: "Verified",
-  },
-  {
-    id: 2,
-    name: "GST Registration Certificate",
-    category: "Tax & Compliance",
-    fileName: "gst-certificate.pdf",
-    size: "920 KB",
-    uploaded: "12 Aug 2026",
-    status: "Verified",
-  },
-  {
-    id: 3,
-    name: "Company Registration Document",
-    category: "Company Registration",
-    fileName: "company-registration.pdf",
-    size: "1.2 MB",
-    uploaded: "13 Aug 2026",
-    status: "Verified",
-  },
-  {
-    id: 4,
-    name: "Pilot Agreement",
-    category: "Pilot Documents",
-    fileName: "pilot-agreement.pdf",
-    size: "2.4 MB",
-    uploaded: "18 Aug 2026",
-    status: "Verified",
-  },
-  {
-    id: 5,
-    name: "Deployment Report",
-    category: "Pilot Evidence",
-    fileName: "deployment-report.pdf",
-    size: "3.1 MB",
-    uploaded: "28 Aug 2026",
-    status: "Under Review",
-  },
+const documentTypeOptions = [
+  { label: "DPIIT Recognition Certificate", value: "DPIIT_RECOGNITION", category: "Government Recognition" },
+  { label: "Certificate of Incorporation", value: "INCORPORATION_CERTIFICATE", category: "Company Registration" },
+  { label: "GST Registration Certificate", value: "GST_REGISTRATION", category: "Tax & Compliance" },
+  { label: "Tax / Financial Compliance", value: "TAX_COMPLIANCE", category: "Tax & Compliance" },
+  { label: "Pilot Agreement & NDA", value: "PILOT_AGREEMENT", category: "Pilot Documents" },
+  { label: "Other Supporting Document", value: "OTHER", category: "Other" }
 ];
 
-const documentTypes = [
+const reverseTypeMap = {
+  DPIIT_RECOGNITION: { name: "DPIIT Recognition Certificate", category: "Government Recognition" },
+  INCORPORATION_CERTIFICATE: { name: "Certificate of Incorporation", category: "Company Registration" },
+  GST_REGISTRATION: { name: "GST Registration Certificate", category: "Tax & Compliance" },
+  TAX_COMPLIANCE: { name: "Tax Compliance Certificate", category: "Tax & Compliance" },
+  PILOT_AGREEMENT: { name: "Pilot Agreement & NDA", category: "Pilot Documents" },
+  OTHER: { name: "Supporting Document", category: "Other" }
+};
+
+const documentCategories = [
+  "All",
+  "Government Recognition",
   "Company Registration",
   "Tax & Compliance",
   "Pilot Documents",
-  "Pilot Evidence",
-  "Other",
+  "Other"
 ];
 
 function StartupDocuments() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
-  const [documents, setDocuments] = useState(() => {
-    try {
-      const saved = localStorage.getItem("setugov_documents");
-      return saved ? JSON.parse(saved) : initialDocuments;
-    } catch {
-      return initialDocuments;
-    }
-  });
+  const [startupId, setStartupId] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadSuccess, setUploadSuccess] = useState("");
 
+  const [showUpload, setShowUpload] = useState(false);
+  const [selectedType, setSelectedType] = useState(documentTypeOptions[0].value);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [selectedDocument, setSelectedDocument] = useState(null);
+
+  // Fetch current startup and documents from Backend
   useEffect(() => {
-    const toSave = documents.map(({ file, fileUrl, ...rest }) => rest);
-    localStorage.setItem("setugov_documents", JSON.stringify(toSave));
-  }, [documents]);
+    let mounted = true;
+    const fetchStartupAndDocs = async () => {
+      try {
+        setLoading(true);
+        const startupsRes = await getStartups({ limit: 50 });
+        const startups = startupsRes?.data?.startups || [];
+        if (startups.length > 0 && mounted) {
+          const s = startups[0];
+          setStartupId(s.id);
 
-  const [showUpload, setShowUpload] =
-    useState(false);
+          const docsRes = await getStartupDocuments(s.id);
+          const rawDocs = docsRes?.data?.documents || [];
+          const formatted = rawDocs.map((d) => {
+            const meta = reverseTypeMap[d.document_type] || {
+              name: d.document_type?.replace(/_/g, " "),
+              category: "Company Documents"
+            };
+            const filename = d.document_url ? d.document_url.split("/").pop() : "document.pdf";
+            return {
+              id: d.id,
+              name: meta.name,
+              category: meta.category,
+              fileName: filename,
+              size: "Uploaded",
+              uploaded: d.created_at
+                ? new Date(d.created_at).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric"
+                  })
+                : "Recently",
+              status: d.verification_status === "VERIFIED" ? "Verified" : d.verification_status === "REJECTED" ? "Rejected" : "Under Review",
+              document_url: d.document_url,
+              rawDoc: d
+            };
+          });
 
-  const [selectedType, setSelectedType] =
-    useState(documentTypes[0]);
+          if (mounted) {
+            setDocuments(formatted);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load startup documents:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
 
-  const [selectedFiles, setSelectedFiles] =
-    useState([]);
-
-  const [uploading, setUploading] =
-    useState(false);
-
-  const [search, setSearch] =
-    useState("");
-
-  const [categoryFilter, setCategoryFilter] =
-    useState("All");
-
-  const [selectedDocument, setSelectedDocument] =
-    useState(null);
+    fetchStartupAndDocs();
+    return () => { mounted = false; };
+  }, []);
 
   const handleFileSelect = (event) => {
+    setUploadError("");
+    setUploadSuccess("");
     const files = Array.from(event.target.files || []);
     if (files.length === 0) return;
+
+    const allowed = [".pdf", ".png", ".jpg", ".jpeg"];
+    const invalid = files.find((f) => {
+      const ext = f.name.substring(f.name.lastIndexOf(".")).toLowerCase();
+      return !allowed.includes(ext) || f.size > 10 * 1024 * 1024;
+    });
+
+    if (invalid) {
+      setUploadError("Files must be PDF, PNG, or JPG/JPEG and under 10MB each.");
+      return;
+    }
 
     setSelectedFiles((prev) => [...prev, ...files]);
   };
@@ -122,40 +143,68 @@ function StartupDocuments() {
     }
   };
 
-  const handleUpload = () => {
-    if (selectedFiles.length === 0) return;
+  const handleUpload = async () => {
+    if (selectedFiles.length === 0) {
+      setUploadError("Please choose at least one file to upload.");
+      return;
+    }
+    if (!startupId) {
+      setUploadError("No active startup profile found. Please complete startup profile first.");
+      return;
+    }
 
     setUploading(true);
+    setUploadError("");
+    setUploadSuccess("");
 
-    setTimeout(() => {
-      const newDocs = selectedFiles.map((file, i) => ({
-        id: Date.now() + i,
-        name: file.name
-          .replace(/\.[^/.]+$/, "")
-          .replace(/[-_]/g, " "),
-        category: selectedType,
-        fileName: file.name,
-        size: formatFileSize(file.size),
-        uploaded: formatCurrentDate(),
-        status: "Under Review",
-        file,
-        fileUrl: URL.createObjectURL(file),
-      }));
+    try {
+      const uploadedDocs = [];
+      for (const file of selectedFiles) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("document_type", selectedType);
 
-      setDocuments((previous) => [
-        ...newDocs,
-        ...previous,
-      ]);
+        const res = await addStartupDocument(startupId, formData);
+        const raw = res?.data?.document;
+        if (raw) {
+          const meta = reverseTypeMap[raw.document_type] || {
+            name: file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
+            category: "Company Documents"
+          };
+          uploadedDocs.push({
+            id: raw.id,
+            name: meta.name,
+            category: meta.category,
+            fileName: raw.document_url ? raw.document_url.split("/").pop() : file.name,
+            size: formatFileSize(file.size),
+            uploaded: new Date(raw.created_at || Date.now()).toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric"
+            }),
+            status: raw.verification_status === "VERIFIED" ? "Verified" : "Under Review",
+            document_url: raw.document_url,
+            rawDoc: raw
+          });
+        }
+      }
 
+      setDocuments((prev) => [...uploadedDocs, ...prev]);
       setSelectedFiles([]);
-      setSelectedType(documentTypes[0]);
-      setUploading(false);
-      setShowUpload(false);
-
+      setUploadSuccess(`Successfully uploaded ${uploadedDocs.length} document(s)!`);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-    }, 700);
+      setTimeout(() => {
+        setShowUpload(false);
+        setUploadSuccess("");
+      }, 1200);
+    } catch (err) {
+      console.error("Document upload failed:", err);
+      setUploadError(err?.message || "Failed to upload document. Please try again.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const filteredDocuments =
@@ -305,7 +354,13 @@ function StartupDocuments() {
           handleRemoveFile={handleRemoveFile}
           handleUpload={handleUpload}
           uploading={uploading}
-          onClose={() => setShowUpload(false)}
+          uploadError={uploadError}
+          uploadSuccess={uploadSuccess}
+          onClose={() => {
+            setShowUpload(false);
+            setUploadError("");
+            setUploadSuccess("");
+          }}
         />
       )}
 
@@ -322,7 +377,7 @@ function StartupDocuments() {
               </h2>
 
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                All documents uploaded by your startup.
+                All official documents and certificates uploaded by your startup.
               </p>
             </div>
 
@@ -348,17 +403,13 @@ function StartupDocuments() {
                 }
                 className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
               >
-                <option value="All">
-                  All Categories
-                </option>
-
-                {documentTypes.map(
-                  (type) => (
+                {documentCategories.map(
+                  (cat) => (
                     <option
-                      key={type}
-                      value={type}
+                      key={cat}
+                      value={cat}
                     >
-                      {type}
+                      {cat === "All" ? "All Categories" : cat}
                     </option>
                   )
                 )}
@@ -509,6 +560,8 @@ function UploadPanel({
   handleRemoveFile,
   handleUpload,
   uploading,
+  uploadError,
+  uploadSuccess,
   onClose,
 }) {
   return (
@@ -530,7 +583,7 @@ function UploadPanel({
           </h2>
 
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Select a document category and choose one or multiple files to upload.
+            Select an official document category and choose files (PDF, PNG, JPG/JPEG max 10MB).
           </p>
         </div>
 
@@ -543,10 +596,24 @@ function UploadPanel({
         </button>
       </div>
 
+      {uploadError && (
+        <div className="mt-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{uploadError}</span>
+        </div>
+      )}
+
+      {uploadSuccess && (
+        <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-medium text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-400">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <span>{uploadSuccess}</span>
+        </div>
+      )}
+
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <div>
           <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-            Document Category
+            Document Category <span className="text-red-500">*</span>
           </label>
 
           <select
@@ -558,13 +625,13 @@ function UploadPanel({
             }
             className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           >
-            {documentTypes.map(
-              (type) => (
+            {documentTypeOptions.map(
+              (opt) => (
                 <option
-                  key={type}
-                  value={type}
+                  key={opt.value}
+                  value={opt.value}
                 >
-                  {type}
+                  {opt.label}
                 </option>
               )
             )}
@@ -573,13 +640,14 @@ function UploadPanel({
 
         <div>
           <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-            Select Files (Multiple allowed)
+            Select Files (PDF, PNG, JPG max 10MB) <span className="text-red-500">*</span>
           </label>
 
           <input
             ref={fileInputRef}
             type="file"
             multiple
+            accept=".pdf,.png,.jpg,.jpeg"
             onChange={handleFileSelect}
             className="mt-2 block h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-white text-xs text-slate-500 file:mr-3 file:h-full file:border-0 file:bg-slate-100 file:px-3 file:text-[10px] file:font-bold dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:file:bg-slate-900"
           />
@@ -806,6 +874,11 @@ function DocumentModal({
   onClose,
 }) {
   const handleDownload = () => {
+    if (document.document_url) {
+      window.open(document.document_url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
     if (document.fileUrl) {
       const link = window.document.createElement("a");
       link.href = document.fileUrl;
@@ -827,18 +900,6 @@ function DocumentModal({
       URL.revokeObjectURL(url);
       return;
     }
-
-    // Default mock documents fallback
-    const content = `Document: ${document.name}\nCategory: ${document.category}\nFile Name: ${document.fileName}\nUploaded: ${document.uploaded}\nStatus: ${document.status}\n\nSetuGov Platform Demo Document Content.`;
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = window.document.createElement("a");
-    link.href = url;
-    link.download = document.fileName || `${document.name}.txt`;
-    window.document.body.appendChild(link);
-    link.click();
-    window.document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   return (

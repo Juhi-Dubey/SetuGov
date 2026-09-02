@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -17,8 +17,22 @@ import {
   Settings,
   X,
   ArrowRight,
+  CheckCheck,
+  RotateCw,
+  Sparkles,
+  ExternalLink,
+  AlertCircle,
+  Inbox,
+  Clock,
+  Loader2,
+  Check,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+} from "../../services/notificationService.js";
 
 const searchDatabase = [
   // Challenges
@@ -172,14 +186,60 @@ const searchDatabase = [
   },
 ];
 
+import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
+
 function Topbar({ onMenuClick, role = "government" }) {
   const navigate = useNavigate();
+  const { user: authUser, logout } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef(null);
 
+  // Notification State
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState(null);
+  const notificationDropdownRef = useRef(null);
+
+  const fetchNotifications = useCallback(async (silent = false) => {
+    if (!authUser) return;
+    if (!silent) setNotificationsLoading(true);
+    setNotificationsError(null);
+    try {
+      const response = await getNotifications({ limit: 20 });
+      if (response?.data) {
+        setNotifications(response.data.notifications || []);
+        setUnreadCount(response.data.unreadCount ?? 0);
+      }
+    } catch (err) {
+      console.warn("Failed to load notifications:", err);
+      if (!silent) {
+        setNotificationsError(err?.message || "Unable to load notifications.");
+      }
+    } finally {
+      if (!silent) setNotificationsLoading(false);
+    }
+  }, [authUser]);
+
+  // Initial load and periodic refresh every 45 seconds when authenticated
+  useEffect(() => {
+    if (!authUser) return;
+    fetchNotifications(true);
+    const interval = setInterval(() => {
+      fetchNotifications(true);
+    }, 45000);
+    return () => clearInterval(interval);
+  }, [authUser, fetchNotifications]);
+
   const roleNames = {
+    GOVERNMENT: "Government Officer",
+    STARTUP: "Startup Founder",
+    EVALUATOR: "Expert Evaluator",
+    ADMIN: "Platform Administrator",
     government: "Government Officer",
     startup: "Startup Founder",
     evaluator: "Expert Evaluator",
@@ -187,9 +247,9 @@ function Topbar({ onMenuClick, role = "government" }) {
   };
 
   const user = {
-    name: "Demo User",
-    email: "demo@setugov.in",
-    role: roleNames[role] || "Government Officer",
+    name: authUser?.name || "Demo User",
+    email: authUser?.email || "demo@setugov.in",
+    role: roleNames[authUser?.role] || roleNames[role] || "Government Officer",
   };
 
   useEffect(() => {
@@ -197,10 +257,102 @@ function Topbar({ onMenuClick, role = "government" }) {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setSearchOpen(false);
       }
+      if (
+        notificationDropdownRef.current &&
+        !notificationDropdownRef.current.contains(e.target)
+      ) {
+        setIsNotificationOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setSearchOpen(false);
+        setIsNotificationOpen(false);
+        setProfileOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
+
+  const handleNotificationClick = async (item) => {
+    if (!item.is_read) {
+      // Optimistic update
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === item.id ? { ...n, is_read: true } : n))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+      try {
+        await markNotificationAsRead(item.id);
+      } catch (err) {
+        console.warn("Error marking notification read:", err);
+      }
+    }
+
+    if (item.link) {
+      setIsNotificationOpen(false);
+      navigate(item.link);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    if (unreadCount === 0) return;
+    // Optimistic update
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    setUnreadCount(0);
+    try {
+      await markAllNotificationsAsRead();
+    } catch (err) {
+      console.warn("Error marking all read:", err);
+      fetchNotifications(true);
+    }
+  };
+
+  const formatRelativeTime = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) return "Just now";
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case "CHALLENGE_PUBLISHED":
+        return <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />;
+      case "APPLICATION_SUBMITTED":
+      case "APPLICATION_RECEIVED":
+        return <Rocket className="h-4 w-4 text-blue-600 dark:text-blue-400" />;
+      case "APPLICATION_SHORTLISTED":
+      case "APPLICATION_SELECTED":
+        return <CheckCheck className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />;
+      case "APPLICATION_REJECTED":
+        return <AlertCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />;
+      case "EVALUATION_SUBMITTED":
+        return <ClipboardCheck className="h-4 w-4 text-purple-600 dark:text-purple-400" />;
+      case "PILOT_CREATED":
+      case "PILOT_STARTED":
+        return <Rocket className="h-4 w-4 text-amber-600 dark:text-amber-400" />;
+      case "SCALE_DECISION":
+        return <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />;
+      case "STARTUP_VERIFIED":
+        return <CheckCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />;
+      default:
+        return <Bell className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />;
+    }
+  };
 
   const searchResults = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -219,8 +371,14 @@ function Topbar({ onMenuClick, role = "government" }) {
     navigate(path);
   };
 
-  const handleLogout = () => {
-    console.log("Logout requested");
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.warn("Logout error:", err);
+    } finally {
+      navigate("/login", { replace: true });
+    }
   };
 
   return (
@@ -337,15 +495,175 @@ function Topbar({ onMenuClick, role = "government" }) {
         </button>
 
         {/* NOTIFICATIONS */}
-        <button
-          type="button"
-          className="relative rounded-xl p-2.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-900 dark:hover:text-white"
-          aria-label="Notifications"
-        >
-          <Bell className="h-5 w-5" />
+        <div className="relative" ref={notificationDropdownRef}>
+          <button
+            type="button"
+            onClick={() => {
+              const nextState = !isNotificationOpen;
+              setIsNotificationOpen(nextState);
+              if (nextState) {
+                setProfileOpen(false);
+                fetchNotifications(false);
+              }
+            }}
+            className="relative rounded-xl p-2.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-900 dark:hover:text-white"
+            aria-label="Notifications"
+            title="Notifications"
+          >
+            <Bell className="h-5 w-5" />
 
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-indigo-500 ring-2 ring-white dark:ring-slate-950" />
-        </button>
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-600 px-1 text-[10px] font-bold text-white ring-2 ring-white dark:ring-slate-950">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {/* NOTIFICATIONS PANEL */}
+          <AnimatePresence>
+            {isNotificationOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 top-14 w-80 sm:w-96 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900 z-50"
+              >
+                {/* HEADER */}
+                <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                      Notifications
+                    </h3>
+                    {unreadCount > 0 && (
+                      <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400">
+                        {unreadCount} new
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    {unreadCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleMarkAllAsRead}
+                        className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-indigo-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-indigo-400 transition-colors"
+                        title="Mark all as read"
+                      >
+                        <CheckCheck className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Mark all read</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => fetchNotifications(false)}
+                      className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors"
+                      title="Refresh"
+                    >
+                      <RotateCw
+                        className={`h-3.5 w-3.5 ${notificationsLoading ? "animate-spin text-indigo-600" : ""}`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* BODY */}
+                <div className="max-h-[380px] overflow-y-auto">
+                  {notificationsLoading && notifications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center text-slate-400">
+                      <Loader2 className="h-6 w-6 animate-spin text-indigo-600 dark:text-indigo-400 mb-2" />
+                      <p className="text-xs">Loading notifications...</p>
+                    </div>
+                  ) : notificationsError ? (
+                    <div className="p-6 text-center">
+                      <AlertCircle className="mx-auto h-6 w-6 text-rose-500 mb-2" />
+                      <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                        {notificationsError}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => fetchNotifications(false)}
+                        className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                      >
+                        <RotateCw className="h-3 w-3" />
+                        Retry
+                      </button>
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800/60 text-slate-400 mb-3">
+                        <Inbox className="h-6 w-6" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                        No new notifications
+                      </p>
+                      <p className="mt-1 text-xs text-slate-400 max-w-xs">
+                        You don't have any notifications yet. Important updates about challenges, applications, and pilots will appear here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                      {notifications.map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => handleNotificationClick(item)}
+                          className={`group flex items-start gap-3 p-3.5 transition-colors cursor-pointer ${
+                            !item.is_read
+                              ? "bg-indigo-50/40 hover:bg-indigo-50/70 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/40"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                          }`}
+                        >
+                          <div
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
+                              !item.is_read
+                                ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300"
+                                : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                            }`}
+                          >
+                            {getNotificationIcon(item.type)}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <p
+                                className={`text-xs font-semibold truncate ${
+                                  !item.is_read
+                                    ? "text-slate-900 dark:text-white"
+                                    : "text-slate-700 dark:text-slate-300"
+                                }`}
+                              >
+                                {item.title}
+                              </p>
+                              <span className="shrink-0 text-[10px] text-slate-400 flex items-center gap-1">
+                                <Clock className="h-2.5 w-2.5" />
+                                {formatRelativeTime(item.created_at)}
+                              </span>
+                            </div>
+
+                            <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                              {item.message}
+                            </p>
+
+                            {item.link && (
+                              <div className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-400 group-hover:underline">
+                                <span>View details</span>
+                                <ExternalLink className="h-2.5 w-2.5" />
+                              </div>
+                            )}
+                          </div>
+
+                          {!item.is_read && (
+                            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-indigo-600" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* THEME TOGGLE */}
         <ThemeButton />
@@ -477,38 +795,7 @@ function Topbar({ onMenuClick, role = "government" }) {
 /* ================================================= */
 
 function ThemeButton() {
-  const [dark, setDark] = useState(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-
-    const savedTheme =
-      localStorage.getItem("theme");
-
-    if (savedTheme) {
-      return savedTheme === "dark";
-    }
-
-    return window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-  });
-
-  useEffect(() => {
-    const root =
-      document.documentElement;
-
-    root.classList.toggle("dark", dark);
-
-    localStorage.setItem(
-      "theme",
-      dark ? "dark" : "light"
-    );
-  }, [dark]);
-
-  const toggleTheme = () => {
-    setDark((previous) => !previous);
-  };
+  const { isDark, toggleTheme } = useTheme();
 
   return (
     <motion.button
@@ -517,22 +804,11 @@ function ThemeButton() {
       type="button"
       onClick={toggleTheme}
       className="relative flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-900 dark:hover:text-white"
-      aria-label={
-        dark
-          ? "Switch to light mode"
-          : "Switch to dark mode"
-      }
-      title={
-        dark
-          ? "Switch to light mode"
-          : "Switch to dark mode"
-      }
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >
-      <AnimatePresence
-        mode="wait"
-        initial={false}
-      >
-        {dark ? (
+      <AnimatePresence mode="wait" initial={false}>
+        {isDark ? (
           <motion.div
             key="sun"
             initial={{

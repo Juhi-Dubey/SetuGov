@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
+import { sendNotification } from './notificationService.js';
 
 /**
  * Calculate total evaluation score based on official weights:
@@ -98,6 +99,17 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
     },
     ip_address
   });
+
+  // Notify the government official managing the challenge
+  if (application.challenge?.created_by) {
+    await sendNotification({
+      user_id: application.challenge.created_by,
+      title: 'Evaluation Scorecard Submitted',
+      message: `Scorecard of ${total_score}% submitted for "${application.startup?.company_name || 'Startup'}" on challenge "${application.challenge?.title}".`,
+      type: 'EVALUATION_SUBMITTED',
+      link: `/government/challenges/${application.challenge_id}/evaluation`
+    });
+  }
 
   return evaluation;
 };

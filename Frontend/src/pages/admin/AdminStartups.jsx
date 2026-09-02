@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   Eye,
   FileCheck2,
+  FileText,
+  ExternalLink,
   MoreVertical,
   Search,
   ShieldCheck,
@@ -16,6 +18,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getStartupDocuments } from "../../services/startupService.js";
 
 const initialStartups = [
   {
@@ -754,6 +757,27 @@ function StartupDetailsModal({
   onClose,
   onToggleSuspend,
 }) {
+  const [documents, setDocuments] = useState([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    if (startup?.id) {
+      setLoadingDocs(true);
+      getStartupDocuments(startup.id)
+        .then((res) => {
+          if (mounted) {
+            setDocuments(res?.data?.documents || []);
+          }
+        })
+        .catch((err) => console.warn("Admin startup docs fetch:", err))
+        .finally(() => {
+          if (mounted) setLoadingDocs(false);
+        });
+    }
+    return () => { mounted = false; };
+  }, [startup?.id]);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
@@ -835,6 +859,54 @@ function StartupDetailsModal({
             label="Registration Date"
             value={startup.joined}
           />
+        </div>
+
+        {/* SUBMITTED VERIFICATION DOCUMENTS */}
+
+        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Submitted Verification Documents
+            </p>
+            <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">
+              {documents.length} File(s)
+            </span>
+          </div>
+
+          {loadingDocs ? (
+            <p className="mt-2 text-xs text-slate-400">Loading documents...</p>
+          ) : documents.length === 0 ? (
+            <p className="mt-2 text-xs text-slate-400">No verification documents uploaded yet.</p>
+          ) : (
+            <div className="mt-3 space-y-2 max-h-40 overflow-y-auto pr-1">
+              {documents.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-950"
+                >
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <FileText className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                    <span className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200">
+                      {doc.document_type?.replace(/_/g, " ")}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (doc.document_url) {
+                        window.open(doc.document_url, "_blank", "noopener,noreferrer");
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 shrink-0 rounded-lg bg-indigo-50 px-2.5 py-1 text-[10px] font-bold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    View File
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ACTIONS */}

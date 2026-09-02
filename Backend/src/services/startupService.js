@@ -2,6 +2,7 @@ import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { generateMockEmbedding } from '../utils/vector.js';
 import { createAuditLog } from './auditService.js';
+import { sendNotification } from './notificationService.js';
 
 export const createStartup = async (data, user, ip_address = null) => {
   // Check if user already has a startup profile
@@ -300,6 +301,16 @@ export const verifyStartup = async (startupId, data, user, ip_address = null) =>
     },
     ip_address
   });
+
+  if (startup.user_id) {
+    await sendNotification({
+      user_id: startup.user_id,
+      title: `Startup Verification: ${data.verification_status}`,
+      message: `Your startup profile verification status has been updated to ${data.verification_status}.`,
+      type: 'STARTUP_VERIFIED',
+      link: '/startup/dashboard'
+    });
+  }
 
   return updatedStartup;
 };

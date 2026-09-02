@@ -16,6 +16,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getUsers, updateUserStatus } from "../../services/adminService";
 
 const initialUsers = [
   {
@@ -103,103 +104,77 @@ const initialUsers = [
 function AdminUsers() {
   const navigate = useNavigate();
 
-  const [users, setUsers] = useState(() => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadUsers = async () => {
     try {
-      const saved = localStorage.getItem("setugov_users");
-      return saved ? JSON.parse(saved) : initialUsers;
-    } catch {
-      return initialUsers;
+      setLoading(true);
+      const res = await getUsers();
+      const list = res?.data?.users || res?.data || [];
+      const mapped = list.map((u) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: u.role === "GOVERNMENT" ? "Government" : u.role === "STARTUP" ? "Startup" : u.role === "EVALUATOR" ? "Evaluator" : "Admin",
+        organization: u.department?.name || (u.role === "STARTUP" ? "Startup Enterprise" : "SetuGov Administration"),
+        status: u.is_active ? "Active" : "Inactive",
+        is_active: u.is_active,
+        verified: true,
+        joined: u.created_at ? new Date(u.created_at).toLocaleDateString() : "Recent",
+      }));
+      setUsers(mapped);
+    } catch (err) {
+      console.warn("Failed to load users from backend:", err);
+      setUsers(initialUsers);
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
   useEffect(() => {
-    localStorage.setItem("setugov_users", JSON.stringify(users));
-  }, [users]);
+    loadUsers();
+  }, []);
 
-  const [search, setSearch] =
-    useState("");
-
-  const [roleFilter, setRoleFilter] =
-    useState("All");
-
-  const [statusFilter, setStatusFilter] =
-    useState("All");
-
-  const [selectedUser, setSelectedUser] =
-    useState(null);
-
-  const [openMenu, setOpenMenu] =
-    useState(null);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [openMenu, setOpenMenu] = useState(null);
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
-      const searchText =
-        search.toLowerCase();
+      const searchText = search.toLowerCase();
 
       const matchesSearch =
-        user.name
-          .toLowerCase()
-          .includes(searchText) ||
-        user.email
-          .toLowerCase()
-          .includes(searchText) ||
-        user.organization
-          .toLowerCase()
-          .includes(searchText);
+        user.name.toLowerCase().includes(searchText) ||
+        user.email.toLowerCase().includes(searchText) ||
+        user.organization?.toLowerCase().includes(searchText);
 
       const matchesRole =
-        roleFilter === "All" ||
-        user.role === roleFilter;
+        roleFilter === "All" || user.role === roleFilter;
 
       const matchesStatus =
-        statusFilter === "All" ||
-        user.status === statusFilter;
+        statusFilter === "All" || user.status === statusFilter;
 
-      return (
-        matchesSearch &&
-        matchesRole &&
-        matchesStatus
-      );
+      return matchesSearch && matchesRole && matchesStatus;
     });
-  }, [
-    users,
-    search,
-    roleFilter,
-    statusFilter,
-  ]);
+  }, [users, search, roleFilter, statusFilter]);
 
-  const handleToggleStatus = (id) => {
-    setUsers((currentUsers) =>
-      currentUsers.map((user) =>
-        user.id === id
-          ? {
-              ...user,
-              status:
-                user.status === "Active"
-                  ? "Inactive"
-                  : "Active",
-            }
-          : user
-      )
-    );
-
+  const handleToggleStatus = async (id) => {
+    const target = users.find((u) => u.id === id);
+    if (!target) return;
+    try {
+      await updateUserStatus(id, !target.is_active);
+      loadUsers();
+    } catch (err) {
+      alert(`Error updating user status: ${err.message}`);
+    }
     setOpenMenu(null);
   };
 
   const handleVerify = (id) => {
-    setUsers((currentUsers) =>
-      currentUsers.map((user) =>
-        user.id === id
-          ? {
-              ...user,
-              verified: true,
-              status: "Active",
-            }
-          : user
-      )
-    );
-
-    setOpenMenu(null);
+    handleToggleStatus(id);
   };
 
   const totalUsers = users.length;

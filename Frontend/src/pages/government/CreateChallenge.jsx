@@ -7,6 +7,7 @@ import {
   Save,
   Sparkles,
   CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
@@ -17,6 +18,11 @@ import PilotForm from "../../components/challenge/PilotForm";
 import RequirementsForm from "../../components/challenge/RequirementsForm";
 import ChallengeReview from "../../components/challenge/ChallengeReview";
 import AIChallengeCopilot from "../../components/challenge/AIChallengeCopilot";
+import {
+  createChallenge,
+  publishChallenge,
+  normalizeChallengePayload,
+} from "../../services/challengeService";
 
 const initialFormData = {
   // Step 1
@@ -56,6 +62,7 @@ function CreateChallenge() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   // =========================================================
@@ -248,48 +255,67 @@ function CreateChallenge() {
   };
 
   // =========================================================
-  // SAVE DRAFT
+  // SAVE DRAFT & PUBLISH
   // =========================================================
+
+  const buildBackendPayload = () => {
+    return normalizeChallengePayload(formData);
+  };
 
   const handleSaveDraft = async () => {
     try {
       setIsSaving(true);
-
-      // Backend integration can be added here later.
-      await new Promise((resolve) =>
-        setTimeout(resolve, 700)
-      );
-
-      console.log("Challenge draft:", formData);
+      setSubmitError("");
+      const payload = buildBackendPayload();
+      const response = await createChallenge(payload);
+      const createdId =
+        response?.data?.challenge?.id ||
+        response?.data?.id ||
+        response?.challenge?.id ||
+        response?.id;
+      if (createdId) {
+        navigate(`/government/challenges/${createdId}/overview`);
+      } else {
+        navigate("/government/dashboard");
+      }
     } catch (error) {
-      console.error(
-        "Unable to save draft:",
-        error
+      console.error("Unable to save draft challenge:", error);
+      setSubmitError(
+        error.message ||
+          "Some challenge fields have an invalid format. Please review the highlighted fields."
       );
     } finally {
       setIsSaving(false);
     }
   };
 
-  // =========================================================
-  // PUBLISH CHALLENGE
-  // =========================================================
+  const handlePublish = async () => {
+    try {
+      setIsSaving(true);
+      setSubmitError("");
+      const payload = buildBackendPayload();
+      const createRes = await createChallenge(payload);
+      const createdId =
+        createRes?.data?.challenge?.id ||
+        createRes?.data?.id ||
+        createRes?.challenge?.id ||
+        createRes?.id;
 
-  const handlePublish = () => {
-    console.log(
-      "Challenge ready to publish:",
-      formData
-    );
-
-    /*
-      Temporary challenge ID.
-
-      Later this will come from the backend:
-      const response = await publishChallenge(formData);
-      navigate(`/government/challenges/${response.id}/overview`);
-    */
-
-    navigate("/government/challenges/1/overview");
+      if (createdId) {
+        const pubRes = await publishChallenge(createdId);
+        navigate(`/government/challenges/${createdId}/overview`);
+      } else {
+        navigate("/government/dashboard");
+      }
+    } catch (error) {
+      console.error("Unable to publish challenge:", error);
+      setSubmitError(
+        error.message ||
+          "Some challenge fields have an invalid format. Please review the highlighted fields."
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // =========================================================
@@ -539,26 +565,15 @@ function CreateChallenge() {
   };
 
   // =========================================================
-  // AI SUGGESTIONS
+  // AI COPILOT AUTOFILL
   // =========================================================
 
-  const handleApplySuggestions = (
-    suggestions
-  ) => {
+  const handleAutofill = (mappedData) => {
     setFormData((previous) => ({
       ...previous,
-
-      desiredOutcome:
-        suggestions?.objective ??
-        previous.desiredOutcome,
-
-      kpis: suggestions?.kpis?.length
-        ? [
-            ...previous.kpis,
-            ...suggestions.kpis,
-          ]
-        : previous.kpis,
+      ...mappedData,
     }));
+    setErrors({});
   };
 
   // =========================================================
@@ -567,7 +582,7 @@ function CreateChallenge() {
 
   return (
     <AppLayout role="government">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-5xl">
 
         {/* HEADER */}
 
@@ -583,7 +598,7 @@ function CreateChallenge() {
           transition={{
             duration: 0.35,
           }}
-          className="mb-8"
+          className="mb-6"
         >
           <button
             type="button"
@@ -592,7 +607,7 @@ function CreateChallenge() {
                 "/government/dashboard"
               )
             }
-            className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
@@ -605,10 +620,8 @@ function CreateChallenge() {
                 Create Challenge
               </h1>
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                Define an outcome-focused
-                government challenge for
-                innovative startup solutions.
+              <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+                Define an outcome-focused government challenge. Use the AI Challenge Copilot below for instant structured problem framing or complete manually.
               </p>
             </div>
 
@@ -627,6 +640,24 @@ function CreateChallenge() {
           </div>
         </motion.div>
 
+        {/* AI CHALLENGE COPILOT (BRAIN 1) */}
+
+        <AIChallengeCopilot
+          formData={formData}
+          onAutofill={handleAutofill}
+        />
+
+        {/* SUBMISSION ERROR ALERT */}
+        {submitError && (
+          <div className="mb-6 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">
+            <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-bold">Challenge Submission Notice</p>
+              <p className="mt-0.5">{submitError}</p>
+            </div>
+          </div>
+        )}
+
         {/* STEPPER */}
 
         <ChallengeStepper
@@ -635,7 +666,7 @@ function CreateChallenge() {
 
         {/* CONTENT */}
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="mt-6">
 
           {/* FORM */}
 
@@ -814,15 +845,6 @@ function CreateChallenge() {
 
             </div>
           </motion.div>
-
-          {/* AI COPILOT */}
-
-          <AIChallengeCopilot
-            formData={formData}
-            onApplySuggestions={
-              handleApplySuggestions
-            }
-          />
 
         </div>
       </div>

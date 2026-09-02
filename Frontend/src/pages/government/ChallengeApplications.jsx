@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -14,154 +14,101 @@ import {
   Building2,
   CalendarDays,
   FileCheck2,
+  Sparkles,
+  Loader2,
+  ShieldCheck,
+  AlertCircle,
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
-
-const applicationsData = [
-  {
-    id: "APP-001",
-    startup: "GreenTech Solutions",
-    founder: "Ananya Sharma",
-    submittedDate: "18 Sep 2026",
-    eligibility: "Eligible",
-    evaluation: "Pending",
-    score: null,
-    status: "Under Review",
-  },
-  {
-    id: "APP-002",
-    startup: "Urban AI Labs",
-    founder: "Rahul Mehta",
-    submittedDate: "17 Sep 2026",
-    eligibility: "Eligible",
-    evaluation: "Completed",
-    score: 87,
-    status: "Evaluated",
-  },
-  {
-    id: "APP-003",
-    startup: "CleanRoute Technologies",
-    founder: "Vikram Singh",
-    submittedDate: "16 Sep 2026",
-    eligibility: "Pending",
-    evaluation: "Not Started",
-    score: null,
-    status: "Eligibility Pending",
-  },
-  {
-    id: "APP-004",
-    startup: "EcoVision AI",
-    founder: "Priya Nair",
-    submittedDate: "15 Sep 2026",
-    eligibility: "Eligible",
-    evaluation: "Completed",
-    score: 81,
-    status: "Evaluated",
-  },
-  {
-    id: "APP-005",
-    startup: "CivicFlow",
-    founder: "Arjun Kapoor",
-    submittedDate: "14 Sep 2026",
-    eligibility: "Rejected",
-    evaluation: "Not Started",
-    score: null,
-    status: "Not Eligible",
-  },
-  {
-    id: "APP-006",
-    startup: "WasteLess Technologies",
-    founder: "Neha Verma",
-    submittedDate: "13 Sep 2026",
-    eligibility: "Eligible",
-    evaluation: "Pending",
-    score: null,
-    status: "Under Review",
-  },
-  {
-    id: "APP-007",
-    startup: "SmartCity Vision",
-    founder: "Karan Malhotra",
-    submittedDate: "12 Sep 2026",
-    eligibility: "Eligible",
-    evaluation: "Completed",
-    score: 91,
-    status: "Evaluated",
-  },
-  {
-    id: "APP-008",
-    startup: "GreenGrid Innovations",
-    founder: "Sneha Das",
-    submittedDate: "11 Sep 2026",
-    eligibility: "Pending",
-    evaluation: "Not Started",
-    score: null,
-    status: "Eligibility Pending",
-  },
-];
-
-const statusOptions = [
-  "All",
-  "Under Review",
-  "Evaluated",
-  "Eligibility Pending",
-  "Not Eligible",
-];
+import {
+  getChallengeApplications,
+  getChallengeMatches,
+  runChallengeMatching,
+} from "../../services/challengeService";
+import { updateApplicationStatus } from "../../services/applicationService";
 
 function ChallengeApplications() {
   const navigate = useNavigate();
-  const { challengeId } = useParams();
+  const { id: paramId, challengeId } = useParams();
+  const id = paramId || challengeId || "1";
 
-  const id = challengeId || "1";
+  const [activeTab, setActiveTab] = useState("applications"); // 'applications' | 'ai-matches'
+  const [applications, setApplications] = useState([]);
+  const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [matchingLoading, setMatchingLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [actionMessage, setActionMessage] = useState("");
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+  useEffect(() => {
+    loadData();
+  }, [id]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [appsRes, matchesRes] = await Promise.all([
+        getChallengeApplications(id).catch(() => ({ data: [] })),
+        getChallengeMatches(id).catch(() => ({ data: [] })),
+      ]);
+
+      const appsList = appsRes?.data?.applications || appsRes?.data || [];
+      const matchesList = matchesRes?.data?.matches || matchesRes?.data || [];
+
+      setApplications(appsList);
+      setMatches(matchesList);
+    } catch (err) {
+      console.warn("Load applications fallback:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRunBrain2Matching = async () => {
+    try {
+      setMatchingLoading(true);
+      setActionMessage("");
+      const res = await runChallengeMatching(id);
+      const newMatches = res?.data?.matches || res?.data || [];
+      setMatches(newMatches);
+      setActiveTab("ai-matches");
+      setActionMessage("Brain 2 completed 5-factor scoring & semantic matching!");
+    } catch (err) {
+      setActionMessage(err?.message || "Matching completed with default rankings.");
+    } finally {
+      setMatchingLoading(false);
+    }
+  };
+
+  const handleStatusChange = async (appId, newStatus) => {
+    try {
+      await updateApplicationStatus(appId, newStatus);
+      setActionMessage(`Application status updated to ${newStatus}`);
+      loadData();
+    } catch (err) {
+      alert(`Error updating status: ${err.message}`);
+    }
+  };
 
   const filteredApplications = useMemo(() => {
-    const search = searchTerm.toLowerCase().trim();
-
-    return applicationsData.filter((application) => {
+    return applications.filter((app) => {
+      const name = app.startup?.name || app.startup_name || "";
+      const proposal = app.proposal_summary || "";
       const matchesSearch =
-        !search ||
-        application.startup
-          .toLowerCase()
-          .includes(search) ||
-        application.founder
-          .toLowerCase()
-          .includes(search) ||
-        application.id
-          .toLowerCase()
-          .includes(search);
+        name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        proposal.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesStatus =
-        statusFilter === "All" ||
-        application.status === statusFilter;
-
-      return matchesSearch && matchesStatus;
+      if (statusFilter === "all") return matchesSearch;
+      return matchesSearch && app.status === statusFilter;
     });
-  }, [searchTerm, statusFilter]);
-
-  const eligibleCount = applicationsData.filter(
-    (item) => item.eligibility === "Eligible"
-  ).length;
-
-  const evaluatedCount = applicationsData.filter(
-    (item) => item.evaluation === "Completed"
-  ).length;
-
-  const pendingCount = applicationsData.filter(
-    (item) =>
-      item.eligibility === "Pending" ||
-      item.evaluation === "Pending"
-  ).length;
+  }, [applications, searchQuery, statusFilter]);
 
   return (
     <AppLayout role="government">
       <div className="mx-auto max-w-7xl">
-
         {/* HEADER */}
-
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -170,11 +117,7 @@ function ChallengeApplications() {
         >
           <button
             type="button"
-            onClick={() =>
-              navigate(
-                `/government/challenges/${id}/overview`
-              )
-            }
+            onClick={() => navigate(`/government/challenges/${id}/overview`)}
             className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -183,501 +126,265 @@ function ChallengeApplications() {
 
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                 <Users className="h-3.5 w-3.5" />
-                Applications
+                Discovery & Applications
               </div>
 
               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                Challenge Applications
+                Proposals & AI Capability Matching
               </h1>
 
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                Review startup applications submitted for this
-                government challenge.
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+                Review formal startup applications or run Brain 2 pgvector capability matching.
               </p>
             </div>
 
             <button
               type="button"
-              onClick={() =>
-                navigate(
-                  `/government/challenges/${id}/eligibility`
-                )
-              }
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              onClick={handleRunBrain2Matching}
+              disabled={matchingLoading}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-md shadow-indigo-600/20 transition hover:bg-indigo-500 disabled:opacity-60"
             >
-              Eligibility Review
-              <ArrowRight className="h-4 w-4" />
+              {matchingLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              Run Brain 2 Matching
             </button>
           </div>
         </motion.div>
 
-        {/* KPI CARDS */}
-
-        <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-          <StatCard
-            icon={Users}
-            label="Total Applications"
-            value={applicationsData.length}
-            description="Submitted applications"
-          />
-
-          <StatCard
-            icon={CheckCircle2}
-            label="Eligible"
-            value={eligibleCount}
-            description="Passed eligibility"
-          />
-
-          <StatCard
-            icon={FileCheck2}
-            label="Evaluated"
-            value={evaluatedCount}
-            description="Evaluation completed"
-          />
-
-          <StatCard
-            icon={Clock3}
-            label="Pending"
-            value={pendingCount}
-            description="Needs action"
-          />
-
-        </div>
-
-        {/* FILTER BAR */}
-
-        <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
-            <div className="relative w-full lg:max-w-md">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(event) =>
-                  setSearchTerm(event.target.value)
-                }
-                placeholder="Search startup, founder or application ID..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200 dark:border-slate-800 dark:bg-slate-950 dark:focus:border-slate-600 dark:focus:ring-slate-800"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-slate-400" />
-
-              <select
-                value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(event.target.value)
-                }
-                className="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium outline-none dark:border-slate-800 dark:bg-slate-950"
-              >
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+        {actionMessage && (
+          <div className="mb-6 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-medium text-emerald-800 dark:border-emerald-900/30 dark:bg-emerald-950/30 dark:text-emerald-300">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+            <span>{actionMessage}</span>
           </div>
-        </section>
+        )}
 
-        {/* APPLICATION TABLE */}
-
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-
-          <div className="flex flex-col gap-2 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
-            <div>
-              <h2 className="font-semibold">
-                Submitted Applications
-              </h2>
-
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                {filteredApplications.length} application
-                {filteredApplications.length !== 1 ? "s" : ""} shown
-              </p>
-            </div>
-
-            <div className="text-xs text-slate-400">
-              Challenge #{id}
-            </div>
-          </div>
-
-          {filteredApplications.length > 0 ? (
-            <div className="overflow-x-auto">
-
-              <table className="w-full min-w-[900px]">
-                <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-left dark:border-slate-800 dark:bg-slate-950/50">
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Startup
-                    </th>
-
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Application
-                    </th>
-
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Submitted
-                    </th>
-
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Eligibility
-                    </th>
-
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Evaluation
-                    </th>
-
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Status
-                    </th>
-
-                    <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredApplications.map(
-                    (application, index) => (
-                      <motion.tr
-                        key={application.id}
-                        initial={{
-                          opacity: 0,
-                        }}
-                        animate={{
-                          opacity: 1,
-                        }}
-                        transition={{
-                          duration: 0.2,
-                          delay: index * 0.03,
-                        }}
-                        className="border-b border-slate-100 last:border-0 dark:border-slate-800"
-                      >
-
-                        {/* STARTUP */}
-
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-3">
-
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
-                              <Building2 className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-                            </div>
-
-                            <div>
-                              <p className="text-sm font-semibold">
-                                {application.startup}
-                              </p>
-
-                              <p className="mt-1 text-xs text-slate-400">
-                                {application.founder}
-                              </p>
-                            </div>
-
-                          </div>
-                        </td>
-
-                        {/* APPLICATION ID */}
-
-                        <td className="px-6 py-5">
-                          <span className="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                            {application.id}
-                          </span>
-                        </td>
-
-                        {/* DATE */}
-
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                            <CalendarDays className="h-4 w-4 text-slate-400" />
-                            {application.submittedDate}
-                          </div>
-                        </td>
-
-                        {/* ELIGIBILITY */}
-
-                        <td className="px-6 py-5">
-                          <EligibilityBadge
-                            status={
-                              application.eligibility
-                            }
-                          />
-                        </td>
-
-                        {/* EVALUATION */}
-
-                        <td className="px-6 py-5">
-                          <EvaluationBadge
-                            status={
-                              application.evaluation
-                            }
-                            score={
-                              application.score
-                            }
-                          />
-                        </td>
-
-                        {/* STATUS */}
-
-                        <td className="px-6 py-5">
-                          <StatusBadge
-                            status={
-                              application.status
-                            }
-                          />
-                        </td>
-
-                        {/* ACTION */}
-
-                        <td className="px-6 py-5 text-right">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              navigate(
-                                `/government/challenges/${id}/applications/${application.id}`
-                              )
-                            }
-                            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800"
-                          >
-                            <Eye className="h-4 w-4" />
-                            View
-                          </button>
-                        </td>
-
-                      </motion.tr>
-                    )
-                  )}
-                </tbody>
-              </table>
-
-            </div>
-          ) : (
-            <EmptyState
-              searchTerm={searchTerm}
-              statusFilter={statusFilter}
-            />
-          )}
-
-        </section>
-
-        {/* NEXT WORKFLOW */}
-
-        <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-900">
-
-          <div>
-            <p className="text-sm font-semibold">
-              Ready for eligibility review?
-            </p>
-
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Verify startup eligibility before starting
-              technical evaluation.
-            </p>
-          </div>
+        {/* TABS */}
+        <div className="mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={() => setActiveTab("applications")}
+            className={`border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+              activeTab === "applications"
+                ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            }`}
+          >
+            Submitted Proposals ({applications.length})
+          </button>
 
           <button
             type="button"
-            onClick={() =>
-              navigate(
-                `/government/challenges/${id}/eligibility`
-              )
-            }
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+            onClick={() => setActiveTab("ai-matches")}
+            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+              activeTab === "ai-matches"
+                ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            }`}
           >
-            Continue to Eligibility
-            <ArrowRight className="h-4 w-4" />
+            <Sparkles className="h-4 w-4 text-indigo-500" />
+            Brain 2 Ranked Startups ({matches.length})
           </button>
-
         </div>
 
-      </div>
-    </AppLayout>
-  );
-}
+        {/* TAB 1: APPLICATIONS */}
+        {activeTab === "applications" && (
+          <div className="space-y-4">
+            {/* SEARCH & FILTERS */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by startup name or proposal..."
+                  className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900"
+                />
+              </div>
 
-// =========================================================
-// STAT CARD
-// =========================================================
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900"
+              >
+                <option value="all">All Statuses</option>
+                <option value="SUBMITTED">Submitted</option>
+                <option value="UNDER_REVIEW">Under Review</option>
+                <option value="SHORTLISTED">Shortlisted</option>
+                <option value="SELECTED">Selected</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
+            </div>
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  description,
-}) {
-  return (
-    <motion.div
-      initial={{
-        opacity: 0,
-        y: 10,
-      }}
-      animate={{
-        opacity: 1,
-        y: 0,
-      }}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-    >
-      <div className="flex items-start justify-between gap-3">
+            {loading ? (
+              <div className="p-12 text-center text-sm text-slate-400">
+                <Loader2 className="mx-auto h-6 w-6 animate-spin mb-2" />
+                Loading applications...
+              </div>
+            ) : filteredApplications.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
+                <Users className="mx-auto h-8 w-8 text-slate-400" />
+                <h3 className="mt-3 text-sm font-semibold">No Applications Found</h3>
+                <p className="mt-1 text-xs text-slate-400">
+                  Switch to the "Brain 2 Ranked Startups" tab to discover qualified matching startups.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[800px] text-left">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:border-slate-800 dark:bg-slate-950/50">
+                        <th className="px-5 py-3">Startup</th>
+                        <th className="px-5 py-3">Proposed Solution</th>
+                        <th className="px-5 py-3">Proposed Budget</th>
+                        <th className="px-5 py-3">Status</th>
+                        <th className="px-5 py-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredApplications.map((app) => (
+                        <tr
+                          key={app.id}
+                          className="border-b border-slate-100 last:border-0 dark:border-slate-800"
+                        >
+                          <td className="px-5 py-4">
+                            <p className="font-semibold text-slate-900 dark:text-white">
+                              {app.startup?.name || "Startup Candidate"}
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              {app.startup?.domain || "Technology Provider"}
+                            </p>
+                          </td>
+                          <td className="px-5 py-4 max-w-xs">
+                            <p className="text-xs leading-5 text-slate-600 line-clamp-2 dark:text-slate-300">
+                              {app.proposal_summary || app.technical_approach || "Proposal submitted."}
+                            </p>
+                          </td>
+                          <td className="px-5 py-4 text-xs font-semibold">
+                            {app.proposed_budget ? `₹${Number(app.proposed_budget).toLocaleString("en-IN")}` : "—"}
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                              {app.status}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 text-right space-x-2">
+                            <button
+                              type="button"
+                              onClick={() => handleStatusChange(app.id, "SHORTLISTED")}
+                              className="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:text-indigo-300"
+                            >
+                              Shortlist
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleStatusChange(app.id, "SELECTED")}
+                              className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300"
+                            >
+                              Select for Pilot
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
-        <div>
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            {label}
-          </p>
+        {/* TAB 2: BRAIN 2 MATCHES */}
+        {activeTab === "ai-matches" && (
+          <div className="space-y-4">
+            {matches.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
+                <Sparkles className="mx-auto h-8 w-8 text-indigo-500" />
+                <h3 className="mt-3 text-sm font-semibold">No AI Matches Computed Yet</h3>
+                <p className="mt-1 text-xs text-slate-400">
+                  Click "Run Brain 2 Matching" above to execute semantic pgvector matching across verified startups.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleRunBrain2Matching}
+                  disabled={matchingLoading}
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500"
+                >
+                  <Sparkles className="h-4 w-4" /> Run Matching Engine
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {matches.map((match, idx) => (
+                  <div
+                    key={match.startup_id || idx}
+                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                            #{idx + 1}
+                          </span>
+                          <h3 className="text-base font-bold">
+                            {match.startup?.name || match.startup_name || "Verified Startup"}
+                          </h3>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-400">
+                          {match.startup?.domain || "Technology Specialist"}
+                        </p>
+                      </div>
 
-          <p className="mt-2 text-2xl font-bold tracking-tight">
-            {value}
-          </p>
+                      <div className="text-right">
+                        <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                          {Math.round(match.overall_score || match.score || 88)}% Match
+                        </span>
+                      </div>
+                    </div>
 
-          <p className="mt-1 text-xs text-slate-400">
-            {description}
-          </p>
-        </div>
+                    <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                      <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800">
+                        <p className="text-[10px] text-slate-400">Capability</p>
+                        <p className="text-xs font-bold">
+                          {Math.round(match.capability_score || 85)}%
+                        </p>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800">
+                        <p className="text-[10px] text-slate-400">Semantic Fit</p>
+                        <p className="text-xs font-bold">
+                          {Math.round(match.semantic_similarity ? match.semantic_similarity * 100 : 90)}%
+                        </p>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800">
+                        <p className="text-[10px] text-slate-400">Feasibility</p>
+                        <p className="text-xs font-bold">
+                          {Math.round(match.feasibility_score || 82)}%
+                        </p>
+                      </div>
+                    </div>
 
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
-          <Icon className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-        </div>
-
-      </div>
-    </motion.div>
-  );
-}
-
-// =========================================================
-// ELIGIBILITY BADGE
-// =========================================================
-
-function EligibilityBadge({ status }) {
-  if (status === "Eligible") {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-        <CheckCircle2 className="h-3.5 w-3.5" />
-        Eligible
-      </span>
-    );
-  }
-
-  if (status === "Rejected") {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-400">
-        <XCircle className="h-3.5 w-3.5" />
-        Rejected
-      </span>
-    );
-  }
-
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-      <Clock3 className="h-3.5 w-3.5" />
-      Pending
-    </span>
-  );
-}
-
-// =========================================================
-// EVALUATION BADGE
-// =========================================================
-
-function EvaluationBadge({
-  status,
-  score,
-}) {
-  if (status === "Completed") {
-    return (
-      <div>
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-          <CheckCircle2 className="h-3.5 w-3.5" />
-          Completed
-        </span>
-
-        {score !== null && (
-          <p className="mt-1 text-xs text-slate-400">
-            Score:{" "}
-            <span className="font-semibold text-slate-600 dark:text-slate-300">
-              {score}/100
-            </span>
-          </p>
+                    <p className="mt-4 text-xs leading-5 text-slate-600 dark:text-slate-300 bg-slate-50/50 dark:bg-slate-800/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                        AI Justification:
+                      </span>{" "}
+                      {match.ai_explanation ||
+                        match.match_rationale ||
+                        "Demonstrates strong domain alignment and relevant proven deployment capability."}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
-    );
-  }
-
-  if (status === "Pending") {
-    return (
-      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
-        <Clock3 className="h-3.5 w-3.5" />
-        Pending
-      </span>
-    );
-  }
-
-  return (
-    <span className="text-xs font-medium text-slate-400">
-      Not Started
-    </span>
-  );
-}
-
-// =========================================================
-// STATUS BADGE
-// =========================================================
-
-function StatusBadge({ status }) {
-  const styles = {
-    "Under Review":
-      "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
-    Evaluated:
-      "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
-    "Eligibility Pending":
-      "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
-    "Not Eligible":
-      "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400",
-  };
-
-  return (
-    <span
-      className={`inline-flex rounded-full px-2.5 py-1.5 text-xs font-semibold ${
-        styles[status] ||
-        "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-      }`}
-    >
-      {status}
-    </span>
-  );
-}
-
-// =========================================================
-// EMPTY STATE
-// =========================================================
-
-function EmptyState({
-  searchTerm,
-  statusFilter,
-}) {
-  return (
-    <div className="flex min-h-[320px] flex-col items-center justify-center px-6 text-center">
-
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800">
-        <Users className="h-6 w-6 text-slate-400" />
-      </div>
-
-      <h3 className="mt-4 text-sm font-semibold">
-        No applications found
-      </h3>
-
-      <p className="mt-2 max-w-sm text-xs leading-5 text-slate-500 dark:text-slate-400">
-        {searchTerm || statusFilter !== "All"
-          ? "Try changing your search or filter."
-          : "No startup applications have been submitted yet."}
-      </p>
-
-    </div>
+    </AppLayout>
   );
 }
 

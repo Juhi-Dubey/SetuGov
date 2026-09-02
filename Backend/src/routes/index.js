@@ -19,6 +19,7 @@ import auditLogRoutes from './auditLogRoutes.js';
 import adminRoutes from './adminRoutes.js';
 import aiRoutes from './aiRoutes.js';
 import decisionRoutes from './decisionRoutes.js';
+import uploadRoutes from './uploadRoutes.js';
 
 const router = Router();
 
@@ -50,7 +51,8 @@ router.get('/', (req, res) => {
       notifications: '/api/v1/notifications',
       auditLogs: '/api/v1/audit-logs',
       admin: '/api/v1/admin',
-      ai: '/api/v1/ai'
+      ai: '/api/v1/ai',
+      upload: '/api/v1/upload'
     }
   });
 });
@@ -76,5 +78,6 @@ router.use('/notifications', notificationRoutes);
 router.use('/audit-logs', auditLogRoutes);
 router.use('/admin', adminRoutes);
 router.use('/ai', aiRoutes);
+router.use('/upload', uploadRoutes);
 
 export default router;

@@ -3,6 +3,7 @@ import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.
 import { validateTransition } from '../utils/lifecycle.js';
 import { generateMockEmbedding } from '../utils/vector.js';
 import { createAuditLog } from './auditService.js';
+import { sendNotification } from './notificationService.js';
 
 export const createChallenge = async (data, user, ip_address = null) => {
   let department_id;
@@ -328,6 +329,14 @@ export const publishChallenge = async (id, user, ip_address = null) => {
     entity_id: id,
     details: { previousStatus: challenge.status, newStatus: 'PUBLISHED' },
     ip_address
+  });
+
+  await sendNotification({
+    user_id: user.id,
+    title: 'Challenge Published',
+    message: `Challenge "${challenge.title}" is now PUBLISHED and open for applications.`,
+    type: 'CHALLENGE_PUBLISHED',
+    link: `/government/challenges/${id}/overview`
   });
 
   return updated;

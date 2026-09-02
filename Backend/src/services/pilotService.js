@@ -3,6 +3,7 @@ import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.
 import { validateTransition } from '../utils/lifecycle.js';
 import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
+import { sendNotification } from './notificationService.js';
 
 export const createPilot = async (data, user, ip_address = null) => {
   // 1. Verify challenge exists
@@ -97,6 +98,21 @@ export const createPilot = async (data, user, ip_address = null) => {
     },
     ip_address
   });
+
+  // Notify the startup user
+  const startupUser = await prisma.startup.findUnique({
+    where: { id: data.startup_id },
+    select: { user_id: true }
+  });
+  if (startupUser?.user_id) {
+    await sendNotification({
+      user_id: startupUser.user_id,
+      title: 'Pilot Project Created',
+      message: `Pilot project for "${challenge.title}" has been created in PLANNED status.`,
+      type: 'PILOT_CREATED',
+      link: '/startup/pilots'
+    });
+  }
 
   return pilot;
 };
@@ -312,6 +328,21 @@ export const startPilot = async (id, user, ip_address = null) => {
     details: { previousStatus: pilot.status, newStatus: 'RUNNING' },
     ip_address
   });
+
+  const fullPilot = await prisma.pilot.findUnique({
+    where: { id },
+    include: { challenge: true, startup: true }
+  });
+
+  if (fullPilot?.startup?.user_id) {
+    await sendNotification({
+      user_id: fullPilot.startup.user_id,
+      title: 'Pilot Started',
+      message: `Pilot project for "${fullPilot.challenge?.title || 'Challenge'}" is now officially RUNNING.`,
+      type: 'PILOT_STARTED',
+      link: '/startup/pilots'
+    });
+  }
 
   return updated;
 };

@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -13,10 +12,13 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 
 const roles = [
   {
     id: "government",
+    roleKey: "GOVERNMENT",
     title: "Government Officer",
     description:
       "Create challenges, discover startups, manage pilots, and make procurement decisions.",
@@ -25,6 +27,7 @@ const roles = [
   },
   {
     id: "startup",
+    roleKey: "STARTUP",
     title: "Startup",
     description:
       "Discover government challenges, submit applications, and manage your pilots.",
@@ -33,6 +36,7 @@ const roles = [
   },
   {
     id: "evaluator",
+    roleKey: "EVALUATOR",
     title: "Evaluator",
     description:
       "Review startup proposals, evaluate technical feasibility, and submit assessments.",
@@ -41,6 +45,7 @@ const roles = [
   },
   {
     id: "admin",
+    roleKey: "ADMIN",
     title: "Admin",
     description:
       "Manage users, startups, evaluation criteria, templates, and system activity.",
@@ -51,26 +56,20 @@ const roles = [
 
 function RoleSelection() {
   const navigate = useNavigate();
+  const { user, role: currentRole } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const [selectedRole, setSelectedRole] = useState(null);
 
-  const [isDark, setIsDark] = useState(() => {
-    return localStorage.getItem("theme") !== "light";
-  });
-
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", isDark);
-    localStorage.setItem("theme", isDark ? "dark" : "light");
-  }, [isDark]);
-
-  const toggleTheme = () => {
-    setIsDark((prev) => !prev);
-  };
+    if (currentRole) {
+      const match = roles.find((r) => r.roleKey === currentRole);
+      if (match) setSelectedRole(match.id);
+    }
+  }, [currentRole]);
 
   const handleContinue = () => {
     if (!selectedRole) return;
-
     const role = roles.find((item) => item.id === selectedRole);
-
     if (role) {
       navigate(role.path);
     }
@@ -90,136 +89,104 @@ function RoleSelection() {
             {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
         </div>
+
         {/* Background decorations */}
         <div className="pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl" />
-
         <div className="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
 
         <motion.div
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="relative z-10 w-full max-w-5xl"
+          transition={{ duration: 0.5 }}
+          className="relative z-10 w-full max-w-4xl"
         >
           {/* Header */}
           <div className="mb-10 text-center">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg dark:bg-white dark:text-slate-900"
-            >
-              <Building2 className="h-7 w-7" />
-            </motion.div>
-
-            <p className="mb-2 text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-              GovInnov
-            </p>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+              <ShieldCheck className="h-4 w-4 text-emerald-500" />
+              Role-Based Workspace
+            </div>
 
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              You want to login as
+              Choose your role to continue
             </h1>
 
             <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-              Select your role to access the workspace designed for your
-              responsibilities.
+              {user ? `Logged in as ${user.name} (${user.role})` : "Select a workspace to explore the platform capabilities."}
             </p>
           </div>
 
           {/* Role Cards */}
-          <div className="grid gap-5 sm:grid-cols-2">
-            {roles.map((role, index) => {
-              const Icon = role.icon;
-              const isSelected = selectedRole === role.id;
+          <div className="grid gap-4 sm:grid-cols-2">
+            {roles.map((item, index) => {
+              const Icon = item.icon;
+              const isSelected = selectedRole === item.id;
+              const isUserAssignedRole = currentRole === item.roleKey;
 
               return (
-                <motion.button
-                  key={role.id}
-                  type="button"
-                  onClick={() => setSelectedRole(role.id)}
-                  initial={{ opacity: 0, y: 25 }}
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.45,
-                    delay: index * 0.08,
-                  }}
-                  whileHover={{ y: -4 }}
-                  whileTap={{ scale: 0.985 }}
-                  className={`group relative overflow-hidden rounded-2xl border p-6 text-left transition-all duration-300 ${
+                  transition={{ duration: 0.4, delay: index * 0.08 }}
+                  onClick={() => setSelectedRole(item.id)}
+                  className={`group relative cursor-pointer rounded-2xl border p-6 transition-all duration-300 ${
                     isSelected
-                      ? "border-indigo-500 bg-indigo-50 shadow-xl shadow-indigo-500/10 dark:border-indigo-400 dark:bg-indigo-500/10"
-                      : "border-slate-200 bg-white shadow-sm hover:border-indigo-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-500/50"
+                      ? "border-indigo-600 bg-white shadow-lg ring-2 ring-indigo-600/20 dark:border-indigo-400 dark:bg-slate-900 dark:ring-indigo-400/20"
+                      : "border-slate-200 bg-white/80 hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/80 dark:hover:border-slate-700"
                   }`}
                 >
-                  {/* Selected indicator */}
-                  <div
-                    className={`absolute right-5 top-5 transition-all duration-300 ${
-                      isSelected
-                        ? "scale-100 opacity-100"
-                        : "scale-75 opacity-0"
-                    }`}
-                  >
-                    <CheckCircle2 className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                  <div className="flex items-start justify-between">
+                    <div
+                      className={`flex h-12 w-12 items-center justify-center rounded-xl transition-colors ${
+                        isSelected
+                          ? "bg-indigo-600 text-white dark:bg-indigo-500"
+                          : "bg-slate-100 text-slate-700 group-hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:group-hover:bg-slate-700"
+                      }`}
+                    >
+                      <Icon className="h-6 w-6" />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {isUserAssignedRole && (
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+                          Assigned
+                        </span>
+                      )}
+                      <div
+                        className={`flex h-6 w-6 items-center justify-center rounded-full border transition-all ${
+                          isSelected
+                            ? "border-indigo-600 bg-indigo-600 text-white dark:border-indigo-400 dark:bg-indigo-400"
+                            : "border-slate-300 dark:border-slate-700"
+                        }`}
+                      >
+                        {isSelected && <CheckCircle2 className="h-4 w-4" />}
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Icon */}
-                  <div
-                    className={`mb-5 flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300 ${
-                      isSelected
-                        ? "bg-indigo-600 text-white dark:bg-indigo-500"
-                        : "bg-slate-100 text-slate-700 group-hover:bg-indigo-50 group-hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-300 dark:group-hover:bg-indigo-500/10 dark:group-hover:text-indigo-400"
-                    }`}
-                  >
-                    <Icon className="h-6 w-6" />
-                  </div>
+                  <h3 className="mt-4 text-base font-semibold">{item.title}</h3>
 
-                  <h2 className="text-lg font-semibold">
-                    {role.title}
-                  </h2>
-
-                  <p className="mt-2 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">
-                    {role.description}
+                  <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                    {item.description}
                   </p>
-
-                  {/* Selection label */}
-                  <div
-                    className={`mt-5 text-xs font-semibold transition-all ${
-                      isSelected
-                        ? "text-indigo-600 dark:text-indigo-400"
-                        : "text-slate-400"
-                    }`}
-                  >
-                    {isSelected ? "Selected" : "Select this role"}
-                  </div>
-                </motion.button>
+                </motion.div>
               );
             })}
           </div>
 
-          {/* Continue Section */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-8 flex flex-col items-center"
-          >
-            <motion.button
+          {/* Continue Button */}
+          <div className="mt-8 flex justify-center">
+            <button
               type="button"
-              onClick={handleContinue}
               disabled={!selectedRole}
-              whileHover={{ scale: selectedRole ? 1.02 : 1 }}
-              whileTap={{ scale: selectedRole ? 0.98 : 1 }}
-              className="flex h-12 min-w-52 items-center justify-center gap-2 rounded-xl bg-slate-900 px-7 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              onClick={handleContinue}
+              className="inline-flex h-12 items-center gap-2 rounded-xl bg-slate-900 px-8 text-sm font-semibold text-white shadow-lg transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
             >
-              Continue
+              Continue to Workspace
               <ArrowRight className="h-4 w-4" />
-            </motion.button>
-
-            <div className="mt-5 flex items-center gap-2 text-xs text-slate-400">
-              <ShieldCheck className="h-4 w-4" />
-              Your role determines your workspace permissions
-            </div>
-          </motion.div>
+            </button>
+          </div>
         </motion.div>
       </div>
     </div>
@@ -227,4 +194,3 @@ function RoleSelection() {
 }
 
 export default RoleSelection;
-

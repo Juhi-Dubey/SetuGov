@@ -41,6 +41,7 @@ import {
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
+import { uploadSingle, getFileUrl } from '../middleware/upload.js';
 import { createPilotSchema, updatePilotSchema } from '../schemas/pilotSchemas.js';
 import { createKpiSchema, createMeasurementSchema } from '../schemas/kpiSchemas.js';
 import { createMilestoneSchema } from '../schemas/milestoneSchemas.js';
@@ -51,6 +52,13 @@ import { createPaymentSchema } from '../schemas/paymentSchemas.js';
 import { createScaleDecisionSchema } from '../schemas/scaleDecisionSchemas.js';
 
 const router = Router();
+
+const prepareEvidenceUpload = (req, _res, next) => {
+  if (req.file) {
+    req.body.file_url = getFileUrl(req, req.file.filename);
+  }
+  next();
+};
 
 // Create Pilot (GOVERNMENT or ADMIN)
 router.post('/', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(createPilotSchema), createPilot);
@@ -89,8 +97,8 @@ router.get('/:pilot_id/measurements', authenticate, getPilotMeasurements);
 router.post('/:pilot_id/milestones', authenticate, authorizeRoles('GOVERNMENT', 'STARTUP', 'ADMIN'), validate(createMilestoneSchema), createMilestone);
 router.get('/:pilot_id/milestones', authenticate, getPilotMilestones);
 
-// Evidence
-router.post('/:pilot_id/evidence', authenticate, validate(createEvidenceSchema), createEvidence);
+// Evidence (accepts multipart with 'file' or JSON with 'file_url')
+router.post('/:pilot_id/evidence', authenticate, uploadSingle('file'), prepareEvidenceUpload, validate(createEvidenceSchema), createEvidence);
 router.get('/:pilot_id/evidence', authenticate, getPilotEvidence);
 
 // Risks

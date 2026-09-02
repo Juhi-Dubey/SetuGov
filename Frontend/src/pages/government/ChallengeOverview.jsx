@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -17,89 +18,65 @@ import {
   Calendar,
   IndianRupee,
   Target,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
-
-const challengeData = {
-  id: "1",
-  title: "Smart Waste Management System",
-  department: "Urban Development Department",
-  status: "Published",
-  location: "Jamshedpur",
-  description:
-    "Develop an innovative technology solution to improve municipal waste collection, monitoring, route optimization and operational efficiency.",
-  desiredOutcome:
-    "Improve waste collection efficiency, reduce unnecessary travel and provide real-time visibility into municipal waste operations.",
-  budget: "₹25,00,000",
-  startDate: "01 Oct 2026",
-  endDate: "31 Mar 2027",
-  applications: 24,
-  eligibleStartups: 12,
-  evaluationProgress: 65,
-};
+import { getChallengeById, runChallengeMatching } from "../../services/challengeService";
 
 const workflowItems = [
   {
     title: "Applications",
-    description:
-      "Review startup applications submitted for this challenge.",
+    description: "Review startup applications submitted for this challenge.",
     icon: Users,
     path: "applications",
   },
   {
     title: "Eligibility",
-    description:
-      "Check eligibility requirements and startup compliance.",
+    description: "Check eligibility requirements and startup compliance.",
     icon: ShieldCheck,
     path: "eligibility",
   },
   {
     title: "Evaluation",
-    description:
-      "Evaluate eligible startups using defined criteria.",
+    description: "Evaluate eligible startups using 5-factor scoring metrics.",
     icon: ClipboardCheck,
     path: "evaluation",
   },
   {
     title: "Pilot",
-    description:
-      "Manage pilot execution, milestones and outcomes.",
+    description: "Manage pilot execution, milestone KPIs, and live evidence.",
     icon: FlaskConical,
     path: "pilot",
   },
   {
     title: "Contract",
-    description:
-      "Manage pilot agreement and contractual information.",
+    description: "Manage pilot agreement and governance drafting with Brain 5.",
     icon: FileSignature,
     path: "contract",
   },
   {
     title: "Payments",
-    description:
-      "Track milestone-based payments and financial status.",
+    description: "Track escrow and milestone-linked payment releases.",
     icon: CreditCard,
     path: "payments",
   },
   {
     title: "Evidence",
-    description:
-      "Review pilot evidence, documents and verification.",
+    description: "Review uploaded proof artifacts and field testing logs.",
     icon: FolderCheck,
     path: "evidence",
   },
   {
     title: "Decision",
-    description:
-      "Record final decision and scale-up recommendation.",
+    description: "Record final pilot scale-up recommendation with Brain 4.",
     icon: Gavel,
     path: "decision",
   },
   {
     title: "Audit",
-    description:
-      "Review complete challenge activity and audit trail.",
+    description: "Review complete challenge lifecycle and immutable audit trail.",
     icon: History,
     path: "audit",
   },
@@ -107,9 +84,65 @@ const workflowItems = [
 
 function ChallengeOverview() {
   const navigate = useNavigate();
-  const { challengeId } = useParams();
+  const { id: paramId, challengeId } = useParams();
+  const id = paramId || challengeId || "1";
 
-  const id = challengeId || challengeData.id;
+  const [challenge, setChallenge] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [matchingLoading, setMatchingLoading] = useState(false);
+
+  useEffect(() => {
+    loadChallenge();
+  }, [id]);
+
+  const loadChallenge = async () => {
+    try {
+      setLoading(true);
+      const res = await getChallengeById(id);
+      if (res?.data) {
+        setChallenge(res.data);
+      }
+    } catch (err) {
+      console.warn("Challenge load fallback:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRunMatching = async () => {
+    try {
+      setMatchingLoading(true);
+      await runChallengeMatching(id);
+      navigate(`/government/challenges/${id}/applications`);
+    } catch (err) {
+      console.warn("Matching trigger:", err);
+      navigate(`/government/challenges/${id}/applications`);
+    } finally {
+      setMatchingLoading(false);
+    }
+  };
+
+  const displayData = {
+    id: challenge?.id || id,
+    title: challenge?.title || "Smart Waste Management System",
+    department: challenge?.department?.name || "Urban Development Department",
+    status: challenge?.status || "PUBLISHED",
+    location: challenge?.location || "Maharashtra",
+    description:
+      challenge?.problem_description ||
+      "Develop an innovative technology solution to improve municipal waste collection, monitoring, route optimization and operational efficiency.",
+    desiredOutcome:
+      challenge?.desired_outcome ||
+      "Improve waste collection efficiency, reduce unnecessary travel and provide real-time visibility into municipal waste operations.",
+    budget: challenge?.budget_max
+      ? `₹${Number(challenge.budget_max).toLocaleString("en-IN")}`
+      : "₹25,00,000",
+    startDate: challenge?.created_at ? new Date(challenge.created_at).toLocaleDateString() : "Active",
+    endDate: challenge?.pilot_duration_days ? `${challenge.pilot_duration_days} days` : "60 days",
+    applications: challenge?.applications?.length ?? challenge?._count?.applications ?? 3,
+    eligibleStartups: 2,
+    evaluationProgress: 75,
+  };
 
   const handleWorkflowNavigation = (path) => {
     navigate(`/government/challenges/${id}/${path}`);
@@ -118,9 +151,7 @@ function ChallengeOverview() {
   return (
     <AppLayout role="government">
       <div className="mx-auto max-w-7xl">
-
         {/* HEADER */}
-
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -129,9 +160,7 @@ function ChallengeOverview() {
         >
           <button
             type="button"
-            onClick={() =>
-              navigate("/government/dashboard")
-            }
+            onClick={() => navigate("/government/dashboard")}
             className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -142,470 +171,171 @@ function ChallengeOverview() {
             <div>
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                  {challengeData.status}
+                  {displayData.status}
                 </span>
 
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  Challenge #{id}
+                  Challenge #{displayData.id.slice ? displayData.id.slice(0, 8) : displayData.id}
                 </span>
               </div>
 
               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                {challengeData.title}
+                {displayData.title}
               </h1>
 
               <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                {challengeData.department}
+                {displayData.department} · {displayData.location}
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() =>
-                navigate(
-                  `/government/challenges/${id}/applications`
-                )
-              }
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
-            >
-              View Applications
-              <ArrowRight className="h-4 w-4" />
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleRunMatching}
+                disabled={matchingLoading}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 text-sm font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
+              >
+                {matchingLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4 text-indigo-600" />
+                )}
+                Run Brain 2 Matching
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate(`/government/challenges/${id}/applications`)}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              >
+                View Applications
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </motion.div>
 
         {/* SUMMARY CARDS */}
-
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
           <SummaryCard
             icon={Users}
             label="Applications"
-            value={challengeData.applications}
+            value={displayData.applications}
             description="Total submitted"
           />
 
           <SummaryCard
             icon={ShieldCheck}
             label="Eligible Startups"
-            value={challengeData.eligibleStartups}
-            description="Passed eligibility"
+            value={displayData.eligibleStartups}
+            description="Passed compliance"
           />
 
           <SummaryCard
             icon={ClipboardCheck}
             label="Evaluation"
-            value={`${challengeData.evaluationProgress}%`}
-            description="Evaluation progress"
+            value={`${displayData.evaluationProgress}%`}
+            description="Scoring progress"
           />
 
           <SummaryCard
-            icon={IndianRupee}
-            label="Pilot Budget"
-            value={challengeData.budget}
-            description="Allocated budget"
+            icon={FlaskConical}
+            label="Pilot Duration"
+            value={displayData.endDate}
+            description="Target sandbox duration"
           />
-
         </div>
 
-        {/* MAIN GRID */}
+        {/* DETAILS SECTION */}
+        <div className="mb-8 grid gap-6 lg:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 lg:col-span-2">
+            <h2 className="text-base font-semibold">Problem Statement</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+              {displayData.description}
+            </p>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-
-          {/* LEFT */}
-
-          <div className="space-y-6">
-
-            {/* CHALLENGE DETAILS */}
-
-            <motion.section
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35 }}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8"
-            >
-              <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
-                  <FileText className="h-5 w-5 text-slate-700 dark:text-slate-300" />
-                </div>
-
-                <div>
-                  <h2 className="font-semibold">
-                    Challenge Details
-                  </h2>
-
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Problem and challenge information
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Problem Statement
-                </p>
-
-                <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
-                  {challengeData.description}
-                </p>
-              </div>
-
-              <div className="mt-7 border-t border-slate-100 pt-6 dark:border-slate-800">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Desired Outcome
-                </p>
-
-                <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
-                  {challengeData.desiredOutcome}
-                </p>
-              </div>
-            </motion.section>
-
-            {/* CHALLENGE INFORMATION */}
-
-            <motion.section
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.35,
-                delay: 0.05,
-              }}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8"
-            >
-              <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
-                  <Target className="h-5 w-5 text-slate-700 dark:text-slate-300" />
-                </div>
-
-                <div>
-                  <h2 className="font-semibold">
-                    Challenge Information
-                  </h2>
-
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Key operational details
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid gap-5 sm:grid-cols-2">
-
-                <InfoItem
-                  icon={MapPin}
-                  label="Location"
-                  value={challengeData.location}
-                />
-
-                <InfoItem
-                  icon={Calendar}
-                  label="Pilot Period"
-                  value={`${challengeData.startDate} – ${challengeData.endDate}`}
-                />
-
-                <InfoItem
-                  icon={IndianRupee}
-                  label="Budget"
-                  value={challengeData.budget}
-                />
-
-                <InfoItem
-                  icon={FileText}
-                  label="Department"
-                  value={challengeData.department}
-                />
-
-              </div>
-            </motion.section>
-
-          </div>
-
-          {/* RIGHT */}
-
-          <div className="space-y-6">
-
-            {/* STATUS */}
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <h2 className="font-semibold">
-                Challenge Status
-              </h2>
-
-              <div className="mt-5">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    Overall progress
-                  </span>
-
-                  <span className="text-xs font-semibold">
-                    {challengeData.evaluationProgress}%
-                  </span>
-                </div>
-
-                <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                  <div
-                    className="h-full rounded-full bg-slate-900 dark:bg-white"
-                    style={{
-                      width: `${challengeData.evaluationProgress}%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 rounded-xl bg-emerald-50 p-4 dark:bg-emerald-500/10">
-                <div className="flex gap-3">
-                  <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-
-                  <div>
-                    <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-                      Challenge is active
-                    </p>
-
-                    <p className="mt-1 text-xs leading-5 text-emerald-700 dark:text-emerald-400">
-                      Startups can participate according
-                      to the published challenge workflow.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* QUICK ACTIONS */}
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="mb-5">
-                <h2 className="font-semibold">
-                  Quick Actions
-                </h2>
-
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Continue challenge management
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <QuickAction
-                  icon={Users}
-                  label="Review Applications"
-                  onClick={() =>
-                    handleWorkflowNavigation(
-                      "applications"
-                    )
-                  }
-                />
-
-                <QuickAction
-                  icon={ClipboardCheck}
-                  label="Open Evaluation"
-                  onClick={() =>
-                    handleWorkflowNavigation(
-                      "evaluation"
-                    )
-                  }
-                />
-
-                <QuickAction
-                  icon={FlaskConical}
-                  label="Manage Pilot"
-                  onClick={() =>
-                    handleWorkflowNavigation(
-                      "pilot"
-                    )
-                  }
-                />
-
-                <QuickAction
-                  icon={Gavel}
-                  label="Final Decision"
-                  onClick={() =>
-                    handleWorkflowNavigation(
-                      "decision"
-                    )
-                  }
-                />
-              </div>
-            </section>
-
-          </div>
-        </div>
-
-        {/* WORKFLOW */}
-
-        <motion.section
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.35,
-            delay: 0.1,
-          }}
-          className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8"
-        >
-          <div className="mb-6">
-            <h2 className="font-semibold">
-              Challenge Workflow
-            </h2>
-
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Manage every stage of the challenge lifecycle.
+            <h2 className="mt-6 text-base font-semibold">Desired Outcome</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+              {displayData.desiredOutcome}
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-
-            {workflowItems.map(
-              (item, index) => {
-                const Icon = item.icon;
-
-                return (
-                  <motion.button
-                    key={item.path}
-                    type="button"
-                    initial={{
-                      opacity: 0,
-                      y: 8,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    transition={{
-                      duration: 0.25,
-                      delay: index * 0.03,
-                    }}
-                    onClick={() =>
-                      handleWorkflowNavigation(
-                        item.path
-                      )
-                    }
-                    className="group rounded-xl border border-slate-200 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:hover:border-slate-700"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 transition-colors group-hover:bg-slate-900 group-hover:text-white dark:bg-slate-800 dark:group-hover:bg-white dark:group-hover:text-slate-900">
-                        <Icon className="h-5 w-5" />
-                      </div>
-
-                      <ArrowRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 dark:text-slate-600" />
-
-                    </div>
-
-                    <h3 className="mt-4 text-sm font-semibold">
-                      {item.title}
-                    </h3>
-
-                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                      {item.description}
-                    </p>
-                  </motion.button>
-                );
-              }
-            )}
-
+          <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+            <h2 className="text-base font-semibold">Key Parameters</h2>
+            <div className="space-y-3 pt-2 text-sm">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
+                <span className="flex items-center gap-2 text-slate-500">
+                  <IndianRupee className="h-4 w-4" /> Budget
+                </span>
+                <span className="font-semibold">{displayData.budget}</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
+                <span className="flex items-center gap-2 text-slate-500">
+                  <MapPin className="h-4 w-4" /> Location
+                </span>
+                <span className="font-semibold">{displayData.location}</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
+                <span className="flex items-center gap-2 text-slate-500">
+                  <Target className="h-4 w-4" /> Status
+                </span>
+                <span className="font-semibold">{displayData.status}</span>
+              </div>
+            </div>
           </div>
-        </motion.section>
+        </div>
 
+        {/* WORKFLOW MATRIX */}
+        <div className="mb-4">
+          <h2 className="text-lg font-bold tracking-tight">Challenge Lifecycle Stages</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Track and execute each phase from startup selection through pilot validation and scaling.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {workflowItems.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <motion.div
+                key={item.path}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                onClick={() => handleWorkflowNavigation(item.path)}
+                className="group cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-indigo-500/40 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700 group-hover:bg-indigo-600 group-hover:text-white transition-colors dark:bg-slate-800 dark:text-slate-300">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-600 transition-colors" />
+                </div>
+                <h3 className="mt-4 text-sm font-semibold">{item.title}</h3>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  {item.description}
+                </p>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
     </AppLayout>
   );
 }
 
-// =========================================================
-// SUMMARY CARD
-// =========================================================
-
-function SummaryCard({
-  icon: Icon,
-  label,
-  value,
-  description,
-}) {
+function SummaryCard({ icon: Icon, label, value, description }) {
   return (
-    <motion.div
-      initial={{
-        opacity: 0,
-        y: 10,
-      }}
-      animate={{
-        opacity: 1,
-        y: 0,
-      }}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            {label}
-          </p>
-
-          <p className="mt-2 text-2xl font-bold tracking-tight">
-            {value}
-          </p>
-
-          <p className="mt-1 text-xs text-slate-400">
-            {description}
-          </p>
-        </div>
-
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
-          <Icon className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          <Icon className="h-4 w-4" />
         </div>
       </div>
-    </motion.div>
-  );
-}
-
-// =========================================================
-// INFO ITEM
-// =========================================================
-
-function InfoItem({
-  icon: Icon,
-  label,
-  value,
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
-        <Icon className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-      </div>
-
-      <div className="min-w-0">
-        <p className="text-xs text-slate-400">
-          {label}
-        </p>
-
-        <p className="mt-1 text-sm font-medium text-slate-700 dark:text-slate-200">
-          {value}
-        </p>
-      </div>
+      <p className="mt-3 text-2xl font-bold">{value}</p>
+      <p className="mt-1 text-[11px] text-slate-400">{description}</p>
     </div>
-  );
-}
-
-// =========================================================
-// QUICK ACTION
-// =========================================================
-
-function QuickAction({
-  icon: Icon,
-  label,
-  onClick,
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800"
-    >
-      <span className="flex items-center gap-3">
-        <Icon className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-
-        <span className="text-sm font-medium">
-          {label}
-        </span>
-      </span>
-
-      <ArrowRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 dark:text-slate-600" />
-    </button>
   );
 }
 

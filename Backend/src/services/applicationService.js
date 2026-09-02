@@ -3,6 +3,7 @@ import { NotFoundError, ForbiddenError, BadRequestError, ConflictError } from '.
 import { validateTransition } from '../utils/lifecycle.js';
 import { evaluateEligibility } from '../utils/eligibility.js';
 import { createAuditLog } from './auditService.js';
+import { sendNotification } from './notificationService.js';
 
 export const createApplication = async (challengeId, data, user, ip_address = null) => {
   // 1. Verify Challenge exists and is PUBLISHED
@@ -95,6 +96,26 @@ export const createApplication = async (challengeId, data, user, ip_address = nu
     },
     ip_address
   });
+
+  // Notify the startup user
+  await sendNotification({
+    user_id: user.id,
+    title: 'Proposal Submitted',
+    message: `Your application for challenge "${challenge.title}" was submitted successfully.`,
+    type: 'APPLICATION_SUBMITTED',
+    link: '/startup/applications'
+  });
+
+  // Notify the government challenge creator if present
+  if (challenge.created_by) {
+    await sendNotification({
+      user_id: challenge.created_by,
+      title: 'New Application Received',
+      message: `Startup "${startup.company_name}" submitted a proposal for "${challenge.title}".`,
+      type: 'APPLICATION_RECEIVED',
+      link: `/government/challenges/${challengeId}/applications`
+    });
+  }
 
   return application;
 };
@@ -300,6 +321,17 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
     },
     ip_address
   });
+
+  // Notify the startup user regarding the status transition
+  if (application.startup?.user_id) {
+    await sendNotification({
+      user_id: application.startup.user_id,
+      title: `Application ${nextStatus}`,
+      message: `Your application for "${application.challenge.title}" has been updated to ${nextStatus}.`,
+      type: `APPLICATION_${nextStatus}`,
+      link: '/startup/applications'
+    });
+  }
 
   return updated;
 };

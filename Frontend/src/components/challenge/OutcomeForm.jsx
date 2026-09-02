@@ -1,5 +1,5 @@
 
-import { Plus, Trash2, Sparkles } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 import FormField from "../ui/FormField";
 
@@ -181,62 +181,7 @@ function OutcomeForm({
           </div>
         )}
       </section>
-
-      {/* AI Suggestions */}
-      <AISuggestionPanel />
     </div>
-  );
-}
-
-function AISuggestionPanel() {
-  return (
-    <section className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-5 dark:border-indigo-500/20 dark:bg-indigo-500/5">
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
-          <Sparkles className="h-5 w-5" />
-        </div>
-
-        <div>
-          <h3 className="font-semibold">
-            AI Suggestions
-          </h3>
-
-          <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-            AI-generated recommendations will appear here
-            after the challenge context is analyzed.
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-5 rounded-xl border border-indigo-100 bg-white p-4 dark:border-indigo-500/20 dark:bg-slate-900">
-        <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-          🤖 AI Suggestion
-        </p>
-
-        <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
-          Recommendations are generated from the challenge
-          information and should be reviewed before applying.
-        </p>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled
-            className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-400 dark:bg-slate-800"
-          >
-            Apply All
-          </button>
-
-          <button
-            type="button"
-            disabled
-            className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-400 dark:border-slate-800"
-          >
-            Apply Selected
-          </button>
-        </div>
-      </div>
-    </section>
   );
 }
 

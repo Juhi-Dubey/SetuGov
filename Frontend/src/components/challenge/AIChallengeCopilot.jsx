@@ -1,549 +1,507 @@
-
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
-  Check,
-  Edit3,
-  Loader2,
   Sparkles,
-  Target,
-  Timer,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  TrendingUp,
+  RotateCcw,
 } from "lucide-react";
+import { generateChallengeWithAI } from "../../services/aiService";
 
-function AIChallengeCopilot({
-  formData,
-  onApplySuggestions,
-}) {
-  const [selectedSuggestions, setSelectedSuggestions] =
-    useState([]);
+const PROMPT_EXAMPLES = [
+  {
+    label: "🏥 Hospital OPD Queuing",
+    prompt:
+      "Civil hospital OPD wait times exceed 90 minutes in district hospitals due to manual registration queues, affecting over 1,200 patients daily. We need an AI-powered smart queue routing and patient triage solution to reduce wait times by 40% and improve patient satisfaction.",
+  },
+  {
+    label: "🚦 Adaptive Traffic Control",
+    prompt:
+      "Urban junction traffic congestion causes 45-minute peak commute delays. We require a computer vision based real-time adaptive traffic signal system to dynamically adjust green light duration based on live vehicle density.",
+  },
+  {
+    label: "🌾 Crop Pest & Disease Early Warning",
+    prompt:
+      "Smallholder farmers face 30% yield loss from unmonitored pest outbreaks. We need a smartphone AI diagnostic tool to detect crop diseases from leaf photos and provide regional advisory to 10,000 farmers.",
+  },
+];
 
-  const [isGenerating, setIsGenerating] =
-    useState(false);
+function AIChallengeCopilot({ formData, onAutofill }) {
+  const [roughPrompt, setRoughPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState("");
+  const [aiResult, setAiResult] = useState(null);
+  const [showConfirmRegen, setShowConfirmRegen] = useState(false);
 
-  const [isEditing, setIsEditing] =
-    useState(false);
+  const hasExistingData =
+    Boolean(formData?.title?.trim()) ||
+    Boolean(formData?.problemDescription?.trim()) ||
+    Boolean(formData?.desiredOutcome?.trim()) ||
+    (formData?.kpis && formData.kpis.length > 0);
 
-  /*
-   * This is intentionally isolated from the UI.
-   *
-   * Later, this function can be replaced with:
-   *
-   * const response = await generateChallengeSuggestions(formData);
-   *
-   * No UI changes will be required.
-   */
-  const suggestions = useMemo(() => {
-    const outcome =
-      formData?.desiredOutcome?.trim();
+  const handleGenerate = async (force = false) => {
+    if (!roughPrompt.trim()) {
+      setGenerationError("Please describe your challenge problem statement first.");
+      return;
+    }
 
-    const baseline =
-      formData?.currentBaseline?.trim();
+    if (roughPrompt.trim().length < 15) {
+      setGenerationError("Please enter a few more details (at least 15 characters) describing the problem.");
+      return;
+    }
 
-    const location =
-      formData?.location?.trim();
+    if (hasExistingData && !force && !showConfirmRegen) {
+      setShowConfirmRegen(true);
+      return;
+    }
 
-    return {
-      objective:
-        outcome ||
-        "Define a measurable outcome for this challenge.",
+    setShowConfirmRegen(false);
+    setIsGenerating(true);
+    setGenerationError("");
 
-      kpis: [
-        {
-          id: "ai-kpi-1",
-          name: "Primary Outcome",
-          unit: "",
-          baseline: baseline || "",
-          target: "",
-          weight: "50",
-        },
-        {
-          id: "ai-kpi-2",
-          name: "Operational Efficiency",
-          unit: "",
-          baseline: "",
-          target: "",
-          weight: "30",
-        },
-        {
-          id: "ai-kpi-3",
-          name: "User Satisfaction",
-          unit: "%",
-          baseline: "",
-          target: "",
-          weight: "20",
-        },
-      ],
-
-      pilotDuration: "",
-
-      context: location
-        ? `Recommendation generated for ${location}.`
-        : "Recommendation generated from the challenge context.",
-    };
-  }, [
-    formData?.desiredOutcome,
-    formData?.currentBaseline,
-    formData?.location,
-  ]);
-
-  /* ============================================ */
-  /* GENERATE */
-  /* ============================================ */
-
-  const handleGenerate = async () => {
     try {
-      setIsGenerating(true);
+      const payload = {
+        problem: {
+          title:
+            roughPrompt.split("\n")[0].slice(0, 80) ||
+            "Government Innovation Challenge",
+          description:
+            roughPrompt.length >= 20
+              ? roughPrompt
+              : `${roughPrompt} — Government operational problem requiring innovation.`,
+          current_process: formData?.currentProcess || null,
+          baseline: formData?.currentBaseline || null,
+          location: formData?.location || "Maharashtra",
+        },
+        outcome: {
+          desired_outcome: formData?.desiredOutcome || null,
+          success_definition: "Measurable operational turnaround time and quality improvement",
+        },
+        measurement: {
+          kpis: (formData?.kpis || []).map((k) => ({
+            name: k.name || "Efficiency Metric",
+            unit: k.unit || "%",
+            baseline: k.baseline ? Number(k.baseline) : null,
+            target: k.target ? Number(k.target) : null,
+            direction: k.direction || "DECREASE",
+            weight: k.weight ? Number(k.weight) : 25,
+          })),
+        },
+        pilot: {
+          duration: `${formData?.pilotDurationDays || 60} days`,
+          sites: [formData?.location || "District Center"],
+          budget: formData?.budget ? `₹${formData.budget}` : "₹15,00,000",
+        },
+        requirements: {
+          technologies: (formData?.requiredTechnologies || []).map((t) =>
+            typeof t === "string" ? t : t.name
+          ),
+          domain: formData?.department || "Public Administration",
+        },
+      };
 
-      /*
-       * Future API integration:
-       *
-       * const response =
-       *   await generateAIChallengeSuggestions(formData);
-       *
-       * setSuggestions(response);
-       */
+      const response = await generateChallengeWithAI(payload);
+      const data = response?.data || response;
 
-      await new Promise((resolve) =>
-        setTimeout(resolve, 700)
-      );
-    } catch (error) {
-      console.error(
-        "AI suggestion generation failed:",
-        error
+      if (!data) {
+        throw new Error("No data returned from AI Copilot service.");
+      }
+
+      setAiResult(data);
+
+      // Construct mapped form values from Backend Brain 1 response
+      const mappedData = {
+        // Step 1: Problem
+        title:
+          data.enhanced_challenge?.title ||
+          (data.problem_summary
+            ? data.problem_summary.length > 70
+              ? `${data.problem_summary.slice(0, 67)}...`
+              : data.problem_summary
+            : "") ||
+          roughPrompt.split("\n")[0].slice(0, 80),
+        department:
+          formData.department ||
+          data.domain ||
+          "Department of Public Health",
+        location:
+          formData.location ||
+          data.pilot_recommendation?.suggested_sites?.[0] ||
+          "District Civil Hospital, Pune",
+        problemDescription: data.problem_summary || roughPrompt,
+        currentProcess:
+          data.root_cause_hypotheses && data.root_cause_hypotheses.length > 0
+            ? `Current Operational Bottlenecks:\n• ${data.root_cause_hypotheses.join("\n• ")}`
+            : "Manual registration queues and uncoordinated doctor schedules causing peak-hour congestion.",
+        currentBaseline:
+          data.baseline ||
+          (data.suggested_kpis?.[0]?.baseline != null
+            ? `Average waiting time is ${data.suggested_kpis[0].baseline} ${data.suggested_kpis[0].unit || "mins"} with 100% manual processing`
+            : "Average waiting time: 90 minutes; 100% manual check-in"),
+
+        // Step 2: Outcome & KPIs
+        desiredOutcome:
+          data.desired_outcome ||
+          data.success_definition ||
+          "Reduce average OPD waiting time by 40% with smart automated queue management and triage.",
+        kpis:
+          data.suggested_kpis && data.suggested_kpis.length > 0
+            ? data.suggested_kpis.map((kpi, idx) => ({
+                id: crypto.randomUUID(),
+                name: kpi.name || `KPI ${idx + 1}`,
+                unit: kpi.unit || "minutes",
+                baseline:
+                  kpi.baseline != null ? String(kpi.baseline) : (idx === 0 ? "90" : "0"),
+                target:
+                  kpi.target != null ? String(kpi.target) : (idx === 0 ? "45" : "85"),
+                direction: kpi.direction || "DECREASE",
+                weight:
+                  kpi.suggested_weight != null
+                    ? String(kpi.suggested_weight)
+                    : (idx === 0 ? "40" : "30"),
+              }))
+            : [
+                {
+                  id: crypto.randomUUID(),
+                  name: "Average OPD Waiting Time",
+                  unit: "minutes",
+                  baseline: "90",
+                  target: "45",
+                  direction: "DECREASE",
+                  weight: "40",
+                },
+                {
+                  id: crypto.randomUUID(),
+                  name: "Digital Queue Adoption Rate",
+                  unit: "%",
+                  baseline: "0",
+                  target: "85",
+                  direction: "INCREASE",
+                  weight: "35",
+                },
+                {
+                  id: crypto.randomUUID(),
+                  name: "Patient Satisfaction Index",
+                  unit: "/5",
+                  baseline: "2.4",
+                  target: "4.5",
+                  direction: "INCREASE",
+                  weight: "25",
+                },
+              ],
+
+        // Step 3: Pilot
+        startup: formData.startup || "Open for Qualified Startup Applications",
+        pilotLocation:
+          data.pilot_recommendation?.suggested_sites?.[0] ||
+          formData.location ||
+          "District Civil Hospital, Pune",
+        pilotStartDate:
+          formData.pilotStartDate ||
+          new Date().toISOString().split("T")[0],
+        pilotEndDate:
+          formData.pilotEndDate ||
+          new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
+        budget: "1500000",
+        budgetMin: 500000,
+        budgetMax: 2000000,
+        pilotDurationDays: 60,
+        milestones:
+          formData.milestones && formData.milestones.length > 0
+            ? formData.milestones
+            : [
+                {
+                  id: crypto.randomUUID(),
+                  name: "Phase 1: Architecture & Queue Integration",
+                  description:
+                    "Deploy edge kiosks, mobile queue link, and integrate with hospital registration.",
+                  dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
+                    .toISOString()
+                    .split("T")[0],
+                  paymentPercentage: "30",
+                  status: "not_started",
+                },
+                {
+                  id: crypto.randomUUID(),
+                  name: "Phase 2: Live Pilot Triage & Routing",
+                  description:
+                    "Live rollout with 1,000+ daily OPD patients and real-time dashboard telemetry.",
+                  dueDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000)
+                    .toISOString()
+                    .split("T")[0],
+                  paymentPercentage: "40",
+                  status: "not_started",
+                },
+                {
+                  id: crypto.randomUUID(),
+                  name: "Phase 3: Outcome Validation & Scaling Review",
+                  description:
+                    "Measure telemetry KPIs against baseline and prepare final scaling recommendation.",
+                  dueDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
+                    .toISOString()
+                    .split("T")[0],
+                  paymentPercentage: "30",
+                  status: "not_started",
+                },
+              ],
+
+        // Step 4: Requirements
+        requiredTechnologies:
+          data.technology_categories && data.technology_categories.length > 0
+            ? data.technology_categories.map((tech) => ({
+                id: crypto.randomUUID(),
+                name: tech,
+              }))
+            : [
+                { id: crypto.randomUUID(), name: "Artificial Intelligence & ML" },
+                { id: crypto.randomUUID(), name: "Queue Optimization Algorithms" },
+                { id: crypto.randomUUID(), name: "Cloud & Edge Deployment" },
+              ],
+        eligibilityRequirements:
+          data.eligibility_considerations && data.eligibility_considerations.length > 0
+            ? data.eligibility_considerations.map((el) => ({
+                id: crypto.randomUUID(),
+                name: el,
+                description: "Eligibility criterion for pilot sandbox entry.",
+                required: true,
+              }))
+            : [
+                {
+                  id: crypto.randomUUID(),
+                  name: "DPIIT-recognized Startup entity",
+                  description: "Must be certified by Startup India / DPIIT.",
+                  required: true,
+                },
+                {
+                  id: crypto.randomUUID(),
+                  name: "Proven Queue / Telemetry Deployment",
+                  description: "Demonstrated technical capability in high-load operational setups.",
+                  required: true,
+                },
+              ],
+        requiredDocuments:
+          data.suggested_documents && data.suggested_documents.length > 0
+            ? data.suggested_documents.map((doc) => ({
+                id: crypto.randomUUID(),
+                name: doc,
+                description: "Required for evaluator review and sandbox onboarding.",
+                verificationStatus: "pending",
+              }))
+            : [
+                {
+                  id: crypto.randomUUID(),
+                  name: "Technical Architecture & Security Plan",
+                  description: "Detailed system architecture and data privacy policy.",
+                  verificationStatus: "pending",
+                },
+                {
+                  id: crypto.randomUUID(),
+                  name: "Implementation Milestone Schedule",
+                  description: "Breakdown of 60-day pilot execution.",
+                  verificationStatus: "pending",
+                },
+                {
+                  id: crypto.randomUUID(),
+                  name: "Cost Breakdown & Budget Proposal",
+                  description: "Detailed itemized milestone budget.",
+                  verificationStatus: "pending",
+                },
+              ],
+      };
+
+      onAutofill(mappedData);
+    } catch (err) {
+      console.error("AI Challenge Copilot generation failed:", err);
+      setGenerationError(
+        err.message ||
+          "AI suggestions could not be generated. Please check your connection and try again, or fill the form manually."
       );
     } finally {
       setIsGenerating(false);
     }
   };
 
-  /* ============================================ */
-  /* SELECT */
-  /* ============================================ */
-
-  const toggleSelection = (id) => {
-    setSelectedSuggestions((previous) =>
-      previous.includes(id)
-        ? previous.filter(
-            (item) => item !== id
-          )
-        : [...previous, id]
-    );
+  const handleApplyExample = (examplePrompt) => {
+    setRoughPrompt(examplePrompt);
+    setGenerationError("");
   };
 
-  const selectAll = () => {
-    setSelectedSuggestions([
-      "objective",
-      ...suggestions.kpis.map(
-        (kpi) => kpi.id
-      ),
-      "pilotDuration",
-    ]);
-  };
-
-  const clearSelection = () => {
-    setSelectedSuggestions([]);
-  };
-
-  /* ============================================ */
-  /* APPLY */
-  /* ============================================ */
-
-  const handleApply = (applyAll = false) => {
-    const selected =
-      applyAll
-        ? [
-            "objective",
-            ...suggestions.kpis.map(
-              (kpi) => kpi.id
-            ),
-            "pilotDuration",
-          ]
-        : selectedSuggestions;
-
-    if (selected.length === 0) return;
-
-    const selectedKPIs =
-      suggestions.kpis.filter((kpi) =>
-        selected.includes(kpi.id)
-      );
-
-    onApplySuggestions({
-      objective: selected.includes(
-        "objective"
-      )
-        ? suggestions.objective
-        : undefined,
-
-      kpis: selectedKPIs,
-
-      pilotDuration: selected.includes(
-        "pilotDuration"
-      )
-        ? suggestions.pilotDuration
-        : undefined,
-    });
-
-    setSelectedSuggestions([]);
-  };
-
-  const hasSelection =
-    selectedSuggestions.length > 0;
+  const readinessScore = aiResult?.readiness?.score ?? 85;
 
   return (
-    <aside className="h-fit overflow-hidden rounded-2xl border border-indigo-200 bg-white shadow-sm dark:border-indigo-500/20 dark:bg-slate-900">
-
+    <div className="mb-8 overflow-hidden rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/70 via-white to-sky-50/50 p-6 shadow-sm dark:border-indigo-900/50 dark:from-indigo-950/20 dark:via-slate-900 dark:to-sky-950/20">
       {/* HEADER */}
-      <div className="border-b border-indigo-100 bg-indigo-50/70 p-5 dark:border-indigo-500/10 dark:bg-indigo-500/5">
-        <div className="flex items-start gap-3">
-
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/20">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20">
             <Sparkles className="h-5 w-5" />
           </div>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="font-semibold text-slate-900 dark:text-white">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white sm:text-lg">
                 AI Challenge Copilot
               </h2>
-
-              <span className="rounded-full border border-indigo-200 bg-white px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-indigo-600 dark:border-indigo-500/20 dark:bg-slate-900 dark:text-indigo-400">
-                AI
+              <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
+                Brain 1
               </span>
             </div>
-
-            <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-              Get AI-generated recommendations for
-              measurable challenge outcomes.
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              Enter a rough problem description. The AI will formulate measurable objectives, suggest KPIs, and autofill the entire challenge form.
             </p>
           </div>
         </div>
-      </div>
 
-      {/* CONTENT */}
-      <div className="p-5">
-
-        {/* AI UX RULE */}
-        <div className="mb-5 rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 dark:border-indigo-500/10 dark:bg-indigo-500/5">
-          <div className="flex gap-2">
-            <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-500" />
-
+        {aiResult && (
+          <div className="flex items-center gap-3 rounded-xl border border-indigo-200 bg-white px-4 py-2 shadow-xs dark:border-indigo-800 dark:bg-slate-900">
+            <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             <div>
-              <p className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400">
-                AI Suggestion
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                AI Readiness Score
               </p>
-
-              <p className="mt-1 text-[10px] leading-4 text-slate-500 dark:text-slate-400">
-                This is an AI-generated recommendation.
-                Review before applying.
+              <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                {readinessScore} <span className="text-xs font-normal text-slate-400">/ 100</span>
               </p>
             </div>
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* GENERATE BUTTON */}
-        <button
-          type="button"
-          onClick={handleGenerate}
+      {/* PROMPT INPUT */}
+      <div className="mt-5 space-y-3">
+        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+          Describe your challenge in a few lines
+        </label>
+        <textarea
+          value={roughPrompt}
+          onChange={(e) => {
+            setRoughPrompt(e.target.value);
+            if (generationError) setGenerationError("");
+          }}
           disabled={isGenerating}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-semibold text-white transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Generating Suggestions...
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4" />
-              Generate Suggestions
-            </>
-          )}
-        </button>
+          rows={4}
+          placeholder="Describe the problem you want to solve, who is affected, and what improvement you hope to achieve (e.g. 'Civil hospital OPD wait times exceed 90 minutes. We need an AI smart queue routing system to reduce wait times by 40%...')"
+          className="w-full rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+        />
 
-        {/* SUGGESTIONS */}
-        <div className="mt-5 space-y-4">
-
-          {/* OBJECTIVE */}
-          <SuggestionCard
-            id="objective"
-            selected={selectedSuggestions.includes(
-              "objective"
-            )}
-            onSelect={() =>
-              toggleSelection("objective")
-            }
-            icon={
-              <Target className="h-4 w-4" />
-            }
-            title="Suggested Objective"
-          >
-            <p className="text-xs leading-5 text-slate-600 dark:text-slate-300">
-              {suggestions.objective}
-            </p>
-          </SuggestionCard>
-
-          {/* KPI */}
-          <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
-
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-indigo-500" />
-
-                <p className="text-xs font-semibold">
-                  Suggested KPIs
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={
-                  isEditing
-                    ? () =>
-                        setIsEditing(false)
-                    : () =>
-                        setIsEditing(true)
-                }
-                className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              >
-                <Edit3 className="h-3 w-3" />
-
-                {isEditing
-                  ? "Done"
-                  : "Edit"}
-              </button>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {suggestions.kpis.map(
-                (kpi) => (
-                  <div
-                    key={kpi.id}
-                    className={`rounded-lg border p-3 transition-all ${
-                      selectedSuggestions.includes(
-                        kpi.id
-                      )
-                        ? "border-indigo-300 bg-indigo-50/50 dark:border-indigo-500/30 dark:bg-indigo-500/5"
-                        : "border-slate-200 dark:border-slate-800"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          toggleSelection(
-                            kpi.id
-                          )
-                        }
-                        className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all ${
-                          selectedSuggestions.includes(
-                            kpi.id
-                          )
-                            ? "border-indigo-600 bg-indigo-600 text-white"
-                            : "border-slate-300 dark:border-slate-700"
-                        }`}
-                        aria-label={`Select ${kpi.name}`}
-                      >
-                        {selectedSuggestions.includes(
-                          kpi.id
-                        ) && (
-                          <Check className="h-3 w-3" />
-                        )}
-                      </button>
-
-                      <div className="min-w-0 flex-1">
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            defaultValue={kpi.name}
-                            className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none focus:border-indigo-500 dark:border-slate-700 dark:bg-slate-950"
-                          />
-                        ) : (
-                          <p className="text-xs font-semibold">
-                            {kpi.name}
-                          </p>
-                        )}
-
-                        <div className="mt-2 grid grid-cols-2 gap-2">
-                          <MiniValue
-                            label="Baseline"
-                            value={
-                              kpi.baseline ||
-                              "AI will determine"
-                            }
-                          />
-
-                          <MiniValue
-                            label="Target"
-                            value={
-                              kpi.target ||
-                              "AI will determine"
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-
-          {/* PILOT DURATION */}
-          <SuggestionCard
-            id="pilotDuration"
-            selected={selectedSuggestions.includes(
-              "pilotDuration"
-            )}
-            onSelect={() =>
-              toggleSelection(
-                "pilotDuration"
-              )
-            }
-            icon={
-              <Timer className="h-4 w-4" />
-            }
-            title="Suggested Pilot Duration"
-          >
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {suggestions.pilotDuration
-                ? `${suggestions.pilotDuration} days`
-                : "AI will recommend an appropriate duration"}
-            </p>
-          </SuggestionCard>
+        {/* QUICK PRESET PILLS */}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <span className="text-xs font-medium text-slate-400">Quick examples:</span>
+          {PROMPT_EXAMPLES.map((ex, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => handleApplyExample(ex.prompt)}
+              disabled={isGenerating}
+              className="rounded-lg border border-slate-200 bg-white/80 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-indigo-300 hover:bg-indigo-50/50 hover:text-indigo-700 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-indigo-700 dark:hover:bg-indigo-950/30"
+            >
+              {ex.label}
+            </button>
+          ))}
         </div>
-
-        {/* ACTIONS */}
-        <div className="mt-5 border-t border-slate-200 pt-4 dark:border-slate-800">
-
-          <div className="mb-3 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={selectAll}
-              className="text-[10px] font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
-            >
-              Select All
-            </button>
-
-            <button
-              type="button"
-              onClick={clearSelection}
-              className="text-[10px] font-semibold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-            >
-              Clear
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                handleApply(false)
-              }
-              disabled={!hasSelection}
-              className="h-10 rounded-xl border border-indigo-200 text-xs font-semibold text-indigo-600 transition-colors hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-indigo-500/20 dark:text-indigo-400 dark:hover:bg-indigo-500/10"
-            >
-              Apply Selected
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                handleApply(true)
-              }
-              className="h-10 rounded-xl bg-indigo-600 text-xs font-semibold text-white transition-colors hover:bg-indigo-700"
-            >
-              Apply All
-            </button>
-          </div>
-        </div>
-
-        {/* CONTEXT */}
-        <p className="mt-4 text-center text-[9px] leading-4 text-slate-400">
-          {suggestions.context}
-        </p>
       </div>
-    </aside>
-  );
-}
 
-/* ============================================= */
-/* SUGGESTION CARD */
-/* ============================================= */
+      {/* ERROR DISPLAY */}
+      {generationError && (
+        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/80 p-3.5 text-xs text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-400">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-semibold">AI Generation Notice</p>
+            <p className="mt-0.5">{generationError}</p>
+          </div>
+        </div>
+      )}
 
-function SuggestionCard({
-  id,
-  selected,
-  onSelect,
-  icon,
-  title,
-  children,
-}) {
-  return (
-    <div
-      className={`rounded-xl border p-4 transition-all ${
-        selected
-          ? "border-indigo-300 bg-indigo-50/50 dark:border-indigo-500/30 dark:bg-indigo-500/5"
-          : "border-slate-200 dark:border-slate-800"
-      }`}
-    >
-      <div className="flex items-start gap-3">
-
-        <button
-          type="button"
-          onClick={onSelect}
-          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all ${
-            selected
-              ? "border-indigo-600 bg-indigo-600 text-white"
-              : "border-slate-300 dark:border-slate-700"
-          }`}
-          aria-label={`Select ${title}`}
-        >
-          {selected && (
-            <Check className="h-3 w-3" />
-          )}
-        </button>
-
-        <div className="min-w-0 flex-1">
-
+      {/* REGENERATION WARNING MODAL / INLINE BANNER */}
+      {showConfirmRegen && (
+        <div className="mt-4 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-indigo-500">
-              {icon}
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>
+              <strong>Generate new suggestions?</strong> Existing form values will be replaced with fresh AI suggestions.
             </span>
-
-            <p className="text-xs font-semibold">
-              {title}
-            </p>
           </div>
-
-          <div className="mt-3">
-            {children}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleGenerate(true)}
+              className="rounded-lg bg-amber-600 px-3 py-1.5 font-semibold text-white transition-colors hover:bg-amber-700"
+            >
+              Confirm & Replace
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowConfirmRegen(false)}
+              className="rounded-lg border border-amber-300 px-3 py-1.5 font-medium transition-colors hover:bg-amber-100 dark:border-amber-800 dark:hover:bg-amber-900/40"
+            >
+              Cancel
+            </button>
           </div>
         </div>
+      )}
+
+      {/* SUCCESS POPULATION BANNER */}
+      {aiResult && !isGenerating && !showConfirmRegen && (
+        <div className="mt-4 flex flex-col gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 text-xs text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-2.5">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+            <div>
+              <p className="font-bold">Form successfully populated with AI suggestions!</p>
+              <p className="mt-0.5 text-emerald-700 dark:text-emerald-400">
+                Problem framing, measurable outcome, {aiResult.suggested_kpis?.length || 3} KPIs, pilot parameters, and requirements have been loaded. You can review and edit every field below.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ACTIONS */}
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-indigo-100 pt-4 dark:border-indigo-900/30">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          💡 AI outputs are suggestions. You maintain complete control to edit, add, or remove fields before saving.
+        </p>
+
+        <div className="flex items-center gap-2">
+          {aiResult && (
+            <button
+              type="button"
+              onClick={() => {
+                setRoughPrompt("");
+                setAiResult(null);
+                setGenerationError("");
+              }}
+              disabled={isGenerating}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Reset Copilot
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => handleGenerate(false)}
+            disabled={isGenerating}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-xs font-semibold text-white shadow-md shadow-indigo-600/20 transition-all hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Generating challenge...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                {aiResult ? "Regenerate Challenge with AI" : "✨ Generate Challenge with AI"}
+              </>
+            )}
+          </button>
+        </div>
       </div>
-    </div>
-  );
-}
-
-/* ============================================= */
-/* MINI VALUE */
-/* ============================================= */
-
-function MiniValue({
-  label,
-  value,
-}) {
-  return (
-    <div className="rounded-lg bg-slate-50 p-2 dark:bg-slate-800/70">
-      <p className="text-[8px] font-semibold uppercase tracking-wider text-slate-400">
-        {label}
-      </p>
-
-      <p className="mt-1 text-[10px] font-medium">
-        {value}
-      </p>
     </div>
   );
 }
 
 export default AIChallengeCopilot;
-

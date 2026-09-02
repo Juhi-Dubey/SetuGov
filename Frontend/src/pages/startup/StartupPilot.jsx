@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -13,8 +13,15 @@ import {
   Rocket,
   Target,
   Upload,
+  ExternalLink,
+  Download,
+  AlertCircle,
+  Loader2,
+  X,
+  FileCheck
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getPilots, getPilotDashboard, addPilotEvidence, getPilotEvidence } from "../../services/pilotService.js";
 
 const pilotData = {
   challengeTitle: "Smart Waste Collection System",
@@ -38,40 +45,41 @@ const initialMilestones = [
   },
   {
     id: 2,
-    title: "Technology Deployment",
+    title: "Initial System Setup & Sensor Deployment",
     description:
-      "Deploy the solution and configure the required infrastructure.",
-    dueDate: "10 Sep 2026",
-    status: "In Progress",
+      "Install IoT sensors on primary fleet vehicles and test data transmission.",
+    dueDate: "30 Aug 2026",
+    status: "Completed",
   },
   {
     id: 3,
-    title: "Field Testing",
+    title: "AI Route Optimization Testing",
     description:
-      "Run the solution in selected pilot locations and collect results.",
-    dueDate: "15 Oct 2026",
-    status: "Upcoming",
+      "Run pilot routing algorithms across 5 critical wards and measure fuel savings.",
+    dueDate: "30 Sep 2026",
+    status: "In Progress",
   },
   {
     id: 4,
-    title: "Pilot Evaluation & Final Report",
+    title: "Citizen Feedback Integration",
     description:
-      "Submit performance results, evidence and final pilot report.",
+      "Collect and analyze feedback from sanitation workers and municipal officers.",
+    dueDate: "31 Oct 2026",
+    status: "Pending",
+  },
+  {
+    id: 5,
+    title: "Final Pilot Performance Evaluation",
+    description:
+      "Submit consolidated report with KPI metrics for scaling decision.",
     dueDate: "30 Nov 2026",
-    status: "Upcoming",
+    status: "Pending",
   },
 ];
 
 const initialUpdates = [
   {
     id: 1,
-    date: "28 Aug 2026",
-    title: "Deployment update submitted",
-    description:
-      "Initial deployment has been completed in the selected pilot area.",
-  },
-  {
-    id: 2,
     date: "24 Aug 2026",
     title: "Government feedback received",
     description:
@@ -81,58 +89,132 @@ const initialUpdates = [
 
 function StartupPilot() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
 
-  const [milestones, setMilestones] =
-    useState(initialMilestones);
+  const [activePilot, setActivePilot] = useState(null);
+  const [evidenceList, setEvidenceList] = useState([]);
+  const [isLoadingPilot, setIsLoadingPilot] = useState(true);
 
-  const [updates, setUpdates] =
-    useState(initialUpdates);
+  const [milestones, setMilestones] = useState(initialMilestones);
+  const [updates, setUpdates] = useState(initialUpdates);
+  const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [updateText, setUpdateText] = useState("");
 
-  const [showUpdateForm, setShowUpdateForm] =
-    useState(false);
+  const [showEvidenceForm, setShowEvidenceForm] = useState(false);
+  const [evidenceType, setEvidenceType] = useState("DEPLOYMENT_REPORT");
+  const [evidenceDescription, setEvidenceDescription] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isSubmittingEvidence, setIsSubmittingEvidence] = useState(false);
+  const [evidenceError, setEvidenceError] = useState("");
+  const [evidenceSuccess, setEvidenceSuccess] = useState("");
 
-  const [updateText, setUpdateText] =
-    useState("");
+  // Load pilot & real evidence from Backend
+  useEffect(() => {
+    let mounted = true;
+    const fetchPilotData = async () => {
+      try {
+        setIsLoadingPilot(true);
+        const pilotsRes = await getPilots();
+        const pilots = pilotsRes?.data?.pilots || [];
+        if (pilots.length > 0 && mounted) {
+          const firstPilot = pilots[0];
+          setActivePilot(firstPilot);
 
-  const [showEvidenceForm, setShowEvidenceForm] =
-    useState(false);
-
-  const [evidenceName, setEvidenceName] =
-    useState("");
-
-  const completedMilestones =
-    milestones.filter(
-      (item) => item.status === "Completed"
-    ).length;
-
-  const handleAddUpdate = () => {
-    if (!updateText.trim()) return;
-
-    const newUpdate = {
-      id: Date.now(),
-      date: formatCurrentDate(),
-      title: "Pilot progress update",
-      description: updateText.trim(),
+          // Fetch evidence for this pilot
+          try {
+            const evRes = await getPilotEvidence(firstPilot.id);
+            if (evRes?.data?.evidence && mounted) {
+              setEvidenceList(evRes.data.evidence);
+            }
+          } catch (err) {
+            console.warn("Evidence fetch warning:", err);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load backend pilot:", err);
+      } finally {
+        if (mounted) setIsLoadingPilot(false);
+      }
     };
 
-    setUpdates((previous) => [
-      newUpdate,
-      ...previous,
-    ]);
+    fetchPilotData();
+    return () => { mounted = false; };
+  }, []);
 
-    setUpdateText("");
-    setShowUpdateForm(false);
+  const handleFileChange = (e) => {
+    setEvidenceError("");
+    setEvidenceSuccess("");
+    const file = e.target.files?.[0];
+    if (!file) {
+      setSelectedFile(null);
+      return;
+    }
+
+    const allowed = [".pdf", ".png", ".jpg", ".jpeg"];
+    const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
+    if (!allowed.includes(ext)) {
+      setEvidenceError("Unsupported file type. Please upload a PDF, PNG, or JPG/JPEG file.");
+      setSelectedFile(null);
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setEvidenceError("File size exceeds 10 MB limit.");
+      setSelectedFile(null);
+      return;
+    }
+
+    setSelectedFile(file);
   };
 
-  const handleEvidenceSubmit = () => {
-    if (!evidenceName.trim()) return;
+  const handleEvidenceSubmit = async (e) => {
+    e?.preventDefault();
+    setEvidenceError("");
+    setEvidenceSuccess("");
 
-    setEvidenceName("");
-    setShowEvidenceForm(false);
+    if (!selectedFile) {
+      setEvidenceError("Please select a document or evidence file (PDF, PNG, JPG).");
+      return;
+    }
 
-    alert(
-      "Evidence submitted successfully."
-    );
+    if (!evidenceDescription.trim() || evidenceDescription.trim().length < 5) {
+      setEvidenceError("Please enter an evidence description (at least 5 characters).");
+      return;
+    }
+
+    if (!activePilot?.id) {
+      setEvidenceError("No active pilot found to attach evidence to.");
+      return;
+    }
+
+    try {
+      setIsSubmittingEvidence(true);
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("type", evidenceType);
+      formData.append("description", evidenceDescription.trim());
+      formData.append("source", "STARTUP_UPLOAD");
+
+      const response = await addPilotEvidence(activePilot.id, formData);
+      const newEvidence = response?.data?.evidence;
+
+      if (newEvidence) {
+        setEvidenceList((prev) => [newEvidence, ...prev]);
+        setEvidenceSuccess("Evidence document uploaded and recorded successfully!");
+        setEvidenceDescription("");
+        setSelectedFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        setTimeout(() => {
+          setShowEvidenceForm(false);
+          setEvidenceSuccess("");
+        }, 1500);
+      }
+    } catch (err) {
+      console.error("Evidence upload failed:", err);
+      setEvidenceError(err?.message || "Failed to upload evidence file. Please try again.");
+    } finally {
+      setIsSubmittingEvidence(false);
+    }
   };
 
   const handleMilestoneClick = (id) => {
@@ -470,99 +552,182 @@ function StartupPilot() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-base font-bold text-slate-900 dark:text-white">
-              Pilot Evidence
+              Pilot Evidence & Verification Documents
             </h2>
 
             <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-              Submit evidence and supporting material
-              for pilot evaluation.
+              Submit telemetry, reports, and verification documents (PDF, PNG, JPG max 10MB) for department review.
             </p>
           </div>
 
           <button
             type="button"
-            onClick={() =>
-              setShowEvidenceForm(
-                (previous) => !previous
-              )
-            }
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-indigo-700"
+            onClick={() => {
+              setShowEvidenceForm((previous) => !previous);
+              setEvidenceError("");
+              setEvidenceSuccess("");
+            }}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-indigo-700"
           >
             <Upload className="h-4 w-4" />
-            Submit Evidence
+            {showEvidenceForm ? "Close Form" : "Upload Evidence File"}
           </button>
         </div>
 
         {showEvidenceForm && (
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 8,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900"
+          <motion.form
+            onSubmit={handleEvidenceSubmit}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5 dark:border-indigo-900/40 dark:bg-indigo-950/20"
           >
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
-              Evidence Description
-            </label>
+            <div className="flex items-center justify-between border-b border-indigo-100 pb-3 dark:border-indigo-900/40">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                Submit New Pilot Evidence File
+              </h3>
+              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                Formats: PDF, PNG, JPG/JPEG (Max 10MB)
+              </span>
+            </div>
 
-            <input
-              type="text"
-              value={evidenceName}
-              onChange={(event) =>
-                setEvidenceName(
-                  event.target.value
-                )
-              }
-              placeholder="e.g. Deployment report, field test results..."
-              className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-            />
+            {evidenceError && (
+              <div className="mt-3 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{evidenceError}</span>
+              </div>
+            )}
 
-            <div className="mt-3 flex justify-end gap-2">
+            {evidenceSuccess && (
+              <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-medium text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-400">
+                <FileCheck className="h-4 w-4 shrink-0" />
+                <span>{evidenceSuccess}</span>
+              </div>
+            )}
+
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  Evidence Category / Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={evidenceType}
+                  onChange={(e) => setEvidenceType(e.target.value)}
+                  className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                >
+                  <option value="DEPLOYMENT_REPORT">Deployment & Installation Report</option>
+                  <option value="FIELD_TEST_RESULT">Field Test & Trial Results</option>
+                  <option value="TELEMETRY_LOG">Telemetry & System Logs</option>
+                  <option value="PERFORMANCE_METRIC">KPI & Performance Metrics</option>
+                  <option value="AUDIT_REPORT">Independent Audit / Survey Report</option>
+                  <option value="MILESTONE_EVIDENCE">Milestone Completion Proof</option>
+                  <option value="OTHER">Other Supporting Material</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  Select Document File <span className="text-red-500">*</span>
+                </label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  onChange={handleFileChange}
+                  className="mt-1.5 block h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:file:bg-indigo-900/40 dark:file:text-indigo-300"
+                />
+              </div>
+            </div>
+
+            {selectedFile && (
+              <div className="mt-3 flex items-center justify-between rounded-xl border border-indigo-200 bg-white p-3 dark:border-indigo-900/60 dark:bg-slate-900">
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <FileText className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                  <span className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    {selectedFile.name}
+                  </span>
+                  <span className="shrink-0 text-[10px] text-slate-400">
+                    ({(selectedFile.size / 1024).toFixed(1)} KB)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
+            <div className="mt-4">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                Description / Context <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={evidenceDescription}
+                onChange={(e) => setEvidenceDescription(e.target.value)}
+                placeholder="Explain what this evidence demonstrates (e.g., 200 telemetry logs from Zone B demonstrating 18% idle time reduction)..."
+                rows={3}
+                className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-xs outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+              />
+            </div>
+
+            <div className="mt-4 flex items-center justify-end gap-2 border-t border-indigo-100 pt-3 dark:border-indigo-900/40">
               <button
                 type="button"
-                onClick={() =>
-                  setShowEvidenceForm(false)
-                }
-                className="rounded-xl px-4 py-2 text-xs font-bold text-slate-500 hover:bg-white dark:hover:bg-slate-950"
+                onClick={() => {
+                  setShowEvidenceForm(false);
+                  setEvidenceError("");
+                  setEvidenceSuccess("");
+                }}
+                className="rounded-xl px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 Cancel
               </button>
 
               <button
-                type="button"
-                onClick={
-                  handleEvidenceSubmit
-                }
-                className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700"
+                type="submit"
+                disabled={isSubmittingEvidence || !selectedFile}
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
               >
-                Submit
+                {isSubmittingEvidence ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Uploading Document...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4" />
+                    Submit Evidence
+                  </>
+                )}
               </button>
             </div>
-          </motion.div>
+          </motion.form>
         )}
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <EvidenceCard
-            title="Deployment Report"
-            type="PDF"
-            status="Submitted"
-          />
-
-          <EvidenceCard
-            title="Field Test Results"
-            type="PDF"
-            status="Submitted"
-          />
-
-          <EvidenceCard
-            title="Performance Metrics"
-            type="Report"
-            status="Pending"
-          />
+          {evidenceList.length === 0 ? (
+            <div className="col-span-full rounded-2xl border border-dashed border-slate-200 p-8 text-center dark:border-slate-800">
+              <FileText className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
+              <p className="mt-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                No evidence documents uploaded yet for this pilot.
+              </p>
+              <p className="mt-1 text-[11px] text-slate-400">
+                Click "Upload Evidence File" above to submit telemetry, reports, or test results.
+              </p>
+            </div>
+          ) : (
+            evidenceList.map((item) => (
+              <EvidenceCard
+                key={item.id}
+                evidence={item}
+              />
+            ))
+          )}
         </div>
       </section>
 
@@ -790,50 +955,91 @@ function DetailRow({
 /* EVIDENCE CARD                                         */
 /* ===================================================== */
 
-function EvidenceCard({
-  title,
-  type,
-  status,
-}) {
-  const submitted =
-    status === "Submitted";
+function EvidenceCard({ evidence }) {
+  const isPdf = evidence.file_url?.toLowerCase().endsWith(".pdf");
+  const isImage = evidence.file_url?.toLowerCase().endsWith(".png") ||
+                  evidence.file_url?.toLowerCase().endsWith(".jpg") ||
+                  evidence.file_url?.toLowerCase().endsWith(".jpeg");
+
+  const status = evidence.verification_status || "PENDING";
+  const isVerified = status === "VERIFIED";
+  const isRejected = status === "REJECTED";
+
+  const typeLabels = {
+    DEPLOYMENT_REPORT: "Deployment Report",
+    FIELD_TEST_RESULT: "Field Test Result",
+    TELEMETRY_LOG: "Telemetry & Logs",
+    PERFORMANCE_METRIC: "Performance Metric",
+    AUDIT_REPORT: "Audit Report",
+    MILESTONE_EVIDENCE: "Milestone Evidence",
+    OTHER: "Supporting Evidence"
+  };
+
+  const handleOpenFile = () => {
+    if (evidence.file_url) {
+      window.open(evidence.file_url, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const formattedDate = evidence.created_at || evidence.date
+    ? new Date(evidence.created_at || evidence.date).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      })
+    : "Recently uploaded";
 
   return (
-    <div className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-          <FileText className="h-4 w-4" />
+    <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+      <div>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+            <FileText className="h-4 w-4" />
+          </div>
+
+          <span
+            className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
+              isVerified
+                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
+                : isRejected
+                ? "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+                : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
+            }`}
+          >
+            {isVerified ? "Verified" : isRejected ? "Rejected" : "Pending Review"}
+          </span>
         </div>
 
-        <span
-          className={`rounded-full px-2 py-1 text-[9px] font-bold ${
-            submitted
-              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
-              : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
-          }`}
-        >
-          {status}
-        </span>
+        <div className="mt-3">
+          <div className="flex items-center gap-1.5">
+            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              {isPdf ? "PDF" : isImage ? "IMAGE" : "FILE"}
+            </span>
+            <span className="text-[10px] font-medium text-slate-400">
+              {formattedDate}
+            </span>
+          </div>
+
+          <h3 className="mt-2 text-xs font-bold text-slate-900 dark:text-white">
+            {typeLabels[evidence.type] || evidence.type}
+          </h3>
+
+          <p className="mt-1 line-clamp-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+            {evidence.description || "No additional description provided."}
+          </p>
+        </div>
       </div>
 
-      <h3 className="mt-4 text-xs font-bold text-slate-800 dark:text-slate-200">
-        {title}
-      </h3>
-
-      <p className="mt-1 text-[9px] text-slate-400">
-        {type}
-      </p>
-
-      <button
-        type="button"
-        className="mt-4 inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400"
-      >
-        {submitted
-          ? "View Evidence"
-          : "Add Evidence"}
-
-        <ArrowRight className="h-3 w-3" />
-      </button>
+      <div className="mt-4 border-t border-slate-100 pt-3 dark:border-slate-800">
+        <button
+          type="button"
+          onClick={handleOpenFile}
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          <span>View / Download Document</span>
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
+import fs from 'fs';
 import apiRouter from './routes/index.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { apiRateLimiter } from './middleware/rateLimiter.js';
@@ -11,8 +13,17 @@ import { config } from './config/env.js';
 export const createApp = () => {
   const app = express();
 
-  // Security Headers
-  app.use(helmet());
+  // Security Headers with Cross-Origin Resource Policy for uploads
+  app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+  }));
+
+  // Ensure uploads directory exists and mount static serving
+  const uploadsDir = path.join(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  app.use('/uploads', express.static(uploadsDir));
 
   // CORS Configuration (P1-7: Restrict origins)
   const allowedOrigins = config.CORS_ORIGIN === '*'

@@ -3,6 +3,7 @@ import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.
 import { validateTransition } from '../utils/lifecycle.js';
 import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
+import { sendNotification } from './notificationService.js';
 
 export const createScaleDecision = async (pilotId, data, user, ip_address = null) => {
   // Only GOVERNMENT or ADMIN role can make final scale decisions
@@ -79,6 +80,16 @@ export const createScaleDecision = async (pilotId, data, user, ip_address = null
     },
     ip_address
   });
+
+  if (pilot.startup?.user_id) {
+    await sendNotification({
+      user_id: pilot.startup.user_id,
+      title: `Scale Decision: ${data.decision}`,
+      message: `A formal ${data.decision} scale decision has been recorded for pilot "${pilot.challenge?.title}".`,
+      type: 'SCALE_DECISION',
+      link: '/startup/pilots'
+    });
+  }
 
   return scaleDecision;
 };

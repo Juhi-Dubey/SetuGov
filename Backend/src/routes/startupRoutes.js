@@ -13,6 +13,7 @@ import {
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
+import { uploadSingle, getFileUrl } from '../middleware/upload.js';
 import {
   createStartupSchema,
   updateStartupSchema,
@@ -21,6 +22,13 @@ import {
 } from '../schemas/startupSchemas.js';
 
 const router = Router();
+
+const prepareDocumentUpload = (req, _res, next) => {
+  if (req.file) {
+    req.body.document_url = getFileUrl(req, req.file.filename);
+  }
+  next();
+};
 
 // Create Startup Profile (STARTUP or ADMIN)
 router.post('/', authenticate, authorizeRoles('STARTUP', 'ADMIN'), validate(createStartupSchema), createStartup);
@@ -34,8 +42,8 @@ router.get('/:startup_id', authenticate, getStartupById);
 // Update Startup Profile (Owner or ADMIN)
 router.patch('/:startup_id', authenticate, validate(updateStartupSchema), updateStartup);
 
-// Upload Startup Document (Owner or ADMIN)
-router.post('/:startup_id/documents', authenticate, validate(addDocumentSchema), addStartupDocument);
+// Upload Startup Document (Owner or ADMIN - accepts multipart with 'file' or JSON with 'document_url')
+router.post('/:startup_id/documents', authenticate, uploadSingle('file'), prepareDocumentUpload, validate(addDocumentSchema), addStartupDocument);
 
 // Get Startup Documents
 router.get('/:startup_id/documents', authenticate, getStartupDocuments);

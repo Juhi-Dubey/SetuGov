@@ -5,7 +5,7 @@ export const createEvidenceSchema = z.object({
   description: z.string().min(5, 'Description must be at least 5 characters'),
   file_url: z.string().url('File URL must be a valid URL').refine(url => /^https?:\/\//i.test(url), { message: 'File URL must use http or https' }),
   date: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}/)).optional(),
-  source: z.string().min(2, 'Source is required')
+  source: z.string().min(2).optional().default('STARTUP_UPLOAD')
 });
 
 export const updateEvidenceSchema = z.object({
