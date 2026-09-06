@@ -265,3 +265,57 @@ class DecisionEngineResponse(BaseModel):
     conditions: list[DecisionCondition] = Field(default_factory=list)
     uncertainties: list[str] = Field(default_factory=list)
     score_breakdown: dict[str, float] = Field(default_factory=dict)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Brain 6 — Startup Comparator Response
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class RecommendationLabel(str, Enum):
+    """Deterministic label assigned based on total match score."""
+
+    HIGHLY_RECOMMENDED = "Highly Recommended"
+    RECOMMENDED = "Recommended"
+    MARGINAL = "Marginal"
+    NOT_RECOMMENDED = "Not Recommended"
+
+
+class StartupRank(BaseModel):
+    """Single ranked startup entry — scores are deterministic, narrative is LLM."""
+
+    rank: int = Field(..., ge=1, description="Rank position (1 = best fit)")
+    startup_name: str
+    total_score: float = Field(..., ge=0, le=100, description="Overall match score (deterministic)")
+    score_breakdown: MatchScoreBreakdown
+    recommendation_label: RecommendationLabel
+    explanation: str = Field(
+        ..., description="LLM narrative explaining this startup's fit with the challenge"
+    )
+    strengths: list[str] = Field(default_factory=list)
+    concerns: list[str] = Field(default_factory=list)
+
+
+class StartupComparatorResponse(BaseModel):
+    """Brain 6 output — ranked startup list with explanations and comparisons."""
+
+    recommended_startup: str = Field(
+        ..., description="Name of the top-ranked startup"
+    )
+    recommendation_rationale: str = Field(
+        ..., description="LLM explanation for why this startup is recommended"
+    )
+    ranked_startups: list[StartupRank] = Field(
+        ..., description="All startups ordered by score, rank 1 = best"
+    )
+    comparative_observations: list[str] = Field(
+        default_factory=list,
+        description="Cross-startup insights highlighting key differentiators",
+    )
+    evaluation_disclaimer: str = Field(
+        default=(
+            "AI-generated comparative analysis — scores are deterministic; "
+            "qualitative explanations require authorized evaluator review before use."
+        )
+    )
+

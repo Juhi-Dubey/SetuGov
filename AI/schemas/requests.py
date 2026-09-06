@@ -309,3 +309,33 @@ class DecisionInput(BaseModel):
     risk_score: float = Field(
         ..., ge=0, le=100, description="Aggregate risk score (0=no risk, 100=critical)"
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Brain 6 — Startup Comparator
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class StartupComparatorRequest(BaseModel):
+    """Brain 6 input — compare and rank multiple startup candidates for a challenge.
+
+    Requires at least two startups. The AI scores every startup
+    deterministically using the same engine as Brain 2 (MatchScoreBreakdown)
+    and the LLM provides qualitative explanations and comparative observations.
+    """
+
+    challenge: ChallengeContext = Field(
+        ..., description="The challenge all startups are being evaluated against"
+    )
+    startups: list[StartupProfile] = Field(
+        ..., min_length=2, description="List of startup candidates (minimum 2)"
+    )
+    evaluation_weights: Optional[dict[str, float]] = Field(
+        None,
+        description=(
+            "Optional custom scoring weights per dimension. "
+            "Keys: 'technology_fit', 'domain_fit', 'readiness', 'experience', 'deployment_fit'. "
+            "Values: 0–100 (relative, need not sum to 100). "
+            "If omitted, default engine weights are used."
+        ),
+    )

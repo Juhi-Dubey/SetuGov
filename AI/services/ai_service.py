@@ -18,11 +18,17 @@ from typing import Any, Optional
 
 from pydantic import ValidationError
 
+# pyrefly: ignore [missing-import]
 from prompts.challenge_copilot import build_challenge_prompt
+# pyrefly: ignore [missing-import]
 from prompts.document_assistance import build_document_prompt
+# pyrefly: ignore [missing-import]
 from prompts.match_explanation import build_match_prompt
+# pyrefly: ignore [missing-import]
 from prompts.pilot_intelligence import build_pilot_prompt
+# pyrefly: ignore [missing-import]
 from prompts.proposal_analysis import build_proposal_prompt
+from prompts.startup_comparator import build_comparator_prompt
 from schemas.requests import (
     ChallengeCopilotRequest,
     DocumentAssistanceRequest,
@@ -30,6 +36,7 @@ from schemas.requests import (
     MatchExplanationRequest,
     PilotIntelligenceRequest,
     ProposalAnalysisRequest,
+    StartupComparatorRequest,
 )
 from schemas.responses import (
     ChallengeCopilotResponse,
@@ -43,11 +50,15 @@ from schemas.responses import (
     ProposalAnalysisResponse,
     ProposalRisk,
     RiskSeverity,
+    StartupComparatorResponse,
     SuggestedKPI,
 )
+# pyrefly: ignore [missing-import]
 from services.decision_engine import DecisionEngine
+# pyrefly: ignore [missing-import]
 from services.ollama_client import InvalidAIResponseError, OllamaClient
 from services.parsers.challenge_parser import parse_challenge_response
+from services.parsers.comparator_parser import parse_comparator_response
 from services.parsers.document_parser import parse_document_response
 from services.parsers.match_parser import parse_match_response
 from services.parsers.pilot_parser import parse_pilot_response
@@ -1694,3 +1705,48 @@ class AIService:
         raw = await self._ollama.generate_json(prompt=user_prompt, system=system_prompt)
 
         return parse_document_response(raw, request=request)
+
+    # ══════════════════════════════════════════════════════════════════
+    # Brain 6 — Startup Comparator
+    # ══════════════════════════════════════════════════════════════════
+
+    async def compare_startups(
+        self, request: StartupComparatorRequest
+    ) -> StartupComparatorResponse:
+        """
+        Rank and compare multiple startup candidates for a single challenge.
+
+        Workflow:
+          1. Run deterministic calculate_match_score() for EVERY startup.
+          2. Sort by total score descending — rank is fully deterministic.
+          3. Pass all profiles + scores to the LLM for qualitative narratives.
+          4. Merge deterministic ranks with LLM text via comparator_parser.
+        """
+        logger.info(
+            "Brain 6 — comparing %d startups for challenge: %s",
+            len(request.startups),
+            request.challenge.title,
+        )
+
+        # 1. Deterministic scoring — one MatchExplanationRequest per startup
+        scores: list[MatchScoreBreakdown] = []
+        for startup in request.startups:
+            match_req = MatchExplanationRequest(
+                challenge=request.challenge,
+                startup=startup,
+            )
+            score = self._engine.calculate_match_score(match_req)
+            scores.append(score)
+            logger.debug(
+                "  scored '%s': %.1f/100", startup.name, score.total
+            )
+
+        # 2. Build prompt with all profiles + their deterministic scores
+        system_prompt, user_prompt = build_comparator_prompt(request, scores)
+
+        # 3. LLM call — qualitative narratives only
+        raw = await self._ollama.generate_json(prompt=user_prompt, system=system_prompt)
+
+        # 4. Parse — scores from Python, text from LLM
+        return parse_comparator_response(raw, request=request, scores=scores)
+
