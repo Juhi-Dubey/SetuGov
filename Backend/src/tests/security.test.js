@@ -279,7 +279,7 @@ const runSecurityTests = async () => {
       name: 'Temp Deactivated User',
       email: tempEmail,
       password: 'Password123!',
-      role: 'EVALUATOR'
+      role: 'STARTUP'
     });
     assertTest('Temp user registered', tempRegister.statusCode === 201);
     const tempToken = tempRegister.body.data.token;
@@ -648,6 +648,116 @@ const runSecurityTests = async () => {
     assertTest(
       'Notification delivery failure returns null without throwing uncaught exception (non-blocking)',
       notificationFailureResult === null
+    );
+
+    // ----------------------------------------------------
+    // TEST 15: PART 26 SPECIFIED SECURITY BOUNDARY TEST CASES (1 to 20)
+    // ----------------------------------------------------
+    logger.info('\n--- TEST 15: Part 26 Specific Security Boundary Verification (Cases 1-20) ---');
+
+    const timestampBoundary = Date.now();
+
+    // 1. STARTUP cannot register as ADMIN
+    const regAdminRes = await request('POST', '/api/v1/auth/register', {
+      name: 'Malicious Admin Wannabe',
+      email: `admin_hack_${timestampBoundary}@test.com`,
+      password: 'Password123!',
+      role: 'ADMIN'
+    });
+    assertTest('1. STARTUP cannot register as ADMIN (422/403)', regAdminRes.statusCode === 422 || regAdminRes.statusCode === 403);
+
+    // 2. STARTUP cannot register as GOVERNMENT
+    const regGovRes = await request('POST', '/api/v1/auth/register', {
+      name: 'Malicious Gov Wannabe',
+      email: `gov_hack_${timestampBoundary}@test.com`,
+      password: 'Password123!',
+      role: 'GOVERNMENT'
+    });
+    assertTest('2. STARTUP cannot register as GOVERNMENT (422/403)', regGovRes.statusCode === 422 || regGovRes.statusCode === 403);
+
+    // 3. STARTUP cannot register as EVALUATOR
+    const regEvalRes = await request('POST', '/api/v1/auth/register', {
+      name: 'Malicious Eval Wannabe',
+      email: `eval_hack_${timestampBoundary}@test.com`,
+      password: 'Password123!',
+      role: 'EVALUATOR'
+    });
+    assertTest('3. STARTUP cannot register as EVALUATOR (422/403)', regEvalRes.statusCode === 422 || regEvalRes.statusCode === 403);
+
+    // 16. Public user cannot view DRAFT challenge
+    const draftChallengeRes = await request('POST', '/api/v1/challenges', {
+      title: `Draft Test Challenge ${timestampBoundary}`,
+      problem_description: 'This is a private draft challenge for boundary testing.',
+      current_baseline: 'Manual process',
+      desired_outcome: 'Automated platform',
+      location: 'National',
+      budget_min: 100000,
+      budget_max: 500000,
+      pilot_duration_days: 60,
+      required_technologies: ['Security', 'Cloud']
+    }, healthGovToken);
+    const draftChallenge = draftChallengeRes.body.data.challenge;
+
+    const publicDraftView = await request('GET', `/api/v1/challenges/${draftChallenge.id}`);
+    assertTest('16. Public user cannot view DRAFT challenge (404/403)', publicDraftView.statusCode === 404 || publicDraftView.statusCode === 403);
+
+    // 18. Government cannot verify evaluator
+    const dummyEvalUser = await prisma.user.create({
+      data: {
+        name: `Eval User ${timestampBoundary}`,
+        email: `eval_user_${timestampBoundary}@test.com`,
+        password_hash: 'hash',
+        role: 'EVALUATOR',
+        is_active: true,
+        is_verified: false
+      }
+    });
+    const dummyProfile = await prisma.evaluatorProfile.create({
+      data: {
+        user_id: dummyEvalUser.id,
+        organization: 'Independent',
+        designation: 'Reviewer',
+        domain_expertise: ['Technology'],
+        verification_status: 'PENDING'
+      }
+    });
+
+    const govVerifyEvalRes = await request('PATCH', `/api/v1/evaluators/${dummyProfile.id}/verify`, {
+      verification_status: 'VERIFIED'
+    }, healthGovToken);
+    assertTest('18. Government cannot verify evaluator (403 Forbidden)', govVerifyEvalRes.statusCode === 403);
+
+    // 19. Government nomination cannot automatically make evaluator VERIFIED
+    const govNominateRes = await request('POST', '/api/v1/evaluators/nominate', {
+      name: `Nominated Specialist ${timestampBoundary}`,
+      email: `nominee_${timestampBoundary}@test.com`,
+      designation: 'Specialist',
+      domain_expertise: ['AI', 'Health'],
+      reason: 'Nominated for healthcare evaluations.'
+    }, healthGovToken);
+    assertTest(
+      '19. Government nomination creates PENDING AccessRequest (not automatically verified)',
+      govNominateRes.statusCode === 201 && govNominateRes.body.data?.status === 'PENDING'
+    );
+
+    // 20. Role change to EVALUATOR without verified profile is rejected
+    const unverifiedUser = await prisma.user.create({
+      data: {
+        name: `Candidate ${timestampBoundary}`,
+        email: `candidate_${timestampBoundary}@test.com`,
+        password_hash: 'hash',
+        role: 'STARTUP',
+        is_active: true,
+        is_verified: false
+      }
+    });
+
+    const roleChangeRes = await request('PATCH', `/api/v1/admin/users/${unverifiedUser.id}/role`, {
+      role: 'EVALUATOR'
+    }, adminToken);
+    assertTest(
+      '20. Role change to EVALUATOR without verified profile is rejected (400)',
+      roleChangeRes.statusCode === 400
     );
 
     logger.info('\n===============================================================');

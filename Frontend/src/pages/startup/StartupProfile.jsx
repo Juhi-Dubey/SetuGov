@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -14,55 +14,100 @@ import {
   User,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const initialProfile = {
-  companyName: "GreenTech Innovations Pvt. Ltd.",
-  founderName: "Demo Founder",
-  email: "contact@greentech.in",
-  phone: "+91 98765 43210",
-  website: "https://www.greentech.in",
-  category: "CleanTech",
-  stage: "Growth Stage",
-  registrationNumber: "U72900JH2024PTC012345",
-  gstNumber: "20ABCDE1234F1Z5",
-  city: "Jamshedpur",
-  state: "Jharkhand",
-  foundedYear: "2024",
-  employees: "25–50",
-  about:
-    "GreenTech Innovations develops technology solutions for sustainable urban infrastructure and smart waste management.",
-};
+import { getStartups, updateStartup } from "../../services/startupService";
+import { useAuth } from "../../context/AuthContext";
 
 function StartupProfile() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const [profile, setProfile] =
-    useState(initialProfile);
+  const [startupId, setStartupId] = useState(null);
+  const [profile, setProfile] = useState({
+    companyName: "Innovator Entity",
+    founderName: user?.name || "Founder",
+    email: user?.email || "founder@startup.in",
+    phone: "+91 98765 43210",
+    website: "https://setugov.in",
+    category: "Technology",
+    stage: "Growth Stage",
+    registrationNumber: "U72900JH2024PTC012345",
+    gstNumber: "20ABCDE1234F1Z5",
+    city: "New Delhi",
+    state: "Delhi",
+    foundedYear: "2024",
+    employees: "10-50",
+    about: "Technology innovations for public governance and mission delivery.",
+  });
 
-  const [editing, setEditing] =
-    useState(false);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
-  const [saved, setSaved] =
-    useState(false);
+  useEffect(() => {
+    let mounted = true;
+    const fetchProfile = async () => {
+      try {
+        const res = await getStartups();
+        const startups = res?.data?.startups || res?.data || [];
+        const myStartup = startups[0];
+
+        if (myStartup && mounted) {
+          setStartupId(myStartup.id);
+          setProfile({
+            companyName: myStartup.company_name || "Startup Innovations",
+            founderName: myStartup.user?.name || user?.name || "Founder",
+            email: myStartup.user?.email || user?.email || "founder@startup.in",
+            phone: myStartup.user?.phone || "+91 98765 43210",
+            website: myStartup.website || "https://setugov.in",
+            category: myStartup.domain || "Technology",
+            stage: myStartup.stage || `TRL-${myStartup.readiness_level || 5}`,
+            registrationNumber: myStartup.dpiit_number || "DPIIT-RECOGNIZED",
+            gstNumber: myStartup.gstin || "20ABCDE1234F1Z5",
+            city: myStartup.location?.split(",")[0]?.trim() || "New Delhi",
+            state: myStartup.location?.split(",")[1]?.trim() || "Delhi",
+            foundedYear: myStartup.incorporation_date ? new Date(myStartup.incorporation_date).getFullYear().toString() : "2024",
+            employees: "10-50",
+            about: myStartup.description || "Building solutions for government challenges.",
+          });
+        }
+      } catch (err) {
+        console.warn("Could not load startup profile from server:", err);
+      }
+    };
+
+    fetchProfile();
+    return () => { mounted = false; };
+  }, [user]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-
     setProfile((previous) => ({
       ...previous,
       [name]: value,
     }));
-
     setSaved(false);
   };
 
-  const handleSave = () => {
-    setEditing(false);
-    setSaved(true);
-
-    setTimeout(() => {
-      setSaved(false);
-    }, 3000);
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      if (startupId) {
+        await updateStartup(startupId, {
+          company_name: profile.companyName,
+          description: profile.about,
+          domain: profile.category,
+          location: `${profile.city}, ${profile.state}`
+        });
+      }
+      setEditing(false);
+      setSaved(true);
+      setTimeout(() => { setSaved(false); }, 3000);
+    } catch (err) {
+      console.error("Failed to save startup profile:", err);
+      alert(err?.message || "Failed to update profile.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

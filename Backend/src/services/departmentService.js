@@ -73,28 +73,42 @@ export const getDepartments = async () => {
   return departments;
 };
 
-export const getDepartmentById = async (id) => {
-  const department = await prisma.department.findUnique({
-    where: { id },
-    include: {
-      users: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          is_active: true
-        }
-      },
-      challenges: {
-        select: {
-          id: true,
-          title: true,
-          status: true,
-          created_at: true
-        }
+export const getDepartmentById = async (id, user = null) => {
+  const isPrivileged = user?.role === 'ADMIN' || (user?.role === 'GOVERNMENT' && user?.department_id === id);
+
+  const include = {
+    challenges: {
+      where: isPrivileged ? {} : { status: 'PUBLISHED' },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        created_at: true
+      }
+    },
+    _count: {
+      select: {
+        challenges: true
       }
     }
+  };
+
+  // Only expose internal users to Admin
+  if (user?.role === 'ADMIN') {
+    include.users = {
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        is_active: true
+      }
+    };
+  }
+
+  const department = await prisma.department.findUnique({
+    where: { id },
+    include
   });
 
   if (!department) {

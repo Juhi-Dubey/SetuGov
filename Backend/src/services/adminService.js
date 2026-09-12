@@ -203,8 +203,27 @@ export const updateUserRole = async (userId, data, adminUser, ip_address = null)
   }
 
   const updateData = { role };
-  if (role === 'GOVERNMENT' && department_id !== undefined) {
-    updateData.department_id = department_id;
+
+  // Part 16 & 20: Role transitions must not bypass verification
+  if (role === 'EVALUATOR') {
+    const evaluatorProfile = await prisma.evaluatorProfile.findUnique({
+      where: { user_id: userId }
+    });
+    if (!evaluatorProfile || evaluatorProfile.verification_status !== 'VERIFIED') {
+      throw new BadRequestError('Cannot change user role to EVALUATOR without an existing VERIFIED EvaluatorProfile.');
+    }
+  }
+
+  if (role === 'GOVERNMENT') {
+    const deptId = department_id !== undefined ? department_id : targetUser.department_id;
+    if (!deptId) {
+      throw new BadRequestError('Cannot change user role to GOVERNMENT without assigning a department.');
+    }
+    const dept = await prisma.department.findUnique({ where: { id: deptId } });
+    if (!dept) {
+      throw new BadRequestError(`Department with ID ${deptId} not found.`);
+    }
+    updateData.department_id = deptId;
   }
 
   const updated = await prisma.user.update({
@@ -281,10 +300,16 @@ export const provisionUser = async (data, adminUser, ip_address = null) => {
     }
   }
 
-  // Generate secure random initial credentials
-  const setupToken = `inv_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
-  const initialPassword = `SetuGov_${Math.random().toString(36).substring(2, 8)}!2026`;
-  const password_hash = await import('bcrypt').then(b => b.default.hash(initialPassword, 12));
+  // Generate secure random cryptographic invitation token
+  const crypto = await import('crypto');
+  const bcrypt = await import('bcrypt');
+  const rawInvitationToken = crypto.default.randomBytes(32).toString('hex');
+  const invitation_token_hash = crypto.default.createHash('sha256').update(rawInvitationToken).digest('hex');
+  const invitation_expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days expiry
+
+  // Unusable random initial password hash until user sets their own password
+  const randomInitialSecret = crypto.default.randomBytes(32).toString('hex');
+  const password_hash = await bcrypt.default.hash(randomInitialSecret, 12);
 
   const user = await prisma.user.create({
     data: {
@@ -295,6 +320,8 @@ export const provisionUser = async (data, adminUser, ip_address = null) => {
       department_id: role === 'GOVERNMENT' ? department_id : null,
       designation: designation ? designation.trim() : null,
       phone: phone ? phone.trim() : null,
+      invitation_token_hash,
+      invitation_expires_at,
       is_active: true,
       is_verified: true
     },
@@ -347,7 +374,20 @@ export const provisionUser = async (data, adminUser, ip_address = null) => {
       provisioned_role: role,
       provisioned_email: normalizedEmail,
       department_id: user.department_id,
-      setup_token: setupToken
+      invitation_expires_at: invitation_expires_at.toISOString()
+    },
+    ip_address
+  });
+
+  await createAuditLog({
+    user_id: adminUser.id,
+    action: 'INVITATION_CREATED',
+    entity_type: 'USER',
+    entity_id: user.id,
+    details: {
+      recipient_email: normalizedEmail,
+      role,
+      expires_at: invitation_expires_at.toISOString()
     },
     ip_address
   });
@@ -363,9 +403,10 @@ export const provisionUser = async (data, adminUser, ip_address = null) => {
   return {
     user,
     invitation: {
-      invitation_token: setupToken,
+      invitation_token: rawInvitationToken,
+      setup_link: `/set-password?token=${rawInvitationToken}`,
       setup_status: 'INVITATION_GENERATED',
-      expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      expiry: invitation_expires_at.toISOString()
     }
   };
 };

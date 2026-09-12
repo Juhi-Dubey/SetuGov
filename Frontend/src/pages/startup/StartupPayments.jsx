@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -11,84 +11,90 @@ import {
   IndianRupee,
   Receipt,
   WalletCards,
+  FolderOpen
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const paymentSummary = {
-  approved: 4000000,
-  paid: 2400000,
-  pending: 1600000,
-};
-
-const paymentMilestones = [
-  {
-    id: 1,
-    title: "Pilot Approval",
-    description:
-      "Initial payment after pilot approval and contract activation.",
-    amount: 1200000,
-    date: "05 Aug 2026",
-    status: "Paid",
-  },
-  {
-    id: 2,
-    title: "Deployment Milestone",
-    description:
-      "Payment after successful technology deployment.",
-    amount: 1200000,
-    date: "28 Aug 2026",
-    status: "Paid",
-  },
-  {
-    id: 3,
-    title: "Field Testing",
-    description:
-      "Payment after completion of field testing and submission of evidence.",
-    amount: 800000,
-    date: "15 Oct 2026",
-    status: "Pending",
-  },
-  {
-    id: 4,
-    title: "Final Pilot Completion",
-    description:
-      "Final payment after evaluation and acceptance of the pilot.",
-    amount: 800000,
-    date: "30 Nov 2026",
-    status: "Pending",
-  },
-];
-
-const transactions = [
-  {
-    id: "TXN-2026-001",
-    date: "05 Aug 2026",
-    description: "Pilot Approval Payment",
-    amount: 1200000,
-    status: "Completed",
-    reference: "GOV-PAY-847291",
-  },
-  {
-    id: "TXN-2026-002",
-    date: "28 Aug 2026",
-    description: "Deployment Milestone Payment",
-    amount: 1200000,
-    status: "Completed",
-    reference: "GOV-PAY-852104",
-  },
-];
+import { getPilots, getPilotPayments, getPilotMilestones } from "../../services/pilotService";
 
 function StartupPayments() {
   const navigate = useNavigate();
 
-  const [selectedTransaction, setSelectedTransaction] =
-    useState(null);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [paymentMilestones, setPaymentMilestones] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [paymentSummary, setPaymentSummary] = useState({
+    approved: 0,
+    paid: 0,
+    pending: 0
+  });
 
-  const paidPercentage = Math.round(
-    (paymentSummary.paid /
-      paymentSummary.approved) *
-      100
-  );
+  useEffect(() => {
+    let mounted = true;
+    const fetchPayments = async () => {
+      try {
+        setLoading(true);
+        const pilotsRes = await getPilots();
+        const pilots = pilotsRes?.data?.pilots || pilotsRes?.data || [];
+        const activePilot = pilots[0];
+
+        if (activePilot && mounted) {
+          const [paymentsRes, milestonesRes] = await Promise.all([
+            getPilotPayments(activePilot.id).catch(() => ({ data: [] })),
+            getPilotMilestones(activePilot.id).catch(() => ({ data: [] }))
+          ]);
+
+          const rawPayments = paymentsRes?.data?.payments || paymentsRes?.data || [];
+          const rawMilestones = milestonesRes?.data?.milestones || milestonesRes?.data || [];
+
+          const budget = Number(activePilot.budget || 0);
+          const paidSum = rawPayments
+            .filter(p => p.status === 'PAID')
+            .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+          const pendingSum = Math.max(0, budget - paidSum);
+
+          setPaymentSummary({
+            approved: budget,
+            paid: paidSum,
+            pending: pendingSum
+          });
+
+          setPaymentMilestones(
+            rawMilestones.map((m, idx) => ({
+              id: m.id || idx + 1,
+              title: m.name,
+              description: m.description || `Milestone ${idx + 1} completion payment.`,
+              amount: (Number(m.payment_percentage || 0) * budget) / 100,
+              date: m.due_date ? new Date(m.due_date).toLocaleDateString('en-IN') : 'Scheduled',
+              status: m.status === 'COMPLETED' ? 'Paid' : 'Pending'
+            }))
+          );
+
+          setTransactions(
+            rawPayments.map((p, idx) => ({
+              id: p.id || `TXN-${idx + 1}`,
+              date: p.payment_date ? new Date(p.payment_date).toLocaleDateString('en-IN') : new Date(p.created_at).toLocaleDateString('en-IN'),
+              description: p.milestone?.name || 'Milestone Payment',
+              amount: Number(p.amount || 0),
+              status: p.status === 'PAID' ? 'Completed' : p.status,
+              reference: p.id ? `PAY-${p.id.slice(0, 8).toUpperCase()}` : 'GOV-DISBURSE'
+            }))
+          );
+        }
+      } catch (err) {
+        console.warn("Could not load startup payments:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchPayments();
+    return () => { mounted = false; };
+  }, []);
+
+  const paidPercentage = paymentSummary.approved > 0
+    ? Math.round((paymentSummary.paid / paymentSummary.approved) * 100)
+    : 0;
 
   return (
     <motion.div

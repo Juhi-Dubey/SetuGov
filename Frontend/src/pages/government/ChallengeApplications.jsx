@@ -27,6 +27,11 @@ import {
   runChallengeMatching,
 } from "../../services/challengeService";
 import { updateApplicationStatus } from "../../services/applicationService";
+import {
+  getEvaluators,
+  assignEvaluatorToApplication,
+  getApplicationAssignments,
+} from "../../services/evaluatorService";
 
 function ChallengeApplications() {
   const navigate = useNavigate();
@@ -42,9 +47,28 @@ function ChallengeApplications() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [actionMessage, setActionMessage] = useState("");
 
+  // Evaluator Assignment State
+  const [verifiedEvaluators, setVerifiedEvaluators] = useState([]);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedAppForAssign, setSelectedAppForAssign] = useState(null);
+  const [selectedEvaluatorId, setSelectedEvaluatorId] = useState("");
+  const [assignmentNotes, setAssignmentNotes] = useState("");
+  const [assignLoading, setAssignLoading] = useState(false);
+
   useEffect(() => {
     loadData();
+    loadVerifiedEvaluators();
   }, [id]);
+
+  const loadVerifiedEvaluators = async () => {
+    try {
+      const res = await getEvaluators();
+      const list = res?.data?.evaluators || res?.evaluators || [];
+      setVerifiedEvaluators(list);
+    } catch (err) {
+      console.warn("Failed to load verified evaluators:", err);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -63,6 +87,31 @@ function ChallengeApplications() {
       console.warn("Load applications fallback:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenAssignModal = (app) => {
+    setSelectedAppForAssign(app);
+    setSelectedEvaluatorId("");
+    setAssignmentNotes("");
+    setShowAssignModal(true);
+  };
+
+  const handleAssignEvaluatorSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedAppForAssign || !selectedEvaluatorId) return;
+
+    try {
+      setAssignLoading(true);
+      setActionMessage("");
+      await assignEvaluatorToApplication(selectedAppForAssign.id, selectedEvaluatorId, assignmentNotes);
+      setActionMessage(`Evaluator assigned successfully to application.`);
+      setShowAssignModal(false);
+      loadData();
+    } catch (err) {
+      alert(`Failed to assign evaluator: ${err.message}`);
+    } finally {
+      setAssignLoading(false);
     }
   };
 
@@ -94,8 +143,8 @@ function ChallengeApplications() {
 
   const filteredApplications = useMemo(() => {
     return applications.filter((app) => {
-      const name = app.startup?.name || app.startup_name || "";
-      const proposal = app.proposal_summary || "";
+      const name = app.startup?.name || app.startup?.company_name || app.startup_name || "";
+      const proposal = app.proposal_summary || app.proposal || "";
       const matchesSearch =
         name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         proposal.toLowerCase().includes(searchQuery.toLowerCase());
@@ -242,56 +291,106 @@ function ChallengeApplications() {
                       <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:border-slate-800 dark:bg-slate-950/50">
                         <th className="px-5 py-3">Startup</th>
                         <th className="px-5 py-3">Proposed Solution</th>
-                        <th className="px-5 py-3">Proposed Budget</th>
+                        <th className="px-5 py-3">Budget</th>
+                        <th className="px-5 py-3">Assigned Evaluators</th>
                         <th className="px-5 py-3">Status</th>
                         <th className="px-5 py-3 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredApplications.map((app) => (
-                        <tr
-                          key={app.id}
-                          className="border-b border-slate-100 last:border-0 dark:border-slate-800"
-                        >
-                          <td className="px-5 py-4">
-                            <p className="font-semibold text-slate-900 dark:text-white">
-                              {app.startup?.name || "Startup Candidate"}
-                            </p>
-                            <p className="text-xs text-slate-400">
-                              {app.startup?.domain || "Technology Provider"}
-                            </p>
-                          </td>
-                          <td className="px-5 py-4 max-w-xs">
-                            <p className="text-xs leading-5 text-slate-600 line-clamp-2 dark:text-slate-300">
-                              {app.proposal_summary || app.technical_approach || "Proposal submitted."}
-                            </p>
-                          </td>
-                          <td className="px-5 py-4 text-xs font-semibold">
-                            {app.proposed_budget ? `₹${Number(app.proposed_budget).toLocaleString("en-IN")}` : "—"}
-                          </td>
-                          <td className="px-5 py-4">
-                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                              {app.status}
-                            </span>
-                          </td>
-                          <td className="px-5 py-4 text-right space-x-2">
-                            <button
-                              type="button"
-                              onClick={() => handleStatusChange(app.id, "SHORTLISTED")}
-                              className="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:text-indigo-300"
-                            >
-                              Shortlist
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleStatusChange(app.id, "SELECTED")}
-                              className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300"
-                            >
-                              Select for Pilot
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                      {filteredApplications.map((app) => {
+                        const assignments = app.evaluator_assignments || [];
+                        const hasRecused = assignments.some((a) => a.status === "RECUSED");
+
+                        return (
+                          <tr
+                            key={app.id}
+                            className="border-b border-slate-100 last:border-0 dark:border-slate-800"
+                          >
+                            <td className="px-5 py-4">
+                              <p className="font-semibold text-slate-900 dark:text-white">
+                                {app.startup?.company_name || app.startup?.name || "Startup Candidate"}
+                              </p>
+                              <p className="text-xs text-slate-400">
+                                {app.startup?.domain || "Technology Provider"}
+                              </p>
+                            </td>
+                            <td className="px-5 py-4 max-w-xs">
+                              <p className="text-xs leading-5 text-slate-600 line-clamp-2 dark:text-slate-300">
+                                {app.proposal_summary || app.proposal || app.technical_approach || "Proposal submitted."}
+                              </p>
+                            </td>
+                            <td className="px-5 py-4 text-xs font-semibold">
+                              {app.estimated_cost ? `₹${Number(app.estimated_cost).toLocaleString("en-IN")}` : app.proposed_budget ? `₹${Number(app.proposed_budget).toLocaleString("en-IN")}` : "—"}
+                            </td>
+                            <td className="px-5 py-4">
+                              <div className="space-y-1">
+                                {assignments.length === 0 ? (
+                                  <span className="text-[11px] text-slate-400 italic">No evaluator assigned</span>
+                                ) : (
+                                  assignments.map((a, idx) => (
+                                    <div key={idx} className="flex items-center gap-1.5 text-xs">
+                                      <span className="font-medium text-slate-800 dark:text-slate-200">
+                                        {a.evaluator?.name || "Evaluator"}
+                                      </span>
+                                      {a.status === "COMPLETED" ? (
+                                        <span className="rounded bg-emerald-50 px-1.5 py-0.2 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                          Evaluated
+                                        </span>
+                                      ) : a.status === "RECUSED" ? (
+                                        <span className="rounded bg-red-50 px-1.5 py-0.2 text-[10px] font-bold text-red-700 dark:bg-red-950/40 dark:text-red-300">
+                                          Recused
+                                        </span>
+                                      ) : a.status === "ACCEPTED" ? (
+                                        <span className="rounded bg-blue-50 px-1.5 py-0.2 text-[10px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                                          Accepted
+                                        </span>
+                                      ) : (
+                                        <span className="rounded bg-amber-50 px-1.5 py-0.2 text-[10px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                                          Pending
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))
+                                )}
+                                {hasRecused && (
+                                  <p className="text-[10px] text-red-500 font-semibold">
+                                    Evaluator recused due to conflict. Please assign another verified evaluator.
+                                  </p>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-5 py-4">
+                              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                {app.status}
+                              </span>
+                            </td>
+                            <td className="px-5 py-4 text-right space-x-2">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenAssignModal(app)}
+                                className="rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700 hover:bg-purple-100 dark:border-purple-900/40 dark:bg-purple-950/40 dark:text-purple-300"
+                              >
+                                {assignments.length > 0 ? "+ Assign Evaluator" : "Assign Evaluator"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleStatusChange(app.id, "SHORTLISTED")}
+                                className="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:text-indigo-300"
+                              >
+                                Shortlist
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleStatusChange(app.id, "SELECTED")}
+                                className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300"
+                              >
+                                Select for Pilot
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -381,6 +480,91 @@ function ChallengeApplications() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+        {/* =====================================================
+            ASSIGN EVALUATOR MODAL
+        ===================================================== */}
+        {showAssignModal && selectedAppForAssign && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 my-8"
+            >
+              <div className="mb-4">
+                <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-semibold text-xs uppercase tracking-wider">
+                  <ClipboardCheck className="h-4 w-4" />
+                  Independent Evaluation Assignment
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mt-1">
+                  Assign Verified Evaluator
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Select an administrator-verified evaluator to assess the proposal for{" "}
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    "{selectedAppForAssign.startup?.company_name || selectedAppForAssign.startup?.name}"
+                  </span>.
+                </p>
+              </div>
+
+              <form onSubmit={handleAssignEvaluatorSubmit} className="space-y-4 text-xs">
+                <div>
+                  <label className="block font-medium mb-1.5 text-slate-700 dark:text-slate-300">
+                    Select Verified Evaluator *
+                  </label>
+                  {verifiedEvaluators.length === 0 ? (
+                    <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:border-amber-900/30 dark:text-amber-300">
+                      No verified evaluators found in registry. You can nominate domain specialists from the Evaluator Directory.
+                    </div>
+                  ) : (
+                    <select
+                      required
+                      value={selectedEvaluatorId}
+                      onChange={(e) => setSelectedEvaluatorId(e.target.value)}
+                      className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent px-3 text-xs outline-none focus:border-purple-500"
+                    >
+                      <option value="">-- Choose Verified Evaluator --</option>
+                      {verifiedEvaluators.map((ev) => (
+                        <option key={ev.user?.id || ev.id} value={ev.user?.id || ev.user_id}>
+                          {ev.user?.name} — {ev.designation} ({ev.organization}) [{Array.isArray(ev.domain_expertise) ? ev.domain_expertise.join(", ") : "General"}]
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block font-medium mb-1.5 text-slate-700 dark:text-slate-300">
+                    Assignment Instructions / Notes (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={assignmentNotes}
+                    onChange={(e) => setAssignmentNotes(e.target.value)}
+                    placeholder="Provide context or key assessment priorities for this challenge..."
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent p-3 outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowAssignModal(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={assignLoading || !selectedEvaluatorId}
+                    className="px-4 py-2 rounded-xl bg-purple-600 text-white font-semibold hover:bg-purple-700 disabled:opacity-50"
+                  >
+                    {assignLoading ? "Assigning..." : "Assign Evaluator"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
         )}
       </div>

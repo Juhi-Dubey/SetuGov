@@ -179,6 +179,22 @@ export const getApplicationById = async (id, user) => {
     }
   }
 
+  // Access check: EVALUATOR can only view applications they are assigned to
+  if (user.role === 'EVALUATOR') {
+    const assignment = await prisma.evaluatorAssignment.findUnique({
+      where: {
+        application_id_evaluator_id: {
+          application_id: id,
+          evaluator_id: user.id
+        }
+      }
+    });
+
+    if (!assignment) {
+      throw new ForbiddenError('You do not have permission to view this application because you are not assigned to it.');
+    }
+  }
+
   return application;
 };
 

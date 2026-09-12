@@ -73,12 +73,52 @@ export const verifyPilotAccess = async (pilotId, user, action = 'READ') => {
     return pilot;
   }
 
-  // 4. EVALUATOR access check
+  // 4. EVALUATOR access check (Parts 3 & 4)
   if (user.role === 'EVALUATOR') {
     const evaluatorAllowedActions = ['READ', 'VALIDATION_MANAGE', 'EVIDENCE_VIEW'];
     if (!evaluatorAllowedActions.includes(action)) {
       throw new ForbiddenError(`Evaluators are not authorized to perform '${action}' on pilot projects.`);
     }
+
+    // Must have a verified profile
+    const evaluatorProfile = await prisma.evaluatorProfile.findUnique({
+      where: { user_id: user.id }
+    });
+
+    if (!evaluatorProfile || evaluatorProfile.verification_status !== 'VERIFIED') {
+      throw new ForbiddenError('Evaluator must be officially VERIFIED to access pilot projects.');
+    }
+
+    // Must have an assignment connected to an application for this pilot/challenge
+    const validAssignment = await prisma.evaluatorAssignment.findFirst({
+      where: {
+        evaluator_id: user.id,
+        application: {
+          challenge_id: pilot.challenge_id
+        },
+        status: { in: ['ACCEPTED', 'COMPLETED', 'PENDING'] }
+      },
+      include: {
+        application: {
+          include: {
+            conflict_declarations: {
+              where: { evaluator_id: user.id }
+            }
+          }
+        }
+      }
+    });
+
+    if (!validAssignment) {
+      throw new ForbiddenError('You do not have an evaluation assignment for this pilot project\'s challenge.');
+    }
+
+    // Must not be recused or have an active conflict
+    const conflict = validAssignment.application?.conflict_declarations?.[0];
+    if (conflict && (conflict.has_conflict || conflict.is_recused)) {
+      throw new ForbiddenError('You have recused yourself from this challenge and cannot access this pilot.');
+    }
+
     return pilot;
   }
 

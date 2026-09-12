@@ -24,7 +24,7 @@ import {
 import {
   getChallengeDecisions
 } from '../controllers/decisionController.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, optionalAuthenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
 import { createChallengeSchema, updateChallengeSchema } from '../schemas/challengeSchemas.js';
@@ -36,10 +36,10 @@ const router = Router();
 router.post('/', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(createChallengeSchema), createChallenge);
 
 // List Challenges (Public/Authenticated)
-router.get('/', getChallenges);
+router.get('/', optionalAuthenticate, getChallenges);
 
 // Get Challenge by ID
-router.get('/:challenge_id', getChallengeById);
+router.get('/:challenge_id', optionalAuthenticate, getChallengeById);
 
 // Update Challenge (GOVERNMENT or ADMIN)
 router.patch('/:challenge_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(updateChallengeSchema), updateChallenge);

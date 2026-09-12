@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/prisma.js';
@@ -17,9 +18,15 @@ export const register = async ({
 }) => {
   const normalizedEmail = email.trim().toLowerCase();
 
-  if (role === 'ADMIN') {
-    throw new ForbiddenError('Direct registration for the ADMIN role is not permitted.');
+  // Task 1: Public registration is strictly for STARTUP accounts only
+  if (role && role !== 'STARTUP') {
+    throw new ForbiddenError(
+      'Public registration is permitted for STARTUP accounts only. Privileged accounts (GOVERNMENT, EVALUATOR, ADMIN) must be provisioned by an administrator.'
+    );
   }
+
+  // Force STARTUP role for all public registrations
+  const assignedRole = 'STARTUP';
 
   // Check email conflict
   const existingUser = await prisma.user.findUnique({
@@ -30,22 +37,8 @@ export const register = async ({
     throw new ConflictError('A user with this email address already exists.');
   }
 
-  // If department_id supplied, verify department exists
-  if (department_id) {
-    const department = await prisma.department.findUnique({
-      where: { id: department_id }
-    });
-    if (!department) {
-      throw new BadRequestError('Specified department does not exist.');
-    }
-  }
-
   // Hash password with 12 bcrypt salt rounds (P1-2)
   const password_hash = await bcrypt.hash(password, 12);
-
-  // For GOVERNMENT or EVALUATOR, default is_verified is false until verified by Admin.
-  // For STARTUP, basic public registration is active and verified.
-  const isVerified = role === 'STARTUP';
 
   // Create User
   const user = await prisma.user.create({
@@ -53,12 +46,12 @@ export const register = async ({
       name: name.trim(),
       email: normalizedEmail,
       password_hash,
-      role,
-      department_id: role === 'GOVERNMENT' ? department_id : null,
+      role: assignedRole,
+      department_id: null,
       designation: designation ? designation.trim() : null,
       phone: phone ? phone.trim() : null,
       is_active: true,
-      is_verified: isVerified
+      is_verified: true
     },
     select: {
       id: true,
@@ -82,19 +75,6 @@ export const register = async ({
     }
   });
 
-  // If Evaluator, create basic pending profile
-  if (role === 'EVALUATOR') {
-    await prisma.evaluatorProfile.create({
-      data: {
-        user_id: user.id,
-        organization: 'Independent Evaluator',
-        designation: designation || 'Domain Specialist',
-        domain_expertise: ['General Innovation'],
-        verification_status: 'PENDING'
-      }
-    }).catch(() => {});
-  }
-
   // Generate JWT token
   const token = jwt.sign(
     { userId: user.id, email: user.email, role: user.role },
@@ -102,17 +82,134 @@ export const register = async ({
     { expiresIn: config.JWT_EXPIRES_IN }
   );
 
-  // Record audit log
+  // Create audit log
   await createAuditLog({
     user_id: user.id,
     action: 'USER_REGISTERED',
     entity_type: 'USER',
     entity_id: user.id,
-    details: { role: user.role, email: user.email, is_verified: user.is_verified },
+    details: { role: user.role, email: user.email },
     ip_address
   });
 
   return { user, token };
+};
+
+/**
+ * Validate an invitation token
+ */
+export const validateInvitation = async (token) => {
+  if (!token || typeof token !== 'string') {
+    throw new BadRequestError('Invitation token is required.');
+  }
+
+  const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+  const user = await prisma.user.findFirst({
+    where: { invitation_token_hash: tokenHash }
+  });
+
+  if (!user) {
+    throw new BadRequestError('Invalid or expired invitation token.');
+  }
+
+  if (user.invitation_accepted_at) {
+    throw new BadRequestError('This invitation has already been accepted. Please sign in with your credentials.');
+  }
+
+  if (user.invitation_expires_at && new Date(user.invitation_expires_at) < new Date()) {
+    throw new BadRequestError('This invitation token has expired. Please request a new invitation from your administrator.');
+  }
+
+  return {
+    valid: true,
+    email: user.email,
+    name: user.name,
+    role: user.role
+  };
+};
+
+/**
+ * Accept invitation and set account password
+ */
+export const acceptInvitation = async ({ token, password, ip_address = null }) => {
+  if (!token || !password) {
+    throw new BadRequestError('Invitation token and password are required.');
+  }
+
+  if (password.length < 6) {
+    throw new BadRequestError('Password must be at least 6 characters long.');
+  }
+
+  const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+  const user = await prisma.user.findFirst({
+    where: { invitation_token_hash: tokenHash }
+  });
+
+  if (!user) {
+    await createAuditLog({
+      user_id: null,
+      action: 'INVITATION_REJECTED',
+      entity_type: 'USER',
+      entity_id: null,
+      details: { reason: 'Invalid invitation token presented' },
+      ip_address
+    });
+    throw new BadRequestError('Invalid invitation token.');
+  }
+
+  if (user.invitation_accepted_at) {
+    throw new BadRequestError('This invitation has already been accepted. Please log in.');
+  }
+
+  if (user.invitation_expires_at && new Date(user.invitation_expires_at) < new Date()) {
+    await createAuditLog({
+      user_id: user.id,
+      action: 'INVITATION_EXPIRED',
+      entity_type: 'USER',
+      entity_id: user.id,
+      details: { email: user.email, expired_at: user.invitation_expires_at },
+      ip_address
+    });
+    throw new BadRequestError('This invitation has expired. Please request a fresh invitation from an administrator.');
+  }
+
+  const password_hash = await bcrypt.hash(password, 12);
+
+  const updatedUser = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      password_hash,
+      invitation_token_hash: null,
+      invitation_expires_at: null,
+      invitation_accepted_at: new Date(),
+      is_active: true,
+      is_verified: true
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      department_id: true,
+      is_active: true,
+      is_verified: true
+    }
+  });
+
+  await createAuditLog({
+    user_id: user.id,
+    action: 'INVITATION_ACCEPTED',
+    entity_type: 'USER',
+    entity_id: user.id,
+    details: { email: user.email, role: user.role },
+    ip_address
+  });
+
+  return {
+    success: true,
+    message: 'Account password configured successfully. You may now log in.',
+    user: updatedUser
+  };
 };
 
 export const login = async ({ email, password, ip_address = null }) => {
@@ -240,6 +337,8 @@ export const getCurrentUser = async (userId) => {
 export default {
   register,
   login,
-  getCurrentUser
+  getCurrentUser,
+  validateInvitation,
+  acceptInvitation
 };
 

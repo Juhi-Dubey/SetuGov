@@ -59,6 +59,7 @@ function RoleSelection() {
   const { user, role: currentRole } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [selectedRole, setSelectedRole] = useState(null);
+  const [permissionNotice, setPermissionNotice] = useState("");
 
   useEffect(() => {
     if (currentRole) {
@@ -67,11 +68,29 @@ function RoleSelection() {
     }
   }, [currentRole]);
 
+  const handleSelectCard = (roleItem) => {
+    if (currentRole && currentRole !== roleItem.roleKey && currentRole !== 'ADMIN') {
+      setPermissionNotice(`Your authenticated account is registered as ${currentRole}. Security policy restricts access to the ${roleItem.title} workspace.`);
+      return;
+    }
+    setPermissionNotice("");
+    setSelectedRole(roleItem.id);
+  };
+
   const handleContinue = () => {
+    // If user is authenticated and not ADMIN, strictly navigate to their authentic role dashboard
+    if (currentRole && currentRole !== 'ADMIN') {
+      const assigned = roles.find((r) => r.roleKey === currentRole);
+      if (assigned) {
+        navigate(assigned.path, { replace: true });
+        return;
+      }
+    }
+
     if (!selectedRole) return;
     const role = roles.find((item) => item.id === selectedRole);
     if (role) {
-      navigate(role.path);
+      navigate(role.path, { replace: true });
     }
   };
 
@@ -114,6 +133,12 @@ function RoleSelection() {
             <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400">
               {user ? `Logged in as ${user.name} (${user.role})` : "Select a workspace to explore the platform capabilities."}
             </p>
+
+            {permissionNotice && (
+              <div className="mt-4 inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300">
+                <span>{permissionNotice}</span>
+              </div>
+            )}
           </div>
 
           {/* Role Cards */}
@@ -129,7 +154,7 @@ function RoleSelection() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.08 }}
-                  onClick={() => setSelectedRole(item.id)}
+                  onClick={() => handleSelectCard(item)}
                   className={`group relative cursor-pointer rounded-2xl border p-6 transition-all duration-300 ${
                     isSelected
                       ? "border-indigo-600 bg-white shadow-lg ring-2 ring-indigo-600/20 dark:border-indigo-400 dark:bg-slate-900 dark:ring-indigo-400/20"

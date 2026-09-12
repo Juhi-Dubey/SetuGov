@@ -45,7 +45,48 @@ export const nominateEvaluator = async (req, res, next) => {
   try {
     const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
     const result = await evaluatorService.nominateEvaluator(req.body, req.user, ip_address);
-    return successResponse(res, result, 'Evaluator nominated successfully', 200);
+    return successResponse(res, result, 'Evaluator nomination submitted successfully', 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const assignEvaluatorToApplication = async (req, res, next) => {
+  try {
+    const applicationId = req.params.application_id || req.params.id;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await evaluatorService.assignEvaluatorToApplication(applicationId, req.body, req.user, ip_address);
+    return successResponse(res, result, 'Evaluator assigned to application successfully', 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMyAssignments = async (req, res, next) => {
+  try {
+    const result = await evaluatorService.getMyAssignments(req.user, req.query);
+    return successResponse(res, result, 'Evaluator assignments retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateAssignmentStatus = async (req, res, next) => {
+  try {
+    const assignmentId = req.params.assignment_id || req.params.id;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await evaluatorService.updateAssignmentStatus(assignmentId, req.body, req.user, ip_address);
+    return successResponse(res, result, 'Assignment status updated successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getApplicationAssignments = async (req, res, next) => {
+  try {
+    const applicationId = req.params.application_id || req.params.id;
+    const result = await evaluatorService.getApplicationAssignments(applicationId, req.user);
+    return successResponse(res, result, 'Application evaluator assignments retrieved successfully', 200);
   } catch (error) {
     next(error);
   }
@@ -56,5 +97,9 @@ export default {
   getEvaluatorProfile,
   updateEvaluatorProfile,
   verifyEvaluator,
-  nominateEvaluator
+  nominateEvaluator,
+  assignEvaluatorToApplication,
+  getMyAssignments,
+  updateAssignmentStatus,
+  getApplicationAssignments
 };

@@ -19,87 +19,6 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { getChallenges } from "../../services/challengeService";
 
-const initialChallenges = [
-  {
-    id: "1",
-    title: "AI-Based Citizen Grievance Management",
-    department: "Department of Public Services",
-    category: "Artificial Intelligence",
-    description:
-      "Develop an intelligent platform to classify, route and track citizen grievances using AI.",
-    budget: "₹25 Lakhs",
-    deadline: "05 Sep 2026",
-    applicants: 18,
-    status: "Open",
-    daysLeft: 5,
-  },
-  {
-    id: "2",
-    title: "Smart Waste Collection System",
-    department: "Urban Development Department",
-    category: "Smart City",
-    description:
-      "Build a technology-driven solution for optimized waste collection and monitoring.",
-    budget: "₹40 Lakhs",
-    deadline: "12 Sep 2026",
-    applicants: 24,
-    status: "Open",
-    daysLeft: 12,
-  },
-  {
-    id: "3",
-    title: "Digital Healthcare Access Platform",
-    department: "Department of Health",
-    category: "Healthcare",
-    description:
-      "Create a digital platform that improves access to government healthcare services.",
-    budget: "₹35 Lakhs",
-    deadline: "15 Sep 2026",
-    applicants: 11,
-    status: "Open",
-    daysLeft: 15,
-  },
-  {
-    id: "4",
-    title: "Agricultural Market Intelligence",
-    department: "Department of Agriculture",
-    category: "Agriculture",
-    description:
-      "Develop a data-driven platform providing farmers with market and crop intelligence.",
-    budget: "₹30 Lakhs",
-    deadline: "20 Sep 2026",
-    applicants: 9,
-    status: "Open",
-    daysLeft: 20,
-  },
-  {
-    id: "5",
-    title: "Digital Public Transport Monitoring",
-    department: "Transport Department",
-    category: "Transportation",
-    description:
-      "Develop a real-time monitoring solution for public transportation services.",
-    budget: "₹50 Lakhs",
-    deadline: "28 Sep 2026",
-    applicants: 31,
-    status: "Open",
-    daysLeft: 28,
-  },
-  {
-    id: "6",
-    title: "Government Document Intelligence",
-    department: "Department of Administration",
-    category: "Artificial Intelligence",
-    description:
-      "Create an AI-powered system for document classification, extraction and processing.",
-    budget: "₹20 Lakhs",
-    deadline: "02 Oct 2026",
-    applicants: 14,
-    status: "Open",
-    daysLeft: 32,
-  },
-];
-
 const categories = [
   "All Categories",
   "Artificial Intelligence",
@@ -113,43 +32,52 @@ function StartupChallenges() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const [challengesList, setChallengesList] = useState(initialChallenges);
+  const [challengesList, setChallengesList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All Categories");
   const [sortBy, setSortBy] = useState("deadline");
   const [selectedChallenge, setSelectedChallenge] = useState(null);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     getChallenges()
       .then((res) => {
         const raw = res?.data?.challenges || res?.challenges || (Array.isArray(res?.data) ? res.data : []) || [];
-        if (raw.length > 0) {
-          const mapped = raw.map((c) => {
-            const daysLeft = c.application_deadline
-              ? Math.max(0, Math.ceil((new Date(c.application_deadline) - new Date()) / (1000 * 60 * 60 * 24)))
-              : 30;
-            const isExpired = c.application_deadline && new Date(c.application_deadline) < new Date();
-            return {
-              id: c.id,
-              title: c.title,
-              department: c.department?.name || "Government",
-              category: c.sector || "GovTech",
-              description: c.problem_description || "",
-              budget: c.budget_max ? `₹${(Number(c.budget_max) / 100000).toFixed(0)} Lakhs` : "₹25 Lakhs",
-              deadline: c.application_deadline
-                ? new Date(c.application_deadline).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-                : "Open Rolling",
-              deadlineRaw: c.application_deadline,
-              isExpired,
-              applicants: c._count?.applications || (Array.isArray(c.applications) ? c.applications.length : 0),
-              status: isExpired ? "Closed" : c.status === "PUBLISHED" ? "Open" : c.status,
-              daysLeft,
-            };
-          });
-          setChallengesList(mapped);
-        }
+        const mapped = raw.map((c) => {
+          const daysLeft = c.application_deadline
+            ? Math.max(0, Math.ceil((new Date(c.application_deadline) - new Date()) / (1000 * 60 * 60 * 24)))
+            : null;
+          const isExpired = c.application_deadline && new Date(c.application_deadline) < new Date();
+          return {
+            id: c.id,
+            title: c.title,
+            department: c.department?.name || "Government Department",
+            category: c.sector || c.category || "GovTech",
+            description: c.problem_description || "",
+            budget: c.budget_max ? `₹${Number(c.budget_max).toLocaleString("en-IN")}` : (c.budget_min ? `₹${Number(c.budget_min).toLocaleString("en-IN")}` : "Not specified"),
+            deadline: c.application_deadline
+              ? new Date(c.application_deadline).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+              : "Open Rolling",
+            deadlineRaw: c.application_deadline,
+            isExpired,
+            applicants: c._count?.applications || (Array.isArray(c.applications) ? c.applications.length : 0),
+            status: isExpired ? "Closed" : c.status === "PUBLISHED" ? "Open" : c.status,
+            daysLeft: daysLeft ?? 30,
+          };
+        });
+        setChallengesList(mapped);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("Failed to load challenges:", err);
+        setError(err?.message || "Failed to load challenges from the server.");
+        setChallengesList([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -208,7 +136,7 @@ function StartupChallenges() {
     }
 
     return result;
-  }, [search, category, sortBy]);
+  }, [challengesList, search, category, sortBy]);
 
   const handleViewChallenge = (challenge) => {
     setSelectedChallenge(challenge);
@@ -263,7 +191,7 @@ function StartupChallenges() {
 
           <div className="rounded-2xl bg-indigo-50 px-5 py-4 dark:bg-indigo-500/10">
             <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-              {challenges.length}
+              {challengesList.length}
             </p>
 
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -356,7 +284,17 @@ function StartupChallenges() {
       {/* CHALLENGES                                        */}
       {/* ================================================= */}
 
-      {filteredChallenges.length > 0 ? (
+      {loading ? (
+        <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+          <p className="text-xs text-slate-400">Loading published government challenges...</p>
+        </div>
+      ) : error ? (
+        <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-center dark:border-red-900/30 dark:bg-red-950/30">
+          <p className="text-sm font-bold text-red-700 dark:text-red-300">Unable to load challenges</p>
+          <p className="mt-1 text-xs text-red-500">{error}</p>
+        </div>
+      ) : filteredChallenges.length > 0 ? (
         <section className="grid gap-5 lg:grid-cols-2">
           {filteredChallenges.map(
             (challenge, index) => (

@@ -6,12 +6,13 @@ import {
 export const getApplicationDecision = async (req, res, next) => {
   try {
     const { application_id } = req.params;
-    const policyOptions = {
+    // Part 25: Do not allow ordinary users to arbitrarily override policy thresholds
+    const policyOptions = req.user?.role === 'ADMIN' ? {
       requiredQuorum: req.query.required_quorum ? parseInt(req.query.required_quorum, 10) : undefined,
       evaluationPassThreshold: req.query.pass_threshold ? parseFloat(req.query.pass_threshold) : undefined,
       evaluationReserveThreshold: req.query.reserve_threshold ? parseFloat(req.query.reserve_threshold) : undefined,
       matchMinThreshold: req.query.match_threshold ? parseFloat(req.query.match_threshold) : undefined
-    };
+    } : {};
 
     const decision = await evaluateApplicationDecision(application_id, req.user, policyOptions);
     return res.status(200).json({
@@ -26,12 +27,13 @@ export const getApplicationDecision = async (req, res, next) => {
 export const getChallengeDecisions = async (req, res, next) => {
   try {
     const { challenge_id } = req.params;
-    const policyOptions = {
+    // Part 25: Do not allow ordinary users to arbitrarily override policy thresholds
+    const policyOptions = req.user?.role === 'ADMIN' ? {
       requiredQuorum: req.query.required_quorum ? parseInt(req.query.required_quorum, 10) : undefined,
       evaluationPassThreshold: req.query.pass_threshold ? parseFloat(req.query.pass_threshold) : undefined,
       evaluationReserveThreshold: req.query.reserve_threshold ? parseFloat(req.query.reserve_threshold) : undefined,
       matchMinThreshold: req.query.match_threshold ? parseFloat(req.query.match_threshold) : undefined
-    };
+    } : {};
 
     const decisions = await evaluateChallengeDecisions(challenge_id, req.user, policyOptions);
     return res.status(200).json({

@@ -39,70 +39,6 @@ import {
   updatePilotIssue,
 } from "../../services/pilotService.js";
 
-const pilotData = {
-  challengeTitle: "Smart Waste Collection System",
-  department: "Urban Development Department",
-  location: "Jamshedpur Municipal Corporation",
-  status: "Pilot Active",
-  progress: 62,
-  startDate: "01 Aug 2026",
-  endDate: "30 Nov 2026",
-  budget: "₹40 Lakhs",
-};
-
-const initialMilestones = [
-  {
-    id: 1,
-    title: "Pilot Planning & Requirement Analysis",
-    description:
-      "Finalize requirements, deployment plan and implementation timeline.",
-    dueDate: "15 Aug 2026",
-    status: "Completed",
-  },
-  {
-    id: 2,
-    title: "Initial System Setup & Sensor Deployment",
-    description:
-      "Install IoT sensors on primary fleet vehicles and test data transmission.",
-    dueDate: "30 Aug 2026",
-    status: "Completed",
-  },
-  {
-    id: 3,
-    title: "AI Route Optimization Testing",
-    description:
-      "Run pilot routing algorithms across 5 critical wards and measure fuel savings.",
-    dueDate: "30 Sep 2026",
-    status: "In Progress",
-  },
-  {
-    id: 4,
-    title: "Citizen Feedback Integration",
-    description:
-      "Collect and analyze feedback from sanitation workers and municipal officers.",
-    dueDate: "31 Oct 2026",
-    status: "Pending",
-  },
-  {
-    id: 5,
-    title: "Final Pilot Performance Evaluation",
-    description:
-      "Submit consolidated report with KPI metrics for scaling decision.",
-    dueDate: "30 Nov 2026",
-    status: "Pending",
-  },
-];
-
-const initialUpdates = [
-  {
-    id: 1,
-    date: "24 Aug 2026",
-    title: "Government feedback received",
-    description:
-      "The department requested additional monitoring metrics.",
-  },
-];
-
 function StartupPilot() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -114,8 +50,7 @@ function StartupPilot() {
   const [issuesList, setIssuesList] = useState([]);
   const [isLoadingPilot, setIsLoadingPilot] = useState(true);
 
-  const [milestones, setMilestones] = useState(initialMilestones);
-  const [updates, setUpdates] = useState(initialUpdates);
+  const [updates, setUpdates] = useState([]);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [updateText, setUpdateText] = useState("");
 
@@ -141,8 +76,9 @@ function StartupPilot() {
   const [issueSeverity, setIssueSeverity] = useState("MEDIUM");
   const [isSubmittingIssue, setIsSubmittingIssue] = useState(false);
 
+  const milestones = activePilot?.milestones || [];
   const completedMilestones = milestones.filter(
-    (m) => m.status === "Completed"
+    (m) => m.status === "COMPLETED" || m.status === "Completed"
   ).length;
 
   const handleAddUpdate = () => {
@@ -361,6 +297,39 @@ function StartupPilot() {
     );
   };
 
+  const progressPercent = activePilot?.progress ?? (milestones.length > 0 ? Math.round((completedMilestones / milestones.length) * 100) : 0);
+  const formattedStartDate = activePilot?.start_date ? new Date(activePilot.start_date).toLocaleDateString("en-IN") : "Not set";
+  const formattedEndDate = activePilot?.end_date ? new Date(activePilot.end_date).toLocaleDateString("en-IN") : "Not set";
+
+  if (isLoadingPilot) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-3">
+        <Loader2 className="h-7 w-7 animate-spin text-indigo-600" />
+        <p className="text-xs text-slate-400">Loading active pilot project workspace from database...</p>
+      </div>
+    );
+  }
+
+  if (!activePilot) {
+    return (
+      <div className="flex min-h-[450px] flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+          <Rocket className="h-8 w-8" />
+        </div>
+        <h2 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">No Active Pilot Projects Sanctioned</h2>
+        <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-slate-500 dark:text-slate-400">
+          When your startup proposal is selected by a government department, your verified pilot workspace, milestone tracking, compliance checklist, and evidence submission will be activated here.
+        </p>
+        <button
+          onClick={() => navigate('/startup/challenges')}
+          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+        >
+          Explore Challenges & Apply
+        </button>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial={{
@@ -409,16 +378,16 @@ function StartupPilot() {
 
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    {pilotData.status}
+                    {activePilot.status || "PLANNED"}
                   </span>
                 </div>
 
                 <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-                  {pilotData.challengeTitle}
+                  {activePilot.title || activePilot.challenge?.title || "Sanctioned Pilot Project"}
                 </h1>
 
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  {pilotData.department}
+                  {activePilot.challenge?.department?.name || "Government Department"} · {activePilot.location || "Deployment Site"}
                 </p>
               </div>
             </div>
@@ -499,7 +468,7 @@ function StartupPilot() {
         <SummaryCard
           icon={Target}
           title="Pilot Progress"
-          value={`${pilotData.progress}%`}
+          value={`${progressPercent}%`}
           description="Overall completion"
         />
 
@@ -513,14 +482,14 @@ function StartupPilot() {
         <SummaryCard
           icon={CalendarDays}
           title="Start Date"
-          value={pilotData.startDate}
+          value={formattedStartDate}
           description="Pilot commencement"
         />
 
         <SummaryCard
           icon={Flag}
           title="End Date"
-          value={pilotData.endDate}
+          value={formattedEndDate}
           description="Target completion"
         />
       </section>
@@ -543,7 +512,7 @@ function StartupPilot() {
           </div>
 
           <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-            {pilotData.progress}%
+            {progressPercent}%
           </span>
         </div>
 
@@ -553,7 +522,7 @@ function StartupPilot() {
               width: 0,
             }}
             animate={{
-              width: `${pilotData.progress}%`,
+              width: `${progressPercent}%`,
             }}
             transition={{
               duration: 0.8,
@@ -564,11 +533,11 @@ function StartupPilot() {
 
         <div className="mt-4 flex flex-wrap justify-between gap-3 text-[10px] text-slate-400">
           <span>
-            Started: {pilotData.startDate}
+            Started: {formattedStartDate}
           </span>
 
           <span>
-            Target: {pilotData.endDate}
+            Target: {formattedEndDate}
           </span>
         </div>
       </section>
@@ -595,10 +564,12 @@ function StartupPilot() {
 
           <div className="p-5 sm:p-6">
             <div className="relative space-y-5">
-              <div className="absolute bottom-5 left-5 top-5 w-px bg-slate-200 dark:bg-slate-800" />
+              {milestones.length > 0 && <div className="absolute bottom-5 left-5 top-5 w-px bg-slate-200 dark:bg-slate-800" />}
 
-              {milestones.map(
-                (milestone, index) => (
+              {milestones.length === 0 ? (
+                <p className="py-6 text-center text-xs text-slate-400">No milestones registered yet for this pilot.</p>
+              ) : (
+                milestones.map((milestone, index) => (
                   <Milestone
                     key={milestone.id}
                     milestone={milestone}
@@ -609,7 +580,7 @@ function StartupPilot() {
                       )
                     }
                   />
-                )
+                ))
               )}
             </div>
           </div>
@@ -627,27 +598,27 @@ function StartupPilot() {
           <div className="mt-5 space-y-4">
             <DetailRow
               label="Government Department"
-              value={pilotData.department}
+              value={activePilot.challenge?.department?.name || "Government Department"}
             />
 
             <DetailRow
               label="Pilot Location"
-              value={pilotData.location}
+              value={activePilot.location || "Designated Pilot Location"}
             />
 
             <DetailRow
               label="Start Date"
-              value={pilotData.startDate}
+              value={formattedStartDate}
             />
 
             <DetailRow
               label="End Date"
-              value={pilotData.endDate}
+              value={formattedEndDate}
             />
 
             <DetailRow
               label="Approved Budget"
-              value={pilotData.budget}
+              value={activePilot.budget ? `₹${Number(activePilot.budget).toLocaleString("en-IN")}` : "Not specified"}
             />
           </div>
 

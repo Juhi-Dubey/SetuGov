@@ -10,6 +10,13 @@ export const createChallengeSchema = z.object({
   budget_max: z.number().positive('Budget max must be positive'),
   pilot_duration_days: z.number().int().positive('Pilot duration must be positive days'),
   required_technologies: z.array(z.string()).min(1, 'At least one required technology must be specified'),
+  application_deadline: z.string().datetime({ offset: true }).or(z.string()).nullable().optional(),
+  data_classification: z.string().optional(),
+  data_access_requirements: z.string().nullable().optional(),
+  data_retention_period: z.string().nullable().optional(),
+  ip_ownership: z.string().optional(),
+  licensing_terms: z.string().nullable().optional(),
+  confidentiality_terms: z.string().nullable().optional(),
   department_id: z.string().uuid().optional()
 }).refine(data => data.budget_max >= data.budget_min, {
   message: 'Budget max must be greater than or equal to budget min',
@@ -25,7 +32,14 @@ export const updateChallengeSchema = z.object({
   budget_min: z.number().nonnegative().optional(),
   budget_max: z.number().positive().optional(),
   pilot_duration_days: z.number().int().positive().optional(),
-  required_technologies: z.array(z.string()).optional()
+  required_technologies: z.array(z.string()).optional(),
+  application_deadline: z.string().datetime({ offset: true }).or(z.string()).nullable().optional(),
+  data_classification: z.string().optional(),
+  data_access_requirements: z.string().nullable().optional(),
+  data_retention_period: z.string().nullable().optional(),
+  ip_ownership: z.string().optional(),
+  licensing_terms: z.string().nullable().optional(),
+  confidentiality_terms: z.string().nullable().optional()
 });
 
 export default {

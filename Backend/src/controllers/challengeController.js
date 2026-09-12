@@ -13,7 +13,7 @@ export const createChallenge = async (req, res, next) => {
 
 export const getChallenges = async (req, res, next) => {
   try {
-    const result = await challengeService.getChallenges(req.query);
+    const result = await challengeService.getChallenges(req.query, req.user);
     return successResponse(res, result, 'Challenges retrieved successfully', 200);
   } catch (error) {
     next(error);
@@ -23,7 +23,7 @@ export const getChallenges = async (req, res, next) => {
 export const getChallengeById = async (req, res, next) => {
   try {
     const challengeId = req.params.challenge_id || req.params.id;
-    const challenge = await challengeService.getChallengeById(challengeId);
+    const challenge = await challengeService.getChallengeById(challengeId, req.user);
     return successResponse(res, { challenge }, 'Challenge details retrieved successfully', 200);
   } catch (error) {
     next(error);

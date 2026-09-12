@@ -22,6 +22,8 @@ import aiRoutes from './aiRoutes.js';
 import decisionRoutes from './decisionRoutes.js';
 import uploadRoutes from './uploadRoutes.js';
 
+import accessRequestRoutes from './accessRequestRoutes.js';
+
 const router = Router();
 
 // Base /api/v1 API info
@@ -40,6 +42,7 @@ router.get('/', (req, res) => {
       challenges: '/api/v1/challenges',
       startups: '/api/v1/startups',
       evaluators: '/api/v1/evaluators',
+      accessRequests: '/api/v1/access-requests',
       applications: '/api/v1/applications',
       evaluations: '/api/v1/evaluations',
       decisions: '/api/v1/decisions',
@@ -67,6 +70,8 @@ router.use('/departments', departmentRoutes);
 router.use('/challenges', challengeRoutes);
 router.use('/startups', startupRoutes);
 router.use('/evaluators', evaluatorRoutes);
+router.use('/evaluator', evaluatorRoutes);
+router.use('/access-requests', accessRequestRoutes);
 router.use('/applications', applicationRoutes);
 router.use('/evaluations', evaluationRoutes);
 router.use('/decisions', decisionRoutes);

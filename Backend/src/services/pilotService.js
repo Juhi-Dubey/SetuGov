@@ -683,7 +683,7 @@ export const getComplianceChecklist = async (pilotId, user = null) => {
  * Update a compliance item status or notes
  */
 export const updateComplianceItem = async (pilotId, itemId, data, user, ip_address = null) => {
-  await verifyPilotAccess(pilotId, user, 'PILOT_LIFECYCLE');
+  await verifyPilotAccess(pilotId, user, 'COMPLIANCE_MANAGE');
 
   const existing = await prisma.complianceItem.findUnique({
     where: { id: itemId }
@@ -785,7 +785,7 @@ export const getPilotFeedbacks = async (pilotId, user = null) => {
  * Pilot Issue Management (Phase 4-12: Distinct from potential risks)
  */
 export const createPilotIssue = async (pilotId, data, user, ip_address = null) => {
-  await verifyPilotAccess(pilotId, user, 'PILOT_LIFECYCLE');
+  await verifyPilotAccess(pilotId, user, 'ISSUE_MANAGE');
 
   const { title, description, severity = 'MEDIUM', assigned_to = null } = data;
 
@@ -830,7 +830,7 @@ export const getPilotIssues = async (pilotId, user = null) => {
 };
 
 export const updatePilotIssue = async (pilotId, issueId, data, user, ip_address = null) => {
-  await verifyPilotAccess(pilotId, user, 'PILOT_LIFECYCLE');
+  await verifyPilotAccess(pilotId, user, 'ISSUE_MANAGE');
 
   const existing = await prisma.pilotIssue.findUnique({ where: { id: issueId } });
   if (!existing || existing.pilot_id !== pilotId) {

@@ -11,641 +11,297 @@ import {
   CheckCircle2,
   Clock3,
   AlertCircle,
-  Flag,
+  XCircle,
   FileText,
+  RefreshCw,
+  ShieldCheck
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const defaultEvaluations = [
+const defaultAssignments = [
   {
-    id: 1,
-    challengeTitle: "AI-Based Citizen Grievance Management",
-    startupName: "TechNova Solutions",
-    domain: "Artificial Intelligence",
-    dueDate: "05 Sep 2026",
-    status: "Pending",
-    priority: "High",
-  },
-  {
-    id: 2,
-    challengeTitle: "Smart Waste Collection System",
-    startupName: "GreenGrid Technologies",
-    domain: "Smart City",
-    dueDate: "12 Sep 2026",
-    status: "Completed",
-    priority: "Medium",
-  },
-  {
-    id: 3,
-    challengeTitle: "Digital Healthcare Access Platform",
-    startupName: "MediPulse AI",
+    id: "assign-demo-1",
+    application_id: "app-demo-1",
+    challenge_title: "AI-Based Healthcare Queue Optimization & Patient Flow",
+    department_name: "Department of Health & Family Welfare",
+    state: "Karnataka",
+    startup_name: "MediQueue AI Technologies Pvt Ltd",
     domain: "Healthcare",
-    dueDate: "15 Sep 2026",
-    status: "Pending",
-    priority: "High",
+    assigned_at: "2026-09-01T10:00:00Z",
+    status: "PENDING",
+    is_recused: false,
+    is_evaluated: false,
+    has_conflict: null,
+    notes: "Assigned for evaluating technical architecture, ABDM compliance, and edge AI capability."
   },
   {
-    id: 4,
-    challengeTitle: "Agricultural Market Intelligence",
-    startupName: "AgriConnect Labs",
-    domain: "Agriculture",
-    dueDate: "20 Sep 2026",
-    status: "Completed",
-    priority: "Low",
+    id: "assign-demo-2",
+    application_id: "app-demo-2",
+    challenge_title: "Smart Waste Collection & IoT Route Optimization",
+    department_name: "Department of Urban Mobility & Transport",
+    state: "Karnataka",
+    startup_name: "GreenGrid Technologies",
+    domain: "Smart City",
+    assigned_at: "2026-08-28T14:30:00Z",
+    status: "ACCEPTED",
+    is_recused: false,
+    is_evaluated: false,
+    has_conflict: false,
+    notes: "Accepted evaluation assignment. Reviewing prototype and sensor telemetry."
   },
   {
-    id: 5,
-    challengeTitle: "Digital Public Transport Monitoring",
-    startupName: "UrbanTransit Tech",
+    id: "assign-demo-3",
+    application_id: "app-demo-3",
+    challenge_title: "Urban Traffic Congestion & Signal Control",
+    department_name: "Department of Urban Mobility & Transport",
+    state: "Karnataka",
+    startup_name: "UrbanFlow Systems",
     domain: "Transportation",
-    dueDate: "28 Aug 2026",
-    status: "Overdue",
-    priority: "High",
-  },
+    assigned_at: "2026-08-20T09:15:00Z",
+    status: "COMPLETED",
+    is_recused: false,
+    is_evaluated: true,
+    has_conflict: false,
+    notes: "Evaluation submitted with score 91%. Solution recommended for sandbox pilot trial."
+  }
 ];
 
-function EvaluatorAssignments({ evaluations: propEvaluations }) {
+function EvaluatorAssignments() {
   const navigate = useNavigate();
-
-  const [evaluations, setEvaluations] = useState(() => {
-    if (propEvaluations && propEvaluations.length > 0) {
-      return propEvaluations;
-    }
-    try {
-      const saved = localStorage.getItem("setugov_evaluator_assignments");
-      return saved ? JSON.parse(saved) : defaultEvaluations;
-    } catch {
-      return defaultEvaluations;
-    }
-  });
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
 
   useEffect(() => {
-    localStorage.setItem("setugov_evaluator_assignments", JSON.stringify(evaluations));
-  }, [evaluations]);
+    fetchAssignments();
+  }, []);
 
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("All");
-  const [priority, setPriority] = useState("All");
+  const fetchAssignments = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const res = await getMyAssignments();
+      const raw = res?.data?.assignments || res?.data || res || [];
+      const list = Array.isArray(raw) ? raw : [];
+      const mapped = list.map((a) => ({
+        id: a.id,
+        application_id: a.application_id || a.application?.id,
+        challenge_title: a.application?.challenge?.title || a.challenge_title || "Innovation Challenge",
+        department_name: a.application?.challenge?.department?.name || a.department_name || "Government Department",
+        state: a.application?.challenge?.department?.state || a.state || "National",
+        startup_name: a.application?.startup?.company_name || a.startup_name || "Startup Innovator",
+        domain: a.application?.startup?.domain || a.domain || "GovTech",
+        assigned_at: a.assigned_at || a.created_at,
+        status: a.status || "PENDING",
+        is_recused: a.status === "RECUSED" || Boolean(a.application?.conflict_declarations?.length),
+        is_evaluated: a.status === "COMPLETED" || Boolean(a.application?.evaluations?.length),
+        has_conflict: Boolean(a.application?.conflict_declarations?.length)
+      }));
 
-  const filteredEvaluations = useMemo(() => {
-    return evaluations.filter((evaluation) => {
-      const searchValue = search.toLowerCase().trim();
+      if (mapped.length > 0) {
+        setAssignments(mapped);
+      } else {
+        setAssignments(defaultAssignments);
+      }
+    } catch (err) {
+      console.warn("Using default assignments fallback:", err);
+      setAssignments(defaultAssignments);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const filteredAssignments = useMemo(() => {
+    return assignments.filter((item) => {
+      const q = search.toLowerCase().trim();
       const matchesSearch =
-        !searchValue ||
-        String(evaluation.challengeTitle || "")
-          .toLowerCase()
-          .includes(searchValue) ||
-        String(evaluation.startupName || "")
-          .toLowerCase()
-          .includes(searchValue) ||
-        String(evaluation.domain || "")
-          .toLowerCase()
-          .includes(searchValue);
+        !q ||
+        (item.challenge_title || "").toLowerCase().includes(q) ||
+        (item.startup_name || "").toLowerCase().includes(q) ||
+        (item.domain || "").toLowerCase().includes(q);
 
       const matchesStatus =
-        status === "All" ||
-        String(evaluation.status || "").toLowerCase() ===
-          status.toLowerCase();
+        statusFilter === "All" ||
+        String(item.status || "").toLowerCase() === statusFilter.toLowerCase();
 
-      const matchesPriority =
-        priority === "All" ||
-        String(evaluation.priority || "").toLowerCase() ===
-          priority.toLowerCase();
-
-      return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesPriority
-      );
+      return matchesSearch && matchesStatus;
     });
-  }, [evaluations, search, status, priority]);
+  }, [assignments, search, statusFilter]);
 
-  const handleOpenEvaluation = (evaluation) => {
-    if (!evaluation?.id) return;
-
-    navigate(
-      `/evaluator/evaluations/${evaluation.id}`
-    );
+  const handleUpdateStatus = async (assignmentId, newStatus) => {
+    try {
+      await updateAssignmentStatus(assignmentId, newStatus);
+      fetchAssignments();
+    } catch (err) {
+      alert(`Error updating assignment: ${err.message}`);
+    }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-      className="space-y-6"
-    >
-      {/* ================================================= */}
-      {/* HEADER                                            */}
-      {/* ================================================= */}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Evaluation Assignments
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Official evaluation assignments assigned to you by Government nodal officers.
+          </p>
+        </div>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-8">
         <button
-          type="button"
-          onClick={() =>
-            navigate("/evaluator/dashboard")
-          }
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+          onClick={fetchAssignments}
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
         >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Evaluator Dashboard
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          Refresh
         </button>
+      </div>
 
-        <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-                <ClipboardCheck className="h-5 w-5" />
-              </div>
-
-              <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                Evaluator Workspace
-              </span>
-            </div>
-
-            <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-              Evaluation Assignments
-            </h1>
-
-            <p className="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
-              Review your assigned startup proposals,
-              manage evaluation deadlines and complete
-              independent assessments.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-              Total Assignments
-            </p>
-
-            <p className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
-              {evaluations.length}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ================================================= */}
-      {/* FILTER BAR                                        */}
-      {/* ================================================= */}
-
-      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-5">
-        <div className="grid gap-3 lg:grid-cols-[1fr_180px_180px]">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-            <input
-              type="search"
-              value={search}
-              onChange={(event) =>
-                setSearch(event.target.value)
-              }
-              placeholder="Search challenge, startup or domain..."
-              className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
-            />
-          </div>
-
-          {/* Status */}
-          <div className="relative">
-            <Filter className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-            <select
-              value={status}
-              onChange={(event) =>
-                setStatus(event.target.value)
-              }
-              className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-8 text-xs font-medium text-slate-600 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-            >
-              <option value="All">
-                All Status
-              </option>
-              <option value="Pending">
-                Pending
-              </option>
-              <option value="Completed">
-                Completed
-              </option>
-              <option value="Overdue">
-                Overdue
-              </option>
-            </select>
-          </div>
-
-          {/* Priority */}
-          <div className="relative">
-            <Flag className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-            <select
-              value={priority}
-              onChange={(event) =>
-                setPriority(event.target.value)
-              }
-              className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-8 text-xs font-medium text-slate-600 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-            >
-              <option value="All">
-                All Priority
-              </option>
-              <option value="High">
-                High
-              </option>
-              <option value="Medium">
-                Medium
-              </option>
-              <option value="Low">
-                Low
-              </option>
-            </select>
-          </div>
-        </div>
-
-        {/* Filter summary */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[11px] text-slate-400">
-            Showing{" "}
-            <span className="font-bold text-slate-600 dark:text-slate-300">
-              {filteredEvaluations.length}
-            </span>{" "}
-            of{" "}
-            <span className="font-bold text-slate-600 dark:text-slate-300">
-              {evaluations.length}
-            </span>{" "}
-            assignments
-          </p>
-
-          {(search ||
-            status !== "All" ||
-            priority !== "All") && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearch("");
-                setStatus("All");
-                setPriority("All");
-              }}
-              className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
-            >
-              Clear Filters
-            </button>
-          )}
-        </div>
-      </section>
-
-      {/* ================================================= */}
-      {/* ASSIGNMENT LIST                                   */}
-      {/* ================================================= */}
-
-      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <div className="border-b border-slate-200 p-6 dark:border-slate-800">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">
-            Assigned Evaluations
-          </h2>
-
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Each evaluation contains the startup proposal
-            and assessment criteria assigned to you.
-          </p>
-        </div>
-
-        {filteredEvaluations.length === 0 ? (
-          <EmptyState
-            hasFilters={
-              Boolean(search) ||
-              status !== "All" ||
-              priority !== "All"
-            }
+      {/* Filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="relative sm:col-span-2">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search by challenge, startup, or domain..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-xs outline-none focus:border-purple-500 dark:border-slate-800 dark:bg-slate-900"
           />
-        ) : (
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {filteredEvaluations.map(
-              (evaluation, index) => (
-                <AssignmentCard
-                  key={
-                    evaluation.id ?? index
-                  }
-                  evaluation={evaluation}
-                  index={index}
-                  onOpen={() =>
-                    handleOpenEvaluation(
-                      evaluation
-                    )
-                  }
-                />
-              )
-            )}
-          </div>
-        )}
-      </section>
-    </motion.div>
-  );
-}
-
-/* ===================================================== */
-/* ASSIGNMENT CARD                                      */
-/* ===================================================== */
-
-function AssignmentCard({
-  evaluation,
-  index,
-  onOpen,
-}) {
-  const normalizedStatus =
-    String(
-      evaluation.status || ""
-    ).toLowerCase();
-
-  const isCompleted =
-    normalizedStatus === "completed";
-
-  return (
-    <motion.div
-      initial={{
-        opacity: 0,
-        y: 10,
-      }}
-      animate={{
-        opacity: 1,
-        y: 0,
-      }}
-      transition={{
-        duration: 0.3,
-        delay: index * 0.04,
-      }}
-      className="group p-5 transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-900/40 sm:p-6"
-    >
-      <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-        {/* Main information */}
-        <div className="flex min-w-0 items-start gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-            <FileText className="h-5 w-5" />
-          </div>
-
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="max-w-xl truncate text-sm font-bold text-slate-900 dark:text-white">
-                {evaluation.challengeTitle ||
-                  "Untitled Challenge"}
-              </h3>
-
-              <StatusBadge
-                status={evaluation.status}
-              />
-            </div>
-
-            <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2">
-              <MetaItem
-                icon={Building2}
-                value={
-                  evaluation.startupName ||
-                  "Startup information unavailable"
-                }
-              />
-
-              <MetaItem
-                icon={CalendarDays}
-                value={formatDate(
-                  evaluation.dueDate
-                )}
-              />
-
-              {evaluation.domain && (
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-600 dark:bg-slate-900 dark:text-slate-400">
-                  {evaluation.domain}
-                </span>
-              )}
-            </div>
-          </div>
         </div>
 
-        {/* Right side */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          {evaluation.priority && (
-            <PriorityBadge
-              priority={
-                evaluation.priority
-              }
-            />
-          )}
-
-          <button
-            type="button"
-            onClick={onOpen}
-            disabled={!evaluation.id}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+        <div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-purple-500 dark:border-slate-800 dark:bg-slate-900"
           >
-            {isCompleted
-              ? "View Evaluation"
-              : "Evaluate"}
-
-            <ArrowRight className="h-4 w-4" />
-          </button>
+            <option value="All">All Assignment Statuses</option>
+            <option value="PENDING">Pending Acceptance</option>
+            <option value="ACCEPTED">Accepted / Ready to Evaluate</option>
+            <option value="COMPLETED">Completed Evaluations</option>
+            <option value="RECUSED">Recused (COI)</option>
+          </select>
         </div>
       </div>
 
-      {/* Additional details */}
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        <DetailBox
-          label="Assignment"
-          value={
-            evaluation.assignmentType ||
-            "Evaluation"
-          }
-          icon={ClipboardCheck}
-        />
-
-        <DetailBox
-          label="Due Date"
-          value={formatDate(
-            evaluation.dueDate
-          )}
-          icon={CalendarDays}
-        />
-
-        <DetailBox
-          label="Status"
-          value={
-            evaluation.status ||
-            "Pending"
-          }
-          icon={
-            isCompleted
-              ? CheckCircle2
-              : Clock3
-          }
-        />
-      </div>
-    </motion.div>
-  );
-}
-
-/* ===================================================== */
-/* META ITEM                                            */
-/* ===================================================== */
-
-function MetaItem({
-  icon: Icon,
-  value,
-}) {
-  return (
-    <div className="flex min-w-0 items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-      <Icon className="h-3.5 w-3.5 shrink-0" />
-
-      <span className="max-w-xs truncate">
-        {value}
-      </span>
-    </div>
-  );
-}
-
-/* ===================================================== */
-/* DETAIL BOX                                           */
-/* ===================================================== */
-
-function DetailBox({
-  label,
-  value,
-  icon: Icon,
-}) {
-  return (
-    <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-900">
-      <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-slate-400">
-        <Icon className="h-3 w-3" />
-        {label}
-      </div>
-
-      <p className="mt-1.5 truncate text-xs font-semibold text-slate-700 dark:text-slate-300">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-/* ===================================================== */
-/* STATUS BADGE                                         */
-/* ===================================================== */
-
-function StatusBadge({
-  status,
-}) {
-  const normalized =
-    String(status || "").toLowerCase();
-
-  if (normalized === "completed") {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-        <CheckCircle2 className="h-3 w-3" />
-        Completed
-      </span>
-    );
-  }
-
-  if (normalized === "overdue") {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-bold text-red-700 dark:bg-red-500/10 dark:text-red-400">
-        <AlertCircle className="h-3 w-3" />
-        Overdue
-      </span>
-    );
-  }
-
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-      <Clock3 className="h-3 w-3" />
-      Pending
-    </span>
-  );
-}
-
-/* ===================================================== */
-/* PRIORITY BADGE                                       */
-/* ===================================================== */
-
-function PriorityBadge({
-  priority,
-}) {
-  const normalized =
-    String(priority || "").toLowerCase();
-
-  if (normalized === "high") {
-    return (
-      <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-red-50 px-3 py-2 text-[10px] font-bold text-red-600 dark:bg-red-500/10 dark:text-red-400">
-        <Flag className="h-3 w-3" />
-        High Priority
-      </span>
-    );
-  }
-
-  if (normalized === "medium") {
-    return (
-      <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-amber-50 px-3 py-2 text-[10px] font-bold text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
-        <Flag className="h-3 w-3" />
-        Medium Priority
-      </span>
-    );
-  }
-
-  return (
-    <span className="inline-flex items-center justify-center gap-1 rounded-xl bg-slate-100 px-3 py-2 text-[10px] font-bold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-      <Flag className="h-3 w-3" />
-      Low Priority
-    </span>
-  );
-}
-
-/* ===================================================== */
-/* EMPTY STATE                                          */
-/* ===================================================== */
-
-function EmptyState({
-  hasFilters,
-}) {
-  return (
-    <div className="flex min-h-80 flex-col items-center justify-center px-6 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-900">
-        {hasFilters ? (
-          <Search className="h-6 w-6" />
+      {/* Assignments Table */}
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-slate-800 dark:bg-slate-900">
+        {loading ? (
+          <div className="p-12 text-center text-xs text-slate-500">
+            <RefreshCw className="mx-auto h-6 w-6 animate-spin mb-2 text-purple-500" />
+            Loading assigned evaluations...
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center text-xs text-red-500 flex items-center justify-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            {error}
+          </div>
+        ) : filteredAssignments.length === 0 ? (
+          <div className="p-12 text-center">
+            <ClipboardCheck className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-700 mb-2" />
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">No Assignments Found</h3>
+            <p className="text-xs text-slate-500 mt-1">
+              There are currently no evaluation assignments matching your criteria.
+            </p>
+          </div>
         ) : (
-          <ClipboardCheck className="h-6 w-6" />
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+              <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:border-slate-800 dark:bg-slate-950">
+                <tr>
+                  <th className="py-3.5 px-4">Challenge & Department</th>
+                  <th className="py-3.5 px-4">Startup Candidate</th>
+                  <th className="py-3.5 px-4">Assigned On</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4">Conflict Status</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                {filteredAssignments.map((a) => (
+                  <tr key={a.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <p className="font-semibold text-slate-900 dark:text-white">
+                        {a.challenge_title || "Innovation Challenge"}
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        {a.department_name} ({a.state || "National"})
+                      </p>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="font-medium text-slate-800 dark:text-slate-200">{a.startup_name}</div>
+                      <div className="text-[11px] text-slate-400">{a.domain}</div>
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-400">
+                      {a.assigned_at ? new Date(a.assigned_at).toLocaleDateString() : "—"}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      {a.status === "COMPLETED" || a.is_evaluated ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                          <CheckCircle2 className="h-3 w-3" /> Completed
+                        </span>
+                      ) : a.status === "RECUSED" || a.is_recused ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 font-bold text-red-700 dark:bg-red-950/40 dark:text-red-300">
+                          <XCircle className="h-3 w-3" /> Recused
+                        </span>
+                      ) : a.status === "ACCEPTED" ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                          Accepted
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                          Pending
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      {a.is_recused ? (
+                        <span className="text-red-500 font-semibold text-[11px]">Conflict Declared</span>
+                      ) : a.has_conflict === false && a.is_evaluated ? (
+                        <span className="text-emerald-600 font-semibold text-[11px]">Certified Clean</span>
+                      ) : (
+                        <span className="text-slate-400 text-[11px]">Pending Declaration</span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 text-right space-x-2">
+                      {a.status === "PENDING" && (
+                        <>
+                          <button
+                            onClick={() => handleUpdateStatus(a.id, "ACCEPTED")}
+                            className="rounded-lg bg-purple-600 px-3 py-1 text-xs font-semibold text-white hover:bg-purple-700"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleUpdateStatus(a.id, "DECLINED")}
+                            className="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
+                          >
+                            Decline
+                          </button>
+                        </>
+                      )}
+
+                      <button
+                        onClick={() => navigate(`/evaluator/evaluation/${a.application_id}`)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200"
+                      >
+                        {a.is_evaluated ? "View Scorecard" : "Evaluate"}
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
-
-      <h3 className="mt-4 text-sm font-bold text-slate-800 dark:text-slate-200">
-        {hasFilters
-          ? "No matching evaluations"
-          : "No assignments yet"}
-      </h3>
-
-      <p className="mt-1 max-w-sm text-xs leading-5 text-slate-400">
-        {hasFilters
-          ? "Try changing your search or filters to find the evaluation you are looking for."
-          : "Assigned startup evaluations will appear here when they are provided by the backend."}
-      </p>
     </div>
   );
-}
-
-/* ===================================================== */
-/* DATE FORMATTER                                        */
-/* ===================================================== */
-
-function formatDate(value) {
-  if (!value) {
-    return "—";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return String(value);
-  }
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
 }
 
 export default EvaluatorAssignments;

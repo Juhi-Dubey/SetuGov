@@ -23,7 +23,7 @@ export const getDepartments = async (req, res, next) => {
 export const getDepartmentById = async (req, res, next) => {
   try {
     const departmentId = req.params.department_id || req.params.id;
-    const department = await departmentService.getDepartmentById(departmentId);
+    const department = await departmentService.getDepartmentById(departmentId, req.user);
     return successResponse(res, { department }, 'Department retrieved successfully', 200);
   } catch (error) {
     next(error);

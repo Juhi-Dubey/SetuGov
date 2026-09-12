@@ -159,14 +159,53 @@ const runE2ETests = async () => {
     logger.info(`✅ Application submitted (ID: ${application.id}, status: ${application.status})`);
 
     // ----------------------------------------------------
-    // STEP 7: Evaluator Login & Evaluates Application
+    // STEP 7: Evaluator Assignment & Evaluates Application
     // ----------------------------------------------------
-    logger.info('Step 7: Evaluator Logging in & Scoring Application...');
+    logger.info('Step 7: Evaluator Logging in, Accepting Assignment & Scoring Application...');
     const evalLoginRes = await request('POST', '/api/v1/auth/login', {
       email: 'anita.desai@evaluators.setugov.in',
       password: 'Password123!'
     });
     const evalToken = evalLoginRes.body.data.token;
+    const evalUser = evalLoginRes.body.data.user;
+
+    // Ensure evaluator profile is verified
+    await prisma.user.update({
+      where: { id: evalUser.id },
+      data: { is_verified: true }
+    });
+
+    await prisma.evaluatorProfile.upsert({
+      where: { user_id: evalUser.id },
+      create: {
+        user_id: evalUser.id,
+        organization: 'National Health Authority',
+        designation: 'Principal Systems Evaluator',
+        employment_type: 'FULL_TIME',
+        years_experience: 12,
+        domain_expertise: ['Healthcare Systems', 'ABDM'],
+        verification_status: 'VERIFIED'
+      },
+      update: { verification_status: 'VERIFIED' }
+    });
+
+    // Government assigns evaluator to application
+    const assignRes = await request('POST', `/api/v1/applications/${application.id}/assign-evaluator`, {
+      evaluator_id: evalUser.id
+    }, govToken);
+    if (assignRes.statusCode !== 201 && assignRes.statusCode !== 200) {
+      throw new Error(`Evaluator assignment failed: ${JSON.stringify(assignRes)}`);
+    }
+    const assignmentId = assignRes.body.data.id || assignRes.body.data.assignment?.id;
+
+    // Evaluator accepts assignment
+    const acceptRes = await request('PATCH', `/api/v1/evaluator/assignments/${assignmentId}`, {
+      status: 'ACCEPTED'
+    }, evalToken);
+    if (acceptRes.statusCode !== 200) {
+      throw new Error(`Evaluator accepting assignment failed: ${JSON.stringify(acceptRes)}`);
+    }
+    logger.info('✅ Evaluator assigned and accepted assignment.');
 
     const evalRes = await request('POST', `/api/v1/applications/${application.id}/evaluations`, {
       technical_score: 92,
@@ -289,9 +328,21 @@ const runE2ETests = async () => {
       milestone_id: milestone.id,
       amount: 114000,
       payment_percentage: 30,
+      status: 'PENDING'
+    }, govToken);
+    if (payRes.statusCode !== 201) {
+      throw new Error(`Payment creation failed: ${JSON.stringify(payRes)}`);
+    }
+    const payment = payRes.body.data.payment;
+
+    // Disburse payment through authorized status transition
+    const disburseRes = await request('PATCH', `/api/v1/payments/${payment.id}/status`, {
       status: 'PAID'
     }, govToken);
-    logger.info(`✅ Milestone & Simulated Payment created (Paid ₹${payRes.body.data.payment.amount})`);
+    if (disburseRes.statusCode !== 200) {
+      throw new Error(`Payment disbursal failed: ${JSON.stringify(disburseRes)}`);
+    }
+    logger.info(`✅ Milestone & Verified Payment created (Paid ₹${payment.amount})`);
 
     // ----------------------------------------------------
     // STEP 13: Upload Evidence & Log Risks

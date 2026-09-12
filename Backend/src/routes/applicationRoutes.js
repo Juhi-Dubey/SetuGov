@@ -25,8 +25,19 @@ import { createEvaluationSchema } from '../schemas/evaluationSchemas.js';
 
 const router = Router();
 
+import {
+  assignEvaluatorToApplication,
+  getApplicationAssignments
+} from '../controllers/evaluatorController.js';
+
 // Get specific application by ID
 router.get('/:application_id', authenticate, getApplicationById);
+
+// Assign Evaluator to Application (GOVERNMENT or ADMIN)
+router.post('/:application_id/assign-evaluator', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), assignEvaluatorToApplication);
+
+// Get Evaluator Assignments for Application (GOVERNMENT, ADMIN, EVALUATOR)
+router.get('/:application_id/assignments', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN', 'EVALUATOR'), getApplicationAssignments);
 
 // Update DRAFT application (Owner or ADMIN)
 router.patch('/:application_id', authenticate, validate(updateApplicationSchema), updateApplication);

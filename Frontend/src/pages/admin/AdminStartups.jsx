@@ -18,107 +18,43 @@ import {
   XCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getStartupDocuments } from "../../services/startupService.js";
+import { getStartups, getStartupDocuments } from "../../services/startupService.js";
 import { verifyStartupDpiit } from "../../services/adminService.js";
-
-const initialStartups = [
-  {
-    id: 1,
-    name: "GreenTech Innovations",
-    founder: "Rahul Verma",
-    email: "contact@greentech.in",
-    category: "Clean Technology",
-    gst: "20ABCDE1234F1Z5",
-    status: "Verified",
-    joined: "12 Aug 2026",
-  },
-  {
-    id: 2,
-    name: "EcoVision Technologies",
-    founder: "Priya Mehta",
-    email: "hello@ecovision.in",
-    category: "Waste Management",
-    gst: "20EFGHI5678J1Z2",
-    status: "Pending",
-    joined: "28 Aug 2026",
-  },
-  {
-    id: 3,
-    name: "SmartInfra Labs",
-    founder: "Amit Kumar",
-    email: "info@smartinfra.in",
-    category: "Infrastructure",
-    gst: "20KLMNO9012P1Z8",
-    status: "Verified",
-    joined: "25 Jul 2026",
-  },
-  {
-    id: 4,
-    name: "AgroNext Solutions",
-    founder: "Sneha Singh",
-    email: "contact@agronext.in",
-    category: "Agriculture",
-    gst: "20QRSTU3456V1Z4",
-    status: "Verified",
-    joined: "21 Jul 2026",
-  },
-  {
-    id: 5,
-    name: "Urban Mobility Labs",
-    founder: "Arjun Rao",
-    email: "hello@urbanmobility.in",
-    category: "Smart Mobility",
-    gst: "20WXYZA7890B1Z6",
-    status: "Suspended",
-    joined: "18 Jul 2026",
-  },
-  {
-    id: 6,
-    name: "HealthGrid Technologies",
-    founder: "Neha Sharma",
-    email: "team@healthgrid.in",
-    category: "Healthcare",
-    gst: "20CDEFG2345H1Z9",
-    status: "Pending",
-    joined: "30 Aug 2026",
-  },
-  {
-    id: 7,
-    name: "WaterSense AI",
-    founder: "Vikash Gupta",
-    email: "info@watersense.in",
-    category: "Water Management",
-    gst: "20IJKLM6789N1Z3",
-    status: "Verified",
-    joined: "15 Jul 2026",
-  },
-  {
-    id: 8,
-    name: "SolarEdge Innovations",
-    founder: "Karan Malhotra",
-    email: "contact@solaredge.in",
-    category: "Renewable Energy",
-    gst: "20OPQRS0123T1Z7",
-    status: "Verified",
-    joined: "10 Jul 2026",
-  },
-];
 
 function AdminStartups() {
   const navigate = useNavigate();
 
-  const [startups, setStartups] = useState(() => {
+  const [startups, setStartups] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadStartups = async () => {
     try {
-      const saved = localStorage.getItem("setugov_startups");
-      return saved ? JSON.parse(saved) : initialStartups;
-    } catch {
-      return initialStartups;
+      setLoading(true);
+      const res = await getStartups();
+      const list = res?.data?.startups || res?.startups || (Array.isArray(res?.data) ? res.data : []) || [];
+      const mapped = list.map((s) => ({
+        id: s.id,
+        name: s.company_name,
+        founder: s.user?.name || "Startup Founder",
+        email: s.user?.email || s.contact_email || "contact@startup.in",
+        category: s.domain || "Technology",
+        gst: s.dpiit_number || s.registration_number || "Verified DPIIT",
+        status: s.verification_status === "VERIFIED" ? "Verified" : s.verification_status === "REJECTED" ? "Suspended" : "Pending",
+        verification_status: s.verification_status,
+        joined: s.created_at ? new Date(s.created_at).toLocaleDateString("en-IN") : "Recent",
+      }));
+      setStartups(mapped);
+    } catch (err) {
+      console.error("Failed to load startups from backend:", err);
+      setStartups([]);
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
   useEffect(() => {
-    localStorage.setItem("setugov_startups", JSON.stringify(startups));
-  }, [startups]);
+    loadStartups();
+  }, []);
 
   const [search, setSearch] =
     useState("");
@@ -135,14 +71,14 @@ function AdminStartups() {
   const [selectedStartup, setSelectedStartup] =
     useState(null);
 
-  const categories = [
+  const categories = useMemo(() => [
     "All",
     ...new Set(
-      initialStartups.map(
-        (startup) => startup.category
-      )
+      startups
+        .map((startup) => startup.category)
+        .filter(Boolean)
     ),
-  ];
+  ], [startups]);
 
   const filteredStartups = useMemo(() => {
     return startups.filter((startup) => {
@@ -196,36 +132,25 @@ function AdminStartups() {
     (startup) => startup.status === "Suspended"
   ).length;
 
-  const handleVerify = (id) => {
-    setStartups((current) =>
-      current.map((startup) =>
-        startup.id === id
-          ? {
-              ...startup,
-              status: "Verified",
-            }
-          : startup
-      )
-    );
-
+  const handleVerify = async (id) => {
+    try {
+      await verifyStartupDpiit(id, { verification_status: "VERIFIED" });
+      loadStartups();
+    } catch (err) {
+      alert(`Verification failed: ${err.message}`);
+    }
     setOpenMenu(null);
   };
 
-  const handleToggleSuspend = (id) => {
-    setStartups((current) =>
-      current.map((startup) =>
-        startup.id === id
-          ? {
-              ...startup,
-              status:
-                startup.status === "Suspended"
-                  ? "Verified"
-                  : "Suspended",
-            }
-          : startup
-      )
-    );
-
+  const handleToggleSuspend = async (id) => {
+    const target = startups.find((s) => s.id === id);
+    const nextStatus = target?.status === "Suspended" ? "VERIFIED" : "REJECTED";
+    try {
+      await verifyStartupDpiit(id, { verification_status: nextStatus });
+      loadStartups();
+    } catch (err) {
+      alert(`Action failed: ${err.message}`);
+    }
     setOpenMenu(null);
   };
 

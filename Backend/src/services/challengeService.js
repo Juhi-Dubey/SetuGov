@@ -50,6 +50,12 @@ export const createChallenge = async (data, user, ip_address = null) => {
       pilot_duration_days: data.pilot_duration_days,
       required_technologies: data.required_technologies,
       application_deadline: data.application_deadline ? new Date(data.application_deadline) : null,
+      data_classification: data.data_classification || 'INTERNAL',
+      data_access_requirements: data.data_access_requirements ? data.data_access_requirements.trim() : null,
+      data_retention_period: data.data_retention_period ? data.data_retention_period.trim() : null,
+      ip_ownership: data.ip_ownership || 'STARTUP_OWNED',
+      licensing_terms: data.licensing_terms ? data.licensing_terms.trim() : null,
+      confidentiality_terms: data.confidentiality_terms ? data.confidentiality_terms.trim() : null,
       status: 'DRAFT',
       created_by: user.id,
       embedding
@@ -85,7 +91,7 @@ export const createChallenge = async (data, user, ip_address = null) => {
   return challenge;
 };
 
-export const getChallenges = async (query = {}) => {
+export const getChallenges = async (query = {}, user = null) => {
   const {
     status,
     department_id,
@@ -95,14 +101,42 @@ export const getChallenges = async (query = {}) => {
   } = query;
 
   const where = {};
-  if (status) where.status = status;
+
+  // Part 11: Public / unauthenticated users must strictly only see PUBLISHED challenges.
+  if (!user || user.role === 'STARTUP' || user.role === 'EVALUATOR') {
+    where.status = 'PUBLISHED';
+  } else if (user.role === 'GOVERNMENT') {
+    // Government officers see all published challenges plus draft/internal challenges for their own department
+    if (status) {
+      if (status === 'DRAFT') {
+        where.status = 'DRAFT';
+        where.department_id = user.department_id;
+      } else {
+        where.status = status;
+      }
+    } else {
+      where.OR = [
+        { status: 'PUBLISHED' },
+        { department_id: user.department_id }
+      ];
+    }
+  } else if (user.role === 'ADMIN') {
+    if (status) where.status = status;
+  }
+
   if (department_id) where.department_id = department_id;
   if (search) {
-    where.OR = [
+    const searchFilter = [
       { title: { contains: search, mode: 'insensitive' } },
       { problem_description: { contains: search, mode: 'insensitive' } },
       { location: { contains: search, mode: 'insensitive' } }
     ];
+    if (where.OR) {
+      where.AND = [{ OR: where.OR }, { OR: searchFilter }];
+      delete where.OR;
+    } else {
+      where.OR = searchFilter;
+    }
   }
 
   const safePage = Math.max(1, parseInt(page, 10) || 1);
@@ -154,7 +188,7 @@ export const getChallenges = async (query = {}) => {
   };
 };
 
-export const getChallengeById = async (id) => {
+export const getChallengeById = async (id, user = null) => {
   const challenge = await prisma.challenge.findUnique({
     where: { id },
     include: {
@@ -185,6 +219,16 @@ export const getChallengeById = async (id) => {
 
   if (!challenge) {
     throw new NotFoundError(`Challenge with ID ${id} not found.`);
+  }
+
+  // Part 11: Public users must only see PUBLISHED challenges.
+  if (challenge.status !== 'PUBLISHED') {
+    if (!user || user.role === 'STARTUP' || user.role === 'EVALUATOR') {
+      throw new NotFoundError(`Challenge with ID ${id} not found.`);
+    }
+    if (user.role === 'GOVERNMENT' && user.department_id !== challenge.department_id) {
+      throw new ForbiddenError('You do not have permission to view non-published challenges from other departments.');
+    }
   }
 
   return challenge;
@@ -223,7 +267,13 @@ export const updateChallenge = async (id, data, user, ip_address = null) => {
     'budget_max',
     'pilot_duration_days',
     'required_technologies',
-    'application_deadline'
+    'application_deadline',
+    'data_classification',
+    'data_access_requirements',
+    'data_retention_period',
+    'ip_ownership',
+    'licensing_terms',
+    'confidentiality_terms'
   ];
 
   const updateData = {};

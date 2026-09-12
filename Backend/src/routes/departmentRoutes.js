@@ -6,7 +6,7 @@ import {
   updateDepartment,
   getGovernmentAnalytics
 } from '../controllers/departmentController.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, optionalAuthenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
 import { createDepartmentSchema, updateDepartmentSchema } from '../schemas/departmentSchemas.js';
@@ -23,7 +23,7 @@ router.post('/', authenticate, authorizeRoles('ADMIN'), validate(createDepartmen
 router.get('/', getDepartments);
 
 // Get department by ID
-router.get('/:department_id', getDepartmentById);
+router.get('/:department_id', optionalAuthenticate, getDepartmentById);
 
 // Update department (Admin & Government)
 router.patch('/:department_id', authenticate, authorizeRoles('ADMIN', 'GOVERNMENT'), validate(updateDepartmentSchema), updateDepartment);

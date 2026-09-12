@@ -52,8 +52,8 @@ function ChallengeEvidence() {
         setLoading(true);
         const pilotsRes = await getPilots();
         const pilots = pilotsRes?.data?.pilots || [];
-        // Match challenge_id or take first pilot
-        const matchedPilot = pilots.find((p) => p.challenge_id === challengeId) || pilots[0];
+        // Part 22: Strictly match challenge_id only. Do NOT fallback to pilots[0].
+        const matchedPilot = pilots.find((p) => p.challenge_id === challengeId) || null;
 
         if (matchedPilot && mounted) {
           setPilot(matchedPilot);

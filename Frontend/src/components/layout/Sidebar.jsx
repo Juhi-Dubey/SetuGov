@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   X,
   Building2,
+  UserCheck,
+  UserPlus,
 } from "lucide-react";
 
 const navigation = {
@@ -30,14 +32,9 @@ const navigation = {
       icon: FileText,
     },
     {
-      label: "Startups",
-      path: "/government/startups",
-      icon: Rocket,
-    },
-    {
-      label: "Evaluations",
-      path: "/government/evaluations",
-      icon: ClipboardCheck,
+      label: "Evaluators",
+      path: "/government/evaluators",
+      icon: UserCheck,
     },
     {
       label: "Pilots",
@@ -50,19 +47,14 @@ const navigation = {
       icon: CreditCard,
     },
     {
+      label: "Audit Logs",
+      path: "/government/audit",
+      icon: ShieldCheck,
+    },
+    {
       label: "Reports",
       path: "/government/reports",
       icon: BarChart3,
-    },
-    {
-      label: "Templates",
-      path: "/government/templates",
-      icon: FileStack,
-    },
-    {
-      label: "Settings",
-      path: "/government/settings",
-      icon: Settings,
     },
   ],
 
@@ -129,9 +121,19 @@ const navigation = {
       icon: LayoutDashboard,
     },
     {
+      label: "Access Requests",
+      path: "/admin/access-requests",
+      icon: UserPlus,
+    },
+    {
       label: "Users",
       path: "/admin/users",
       icon: Users,
+    },
+    {
+      label: "Evaluators",
+      path: "/admin/evaluators",
+      icon: UserCheck,
     },
     {
       label: "Startups",
@@ -194,11 +196,11 @@ function Sidebar({ role = "government", isOpen, onClose }) {
 
             <div>
               <h1 className="text-base font-bold tracking-tight">
-                GovInnov
+                SetuGov
               </h1>
 
               <p className="text-[11px] text-slate-400">
-                Innovation Procurement OS
+                National Innovation Procurement
               </p>
             </div>
           </div>

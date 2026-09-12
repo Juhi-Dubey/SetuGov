@@ -84,7 +84,8 @@ export const updateMilestone = async (id, data, user, ip_address = null) => {
     'due_date',
     'completion_percentage',
     'payment_percentage',
-    'evidence_url'
+    'evidence_url',
+    'status'
   ];
 
   const updateData = {};
@@ -100,8 +101,14 @@ export const updateMilestone = async (id, data, user, ip_address = null) => {
     }
   }
 
-  if (updateData.completion_percentage === 100) {
-    updateData.status = 'COMPLETED';
+  // Part 7: Separate SUBMISSION from APPROVAL. Only GOVERNMENT / ADMIN can approve milestones as COMPLETED.
+  if (user.role === 'STARTUP') {
+    delete updateData.status;
+    delete updateData.payment_percentage; // Startups cannot manipulate payment eligibility
+  } else if (user.role === 'GOVERNMENT' || user.role === 'ADMIN') {
+    if (updateData.completion_percentage === 100 && !updateData.status) {
+      updateData.status = 'COMPLETED';
+    }
   }
 
   const updated = await prisma.milestone.update({

@@ -18,89 +18,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getUsers, updateUserStatus, updateUserRole, verifyEvaluator } from "../../services/adminService";
 
-const initialUsers = [
-  {
-    id: 1,
-    name: "GreenTech Innovations",
-    email: "contact@greentech.in",
-    role: "Startup",
-    organization: "GreenTech Innovations Pvt. Ltd.",
-    status: "Active",
-    verified: true,
-    joined: "12 Aug 2026",
-  },
-  {
-    id: 2,
-    name: "Department of Urban Development",
-    email: "urban@gov.in",
-    role: "Government",
-    organization: "Department of Urban Development",
-    status: "Active",
-    verified: true,
-    joined: "10 Aug 2026",
-  },
-  {
-    id: 3,
-    name: "Dr. Ananya Sharma",
-    email: "ananya@example.com",
-    role: "Evaluator",
-    organization: "Innovation Evaluation Board",
-    status: "Active",
-    verified: true,
-    joined: "08 Aug 2026",
-  },
-  {
-    id: 4,
-    name: "EcoVision Technologies",
-    email: "hello@ecovision.in",
-    role: "Startup",
-    organization: "EcoVision Technologies",
-    status: "Pending",
-    verified: false,
-    joined: "28 Aug 2026",
-  },
-  {
-    id: 5,
-    name: "Rajesh Kumar",
-    email: "rajesh@example.com",
-    role: "Evaluator",
-    organization: "Technical Evaluation Committee",
-    status: "Active",
-    verified: true,
-    joined: "05 Aug 2026",
-  },
-  {
-    id: 6,
-    name: "Department of Transport",
-    email: "transport@gov.in",
-    role: "Government",
-    organization: "State Transport Department",
-    status: "Active",
-    verified: true,
-    joined: "02 Aug 2026",
-  },
-  {
-    id: 7,
-    name: "SmartInfra Labs",
-    email: "info@smartinfra.in",
-    role: "Startup",
-    organization: "SmartInfra Labs Pvt. Ltd.",
-    status: "Inactive",
-    verified: true,
-    joined: "25 Jul 2026",
-  },
-  {
-    id: 8,
-    name: "Priya Mehta",
-    email: "priya@example.com",
-    role: "Evaluator",
-    organization: "Public Procurement Evaluation Cell",
-    status: "Pending",
-    verified: false,
-    joined: "30 Aug 2026",
-  },
-];
-
 function AdminUsers() {
   const navigate = useNavigate();
 
@@ -120,13 +37,13 @@ function AdminUsers() {
         organization: u.department?.name || (u.role === "STARTUP" ? "Startup Enterprise" : "SetuGov Administration"),
         status: u.is_active ? "Active" : "Inactive",
         is_active: u.is_active,
-        verified: true,
-        joined: u.created_at ? new Date(u.created_at).toLocaleDateString() : "Recent",
+        verified: u.is_verified,
+        joined: u.created_at ? new Date(u.created_at).toLocaleDateString("en-IN") : "Recent",
       }));
       setUsers(mapped);
     } catch (err) {
-      console.warn("Failed to load users from backend:", err);
-      setUsers(initialUsers);
+      console.error("Failed to load users from backend:", err);
+      setUsers([]);
     } finally {
       setLoading(false);
     }

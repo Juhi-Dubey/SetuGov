@@ -110,24 +110,78 @@ const initialCompletedEvaluations = [
   },
 ];
 
+import { getMyAssignments } from "../../services/evaluatorService";
+
 function EvaluatorEvaluations() {
   const navigate = useNavigate();
 
-  const [evaluations, setEvaluations] = useState(() => {
-    try {
-      const saved = localStorage.getItem("setugov_evaluations_history");
-      return saved ? JSON.parse(saved) : initialCompletedEvaluations;
-    } catch {
-      return initialCompletedEvaluations;
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem("setugov_evaluations_history", JSON.stringify(evaluations));
-  }, [evaluations]);
+  const [evaluations, setEvaluations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [recommendationFilter, setRecommendationFilter] = useState("All");
   const [selectedEvaluation, setSelectedEvaluation] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchEvaluations = async () => {
+      try {
+        setLoading(true);
+        const res = await getMyAssignments();
+        const assignments = res?.data?.assignments || res?.data || [];
+
+        if (mounted) {
+          const completed = assignments
+            .filter((a) => a.status === "COMPLETED" || a.status === "ACCEPTED")
+            .map((a, idx) => {
+              const app = a.application || {};
+              const startup = app.startup || {};
+              const challenge = app.challenge || {};
+              const evals = app.evaluations || [];
+              const myEval = evals.find(e => e.evaluator_id === a.evaluator_id) || evals[0] || {};
+              const score = myEval.total_score || 0;
+
+              let rec = "Under Review";
+              if (score >= 75) rec = "Recommended for Pilot";
+              else if (score >= 60) rec = "Conditional Approval";
+              else if (score > 0) rec = "Needs Revision";
+
+              return {
+                id: a.id || idx + 1,
+                startupName: startup.company_name || "Innovator",
+                challengeTitle: challenge.title || "Government Challenge",
+                domain: startup.domain || "Technology",
+                submittedDate: a.completed_at ? new Date(a.completed_at).toLocaleDateString("en-IN") : "Pending",
+                overallScore: score,
+                scores: {
+                  technicalFeasibility: myEval.technical_score || 0,
+                  innovation: myEval.innovation_score || 0,
+                  expectedImpact: myEval.impact_score || 0,
+                  scalability: myEval.scalability_score || 0,
+                  costEffectiveness: myEval.cost_score || 0,
+                },
+                recommendation: rec,
+                verdict: myEval.comments || "Evaluation scorecard registered.",
+                status: a.status === "COMPLETED" ? "Completed" : "In Progress",
+              };
+            });
+
+          if (completed.length > 0) {
+            setEvaluations(completed);
+          } else {
+            setEvaluations(initialCompletedEvaluations);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch evaluation history, using mock dataset:", err);
+        if (mounted) setEvaluations(initialCompletedEvaluations);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchEvaluations();
+    return () => { mounted = false; };
+  }, []);
 
   const filtered = useMemo(() => {
     return evaluations.filter((item) => {

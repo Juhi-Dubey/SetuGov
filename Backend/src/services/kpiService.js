@@ -131,6 +131,9 @@ export const createMeasurement = async (pilotId, data, user, ip_address = null) 
     throw new BadRequestError(`KPI ${data.kpi_id} does not belong to pilot ${pilotId}.`);
   }
 
+  // Part 8: Startup must not be able to mark its own measurement as verified
+  const isVerified = user.role === 'STARTUP' ? false : (Boolean(data.verified) || false);
+
   // Create measurement and update KPI actual_value atomically
   const [measurement] = await prisma.$transaction([
     prisma.pilotMeasurement.create({
@@ -139,7 +142,7 @@ export const createMeasurement = async (pilotId, data, user, ip_address = null) 
         kpi_id: data.kpi_id,
         value: data.value,
         source: data.source.trim(),
-        verified: data.verified || false,
+        verified: isVerified,
         measurement_date: data.measurement_date ? new Date(data.measurement_date) : new Date()
       }
     }),

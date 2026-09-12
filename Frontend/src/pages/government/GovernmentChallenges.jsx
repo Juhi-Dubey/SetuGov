@@ -42,111 +42,6 @@ import {
 } from "../../services/challengeService";
 import { useAuth } from "../../context/AuthContext";
 
-const fallbackChallenges = [
-  {
-    id: "ch-1",
-    title: "AI-Powered Grievance Triage & Resolution Engine",
-    problem_description:
-      "Automated natural language classification, multilingual sentiment detection, and SLA-aware intelligent routing for citizen grievances across 36 districts.",
-    department: { name: "Public Grievances & Administration" },
-    status: "PUBLISHED",
-    budget_min: 1500000,
-    budget_max: 3500000,
-    pilot_duration_days: 60,
-    required_technologies: ["NLP", "LLM", "Python", "OCR", "Indic-BERT"],
-    applications_count: 14,
-    pilots_count: 1,
-    created_at: "2026-08-15T10:00:00Z",
-    deadline: "2026-09-30",
-    category: "Artificial Intelligence",
-  },
-  {
-    id: "ch-2",
-    title: "IoT-Based Real-time Urban Flood Warning System",
-    problem_description:
-      "Telemetry sensor grid deployment across river basins and storm drains to provide 45-minute early flood warnings with spatial GIS telemetry.",
-    department: { name: "Disaster Management Authority" },
-    status: "PILOT",
-    budget_min: 2500000,
-    budget_max: 5000000,
-    pilot_duration_days: 90,
-    required_technologies: ["IoT", "GIS", "Embedded C", "Telemetry", "LoRaWAN"],
-    applications_count: 22,
-    pilots_count: 2,
-    created_at: "2026-07-20T10:00:00Z",
-    deadline: "2026-08-25",
-    category: "Smart Cities & IoT",
-  },
-  {
-    id: "ch-3",
-    title: "Computer Vision Drone Pipeline for Crop Health & Yield Assessment",
-    problem_description:
-      "Multispectral satellite and drone imagery processing pipeline for automated pest damage assessment, crop loss verification, and DBT claim audit.",
-    department: { name: "Department of Agriculture" },
-    status: "EVALUATION",
-    budget_min: 2000000,
-    budget_max: 4000000,
-    pilot_duration_days: 75,
-    required_technologies: ["Computer Vision", "YOLOv9", "Drone Telemetry", "PyTorch"],
-    applications_count: 18,
-    pilots_count: 0,
-    created_at: "2026-08-01T10:00:00Z",
-    deadline: "2026-09-15",
-    category: "Agritech",
-  },
-  {
-    id: "ch-4",
-    title: "Decentralized Medical Supply Chain & Cold-Chain Integrity",
-    problem_description:
-      "Tamper-proof verifiable ledger and temperature logger telemetry for critical vaccine and emergency medicine distribution to rural PHCs.",
-    department: { name: "Public Health & Family Welfare" },
-    status: "PUBLISHED",
-    budget_min: 3000000,
-    budget_max: 6000000,
-    pilot_duration_days: 90,
-    required_technologies: ["Blockchain", "RFID", "IoT Sensors", "Node.js"],
-    applications_count: 9,
-    pilots_count: 0,
-    created_at: "2026-08-28T10:00:00Z",
-    deadline: "2026-10-15",
-    category: "Healthcare",
-  },
-  {
-    id: "ch-5",
-    title: "Smart Traffic Light Synchronization & Green Corridor Routing",
-    problem_description:
-      "Edge-computing video analytics at 120 key intersections to dynamically optimize cycle lengths and auto-clear emergency corridors for ambulances.",
-    department: { name: "Urban Transport Department" },
-    status: "DRAFT",
-    budget_min: 4000000,
-    budget_max: 8500000,
-    pilot_duration_days: 120,
-    required_technologies: ["Edge AI", "Computer Vision", "MQTT", "Traffic Modeling"],
-    applications_count: 0,
-    pilots_count: 0,
-    created_at: "2026-09-05T10:00:00Z",
-    deadline: "2026-10-30",
-    category: "Urban Mobility",
-  },
-  {
-    id: "ch-6",
-    title: "AI-Assisted Land Record Mutation & Title Verification",
-    problem_description:
-      "Automated extraction and cross-referencing of historical land registries, encumbrance certificates, and GIS cadastre maps to accelerate mutations.",
-    department: { name: "Revenue & Land Reforms" },
-    status: "COMPLETED",
-    budget_min: 1800000,
-    budget_max: 3200000,
-    pilot_duration_days: 60,
-    required_technologies: ["OCR", "NLP", "GIS Cadastre", "PostgreSQL"],
-    applications_count: 31,
-    pilots_count: 3,
-    created_at: "2026-05-10T10:00:00Z",
-    deadline: "2026-06-30",
-    category: "GovTech",
-  },
-];
-
 const statusTabs = [
   { id: "ALL", label: "All Challenges" },
   { id: "PUBLISHED", label: "Published & Open" },
@@ -181,7 +76,7 @@ export default function GovernmentChallenges() {
     try {
       setLoading(true);
       setError(null);
-      const res = await getChallenges().catch(() => null);
+      const res = await getChallenges();
 
       const raw =
         res?.data?.challenges ||
@@ -189,47 +84,42 @@ export default function GovernmentChallenges() {
         (Array.isArray(res?.data) ? res.data : []) ||
         [];
 
-      if (raw.length > 0) {
-        // Map backend challenges format
-        const formatted = raw.map((ch, idx) => ({
-          id: ch.id || `ch-${idx + 1}`,
-          title: ch.title || "Government Challenge",
-          problem_description:
-            ch.problem_description ||
-            ch.description ||
-            "Operational challenge statement created for statewide innovation matching.",
-          department: {
-            name:
-              ch.department?.name ||
-              ch.department_name ||
-              user?.department?.name ||
-              "Government Administration",
-          },
-          status: ch.status || "PUBLISHED",
-          budget_min: Number(ch.budget_min) || 1000000,
-          budget_max: Number(ch.budget_max) || 2500000,
-          pilot_duration_days: ch.pilot_duration_days || 60,
-          required_technologies: Array.isArray(ch.required_technologies)
-            ? ch.required_technologies
-            : ["AI", "Cloud", "Analytics"],
-          applications_count:
-            ch._count?.applications ??
-            (Array.isArray(ch.applications) ? ch.applications.length : 0),
-          pilots_count:
-            ch._count?.pilots ??
-            (Array.isArray(ch.pilots) ? ch.pilots.length : ch.status === "PILOT" ? 1 : 0),
-          created_at: ch.created_at || new Date().toISOString(),
-          deadline: ch.deadline || "2026-10-15",
-          category: ch.category || "GovTech Innovation",
-        }));
-        setChallenges(formatted);
-      } else {
-        // Fallback to rich sample challenges
-        setChallenges(fallbackChallenges);
-      }
+      const formatted = raw.map((ch, idx) => ({
+        id: ch.id || `ch-${idx + 1}`,
+        title: ch.title || "Government Challenge",
+        problem_description:
+          ch.problem_description ||
+          ch.description ||
+          "",
+        department: {
+          name:
+            ch.department?.name ||
+            ch.department_name ||
+            user?.department?.name ||
+            "Government Administration",
+        },
+        status: ch.status || "PUBLISHED",
+        budget_min: Number(ch.budget_min) || 0,
+        budget_max: Number(ch.budget_max) || 0,
+        pilot_duration_days: ch.pilot_duration_days || 0,
+        required_technologies: Array.isArray(ch.required_technologies)
+          ? ch.required_technologies
+          : [],
+        applications_count:
+          ch._count?.applications ??
+          (Array.isArray(ch.applications) ? ch.applications.length : 0),
+        pilots_count:
+          ch._count?.pilots ??
+          (Array.isArray(ch.pilots) ? ch.pilots.length : ch.status === "PILOT" ? 1 : 0),
+        created_at: ch.created_at || new Date().toISOString(),
+        deadline: ch.application_deadline || ch.deadline || "Open Rolling",
+        category: ch.sector || ch.category || "GovTech Innovation",
+      }));
+      setChallenges(formatted);
     } catch (err) {
-      console.error("Failed to load challenges", err);
-      setChallenges(fallbackChallenges);
+      console.error("Failed to load challenges from backend", err);
+      setError(err?.message || "Failed to load challenges.");
+      setChallenges([]);
     } finally {
       setLoading(false);
     }

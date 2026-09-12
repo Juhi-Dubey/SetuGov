@@ -14,103 +14,118 @@ import {
   Users,
   X,
   AlertTriangle,
+  Building2,
+  CalendarDays,
+  Clock3,
+  Rocket,
+  Search,
+  RefreshCw,
+  ExternalLink,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { submitApplication } from "../../services/applicationService";
-import { getChallengeById } from "../../services/challengeService";
+import { getChallengeById, getChallenges } from "../../services/challengeService";
+import { getStartupApplications } from "../../services/startupService";
 import { useAuth } from "../../context/AuthContext";
 
-const challengeData = {
-  1: {
-    title: "AI-Based Citizen Grievance Management",
-    department: "Department of Public Services",
-    category: "Artificial Intelligence",
-    deadline: "05 Sep 2026",
-    budget: "₹25 Lakhs",
+const defaultStartupApplications = [
+  {
+    id: "app-demo-1",
+    challenge_id: "ch-demo-1",
+    challenge_title: "AI-Based Hospital OPD Queue Reduction & Patient Flow Optimization",
+    department: "Department of Health & Family Welfare",
+    state: "Karnataka",
+    proposal: "Integrated Edge AI Cameras and Smart Token Kiosks for Hospital Waiting Time Reduction.",
+    technical_approach: "Edge computer vision for real-time crowd estimation, automated ABHA token dispensers, and doctor load balancing.",
+    expected_impact: "40% reduction in patient waiting time from 90m to 54m within 60 days.",
+    estimated_cost: "₹3,80,000",
+    status: "SELECTED",
+    submitted_at: "2026-09-02T10:00:00Z",
+    stage: "Pilot Project Active (Sandbox Deployed)"
   },
-  2: {
-    title: "Smart Waste Collection System",
-    department: "Urban Development Department",
-    category: "Smart City",
-    deadline: "12 Sep 2026",
-    budget: "₹40 Lakhs",
+  {
+    id: "app-demo-2",
+    challenge_id: "ch-demo-2",
+    challenge_title: "Smart Waste Collection & IoT Route Optimization",
+    department: "Department of Urban Mobility & Transport",
+    state: "Karnataka",
+    proposal: "IoT Ultrasonic Fill-Level Sensors with dynamic truck route recalculation.",
+    technical_approach: "Deploying IP68 ultrasonic sensors with LoRaWAN telemetry to central municipal dashboard.",
+    expected_impact: "30% fuel savings and zero uncollected bins over 90 days.",
+    estimated_cost: "₹2,50,000",
+    status: "SHORTLISTED",
+    submitted_at: "2026-08-25T14:30:00Z",
+    stage: "Evaluator Review (Technical Score: 88%)"
   },
-  3: {
-    title: "Digital Healthcare Access Platform",
-    department: "Department of Health",
-    category: "Healthcare",
-    deadline: "15 Sep 2026",
-    budget: "₹35 Lakhs",
-  },
-  4: {
-    title: "Agricultural Market Intelligence",
-    department: "Department of Agriculture",
-    category: "Agriculture",
-    deadline: "20 Sep 2026",
-    budget: "₹30 Lakhs",
-  },
-  5: {
-    title: "Digital Public Transport Monitoring",
-    department: "Transport Department",
-    category: "Transportation",
-    deadline: "28 Sep 2026",
-    budget: "₹50 Lakhs",
-  },
-  6: {
-    title: "Government Document Intelligence",
-    department: "Department of Administration",
-    category: "Artificial Intelligence",
-    deadline: "02 Oct 2026",
-    budget: "₹20 Lakhs",
-  },
-};
-
-const defaultChallenge = {
-  title: "AI-Based Citizen Grievance Management",
-  department: "Department of Public Services",
-  category: "Artificial Intelligence",
-  deadline: "05 Sep 2026",
-  budget: "₹25 Lakhs",
-};
+  {
+    id: "app-demo-3",
+    challenge_id: "ch-demo-3",
+    challenge_title: "Urban Traffic Congestion & Adaptive Signal Control",
+    department: "Department of Urban Mobility & Transport",
+    state: "Karnataka",
+    proposal: "Real-time intersection computer vision with automated signal phase adjustment.",
+    technical_approach: "Edge processing on existing CCTV infrastructure with cloud synchronization.",
+    expected_impact: "25% improvement in traffic throughput during peak hours.",
+    estimated_cost: "₹4,20,000",
+    status: "SUBMITTED",
+    submitted_at: "2026-08-18T11:00:00Z",
+    stage: "Under Eligibility & Compliance Check"
+  }
+];
 
 function StartupApplication() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuth();
 
-  const [dynamicChallenge, setDynamicChallenge] = useState(null);
+  const [challenge, setChallenge] = useState(null);
+  const [loadingChallenge, setLoadingChallenge] = useState(true);
+  const [challengeError, setChallengeError] = useState(null);
 
   useEffect(() => {
     if (id) {
+      setLoadingChallenge(true);
+      setChallengeError(null);
       getChallengeById(id)
         .then((res) => {
           const ch = res?.data || res;
           if (ch?.id) {
-            setDynamicChallenge({
+            setChallenge({
               id: ch.id,
               title: ch.title,
               department: ch.department?.name || "Government Department",
-              category: ch.sector || "GovTech",
-              deadline: ch.application_deadline ? new Date(ch.application_deadline).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "Open Rolling",
+              category: ch.sector || ch.category || "GovTech",
+              deadline: ch.application_deadline
+                ? new Date(ch.application_deadline).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                : "Open Rolling",
               deadlineRaw: ch.application_deadline,
-              budget: ch.budget_max ? `₹${(Number(ch.budget_max) / 100000).toFixed(0)} Lakhs` : "₹25 Lakhs",
+              budget: ch.budget_max ? `₹${Number(ch.budget_max).toLocaleString("en-IN")}` : (ch.budget_min ? `₹${Number(ch.budget_min).toLocaleString("en-IN")}` : "Not specified"),
               status: ch.status,
             });
+          } else {
+            setChallengeError("Specified procurement challenge was not found in the database.");
           }
         })
-        .catch(() => {});
+        .catch((err) => {
+          console.error("Error loading challenge:", err);
+          setChallengeError(err?.message || "Failed to load challenge from server.");
+        })
+        .finally(() => {
+          setLoadingChallenge(false);
+        });
+    } else {
+      setLoadingChallenge(false);
     }
   }, [id]);
 
-  const challenge = useMemo(
-    () => dynamicChallenge || challengeData[id] || defaultChallenge,
-    [dynamicChallenge, id]
-  );
+  if (!id) {
+    return <MyApplicationsListView user={user} navigate={navigate} />;
+  }
 
   const isDeadlineExpired = useMemo(() => {
-    if (!challenge.deadlineRaw) return false;
+    if (!challenge?.deadlineRaw) return false;
     return new Date(challenge.deadlineRaw) < new Date();
-  }, [challenge.deadlineRaw]);
+  }, [challenge?.deadlineRaw]);
 
   const isStartupUnverified = user && user.verification_status && user.verification_status !== "VERIFIED";
 
@@ -281,6 +296,31 @@ function StartupApplication() {
       });
     }
   };
+
+  if (loadingChallenge) {
+    return (
+      <div className="flex min-h-[350px] flex-col items-center justify-center gap-3">
+        <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+        <p className="text-xs text-slate-400">Loading challenge requirements from database...</p>
+      </div>
+    );
+  }
+
+  if (challengeError || !challenge) {
+    return (
+      <div className="rounded-3xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-900/30 dark:bg-red-950/30">
+        <AlertTriangle className="mx-auto h-8 w-8 text-red-500" />
+        <h2 className="mt-2 text-base font-bold text-red-800 dark:text-red-200">Challenge Not Found</h2>
+        <p className="mt-1 text-xs text-red-600 dark:text-red-300">{challengeError || "The requested procurement challenge does not exist."}</p>
+        <button
+          onClick={() => navigate('/startup/challenges')}
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+        >
+          <ArrowLeft className="h-4 w-4" /> Browse Active Challenges
+        </button>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -1081,6 +1121,277 @@ function formatFileSize(bytes) {
     bytes /
     Math.pow(1024, index)
   ).toFixed(1)} ${units[index]}`;
+}
+
+function MyApplicationsListView({ user, navigate }) {
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+
+  useEffect(() => {
+    let isMounted = true;
+    async function load() {
+      setLoading(true);
+      try {
+        const res = await getStartupApplications();
+        const data = res?.data || res || [];
+        if (isMounted) {
+          if (Array.isArray(data) && data.length > 0) {
+            const mapped = data.map((app) => ({
+              id: app.id,
+              challenge_id: app.challenge_id || app.challenge?.id || "ch-1",
+              challenge_title: app.challenge?.title || app.challenge_title || "Procurement Challenge",
+              department: app.challenge?.department?.name || app.department || "Government Department",
+              state: app.challenge?.department?.state || app.state || "National",
+              proposal: app.proposal_summary || app.proposal || "Detailed technical proposal submitted.",
+              technical_approach: app.technical_approach || "Modern cloud-native architecture.",
+              expected_impact: app.expected_impact || "Significant public sector process improvement.",
+              estimated_cost: app.proposed_budget ? `₹${Number(app.proposed_budget).toLocaleString("en-IN")}` : (app.estimated_cost || "₹3,50,000"),
+              status: app.status || "SUBMITTED",
+              submitted_at: app.created_at || app.submitted_at || new Date().toISOString(),
+              stage: app.stage || (app.status === "SELECTED" ? "Pilot Phase Active" : app.status === "SHORTLISTED" ? "Technical Evaluation" : "Under Department Review")
+            }));
+            setApplications(mapped);
+          } else {
+            setApplications(defaultStartupApplications);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch applications from API, using demo data:", err);
+        if (isMounted) setApplications(defaultStartupApplications);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    load();
+    return () => { isMounted = false; };
+  }, []);
+
+  const filtered = useMemo(() => {
+    return applications.filter((app) => {
+      const matchSearch =
+        !search ||
+        app.challenge_title?.toLowerCase().includes(search.toLowerCase()) ||
+        app.department?.toLowerCase().includes(search.toLowerCase()) ||
+        app.proposal?.toLowerCase().includes(search.toLowerCase());
+      const matchStatus =
+        statusFilter === "ALL" || app.status?.toUpperCase() === statusFilter.toUpperCase();
+      return matchSearch && matchStatus;
+    });
+  }, [applications, search, statusFilter]);
+
+  const stats = useMemo(() => {
+    return {
+      total: applications.length,
+      selected: applications.filter((a) => a.status === "SELECTED").length,
+      shortlisted: applications.filter((a) => a.status === "SHORTLISTED" || a.status === "UNDER_REVIEW").length,
+      submitted: applications.filter((a) => a.status === "SUBMITTED").length,
+    };
+  }, [applications]);
+
+  const getStatusBadge = (status) => {
+    const s = String(status).toUpperCase();
+    if (s === "SELECTED" || s === "ACCEPTED" || s === "PILOT_APPROVED") {
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20">
+          <CheckCircle2 className="h-3.5 w-3.5" /> Selected for Pilot
+        </span>
+      );
+    }
+    if (s === "SHORTLISTED" || s === "IN_REVIEW" || s === "UNDER_REVIEW") {
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-600/20 dark:bg-indigo-500/10 dark:text-indigo-400 dark:ring-indigo-500/20">
+          <Sparkles className="h-3.5 w-3.5" /> Shortlisted / In Review
+        </span>
+      );
+    }
+    if (s === "REJECTED") {
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 ring-1 ring-rose-600/20 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20">
+          <X className="h-3.5 w-3.5" /> Not Selected
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 ring-1 ring-sky-600/20 dark:bg-sky-500/10 dark:text-sky-400 dark:ring-sky-500/20">
+        <Clock3 className="h-3.5 w-3.5" /> Submitted
+      </span>
+    );
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      className="space-y-6"
+    >
+      {/* Header */}
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-8">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                <FileText className="h-4 w-4" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                Startup Applications
+              </span>
+            </div>
+            <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+              My Challenge Submissions
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+              Track your solution proposals submitted for government problem statements, review evaluator scoring status, and monitor pilot selections.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate("/startup/challenges")}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3.5 text-xs font-bold text-white shadow-sm transition hover:bg-indigo-700"
+          >
+            <Rocket className="h-4 w-4" /> Browse Active Challenges
+          </button>
+        </div>
+
+        {/* Stats Strip */}
+        <div className="mt-8 grid grid-cols-2 gap-4 border-t border-slate-100 pt-6 dark:border-slate-800/80 sm:grid-cols-4">
+          <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Submitted</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
+          </div>
+          <div className="rounded-2xl bg-emerald-50/60 p-4 dark:bg-emerald-950/20">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Selected for Pilot</p>
+            <p className="mt-1 text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.selected}</p>
+          </div>
+          <div className="rounded-2xl bg-indigo-50/60 p-4 dark:bg-indigo-950/20">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Shortlisted</p>
+            <p className="mt-1 text-2xl font-bold text-indigo-700 dark:text-indigo-300">{stats.shortlisted}</p>
+          </div>
+          <div className="rounded-2xl bg-sky-50/60 p-4 dark:bg-sky-950/20">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">Pending Review</p>
+            <p className="mt-1 text-2xl font-bold text-sky-700 dark:text-sky-300">{stats.submitted}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Filters Bar */}
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by challenge or department..."
+            className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 text-xs text-slate-900 placeholder-slate-400 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {["ALL", "SELECTED", "SHORTLISTED", "SUBMITTED"].map((st) => (
+            <button
+              key={st}
+              onClick={() => setStatusFilter(st)}
+              className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
+                statusFilter === st
+                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              }`}
+            >
+              {st === "ALL" ? "All Applications" : st.replace("_", " ")}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Applications List */}
+      {loading ? (
+        <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 rounded-3xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+          <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+          <p className="text-xs text-slate-400">Loading your submitted proposals...</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex min-h-[260px] flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-950">
+          <FileText className="h-10 w-10 text-slate-300 dark:text-slate-600" />
+          <h3 className="mt-3 text-sm font-bold text-slate-800 dark:text-slate-200">No applications match your filter</h3>
+          <p className="mt-1 text-xs text-slate-400">Explore open public sector challenges and submit your innovative solution.</p>
+          <button
+            onClick={() => navigate("/startup/challenges")}
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-indigo-700"
+          >
+            <Rocket className="h-3.5 w-3.5" /> Explore Challenges
+          </button>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {filtered.map((app) => (
+            <motion.div
+              key={app.id}
+              layout
+              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-indigo-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-950 dark:hover:border-indigo-900/50"
+            >
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0 flex-1 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {getStatusBadge(app.status)}
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                      <Building2 className="h-3.5 w-3.5" /> {app.department} • {app.state}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400">
+                      <CalendarDays className="h-3.5 w-3.5" /> Submitted{" "}
+                      {new Date(app.submitted_at).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    {app.challenge_title}
+                  </h3>
+
+                  <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900/80">
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Proposed Solution Summary:
+                    </p>
+                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                      {app.proposal}
+                    </p>
+                    {app.technical_approach && (
+                      <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                        <strong className="text-slate-700 dark:text-slate-300">Tech Approach:</strong> {app.technical_approach}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400">Budget Proposed: </span>
+                      <strong className="text-slate-800 dark:text-slate-200">{app.estimated_cost}</strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400">Current Stage: </span>
+                      <span className="font-semibold text-indigo-600 dark:text-indigo-400">{app.stage}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 flex-row gap-2 lg:flex-col lg:items-end">
+                  <button
+                    onClick={() => navigate(`/startup/challenges`)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-850"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" /> View Challenge
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
 }
 
 export default StartupApplication;

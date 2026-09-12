@@ -109,6 +109,11 @@ export const updateEvidence = async (id, data, user, ip_address = null) => {
     }
   }
 
+  // Part 9: Startup must NOT be able to mark its own evidence as VERIFIED or change verification status
+  if (user.role === 'STARTUP') {
+    delete updateData.verification_status;
+  }
+
   const updated = await prisma.evidence.update({
     where: { id },
     data: updateData

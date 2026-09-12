@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -8,47 +9,53 @@ import {
   FileText,
   CheckCircle2,
   AlertCircle,
+  FolderOpen
 } from "lucide-react";
 import AppLayout from "../../components/layout/AppLayout";
+import { getAdminAuditLogs } from "../../services/adminService";
 
 function ChallengeAudit() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const auditLogs = [
-    {
-      id: 1,
-      action: "Challenge created",
-      description: "Government challenge was created.",
-      user: "Government Officer",
-      time: "Today, 10:30 AM",
-      status: "completed",
-    },
-    {
-      id: 2,
-      action: "Challenge details updated",
-      description: "Problem statement and desired outcomes were updated.",
-      user: "Government Officer",
-      time: "Today, 11:15 AM",
-      status: "completed",
-    },
-    {
-      id: 3,
-      action: "Requirements reviewed",
-      description: "Technology and eligibility requirements were reviewed.",
-      user: "Government Officer",
-      time: "Today, 12:05 PM",
-      status: "completed",
-    },
-    {
-      id: 4,
-      action: "Pending approval",
-      description: "Challenge is waiting for the next approval step.",
-      user: "System",
-      time: "Today, 12:30 PM",
-      status: "pending",
-    },
-  ];
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchLogs = async () => {
+      try {
+        setLoading(true);
+        const res = await getAdminAuditLogs({ limit: 50 });
+        const rawLogs = res?.data?.auditLogs || res?.data?.logs || (Array.isArray(res?.data) ? res.data : []) || [];
+        
+        // Filter by challenge ID if relevant or show system events
+        const relevantLogs = id
+          ? rawLogs.filter(l => l.entity_id === id || l.details?.challenge_id === id || !l.entity_id)
+          : rawLogs;
+
+        if (mounted) {
+          setAuditLogs(
+            relevantLogs.map((log) => ({
+              id: log.id,
+              action: log.action?.replace(/_/g, " "),
+              description: log.details ? JSON.stringify(log.details) : `Action ${log.action} recorded.`,
+              user: log.user?.name || log.user?.email || "System",
+              time: new Date(log.created_at).toLocaleString("en-IN"),
+              status: "completed",
+            }))
+          );
+        }
+      } catch (err) {
+        console.warn("Could not load audit logs:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchLogs();
+    return () => { mounted = false; };
+  }, [id]);
 
   return (
     <AppLayout role="government">
@@ -172,12 +179,21 @@ function ChallengeAudit() {
           </div>
 
           <div className="p-6">
-            <div className="space-y-6">
-              {auditLogs.map((log, index) => (
-                <div
-                  key={log.id}
-                  className="relative flex gap-4"
-                >
+            {loading ? (
+              <div className="py-12 text-center text-sm text-slate-500">Loading audit history...</div>
+            ) : auditLogs.length === 0 ? (
+              <div className="py-12 text-center">
+                <FolderOpen className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600 mb-2" />
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">No audit records found</p>
+                <p className="text-xs text-slate-500 mt-1">Actions performed on this challenge will be tracked here.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {auditLogs.map((log, index) => (
+                  <div
+                    key={log.id}
+                    className="relative flex gap-4"
+                  >
                   {/* Timeline line */}
                   {index !== auditLogs.length - 1 && (
                     <div className="absolute left-5 top-10 h-full w-px bg-slate-200 dark:bg-slate-800" />
@@ -233,6 +249,7 @@ function ChallengeAudit() {
                 </div>
               ))}
             </div>
+            )}
           </div>
         </motion.div>
 

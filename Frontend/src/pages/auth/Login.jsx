@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Building2,
@@ -19,6 +19,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import {
+  submitEvaluatorApplication,
+  submitGovernmentAccessRequest,
+} from "../../services/accessRequestService";
 
 const demoAccounts = [
   {
@@ -66,6 +70,75 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [authError, setAuthError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Evaluator Application Modal State
+  const [showEvaluatorModal, setShowEvaluatorModal] = useState(false);
+  const [evalModalLoading, setEvalModalLoading] = useState(false);
+  const [evalModalSuccess, setEvalModalSuccess] = useState(false);
+  const [evalModalError, setEvalModalError] = useState("");
+  const [evalForm, setEvalForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    organization: "",
+    designation: "",
+    employment_type: "INDEPENDENT",
+    domain_expertise: "",
+    years_experience: "",
+    bio: "",
+    reason: "",
+    supporting_document_url: "",
+  });
+
+  // Government Access Request Modal State
+  const [showGovModal, setShowGovModal] = useState(false);
+  const [govModalLoading, setGovModalLoading] = useState(false);
+  const [govModalSuccess, setGovModalSuccess] = useState(false);
+  const [govModalError, setGovModalError] = useState("");
+  const [govForm, setGovForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    department_name: "",
+    state: "",
+    department_code: "",
+    official_website: "",
+    designation: "",
+    reason: "",
+    supporting_document_url: "",
+  });
+
+  const handleEvaluatorSubmit = async (e) => {
+    e.preventDefault();
+    setEvalModalLoading(true);
+    setEvalModalError("");
+    try {
+      await submitEvaluatorApplication({
+        ...evalForm,
+        domain_expertise: evalForm.domain_expertise.split(",").map((s) => s.trim()).filter(Boolean),
+        years_experience: parseInt(evalForm.years_experience, 10) || 0,
+      });
+      setEvalModalSuccess(true);
+    } catch (err) {
+      setEvalModalError(err.message || "Failed to submit evaluator application.");
+    } finally {
+      setEvalModalLoading(false);
+    }
+  };
+
+  const handleGovSubmit = async (e) => {
+    e.preventDefault();
+    setGovModalLoading(true);
+    setGovModalError("");
+    try {
+      await submitGovernmentAccessRequest(govForm);
+      setGovModalSuccess(true);
+    } catch (err) {
+      setGovModalError(err.message || "Failed to submit government access request.");
+    } finally {
+      setGovModalLoading(false);
+    }
+  };
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -165,20 +238,21 @@ function Login() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="flex items-center gap-3"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm backdrop-blur dark:bg-white/10 dark:text-white">
-                <Building2 className="h-6 w-6" />
-              </div>
+              <Link to="/" className="flex items-center gap-3 w-fit">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm backdrop-blur dark:bg-white/10 dark:text-white">
+                  <Building2 className="h-6 w-6" />
+                </div>
 
-              <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  SetuGov
-                </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Government Innovation Procurement OS
-                </p>
-              </div>
+                <div>
+                  <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    SetuGov
+                  </h1>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Government Innovation Procurement OS
+                  </p>
+                </div>
+              </Link>
             </motion.div>
 
             {/* Main Content */}
@@ -237,15 +311,21 @@ function Login() {
 
         {/* Login Section */}
         <div className="relative flex items-center justify-center px-6 py-12 sm:px-10 lg:px-12">
-          {/* Top Theme Switcher */}
-          <div className="absolute right-6 top-6">
+          {/* Top Header Controls */}
+          <div className="absolute right-6 top-6 flex items-center gap-2">
+            <Link
+              to="/"
+              className="text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+            >
+              Back to Home
+            </Link>
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
-              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
           </div>
 
@@ -257,16 +337,18 @@ function Login() {
           >
             {/* Mobile Logo */}
             <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-                <Building2 className="h-6 w-6" />
-              </div>
+              <Link to="/" className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
+                  <Building2 className="h-6 w-6" />
+                </div>
 
-              <div>
-                <h1 className="text-xl font-bold">SetuGov</h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Innovation Procurement OS
-                </p>
-              </div>
+                <div>
+                  <h1 className="text-xl font-bold">SetuGov</h1>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Innovation Procurement OS
+                  </p>
+                </div>
+              </Link>
             </div>
 
             {/* Heading */}
@@ -405,8 +487,22 @@ function Login() {
               </motion.button>
             </form>
 
+            {/* Startup Signup Card */}
+            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-center dark:border-emerald-900/30 dark:bg-emerald-950/20">
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                Are you a deep-tech innovator or startup?
+              </p>
+              <Link
+                to="/signup"
+                className="mt-1.5 inline-flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline"
+              >
+                <Rocket className="h-3.5 w-3.5" />
+                Create Free Startup Account <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+
             {/* Divider */}
-            <div className="my-6 flex items-center gap-4">
+            <div className="my-5 flex items-center gap-4">
               <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                 Demo Quick-Fill
@@ -435,6 +531,35 @@ function Login() {
               })}
             </div>
 
+            {/* Access Request Portals */}
+            <div className="mt-6 space-y-2">
+              <div className="flex items-center gap-4">
+                <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                  Privileged Access Onboarding
+                </span>
+                <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Link
+                  to="/evaluator/apply"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50/50 p-2.5 text-xs font-semibold text-purple-700 transition-all hover:bg-purple-100 dark:border-purple-900/30 dark:bg-purple-950/20 dark:text-purple-300 dark:hover:bg-purple-900/30"
+                >
+                  <ClipboardCheck className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
+                  Apply as Evaluator
+                </Link>
+
+                <Link
+                  to="/government/request-access"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50/50 p-2.5 text-xs font-semibold text-blue-700 transition-all hover:bg-blue-100 dark:border-blue-900/30 dark:bg-blue-950/20 dark:text-blue-300 dark:hover:bg-blue-900/30"
+                >
+                  <Building2 className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+                  Request Govt Access
+                </Link>
+              </div>
+            </div>
+
             {/* Footer */}
             <p className="mt-8 text-center text-xs leading-5 text-slate-400">
               State Innovation Procurement Platform · Standard JWT Auth
@@ -442,6 +567,414 @@ function Login() {
           </motion.div>
         </div>
       </div>
+
+      {/* =====================================================
+          EVALUATOR SELF-APPLICATION MODAL
+      ===================================================== */}
+      {showEvaluatorModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 my-8"
+          >
+            <div className="mb-4">
+              <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-semibold text-xs uppercase tracking-wider">
+                <ClipboardCheck className="h-4 w-4" />
+                Evaluator Onboarding
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mt-1">
+                Apply as an Innovation Evaluator
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Join the verified panel to evaluate emerging startup solutions. All applications undergo administrative verification.
+              </p>
+            </div>
+
+            {evalModalSuccess ? (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center dark:border-emerald-900/40 dark:bg-emerald-950/40">
+                <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-600 dark:text-emerald-400 mb-2" />
+                <h4 className="text-sm font-bold text-emerald-800 dark:text-emerald-200">Application Submitted!</h4>
+                <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
+                  Your credentials have been submitted to SetuGov administrators. You will receive an invitation token upon verification.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEvaluatorModal(false);
+                    setEvalModalSuccess(false);
+                  }}
+                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleEvaluatorSubmit} className="space-y-3.5 text-xs max-h-[70vh] overflow-y-auto pr-1">
+                {evalModalError && (
+                  <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/30 dark:text-red-300 dark:border-red-900/30">
+                    {evalModalError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block font-medium mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={evalForm.name}
+                    onChange={(e) => setEvalForm({ ...evalForm, name: e.target.value })}
+                    placeholder="Dr. Rajesh Sharma"
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block font-medium mb-1">Professional Email *</label>
+                    <input
+                      type="email"
+                      required
+                      value={evalForm.email}
+                      onChange={(e) => setEvalForm({ ...evalForm, email: e.target.value })}
+                      placeholder="rajesh@iisc.ac.in"
+                      className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium mb-1">Phone Number</label>
+                    <input
+                      type="tel"
+                      value={evalForm.phone}
+                      onChange={(e) => setEvalForm({ ...evalForm, phone: e.target.value })}
+                      placeholder="+91 98765 43210"
+                      className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-medium mb-1">Employment Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEvalForm({ ...evalForm, employment_type: "INDEPENDENT" })}
+                      className={`h-8 rounded-lg border text-xs font-medium transition-all ${
+                        evalForm.employment_type === "INDEPENDENT"
+                          ? "border-purple-600 bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300"
+                          : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      Independent / Freelancer
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEvalForm({ ...evalForm, employment_type: "EMPLOYED" })}
+                      className={`h-8 rounded-lg border text-xs font-medium transition-all ${
+                        evalForm.employment_type === "EMPLOYED"
+                          ? "border-purple-600 bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300"
+                          : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400"
+                      }`}
+                    >
+                      Organization / Employed
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block font-medium mb-1">
+                      Organization {evalForm.employment_type === "INDEPENDENT" ? "(Optional)" : "*"}
+                    </label>
+                    <input
+                      type="text"
+                      value={evalForm.organization}
+                      onChange={(e) => setEvalForm({ ...evalForm, organization: e.target.value })}
+                      placeholder={evalForm.employment_type === "INDEPENDENT" ? "Independent Consultant" : "IIT Madras / AIIMS"}
+                      className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium mb-1">Designation</label>
+                    <input
+                      type="text"
+                      value={evalForm.designation}
+                      onChange={(e) => setEvalForm({ ...evalForm, designation: e.target.value })}
+                      placeholder="Principal Scientist / AI Lead"
+                      className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block font-medium mb-1">Domain Expertise (comma-separated) *</label>
+                    <input
+                      type="text"
+                      required
+                      value={evalForm.domain_expertise}
+                      onChange={(e) => setEvalForm({ ...evalForm, domain_expertise: e.target.value })}
+                      placeholder="AI, Healthcare, IoT, Smart City"
+                      className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium mb-1">Years of Experience</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={evalForm.years_experience}
+                      onChange={(e) => setEvalForm({ ...evalForm, years_experience: e.target.value })}
+                      placeholder="8"
+                      className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-medium mb-1">Bio / Profile Summary</label>
+                  <textarea
+                    rows={2}
+                    value={evalForm.bio}
+                    onChange={(e) => setEvalForm({ ...evalForm, bio: e.target.value })}
+                    placeholder="Brief background of technical evaluation and research experience..."
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent p-2.5 outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-medium mb-1">Reason for Joining SetuGov *</label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={evalForm.reason}
+                    onChange={(e) => setEvalForm({ ...evalForm, reason: e.target.value })}
+                    placeholder="Why would you like to evaluate public innovation procurement proposals?"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent p-2.5 outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-medium mb-1">Supporting Credentials URL (LinkedIn / Google Scholar / Portfolio)</label>
+                  <input
+                    type="url"
+                    value={evalForm.supporting_document_url}
+                    onChange={(e) => setEvalForm({ ...evalForm, supporting_document_url: e.target.value })}
+                    placeholder="https://linkedin.com/in/..."
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowEvaluatorModal(false)}
+                    className="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={evalModalLoading}
+                    className="px-4 py-2 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 disabled:opacity-50"
+                  >
+                    {evalModalLoading ? "Submitting..." : "Submit Application"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </motion.div>
+        </div>
+      )}
+
+      {/* =====================================================
+          GOVERNMENT ACCESS REQUEST MODAL
+      ===================================================== */}
+      {showGovModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 my-8"
+          >
+            <div className="mb-4">
+              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-semibold text-xs uppercase tracking-wider">
+                <Building2 className="h-4 w-4" />
+                Government Nodal Access
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mt-1">
+                Request Official Government Access
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                For state and central department officers procuring innovative solutions. Verified by platform administrators.
+              </p>
+            </div>
+
+            {govModalSuccess ? (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center dark:border-emerald-900/40 dark:bg-emerald-950/40">
+                <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-600 dark:text-emerald-400 mb-2" />
+                <h4 className="text-sm font-bold text-emerald-800 dark:text-emerald-200">Request Submitted!</h4>
+                <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
+                  Your official access request has been sent for administrative verification. You will receive an official setup invitation upon approval.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowGovModal(false);
+                    setGovModalSuccess(false);
+                  }}
+                  className="mt-4 inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleGovSubmit} className="space-y-3.5 text-xs max-h-[70vh] overflow-y-auto pr-1">
+                {govModalError && (
+                  <div className="p-3 rounded-lg bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/30 dark:text-red-300 dark:border-red-900/30">
+                    {govModalError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block font-medium mb-1">Nodal Officer Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={govForm.name}
+                    onChange={(e) => setGovForm({ ...govForm, name: e.target.value })}
+                    placeholder="Shri Ramesh Kumar"
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block font-medium mb-1">Official Email (.gov.in / .nic.in) *</label>
+                    <input
+                      type="email"
+                      required
+                      value={govForm.email}
+                      onChange={(e) => setGovForm({ ...govForm, email: e.target.value })}
+                      placeholder="ramesh.kumar@health.gov.in"
+                      className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium mb-1">Official Phone</label>
+                    <input
+                      type="tel"
+                      value={govForm.phone}
+                      onChange={(e) => setGovForm({ ...govForm, phone: e.target.value })}
+                      placeholder="+91 98765 43210"
+                      className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block font-medium mb-1">Department / Ministry Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={govForm.department_name}
+                      onChange={(e) => setGovForm({ ...govForm, department_name: e.target.value })}
+                      placeholder="Department of Health & Family Welfare"
+                      className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium mb-1">State / Union Territory *</label>
+                    <input
+                      type="text"
+                      required
+                      value={govForm.state}
+                      onChange={(e) => setGovForm({ ...govForm, state: e.target.value })}
+                      placeholder="Karnataka"
+                      className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block font-medium mb-1">Officer Designation</label>
+                    <input
+                      type="text"
+                      value={govForm.designation}
+                      onChange={(e) => setGovForm({ ...govForm, designation: e.target.value })}
+                      placeholder="Joint Secretary / Nodal Director"
+                      className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium mb-1">Department Code</label>
+                    <input
+                      type="text"
+                      value={govForm.department_code}
+                      onChange={(e) => setGovForm({ ...govForm, department_code: e.target.value })}
+                      placeholder="HFW-KA-01"
+                      className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-medium mb-1">Official Website</label>
+                  <input
+                    type="url"
+                    value={govForm.official_website}
+                    onChange={(e) => setGovForm({ ...govForm, official_website: e.target.value })}
+                    placeholder="https://health.karnataka.gov.in"
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-medium mb-1">Reason for Official Access *</label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={govForm.reason}
+                    onChange={(e) => setGovForm({ ...govForm, reason: e.target.value })}
+                    placeholder="Specify planned challenges and innovation procurement needs..."
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent p-2.5 outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-medium mb-1">Supporting Authorization Document URL</label>
+                  <input
+                    type="url"
+                    value={govForm.supporting_document_url}
+                    onChange={(e) => setGovForm({ ...govForm, supporting_document_url: e.target.value })}
+                    placeholder="https://..."
+                    className="w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-transparent px-3 outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowGovModal(false)}
+                    className="px-3.5 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={govModalLoading}
+                    className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {govModalLoading ? "Submitting..." : "Submit Access Request"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

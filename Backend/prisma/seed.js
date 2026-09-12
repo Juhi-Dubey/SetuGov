@@ -93,7 +93,18 @@ const seedDatabase = async () => {
       email: 'anita.desai@evaluators.setugov.in',
       password_hash,
       role: 'EVALUATOR',
-      is_active: true
+      is_active: true,
+      is_verified: true,
+      evaluator_profile: {
+        create: {
+          organization: 'National Health Authority',
+          designation: 'Principal Systems Evaluator',
+          employment_type: 'FULL_TIME',
+          years_experience: 12,
+          domain_expertise: ['Healthcare Systems', 'ABDM', 'Clinical Workflows'],
+          verification_status: 'VERIFIED'
+        }
+      }
     }
   });
 
@@ -103,7 +114,18 @@ const seedDatabase = async () => {
       email: 'rajesh.iyer@evaluators.setugov.in',
       password_hash,
       role: 'EVALUATOR',
-      is_active: true
+      is_active: true,
+      is_verified: true,
+      evaluator_profile: {
+        create: {
+          organization: 'Indian Institute of Science (IISc)',
+          designation: 'Professor & AI Lead',
+          employment_type: 'FULL_TIME',
+          years_experience: 15,
+          domain_expertise: ['Computer Vision', 'AI / ML', 'Edge Computing'],
+          verification_status: 'VERIFIED'
+        }
+      }
     }
   });
 
@@ -113,7 +135,18 @@ const seedDatabase = async () => {
       email: 'sunita.rao@evaluators.setugov.in',
       password_hash,
       role: 'EVALUATOR',
-      is_active: true
+      is_active: true,
+      is_verified: true,
+      evaluator_profile: {
+        create: {
+          organization: 'Centre for Public Policy & Governance',
+          designation: 'Senior Procurement Analyst',
+          employment_type: 'FULL_TIME',
+          years_experience: 10,
+          domain_expertise: ['Public Finance', 'Procurement Policy', 'Cost-Benefit Analysis'],
+          verification_status: 'VERIFIED'
+        }
+      }
     }
   });
 

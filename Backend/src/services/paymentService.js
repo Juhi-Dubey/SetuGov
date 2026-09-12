@@ -1,11 +1,31 @@
 import { prisma } from '../config/prisma.js';
-import { NotFoundError } from '../utils/errors.js';
+import { NotFoundError, BadRequestError } from '../utils/errors.js';
 import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
 
 export const createPayment = async (pilotId, data, user, ip_address = null) => {
   // P0-3: Verify user has PAYMENT_MANAGE access to this pilot
   await verifyPilotAccess(pilotId, user, 'PAYMENT_MANAGE');
+
+  // Part 10: Payment must not be created directly with status = PAID
+  if (data.status === 'PAID') {
+    throw new BadRequestError('Payments cannot be created directly with PAID status. They must follow the approval lifecycle.');
+  }
+
+  // Validate milestone relationship if milestone_id is supplied
+  if (data.milestone_id) {
+    const milestone = await prisma.milestone.findUnique({
+      where: { id: data.milestone_id }
+    });
+
+    if (!milestone) {
+      throw new NotFoundError(`Milestone with ID ${data.milestone_id} not found.`);
+    }
+
+    if (milestone.pilot_id !== pilotId) {
+      throw new BadRequestError(`Milestone ${data.milestone_id} belongs to a different pilot project.`);
+    }
+  }
 
   const payment = await prisma.payment.create({
     data: {
@@ -14,7 +34,7 @@ export const createPayment = async (pilotId, data, user, ip_address = null) => {
       amount: data.amount,
       payment_percentage: data.payment_percentage,
       status: data.status || 'UPCOMING',
-      payment_date: data.payment_date ? new Date(data.payment_date) : null
+      payment_date: null
     },
     include: {
       milestone: true

@@ -148,4 +148,12 @@ export const authenticate = async (req, res, next) => {
   }
 };
 
+export const optionalAuthenticate = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+  return authenticate(req, res, next);
+};
+
 export default authenticate;

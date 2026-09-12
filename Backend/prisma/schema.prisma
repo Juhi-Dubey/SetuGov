@@ -18,6 +18,9 @@ model User {
   is_verified          Boolean                @default(false)
   designation          String?
   phone                String?
+  invitation_token_hash  String?
+  invitation_expires_at  DateTime?
+  invitation_accepted_at DateTime?
   created_at           DateTime               @default(now())
   updated_at           DateTime               @updatedAt
   audit_logs           AuditLog[]
@@ -35,6 +38,10 @@ model User {
   verified_startups    Startup[]              @relation("StartupVerifier")
   verified_evaluators  EvaluatorProfile[]     @relation("EvaluatorProfileVerifier")
   verified_compliance  ComplianceItem[]       @relation("ComplianceVerifier")
+  reviewed_access_requests AccessRequest[]     @relation("AccessRequestReviewer")
+  nominated_access_requests AccessRequest[]    @relation("AccessRequestNominator")
+  evaluator_assignments    EvaluatorAssignment[] @relation("EvaluatorAssigned")
+  created_evaluator_assignments EvaluatorAssignment[] @relation("EvaluatorAssigner")
 
   @@map("users")
 }
@@ -54,6 +61,7 @@ model Department {
   updated_at                 DateTime                  @updatedAt
   challenges                 Challenge[]
   users                      User[]
+  access_requests            AccessRequest[]
 
   @@map("departments")
 }
@@ -180,6 +188,7 @@ model Application {
   startup               Startup               @relation(fields: [startup_id], references: [id], onDelete: Cascade)
   evaluations           Evaluation[]
   conflict_declarations ConflictDeclaration[]
+  evaluator_assignments EvaluatorAssignment[]
 
   @@unique([challenge_id, startup_id])
   @@index([status])
@@ -191,6 +200,7 @@ model EvaluatorProfile {
   user_id             String                    @unique
   organization        String
   designation         String
+  employment_type     String?
   domain_expertise    String[]
   years_experience    Int                       @default(0)
   bio                 String?
@@ -571,4 +581,81 @@ enum ScaleDecisionType {
   SCALE
   EXTEND
   STOP
+}
+
+enum AccessRequestSource {
+  SELF_REQUEST
+  GOVERNMENT_NOMINATION
+}
+
+enum AccessRequestStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum EvaluatorAssignmentStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COMPLETED
+  RECUSED
+}
+
+model AccessRequest {
+  id                      String              @id @default(uuid())
+  name                    String
+  email                   String
+  phone                   String?
+  requested_role          UserRole            @default(EVALUATOR)
+  request_source          AccessRequestSource @default(SELF_REQUEST)
+  department_id           String?
+  organization            String?
+  designation             String?
+  employment_type         String?             // "EMPLOYED", "INDEPENDENT"
+  domain_expertise        String[]
+  years_experience        Int                 @default(0)
+  bio                     String?
+  reason                  String?
+  supporting_document_url String?
+  status                  AccessRequestStatus @default(PENDING)
+  reviewed_by             String?
+  reviewed_at             DateTime?
+  rejection_reason        String?
+  nominated_by_user_id    String?
+  challenge_id            String?
+  created_at              DateTime            @default(now())
+  updated_at              DateTime            @updatedAt
+
+  department              Department?         @relation(fields: [department_id], references: [id])
+  reviewer                User?               @relation("AccessRequestReviewer", fields: [reviewed_by], references: [id])
+  nominator               User?               @relation("AccessRequestNominator", fields: [nominated_by_user_id], references: [id])
+
+  @@index([status])
+  @@index([requested_role])
+  @@index([request_source])
+  @@map("access_requests")
+}
+
+model EvaluatorAssignment {
+  id             String                    @id @default(uuid())
+  application_id String
+  evaluator_id   String
+  assigned_by    String
+  status         EvaluatorAssignmentStatus @default(PENDING)
+  notes          String?
+  assigned_at    DateTime                  @default(now())
+  accepted_at    DateTime?
+  completed_at   DateTime?
+  created_at     DateTime                  @default(now())
+  updated_at     DateTime                  @updatedAt
+
+  application    Application               @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  evaluator      User                      @relation("EvaluatorAssigned", fields: [evaluator_id], references: [id], onDelete: Cascade)
+  assigner       User                      @relation("EvaluatorAssigner", fields: [assigned_by], references: [id])
+
+  @@unique([application_id, evaluator_id])
+  @@index([status])
+  @@map("evaluator_assignments")
 }

@@ -44,13 +44,40 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
     throw new BadRequestError(`Cannot evaluate application in '${application.status}' status. Must be SUBMITTED or SHORTLISTED.`);
   }
 
-  // 2. Evaluator Verification Enforcement (Phase 1-4 & Phase 3-10)
+  // 2. Evaluator Authorization & Verification Enforcement (Part 1)
+  if (user.role !== 'EVALUATOR' && user.role !== 'ADMIN') {
+    throw new ForbiddenError('Only assigned evaluators can submit evaluations.');
+  }
+
   if (user.role === 'EVALUATOR') {
-    const evaluatorProfile = await prisma.evaluatorProfile.findUnique({
-      where: { user_id: user.id }
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      include: { evaluator_profile: true }
     });
-    if (!user.is_verified || (evaluatorProfile && evaluatorProfile.verification_status === 'REJECTED')) {
-      throw new ForbiddenError('Evaluator credentials must be officially VERIFIED by an administrator before evaluating applications.');
+
+    if (!dbUser || !dbUser.is_active) {
+      throw new ForbiddenError('Evaluator account is inactive.');
+    }
+
+    if (!dbUser.evaluator_profile || dbUser.evaluator_profile.verification_status !== 'VERIFIED') {
+      throw new ForbiddenError('Evaluator credentials must be officially VERIFIED before evaluating applications.');
+    }
+
+    const assignment = await prisma.evaluatorAssignment.findUnique({
+      where: {
+        application_id_evaluator_id: {
+          application_id: applicationId,
+          evaluator_id: user.id
+        }
+      }
+    });
+
+    if (!assignment) {
+      throw new ForbiddenError('Evaluator is not assigned to this application.');
+    }
+
+    if (assignment.status !== 'ACCEPTED') {
+      throw new ForbiddenError(`Cannot evaluate application with assignment status '${assignment.status}'. Must be ACCEPTED.`);
     }
   }
 
@@ -110,6 +137,18 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
       }
     }
   });
+
+  // Mark evaluator assignment as COMPLETED if it exists
+  await prisma.evaluatorAssignment.updateMany({
+    where: {
+      application_id: applicationId,
+      evaluator_id: user.id
+    },
+    data: {
+      status: 'COMPLETED',
+      completed_at: new Date()
+    }
+  }).catch(() => {});
 
   await createAuditLog({
     user_id: user.id,
@@ -366,6 +405,22 @@ export const declareConflictOfInterest = async (applicationId, data, user, ip_ad
     throw new NotFoundError(`Application with ID ${applicationId} not found.`);
   }
 
+  // Part 5: Verify evaluator has assignment for this application
+  if (user.role === 'EVALUATOR') {
+    const assignment = await prisma.evaluatorAssignment.findUnique({
+      where: {
+        application_id_evaluator_id: {
+          application_id: applicationId,
+          evaluator_id: user.id
+        }
+      }
+    });
+
+    if (!assignment) {
+      throw new ForbiddenError('You can only declare conflicts of interest for applications you are assigned to.');
+    }
+  }
+
   const { has_conflict = false, conflict_details = null, is_recused = false } = data;
 
   const declaration = await prisma.conflictDeclaration.upsert({
@@ -390,6 +445,18 @@ export const declareConflictOfInterest = async (applicationId, data, user, ip_ad
       declared_at: new Date()
     }
   });
+
+  if (declaration.is_recused) {
+    await prisma.evaluatorAssignment.updateMany({
+      where: {
+        application_id: applicationId,
+        evaluator_id: user.id
+      },
+      data: {
+        status: 'RECUSED'
+      }
+    }).catch(() => {});
+  }
 
   await createAuditLog({
     user_id: user.id,
