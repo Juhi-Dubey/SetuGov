@@ -8,7 +8,8 @@ import {
   getStartupDocuments,
   verifyStartup,
   getStartupApplications,
-  getStartupPilots
+  getStartupPilots,
+  getStartupPerformance
 } from '../controllers/startupController.js';
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
@@ -39,6 +40,9 @@ router.get('/', authenticate, getStartups);
 // Get Startup by ID (Authenticated)
 router.get('/:startup_id', authenticate, getStartupById);
 
+// Get Startup Performance History (Authenticated)
+router.get('/:startup_id/performance', authenticate, getStartupPerformance);
+
 // Update Startup Profile (Owner or ADMIN)
 router.patch('/:startup_id', authenticate, validate(updateStartupSchema), updateStartup);
 
@@ -58,3 +62,4 @@ router.get('/:startup_id/applications', authenticate, getStartupApplications);
 router.get('/:startup_id/pilots', authenticate, getStartupPilots);
 
 export default router;
+

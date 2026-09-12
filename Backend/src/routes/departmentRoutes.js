@@ -3,7 +3,8 @@ import {
   createDepartment,
   getDepartments,
   getDepartmentById,
-  updateDepartment
+  updateDepartment,
+  getGovernmentAnalytics
 } from '../controllers/departmentController.js';
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
@@ -11,6 +12,9 @@ import { validate } from '../middleware/validate.js';
 import { createDepartmentSchema, updateDepartmentSchema } from '../schemas/departmentSchemas.js';
 
 const router = Router();
+
+// Government / Admin Analytics and Budget Utilization (Phase 5)
+router.get('/analytics', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), getGovernmentAnalytics);
 
 // Create department (Admin only)
 router.post('/', authenticate, authorizeRoles('ADMIN'), validate(createDepartmentSchema), createDepartment);
@@ -25,3 +29,4 @@ router.get('/:department_id', getDepartmentById);
 router.patch('/:department_id', authenticate, authorizeRoles('ADMIN', 'GOVERNMENT'), validate(updateDepartmentSchema), updateDepartment);
 
 export default router;
+

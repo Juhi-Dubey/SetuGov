@@ -41,9 +41,20 @@ export const updateDepartment = async (req, res, next) => {
   }
 };
 
+export const getGovernmentAnalytics = async (req, res, next) => {
+  try {
+    const analytics = await departmentService.getGovernmentAnalytics(req.user);
+    return successResponse(res, analytics, 'Government analytics and budget metrics retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   createDepartment,
   getDepartments,
   getDepartmentById,
-  updateDepartment
+  updateDepartment,
+  getGovernmentAnalytics
 };
+

@@ -29,9 +29,10 @@ export const updatePilot = async (id, pilotData) => {
   });
 };
 
-export const startPilot = async (id) => {
+export const startPilot = async (id, data = {}) => {
   return apiRequest(`/pilots/${id}/start`, {
     method: "POST",
+    body: JSON.stringify(data),
   });
 };
 
@@ -164,6 +165,49 @@ export const getScaleDecision = async (pilotId) => {
   return apiRequest(`/pilots/${pilotId}/scale-decision`);
 };
 
+// Compliance Checklist
+export const getComplianceChecklist = async (pilotId) => {
+  return apiRequest(`/pilots/${pilotId}/compliance`);
+};
+
+export const updateComplianceItem = async (pilotId, itemId, data) => {
+  return apiRequest(`/pilots/${pilotId}/compliance/${itemId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+};
+
+// Citizen / Beneficiary Feedback
+export const addPilotFeedback = async (pilotId, feedbackData) => {
+  return apiRequest(`/pilots/${pilotId}/feedback`, {
+    method: "POST",
+    body: JSON.stringify(feedbackData),
+  });
+};
+
+export const getPilotFeedbacks = async (pilotId) => {
+  return apiRequest(`/pilots/${pilotId}/feedback`);
+};
+
+// Pilot Issues (Phase 4-12)
+export const createPilotIssue = async (pilotId, issueData) => {
+  return apiRequest(`/pilots/${pilotId}/issues`, {
+    method: "POST",
+    body: JSON.stringify(issueData),
+  });
+};
+
+export const getPilotIssues = async (pilotId) => {
+  return apiRequest(`/pilots/${pilotId}/issues`);
+};
+
+export const updatePilotIssue = async (pilotId, issueId, issueData) => {
+  return apiRequest(`/pilots/${pilotId}/issues/${issueId}`, {
+    method: "PATCH",
+    body: JSON.stringify(issueData),
+  });
+};
+
 export default {
   getPilots,
   getPilotById,
@@ -172,6 +216,10 @@ export default {
   startPilot,
   completePilot,
   getPilotDashboard,
+  getComplianceChecklist,
+  updateComplianceItem,
+  addPilotFeedback,
+  getPilotFeedbacks,
   createKpi,
   getPilotKpis,
   createMeasurement,
@@ -190,4 +238,9 @@ export default {
   updatePaymentStatus,
   createScaleDecision,
   getScaleDecision,
+  createPilotIssue,
+  getPilotIssues,
+  updatePilotIssue,
 };
+
+

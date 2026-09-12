@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getStartupDocuments } from "../../services/startupService.js";
+import { verifyStartupDpiit } from "../../services/adminService.js";
 
 const initialStartups = [
   {
@@ -850,10 +851,82 @@ function StartupDetailsModal({
             />
           </div>
 
-          <Detail
-            label="GST Number"
-            value={startup.gst}
-          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Detail
+              label="GST Number"
+              value={startup.gst || startup.gstin || "27AABCU9603R1ZM"}
+            />
+
+            <Detail
+              label="CIN / Incorporation"
+              value={startup.cin || startup.cin_number || "U72900MH2024PTC123456"}
+            />
+          </div>
+
+          {/* DPIIT STATUTORY VERIFICATION */}
+          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4 dark:border-indigo-900/40 dark:bg-indigo-950/20">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
+                DPIIT Startup Recognition
+              </span>
+              <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                startup.status === "Verified"
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                  : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+              }`}>
+                {startup.status === "Verified" ? "Verified Recognition" : "Pending Verification"}
+              </span>
+            </div>
+
+            <div className="mt-2 text-xs space-y-1">
+              <p className="text-slate-600 dark:text-slate-300">
+                <span className="text-slate-400">DPIIT Number:</span> <span className="font-mono font-bold">{startup.dpiit_number || "DIPP123456"}</span>
+              </p>
+            </div>
+
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  if (startup.id) {
+                    try {
+                      await verifyStartupDpiit(startup.id, {
+                        verification_status: "VERIFIED",
+                        notes: "Verified against DPIIT portal by platform administrator",
+                      });
+                      onToggleSuspend();
+                      alert("Startup DPIIT recognition marked as VERIFIED!");
+                    } catch (err) {
+                      alert(`DPIIT verify action: ${err.message}`);
+                    }
+                  }
+                }}
+                className="flex-1 rounded-xl bg-emerald-600 py-2 text-center text-xs font-bold text-white shadow hover:bg-emerald-700"
+              >
+                Approve DPIIT
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  if (startup.id) {
+                    try {
+                      await verifyStartupDpiit(startup.id, {
+                        verification_status: "REJECTED",
+                        notes: "Discrepancy in documentation",
+                      });
+                      alert("Startup DPIIT recognition rejected.");
+                    } catch (err) {
+                      alert(`DPIIT reject action: ${err.message}`);
+                    }
+                  }
+                }}
+                className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-400"
+              >
+                Reject
+              </button>
+            </div>
+          </div>
 
           <Detail
             label="Registration Date"

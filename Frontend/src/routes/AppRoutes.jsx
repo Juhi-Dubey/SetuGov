@@ -12,6 +12,7 @@ import RoleRoute from "../components/auth/RoleRoute";
 // GOVERNMENT
 // =====================================================
 import GovernmentDashboard from "../pages/government/GovernmentDashboard";
+import GovernmentChallenges from "../pages/government/GovernmentChallenges";
 import CreateChallenge from "../pages/government/CreateChallenge";
 import ChallengeOverview from "../pages/government/ChallengeOverview";
 import ChallengeApplications from "../pages/government/ChallengeApplications";
@@ -102,7 +103,7 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
-              <GovernmentDashboard />
+              <GovernmentChallenges />
             </RoleRoute>
           </ProtectedRoute>
         }
@@ -668,7 +669,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={["ADMIN"]}>
-              <AdminTemplates />
+              <AppLayout role="admin">
+                <AdminTemplates />
+              </AppLayout>
             </RoleRoute>
           </ProtectedRoute>
         }

@@ -20,6 +20,14 @@ export const createApplication = async (challengeId, data, user, ip_address = nu
     throw new BadRequestError(`Cannot submit applications for challenge with status '${challenge.status}'. Challenge must be PUBLISHED.`);
   }
 
+  // Application Deadline Enforcement (Phase 2-6)
+  if (challenge.application_deadline) {
+    const deadline = new Date(challenge.application_deadline);
+    if (new Date() > deadline) {
+      throw new BadRequestError(`The application deadline for this challenge passed on ${deadline.toLocaleDateString('en-IN')}. Submissions are closed.`);
+    }
+  }
+
   // 2. Resolve Startup for user
   const startup = await prisma.startup.findFirst({
     where: { user_id: user.id }

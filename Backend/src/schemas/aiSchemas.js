@@ -224,6 +224,40 @@ export const documentAssistanceSchema = z.object({
   additional_context: z.string().optional().nullable()
 });
 
+/**
+ * Scale Recommendation Request Schema
+ * Mirrors AI service ScaleRecommendationRequest
+ */
+export const scaleRecommendationSchema = z.object({
+  challenge_title: z.string().optional().nullable(),
+  startup_name: z.string().optional().nullable(),
+  pilot_duration: z.string().optional().nullable(),
+  kpi_achievement_pct: z.number().min(0).max(100).optional().nullable(),
+  evidence_quality: z.number().min(0).max(100).optional().nullable(),
+  validation_status: z.string().optional().nullable(),
+  technical_stability: z.number().min(0).max(100).optional().nullable(),
+  user_feedback_score: z.number().min(0).max(100).optional().nullable(),
+  risk_score: z.number().min(0).max(100).optional().nullable(),
+  kpi_results: z.array(kpiResultSchema).default([]),
+  risks: z.array(pilotRiskSchema).default([]),
+  evidence: z.array(pilotEvidenceSchema).default([])
+});
+
+/**
+ * Risk Analysis Request Schema
+ * Mirrors AI service RiskAnalysisRequest
+ */
+export const riskAnalysisSchema = z.object({
+  challenge_title: z.string().optional().nullable(),
+  challenge_description: z.string().optional().nullable(),
+  startup_name: z.string().optional().nullable(),
+  proposal_summary: z.string().optional().nullable(),
+  technical_approach: z.string().optional().nullable(),
+  pilot_duration: z.string().optional().nullable(),
+  budget: z.string().optional().nullable(),
+  categories: z.array(z.string()).optional().nullable()
+});
+
 export default {
   kpiInputSchema,
   challengeCopilotSchema,
@@ -236,8 +270,11 @@ export default {
   pilotRiskSchema,
   pilotEvidenceSchema,
   pilotIntelligenceSchema,
+  scaleRecommendationSchema,
+  riskAnalysisSchema,
   documentTypeEnum,
   documentAssistanceSchema
 };
+
 
 

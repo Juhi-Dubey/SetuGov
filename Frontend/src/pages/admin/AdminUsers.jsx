@@ -16,7 +16,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getUsers, updateUserStatus } from "../../services/adminService";
+import { getUsers, updateUserStatus, updateUserRole, verifyEvaluator } from "../../services/adminService";
 
 const initialUsers = [
   {
@@ -461,6 +461,10 @@ function AdminUsers() {
           onClose={() =>
             setSelectedUser(null)
           }
+          onRoleChange={() => {
+            loadUsers();
+            setSelectedUser(null);
+          }}
           onToggleStatus={() => {
             handleToggleStatus(
               selectedUser.id
@@ -771,7 +775,26 @@ function UserDetailsModal({
   user,
   onClose,
   onToggleStatus,
+  onRoleChange,
 }) {
+  const [selectedRole, setSelectedRole] = useState(
+    user.role === "Government" ? "GOVERNMENT" : user.role === "Startup" ? "STARTUP" : user.role === "Evaluator" ? "EVALUATOR" : "ADMIN"
+  );
+  const [updatingRole, setUpdatingRole] = useState(false);
+
+  const handleSaveRole = async () => {
+    try {
+      setUpdatingRole(true);
+      await updateUserRole(user.id, selectedRole);
+      if (onRoleChange) onRoleChange(user.id, selectedRole);
+      alert(`User role updated to ${selectedRole} successfully!`);
+    } catch (err) {
+      alert(`Error updating role: ${err.message}`);
+    } finally {
+      setUpdatingRole(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
@@ -799,7 +822,7 @@ function UserDetailsModal({
 
             <div>
               <p className="text-[9px] font-bold uppercase tracking-wider text-indigo-500">
-                User Details
+                User Details & Role Governance
               </p>
 
               <h2 className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
@@ -828,19 +851,39 @@ function UserDetailsModal({
             value={user.organization}
           />
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Detail
-              label="Role"
-              value={user.role}
-            />
+          {/* ROLE MODIFICATION */}
+          <div className="rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 dark:border-indigo-900/40 dark:bg-indigo-950/20">
+            <label className="text-[9px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
+              Platform Role Assignment
+            </label>
+            <div className="mt-2 flex items-center gap-2">
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className="h-9 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-900 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+              >
+                <option value="STARTUP">Startup Innovator</option>
+                <option value="GOVERNMENT">Government Procurement Officer</option>
+                <option value="EVALUATOR">Technical / Financial Evaluator</option>
+                <option value="ADMIN">System Administrator</option>
+              </select>
+              <button
+                type="button"
+                onClick={handleSaveRole}
+                disabled={updatingRole}
+                className="h-9 rounded-xl bg-indigo-600 px-3 text-xs font-bold text-white shadow hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {updatingRole ? "Saving..." : "Change Role"}
+              </button>
+            </div>
+          </div>
 
+          <div className="grid gap-3 sm:grid-cols-2">
             <Detail
               label="Status"
               value={user.status}
             />
-          </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
             <Detail
               label="Verification"
               value={
@@ -849,12 +892,12 @@ function UserDetailsModal({
                   : "Pending"
               }
             />
-
-            <Detail
-              label="Joined"
-              value={user.joined}
-            />
           </div>
+
+          <Detail
+            label="Joined"
+            value={user.joined}
+          />
         </div>
 
         <div className="mt-6 flex gap-2">
@@ -871,7 +914,7 @@ function UserDetailsModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl bg-indigo-600 px-4 py-3 text-[10px] font-bold text-white hover:bg-indigo-700"
+            className="flex-1 rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-bold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
           >
             Close
           </button>

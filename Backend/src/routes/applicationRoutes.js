@@ -7,7 +7,9 @@ import {
 } from '../controllers/applicationController.js';
 import {
   submitEvaluation,
-  getApplicationEvaluations
+  getApplicationEvaluations,
+  declareConflictOfInterest,
+  getConflictDeclaration
 } from '../controllers/evaluationController.js';
 import {
   getApplicationDecision
@@ -35,6 +37,10 @@ router.delete('/:application_id', authenticate, deleteApplication);
 // Update application lifecycle status (GOVERNMENT or ADMIN)
 router.patch('/:application_id/status', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(updateApplicationStatusSchema), updateApplicationStatus);
 
+// Conflict of Interest declaration (EVALUATOR or ADMIN)
+router.get('/:application_id/conflict-declaration', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), getConflictDeclaration);
+router.post('/:application_id/conflict-declaration', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), declareConflictOfInterest);
+
 // Submit Evaluation for Application (EVALUATOR or ADMIN)
 router.post('/:application_id/evaluations', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), validate(createEvaluationSchema), submitEvaluation);
 
@@ -45,3 +51,4 @@ router.get('/:application_id/evaluations', authenticate, getApplicationEvaluatio
 router.get('/:application_id/decision-recommendation', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN', 'EVALUATOR', 'STARTUP'), getApplicationDecision);
 
 export default router;
+

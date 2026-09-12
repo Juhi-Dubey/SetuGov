@@ -114,6 +114,7 @@ function AIChallengeCopilot({ formData, onAutofill }) {
       const mappedData = {
         // Step 1: Problem
         title:
+          data.refined_title ||
           data.enhanced_challenge?.title ||
           (data.problem_summary
             ? data.problem_summary.length > 70
@@ -129,12 +130,13 @@ function AIChallengeCopilot({ formData, onAutofill }) {
           formData.location ||
           data.pilot_recommendation?.suggested_sites?.[0] ||
           "District Civil Hospital, Pune",
-        problemDescription: data.problem_summary || roughPrompt,
+        problemDescription: data.refined_problem_statement || data.problem_summary || roughPrompt,
         currentProcess:
           data.root_cause_hypotheses && data.root_cause_hypotheses.length > 0
             ? `Current Operational Bottlenecks:\n• ${data.root_cause_hypotheses.join("\n• ")}`
             : "Manual registration queues and uncoordinated doctor schedules causing peak-hour congestion.",
         currentBaseline:
+          data.current_baseline ||
           data.baseline ||
           (data.suggested_kpis?.[0]?.baseline != null
             ? `Average waiting time is ${data.suggested_kpis[0].baseline} ${data.suggested_kpis[0].unit || "mins"} with 100% manual processing`
@@ -145,6 +147,7 @@ function AIChallengeCopilot({ formData, onAutofill }) {
           data.desired_outcome ||
           data.success_definition ||
           "Reduce average OPD waiting time by 40% with smart automated queue management and triage.",
+        expectedImpact: data.expected_impact || "Digitized public workflow and reduced citizen turnaround delays.",
         kpis:
           data.suggested_kpis && data.suggested_kpis.length > 0
             ? data.suggested_kpis.map((kpi, idx) => ({
@@ -261,7 +264,14 @@ function AIChallengeCopilot({ formData, onAutofill }) {
                 { id: crypto.randomUUID(), name: "Cloud & Edge Deployment" },
               ],
         eligibilityRequirements:
-          data.eligibility_considerations && data.eligibility_considerations.length > 0
+          (data.suggested_eligibility_criteria && data.suggested_eligibility_criteria.length > 0)
+            ? data.suggested_eligibility_criteria.map((el) => ({
+                id: crypto.randomUUID(),
+                name: el,
+                description: "Eligibility criterion for pilot sandbox entry.",
+                required: true,
+              }))
+            : (data.eligibility_considerations && data.eligibility_considerations.length > 0)
             ? data.eligibility_considerations.map((el) => ({
                 id: crypto.randomUUID(),
                 name: el,

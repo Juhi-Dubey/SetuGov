@@ -6,7 +6,14 @@ import {
   updatePilot,
   startPilot,
   completePilot,
-  getPilotDashboard
+  getPilotDashboard,
+  getComplianceChecklist,
+  updateComplianceItem,
+  addPilotFeedback,
+  getPilotFeedbacks,
+  createPilotIssue,
+  getPilotIssues,
+  updatePilotIssue
 } from '../controllers/pilotController.js';
 import {
   createKpi,
@@ -85,6 +92,14 @@ router.get('/:pilot_id/dashboard', authenticate, getPilotDashboard);
 // Sub-resources under Pilot
 // ----------------------------------------------------
 
+// Security & Compliance Checklist
+router.get('/:pilot_id/compliance', authenticate, getComplianceChecklist);
+router.patch('/:pilot_id/compliance/:item_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN', 'EVALUATOR'), updateComplianceItem);
+
+// Beneficiary / Citizen Feedback
+router.post('/:pilot_id/feedback', addPilotFeedback); // Open or authenticated
+router.get('/:pilot_id/feedback', authenticate, getPilotFeedbacks);
+
 // KPIs
 router.post('/:pilot_id/kpis', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(createKpiSchema), createKpi);
 router.get('/:pilot_id/kpis', authenticate, getPilotKpis);
@@ -105,6 +120,11 @@ router.get('/:pilot_id/evidence', authenticate, getPilotEvidence);
 router.post('/:pilot_id/risks', authenticate, validate(createRiskSchema), createRisk);
 router.get('/:pilot_id/risks', authenticate, getPilotRisks);
 
+// Issues (Phase 4-12: Actual occurred problems tracking)
+router.post('/:pilot_id/issues', authenticate, authorizeRoles('GOVERNMENT', 'STARTUP', 'ADMIN', 'EVALUATOR'), createPilotIssue);
+router.get('/:pilot_id/issues', authenticate, getPilotIssues);
+router.patch('/:pilot_id/issues/:issue_id', authenticate, authorizeRoles('GOVERNMENT', 'STARTUP', 'ADMIN'), updatePilotIssue);
+
 // Validations
 router.post('/:pilot_id/validation', authenticate, authorizeRoles('GOVERNMENT', 'EVALUATOR', 'ADMIN'), validate(createValidationSchema), createValidation);
 router.get('/:pilot_id/validation', authenticate, getPilotValidations);
@@ -118,3 +138,5 @@ router.post('/:pilot_id/scale-decision', authenticate, authorizeRoles('GOVERNMEN
 router.get('/:pilot_id/scale-decision', authenticate, getScaleDecision);
 
 export default router;
+
+

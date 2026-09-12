@@ -31,7 +31,7 @@ function ChallengeForm({
           helperText="Keep the title concise and focused on the problem or outcome."
         />
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-3">
           <FormField
             label="Department"
             name="department"
@@ -50,6 +50,16 @@ function ChallengeForm({
             placeholder="City, district, state or facility"
             required
             error={errors.location}
+          />
+
+          <FormField
+            label="Application Deadline"
+            name="applicationDeadline"
+            type="date"
+            value={formData.applicationDeadline || ""}
+            onChange={onChange}
+            helperText="Proposals will close on this date."
+            error={errors.applicationDeadline}
           />
         </div>
 

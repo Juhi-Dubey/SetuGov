@@ -28,6 +28,11 @@ export const createStartup = async (data, user, ip_address = null) => {
       years_experience: data.years_experience || 0,
       previous_deployments: data.previous_deployments || 0,
       verification_status: 'PENDING',
+      dpiit_number: data.dpiit_number ? data.dpiit_number.trim() : null,
+      certificate_number: data.certificate_number ? data.certificate_number.trim() : null,
+      incorporation_date: data.incorporation_date ? new Date(data.incorporation_date) : null,
+      cin_number: data.cin_number ? data.cin_number.trim() : null,
+      gstin: data.gstin ? data.gstin.trim() : null,
       location: data.location.trim(),
       embedding
     },
@@ -168,13 +173,22 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
     'readiness_level',
     'years_experience',
     'previous_deployments',
-    'location'
+    'location',
+    'dpiit_number',
+    'certificate_number',
+    'incorporation_date',
+    'cin_number',
+    'gstin'
   ];
 
   const updateData = {};
   for (const field of allowedFields) {
     if (data[field] !== undefined) {
-      updateData[field] = typeof data[field] === 'string' ? data[field].trim() : data[field];
+      if (field === 'incorporation_date' && data[field]) {
+        updateData[field] = new Date(data[field]);
+      } else {
+        updateData[field] = typeof data[field] === 'string' ? data[field].trim() : data[field];
+      }
     }
   }
 
@@ -265,7 +279,10 @@ export const verifyStartup = async (startupId, data, user, ip_address = null) =>
   const updatedStartup = await prisma.startup.update({
     where: { id: startupId },
     data: {
-      verification_status: data.verification_status
+      verification_status: data.verification_status,
+      verification_notes: data.comments || null,
+      verified_by: user.id,
+      verified_at: new Date()
     },
     include: {
       user: {
@@ -381,6 +398,79 @@ export const getStartupPilots = async (startupId, user) => {
   return pilots;
 };
 
+/**
+ * Calculates startup performance track record dynamically from database records
+ */
+export const getStartupPerformance = async (startupId, user = null) => {
+  const startup = await prisma.startup.findUnique({
+    where: { id: startupId },
+    include: {
+      applications: true,
+      pilots: {
+        include: {
+          kpis: true,
+          milestones: true,
+          scale_decisions: true
+        }
+      }
+    }
+  });
+
+  if (!startup) {
+    throw new NotFoundError(`Startup with ID ${startupId} not found.`);
+  }
+
+  const pilots = startup.pilots || [];
+  const totalPilots = pilots.length;
+  const scaledPilots = pilots.filter(p => p.status === 'SCALED').length;
+  const completedPilots = pilots.filter(p => p.status === 'COMPLETED').length;
+  const extendedPilots = pilots.filter(p => p.status === 'EXTENDED').length;
+  const stoppedPilots = pilots.filter(p => p.status === 'STOPPED').length;
+  const activePilots = pilots.filter(p => p.status === 'RUNNING' || p.status === 'PLANNED' || p.status === 'VALIDATION').length;
+
+  // Calculate KPI success rate
+  let totalKpis = 0;
+  let achievedKpis = 0;
+  pilots.forEach(p => {
+    (p.kpis || []).forEach(k => {
+      totalKpis++;
+      if (k.actual_value !== null && k.target_value !== null) {
+        const isDecrease = k.target_value < k.baseline_value;
+        if (isDecrease ? (k.actual_value <= k.target_value) : (k.actual_value >= k.target_value)) {
+          achievedKpis++;
+        }
+      }
+    });
+  });
+
+  const kpiSuccessRate = totalKpis > 0 ? Math.round((achievedKpis / totalKpis) * 100) : 100;
+  const successfulPilots = scaledPilots + completedPilots;
+  const pilotSuccessRate = totalPilots > 0 ? Math.round((successfulPilots / totalPilots) * 100) : 100;
+
+  const totalApplications = startup.applications.length;
+  const shortlistedApplications = startup.applications.filter(a => a.status === 'SHORTLISTED' || a.status === 'SELECTED').length;
+
+  return {
+    startup_id: startup.id,
+    company_name: startup.company_name,
+    verification_status: startup.verification_status,
+    dpiit_number: startup.dpiit_number,
+    metrics: {
+      total_pilots: totalPilots,
+      scaled_pilots: scaledPilots,
+      completed_pilots: completedPilots,
+      extended_pilots: extendedPilots,
+      stopped_pilots: stoppedPilots,
+      active_pilots: activePilots,
+      pilot_success_rate: pilotSuccessRate,
+      kpi_success_rate: kpiSuccessRate,
+      total_kpis_tracked: totalKpis,
+      total_applications: totalApplications,
+      shortlisted_applications: shortlistedApplications
+    }
+  };
+};
+
 export default {
   createStartup,
   getStartups,
@@ -390,5 +480,7 @@ export default {
   getStartupDocuments,
   verifyStartup,
   getStartupApplications,
-  getStartupPilots
+  getStartupPilots,
+  getStartupPerformance
 };
+

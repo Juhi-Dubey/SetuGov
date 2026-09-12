@@ -13,6 +13,8 @@ import {
   AlertCircle,
   Loader2,
   History,
+  Award,
+  Sparkles
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getAdminDashboard } from "../../services/adminService";
@@ -38,28 +40,32 @@ function AdminDashboard() {
     }
   };
 
+  const summary = data?.summary || {};
+  const usersBreakdown = data?.usersBreakdown || {};
+  const pendingVerifications = summary?.pendingVerifications || { government: 0, startups: 0, evaluators: 0, total: 0 };
+
   const userStats = [
     {
       title: "Total Users",
-      value: String(data?.users?.total || 14),
+      value: String(summary?.totalUsers || 14),
       change: "Active in platform",
       icon: Users,
     },
     {
       title: "Government Officers",
-      value: String(data?.users?.by_role?.GOVERNMENT || 3),
+      value: String(usersBreakdown?.GOVERNMENT || 3),
       change: "Department nodal officers",
       icon: ShieldCheck,
     },
     {
       title: "Registered Startups",
-      value: String(data?.startups?.total || data?.users?.by_role?.STARTUP || 6),
-      change: `${data?.startups?.verified || 4} verified entities`,
+      value: String(summary?.totalStartups || usersBreakdown?.STARTUP || 6),
+      change: "Innovation enterprises",
       icon: Building2,
     },
     {
       title: "Domain Evaluators",
-      value: String(data?.users?.by_role?.EVALUATOR || 4),
+      value: String(summary?.totalEvaluators || usersBreakdown?.EVALUATOR || 4),
       change: "Technical experts",
       icon: UserCheck,
     },
@@ -68,43 +74,27 @@ function AdminDashboard() {
   const systemStats = [
     {
       title: "Active Challenges",
-      value: String(data?.challenges?.total || 5),
+      value: String(summary?.totalChallenges || 5),
       icon: ClipboardList,
     },
     {
       title: "Verified Startups",
-      value: String(data?.startups?.verified || 4),
+      value: String(data?.startupsBreakdown?.VERIFIED || 4),
       icon: FileCheck2,
     },
     {
-      title: "Running Pilots",
-      value: String(data?.pilots?.by_status?.RUNNING || data?.pilots?.total || 2),
+      title: "Total Pilots",
+      value: String(summary?.totalPilots || 2),
       icon: Activity,
     },
     {
       title: "Audit Log Entries",
-      value: String(data?.recent_activity?.length || 28),
+      value: String(data?.recentAuditLogs?.length || 28),
       icon: History,
     },
   ];
 
-  const activities = (data?.recent_activity || [
-    {
-      action: "CHALLENGE_PUBLISHED",
-      details: { title: "AI-Based Citizen Grievance Management" },
-      created_at: new Date().toISOString(),
-    },
-    {
-      action: "PILOT_STARTED",
-      details: { challenge: "Smart Waste Collection System" },
-      created_at: new Date().toISOString(),
-    },
-    {
-      action: "EVALUATION_SUBMITTED",
-      details: { startup: "TechNova Solutions" },
-      created_at: new Date().toISOString(),
-    },
-  ]).slice(0, 5);
+  const activities = (data?.recentAuditLogs || []).slice(0, 6);
 
   return (
     <div className="space-y-8">
@@ -112,24 +102,70 @@ function AdminDashboard() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
-            <ShieldCheck className="h-3.5 w-3.5" /> Platform Governance
+            <ShieldCheck className="h-3.5 w-3.5" /> Platform Governance & Administration
           </span>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl text-slate-900 dark:text-white">
             System Administrator Overview
           </h1>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            System health, verified users, security policies, and platform audit trail.
+            Real-time verification queue, role governance, system health, and complete audit trail.
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => navigate("/admin/users")}
-          className="inline-flex h-11 items-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
-        >
-          <Users className="h-4 w-4" /> Manage Directory
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate("/admin/users")}
+            className="inline-flex h-11 items-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+          >
+            <Users className="h-4 w-4" /> Manage Directory & Roles
+          </button>
+        </div>
       </div>
+
+      {/* PENDING VERIFICATION ACTION BAR */}
+      {pendingVerifications.total > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border border-amber-200 bg-amber-50/80 p-5 dark:border-amber-900/50 dark:bg-amber-950/30"
+        >
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  {pendingVerifications.total} Official Verification Request(s) Pending Review
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  Government Departments: {pendingVerifications.government} | Startups (DPIIT): {pendingVerifications.startups} | Evaluators: {pendingVerifications.evaluators}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {pendingVerifications.startups > 0 && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/startups")}
+                  className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700"
+                >
+                  Review Startups
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => navigate("/admin/users")}
+                className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:bg-amber-50 dark:border-amber-800 dark:bg-slate-900 dark:text-slate-200"
+              >
+                Review Directory
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* USER STATS */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -149,77 +185,75 @@ function AdminDashboard() {
                   <Icon className="h-4 w-4" />
                 </div>
               </div>
-              <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {item.value}
-              </p>
-              <p className="mt-1 text-xs text-slate-400">{item.change}</p>
+              <div className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">{item.value}</div>
+              <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">{item.change}</div>
             </motion.div>
           );
         })}
       </div>
 
-      {/* SYSTEM SUMMARY & RECENT ACTIVITIES */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* SYSTEM STATUS */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="text-base font-bold">Platform Operations</h2>
-          <p className="text-xs text-slate-400">Current active workload across government portals</p>
-
-          <div className="mt-6 grid grid-cols-2 gap-4">
-            {systemStats.map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <div
-                  key={stat.title}
-                  className="rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/40"
-                >
-                  <div className="flex items-center gap-2 text-slate-500">
-                    <Icon className="h-4 w-4" />
-                    <span className="text-xs font-medium">{stat.title}</span>
-                  </div>
-                  <p className="mt-3 text-2xl font-bold">{stat.value}</p>
+      {/* SYSTEM STATS */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {systemStats.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.2 + index * 0.08 }}
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-slate-400">{item.title}</span>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+                  <Icon className="h-4 w-4" />
                 </div>
-              );
-            })}
+              </div>
+              <div className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">{item.value}</div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* RECENT AUDIT LOGS PREVIEW */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <History className="h-5 w-5 text-indigo-500" />
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              Real-time Administrative Audit Trail
+            </h2>
           </div>
+          <button
+            type="button"
+            onClick={() => navigate("/admin/audit")}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+          >
+            View All Logs <ArrowRight className="h-3.5 w-3.5" />
+          </button>
         </div>
 
-        {/* AUDIT ACTIVITY */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
-            <div>
-              <h2 className="text-base font-bold">Recent System Audit Trail</h2>
-              <p className="text-xs text-slate-400">Logged security and transaction events</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate("/admin/audit")}
-              className="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
-            >
-              Full Trail
-            </button>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            {activities.map((act, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between rounded-xl border border-slate-100 p-3.5 text-xs dark:border-slate-800"
-              >
+        <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+          {activities.length === 0 ? (
+            <p className="py-4 text-xs text-slate-400">No recent audit logs recorded.</p>
+          ) : (
+            activities.map((log) => (
+              <div key={log.id} className="py-3 flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-slate-900 dark:text-white">
-                    {act.action?.replace(/_/g, " ")}
-                  </p>
-                  <p className="text-[11px] text-slate-400">
-                    {act.details ? JSON.stringify(act.details).slice(0, 60) : "System verified operation"}
-                  </p>
+                  <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    {log.action}
+                  </span>
+                  <span className="ml-2 text-xs text-slate-400">
+                    by {log.user?.name || "System"} ({log.user?.role || "ADMIN"})
+                  </span>
                 </div>
-                <span className="text-[10px] text-slate-400">
-                  {act.created_at ? new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"}
+                <span className="text-xs text-slate-400 font-mono">
+                  {new Date(log.created_at).toLocaleString()}
                 </span>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </div>
       </div>
     </div>

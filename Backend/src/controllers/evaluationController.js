@@ -43,9 +43,33 @@ export const getChallengeEvaluationSummary = async (req, res, next) => {
   }
 };
 
+export const declareConflictOfInterest = async (req, res, next) => {
+  try {
+    const applicationId = req.params.application_id || req.params.id;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await evaluationService.declareConflictOfInterest(applicationId, req.body, req.user, ip_address);
+    return successResponse(res, result, 'Conflict of interest declaration recorded', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getConflictDeclaration = async (req, res, next) => {
+  try {
+    const applicationId = req.params.application_id || req.params.id;
+    const result = await evaluationService.getConflictDeclaration(applicationId, req.user);
+    return successResponse(res, result, 'Conflict declaration retrieved', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   submitEvaluation,
   getApplicationEvaluations,
   updateEvaluation,
-  getChallengeEvaluationSummary
+  getChallengeEvaluationSummary,
+  declareConflictOfInterest,
+  getConflictDeclaration
 };
+

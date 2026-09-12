@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -13,9 +13,12 @@ import {
   Upload,
   Users,
   X,
+  AlertTriangle,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { submitApplication } from "../../services/applicationService";
+import { getChallengeById } from "../../services/challengeService";
+import { useAuth } from "../../context/AuthContext";
 
 const challengeData = {
   1: {
@@ -73,11 +76,43 @@ const defaultChallenge = {
 function StartupApplication() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useAuth();
+
+  const [dynamicChallenge, setDynamicChallenge] = useState(null);
+
+  useEffect(() => {
+    if (id) {
+      getChallengeById(id)
+        .then((res) => {
+          const ch = res?.data || res;
+          if (ch?.id) {
+            setDynamicChallenge({
+              id: ch.id,
+              title: ch.title,
+              department: ch.department?.name || "Government Department",
+              category: ch.sector || "GovTech",
+              deadline: ch.application_deadline ? new Date(ch.application_deadline).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "Open Rolling",
+              deadlineRaw: ch.application_deadline,
+              budget: ch.budget_max ? `₹${(Number(ch.budget_max) / 100000).toFixed(0)} Lakhs` : "₹25 Lakhs",
+              status: ch.status,
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [id]);
 
   const challenge = useMemo(
-    () => challengeData[id] || defaultChallenge,
-    [id]
+    () => dynamicChallenge || challengeData[id] || defaultChallenge,
+    [dynamicChallenge, id]
   );
+
+  const isDeadlineExpired = useMemo(() => {
+    if (!challenge.deadlineRaw) return false;
+    return new Date(challenge.deadlineRaw) < new Date();
+  }, [challenge.deadlineRaw]);
+
+  const isStartupUnverified = user && user.verification_status && user.verification_status !== "VERIFIED";
 
   const [form, setForm] = useState({
     solutionName: "",
@@ -96,6 +131,7 @@ function StartupApplication() {
   const [errors, setErrors] = useState({});
   const [saveState, setSaveState] = useState("idle");
   const [submitState, setSubmitState] = useState("idle");
+  const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   const updateField = (field, value) => {
@@ -194,6 +230,12 @@ function StartupApplication() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSuccessMessage("");
+    setErrorMessage("");
+
+    if (isDeadlineExpired) {
+      setErrorMessage("Application deadline for this challenge has passed. Submissions are no longer accepted.");
+      return;
+    }
 
     if (!validateForm()) {
       window.scrollTo({
@@ -225,14 +267,13 @@ function StartupApplication() {
 
       setSubmitState("submitted");
       setSuccessMessage(
-        "Application submitted successfully! Your proposal has entered the formal evaluation workflow."
+        "Application submitted successfully! Your proposal has entered the formal government evaluation workflow."
       );
     } catch (err) {
-      console.warn("Application submit fallback:", err);
-      setSubmitState("submitted");
-      setSuccessMessage(
-        "Application submitted successfully! Your proposal has entered the formal evaluation workflow."
-      );
+      console.warn("Application submit error:", err);
+      const msg = err?.response?.data?.message || err?.message || "Failed to submit proposal.";
+      setErrorMessage(msg);
+      setSubmitState("idle");
     } finally {
       window.scrollTo({
         top: 0,
@@ -256,6 +297,64 @@ function StartupApplication() {
       }}
       className="space-y-6"
     >
+      {/* ================================================= */}
+      {/* ERROR MESSAGE                                    */}
+      {/* ================================================= */}
+
+      {errorMessage && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-900/50 dark:bg-red-950/30"
+        >
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+          <div>
+            <p className="text-sm font-bold text-red-800 dark:text-red-300">Submission Error</p>
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errorMessage}</p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ================================================= */}
+      {/* DEADLINE EXPIRED WARNING                          */}
+      {/* ================================================= */}
+
+      {isDeadlineExpired && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-3 rounded-2xl border border-red-300 bg-red-50/80 p-4 dark:border-red-900/60 dark:bg-red-950/40"
+        >
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+          <div>
+            <p className="text-sm font-bold text-red-800 dark:text-red-300">Application Window Closed</p>
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+              The deadline ({challenge.deadline}) for this procurement challenge has expired. New proposals can no longer be submitted.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ================================================= */}
+      {/* UNVERIFIED STARTUP WARNING                        */}
+      {/* ================================================= */}
+
+      {isStartupUnverified && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 dark:border-amber-900/50 dark:bg-amber-950/30"
+        >
+          <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <div>
+            <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Account Verification Pending</p>
+            <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+              Your startup profile is awaiting administrative verification. You can submit proposals, but formal evaluator scoring will commence upon account verification.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {/* ================================================= */}
       {/* SUCCESS MESSAGE                                  */}
       {/* ================================================= */}
@@ -782,7 +881,8 @@ function StartupApplication() {
                 type="submit"
                 disabled={
                   submitState === "submitting" ||
-                  submitState === "submitted"
+                  submitState === "submitted" ||
+                  isDeadlineExpired
                 }
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white transition-all hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none"
               >
@@ -795,6 +895,11 @@ function StartupApplication() {
                   <>
                     <CheckCircle2 className="h-4 w-4" />
                     Submitted
+                  </>
+                ) : isDeadlineExpired ? (
+                  <>
+                    <AlertTriangle className="h-4 w-4 text-amber-300" />
+                    Deadline Closed
                   </>
                 ) : (
                   <>

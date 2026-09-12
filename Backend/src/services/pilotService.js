@@ -235,6 +235,9 @@ export const getPilotById = async (id, user = null) => {
         orderBy: { due_date: 'asc' }
       },
       risks: true,
+      issues: {
+        orderBy: { created_at: 'desc' }
+      },
       validations: {
         include: {
           validator: {
@@ -274,14 +277,25 @@ export const updatePilot = async (id, data, user, ip_address = null) => {
   // P0-3: Centralized pilot access verification
   const pilot = await verifyPilotAccess(id, user, 'PILOT_LIFECYCLE');
 
-  // P1-6: Whitelist allowable update fields (eliminate mass assignment)
-  const allowedFields = ['location', 'start_date', 'end_date', 'budget'];
+  // P1-6: Whitelist allowable update fields (P1-6: Eliminate mass assignment)
+  const allowedFields = [
+    'location',
+    'start_date',
+    'end_date',
+    'budget',
+    'data_classification',
+    'data_access_requirements',
+    'data_retention_period',
+    'ip_ownership',
+    'licensing_terms',
+    'confidentiality_terms'
+  ];
   const updateData = {};
   for (const field of allowedFields) {
     if (data[field] !== undefined) {
       if (field === 'start_date' || field === 'end_date') {
         updateData[field] = new Date(data[field]);
-      } else if (field === 'location') {
+      } else if (typeof data[field] === 'string') {
         updateData[field] = data[field].trim();
       } else {
         updateData[field] = data[field];
@@ -310,10 +324,22 @@ export const updatePilot = async (id, data, user, ip_address = null) => {
   return updated;
 };
 
-export const startPilot = async (id, user, ip_address = null) => {
+export const startPilot = async (id, user, ip_address = null, options = {}) => {
   const pilot = await verifyPilotAccess(id, user, 'PILOT_LIFECYCLE');
 
   validateTransition('PILOT', pilot.status, 'RUNNING');
+
+  // Phase 4-11: Pilot Readiness Checklist Enforcement
+  const complianceItems = await prisma.complianceItem.findMany({
+    where: { pilot_id: id }
+  });
+
+  const uncompliedItems = complianceItems.filter(c => c.status !== 'COMPLIED');
+  if (uncompliedItems.length > 0 && !options.readiness_override) {
+    throw new BadRequestError(
+      `Pilot readiness checklist has ${uncompliedItems.length} unverified item(s). Complete compliance verification or provide an authorized administrative readiness_override.`
+    );
+  }
 
   const updated = await prisma.pilot.update({
     where: { id },
@@ -322,10 +348,15 @@ export const startPilot = async (id, user, ip_address = null) => {
 
   await createAuditLog({
     user_id: user.id,
-    action: 'PILOT_STARTED',
+    action: options.readiness_override ? 'PILOT_STARTED_WITH_OVERRIDE' : 'PILOT_STARTED',
     entity_type: 'PILOT',
     entity_id: id,
-    details: { previousStatus: pilot.status, newStatus: 'RUNNING' },
+    details: {
+      previousStatus: pilot.status,
+      newStatus: 'RUNNING',
+      readiness_override: Boolean(options.readiness_override),
+      override_reason: options.override_reason || null
+    },
     ip_address
   });
 
@@ -405,6 +436,9 @@ export const getPilotDashboard = async (id, user = null) => {
         orderBy: { date: 'desc' }
       },
       risks: {
+        orderBy: { created_at: 'desc' }
+      },
+      issues: {
         orderBy: { created_at: 'desc' }
       },
       validations: {
@@ -508,6 +542,17 @@ export const getPilotDashboard = async (id, user = null) => {
   // Scale Decision
   const scaleDecision = pilot.scale_decisions.length > 0 ? pilot.scale_decisions[0] : null;
 
+  // Feedback summary
+  const feedbackList = pilot.feedback || [];
+  const avgSatisfaction = feedbackList.length > 0
+    ? parseFloat((feedbackList.reduce((sum, f) => sum + f.rating, 0) / feedbackList.length).toFixed(1))
+    : null;
+
+  // Compliance summary
+  const complianceList = pilot.compliance_items || [];
+  const compliedCount = complianceList.filter(c => c.status === 'COMPLIED').length;
+  const complianceScore = complianceList.length > 0 ? Math.round((compliedCount / complianceList.length) * 100) : null;
+
   return {
     pilot: {
       id: pilot.id,
@@ -517,7 +562,13 @@ export const getPilotDashboard = async (id, user = null) => {
       start_date: pilot.start_date,
       end_date: pilot.end_date,
       overall_score: pilot.overall_score,
-      final_recommendation: pilot.final_recommendation
+      final_recommendation: pilot.final_recommendation,
+      data_classification: pilot.data_classification || 'INTERNAL',
+      data_access_requirements: pilot.data_access_requirements,
+      data_retention_period: pilot.data_retention_period,
+      ip_ownership: pilot.ip_ownership || 'STARTUP_OWNED',
+      licensing_terms: pilot.licensing_terms,
+      confidentiality_terms: pilot.confidentiality_terms
     },
     challenge: pilot.challenge,
     startup: pilot.startup,
@@ -531,7 +582,9 @@ export const getPilotDashboard = async (id, user = null) => {
       avgKpiAchievement,
       avgMilestoneCompletion,
       totalDisbursed,
-      disbursementPercent
+      disbursementPercent,
+      avgSatisfaction,
+      complianceScore
     },
     kpis: kpiAnalytics,
     milestones: pilot.milestones,
@@ -541,6 +594,22 @@ export const getPilotDashboard = async (id, user = null) => {
       open: openRisks.length,
       critical_or_high: criticalRisks.length,
       items: pilot.risks
+    },
+    issues: {
+      total: pilot.issues?.length || 0,
+      open: (pilot.issues || []).filter(i => i.status === 'OPEN' || i.status === 'IN_PROGRESS').length,
+      items: pilot.issues || []
+    },
+    compliance: {
+      total: complianceList.length,
+      complied: compliedCount,
+      score: complianceScore,
+      items: complianceList
+    },
+    feedback: {
+      total: feedbackList.length,
+      average_rating: avgSatisfaction,
+      items: feedbackList
     },
     validation: latestValidation,
     payments: {
@@ -553,6 +622,259 @@ export const getPilotDashboard = async (id, user = null) => {
   };
 };
 
+/**
+ * Standard default security & compliance checklist items
+ */
+const DEFAULT_COMPLIANCE_ITEMS = [
+  { category: 'Security', item_name: 'Authentication & Identity Management', description: 'Enforce strong passwords, multi-factor authentication, and JWT session controls.' },
+  { category: 'Security', item_name: 'Role-Based Access Control (RBAC)', description: 'Strict separation of privileges between Government, Startup, Evaluator, and Admin.' },
+  { category: 'Privacy', item_name: 'Data Protection & Anonymization', description: 'Citizen/beneficiary PII is sanitized and protected from unauthorized disclosure.' },
+  { category: 'Security', item_name: 'Encryption In-Transit & At-Rest', description: 'TLS 1.3 enforced for APIs; database and storage encryption verified.' },
+  { category: 'Governance', item_name: 'Audit Logging & Traceability', description: 'All security-sensitive operations recorded with actor IDs, actions, and timestamps.' },
+  { category: 'Security', item_name: 'Vulnerability & Penetration Review', description: 'Security assessment completed with no unmitigated critical vulnerabilities.' },
+  { category: 'Governance', item_name: 'Data Retention & Purging Policy', description: 'Documented protocol for post-pilot data archival or secure destruction.' }
+];
+
+/**
+ * Get or initialize Security & Compliance Checklist for a pilot
+ */
+export const getComplianceChecklist = async (pilotId, user = null) => {
+  if (user) {
+    await verifyPilotAccess(pilotId, user, 'READ');
+  }
+
+  let items = await prisma.complianceItem.findMany({
+    where: { pilot_id: pilotId },
+    include: {
+      verifier: {
+        select: { id: true, name: true, role: true }
+      }
+    },
+    orderBy: { created_at: 'asc' }
+  });
+
+  if (items.length === 0) {
+    // Seed default items
+    await prisma.complianceItem.createMany({
+      data: DEFAULT_COMPLIANCE_ITEMS.map(item => ({
+        pilot_id: pilotId,
+        category: item.category,
+        item_name: item.item_name,
+        description: item.description,
+        status: 'PENDING'
+      }))
+    });
+
+    items = await prisma.complianceItem.findMany({
+      where: { pilot_id: pilotId },
+      include: {
+        verifier: {
+          select: { id: true, name: true, role: true }
+        }
+      },
+      orderBy: { created_at: 'asc' }
+    });
+  }
+
+  return items;
+};
+
+/**
+ * Update a compliance item status or notes
+ */
+export const updateComplianceItem = async (pilotId, itemId, data, user, ip_address = null) => {
+  await verifyPilotAccess(pilotId, user, 'PILOT_LIFECYCLE');
+
+  const existing = await prisma.complianceItem.findUnique({
+    where: { id: itemId }
+  });
+
+  if (!existing || existing.pilot_id !== pilotId) {
+    throw new NotFoundError(`Compliance item ${itemId} not found for this pilot.`);
+  }
+
+  const { status, notes } = data;
+  const updateData = {};
+  if (status) {
+    updateData.status = status;
+    updateData.verified_by = user.id;
+    updateData.verified_at = new Date();
+  }
+  if (notes !== undefined) {
+    updateData.notes = notes ? notes.trim() : null;
+  }
+
+  const updated = await prisma.complianceItem.update({
+    where: { id: itemId },
+    data: updateData,
+    include: {
+      verifier: {
+        select: { id: true, name: true, role: true }
+      }
+    }
+  });
+
+  await createAuditLog({
+    user_id: user.id,
+    action: 'COMPLIANCE_ITEM_UPDATED',
+    entity_type: 'PILOT_COMPLIANCE',
+    entity_id: itemId,
+    details: { pilot_id: pilotId, item_name: existing.item_name, status: updated.status },
+    ip_address
+  });
+
+  return updated;
+};
+
+/**
+ * Add Citizen / Beneficiary Feedback for a pilot
+ */
+export const addPilotFeedback = async (pilotId, data, user = null, ip_address = null) => {
+  const pilot = await prisma.pilot.findUnique({ where: { id: pilotId } });
+  if (!pilot) {
+    throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
+  }
+
+  const { citizen_name, beneficiary_type = 'CITIZEN', rating, comments } = data;
+
+  const feedback = await prisma.pilotFeedback.create({
+    data: {
+      pilot_id: pilotId,
+      citizen_name: citizen_name ? citizen_name.trim() : 'Beneficiary / Citizen',
+      beneficiary_type: beneficiary_type || 'CITIZEN',
+      rating: Math.max(1, Math.min(5, parseInt(rating, 10) || 5)),
+      comments: comments.trim(),
+      feedback_date: new Date()
+    }
+  });
+
+  await createAuditLog({
+    user_id: user ? user.id : null,
+    action: 'PILOT_FEEDBACK_SUBMITTED',
+    entity_type: 'PILOT_FEEDBACK',
+    entity_id: feedback.id,
+    details: { pilot_id: pilotId, rating: feedback.rating, beneficiary_type: feedback.beneficiary_type },
+    ip_address
+  });
+
+  return feedback;
+};
+
+/**
+ * Get all Citizen / Beneficiary Feedbacks for a pilot
+ */
+export const getPilotFeedbacks = async (pilotId, user = null) => {
+  const feedbacks = await prisma.pilotFeedback.findMany({
+    where: { pilot_id: pilotId },
+    orderBy: { feedback_date: 'desc' }
+  });
+
+  const total = feedbacks.length;
+  const avgRating = total > 0
+    ? parseFloat((feedbacks.reduce((sum, f) => sum + f.rating, 0) / total).toFixed(1))
+    : 0;
+
+  return {
+    total,
+    average_rating: avgRating,
+    feedbacks
+  };
+};
+
+/**
+ * Pilot Issue Management (Phase 4-12: Distinct from potential risks)
+ */
+export const createPilotIssue = async (pilotId, data, user, ip_address = null) => {
+  await verifyPilotAccess(pilotId, user, 'PILOT_LIFECYCLE');
+
+  const { title, description, severity = 'MEDIUM', assigned_to = null } = data;
+
+  if (!title || !description) {
+    throw new BadRequestError('Issue title and description are required.');
+  }
+
+  const issue = await prisma.pilotIssue.create({
+    data: {
+      pilot_id: pilotId,
+      title: title.trim(),
+      description: description.trim(),
+      severity: severity.toUpperCase(),
+      status: 'OPEN',
+      assigned_to: assigned_to ? assigned_to.trim() : null
+    }
+  });
+
+  await createAuditLog({
+    user_id: user.id,
+    action: 'PILOT_ISSUE_REPORTED',
+    entity_type: 'PILOT_ISSUE',
+    entity_id: issue.id,
+    details: { pilot_id: pilotId, title: issue.title, severity: issue.severity },
+    ip_address
+  });
+
+  return issue;
+};
+
+export const getPilotIssues = async (pilotId, user = null) => {
+  if (user) {
+    await verifyPilotAccess(pilotId, user, 'READ');
+  }
+
+  const issues = await prisma.pilotIssue.findMany({
+    where: { pilot_id: pilotId },
+    orderBy: { created_at: 'desc' }
+  });
+
+  return issues;
+};
+
+export const updatePilotIssue = async (pilotId, issueId, data, user, ip_address = null) => {
+  await verifyPilotAccess(pilotId, user, 'PILOT_LIFECYCLE');
+
+  const existing = await prisma.pilotIssue.findUnique({ where: { id: issueId } });
+  if (!existing || existing.pilot_id !== pilotId) {
+    throw new NotFoundError(`Pilot issue ${issueId} not found.`);
+  }
+
+  const { title, description, severity, status, assigned_to, resolution } = data;
+  const updateData = {};
+
+  if (title) updateData.title = title.trim();
+  if (description) updateData.description = description.trim();
+  if (severity) updateData.severity = severity.toUpperCase();
+  if (assigned_to !== undefined) updateData.assigned_to = assigned_to ? assigned_to.trim() : null;
+  if (resolution !== undefined) updateData.resolution = resolution ? resolution.trim() : null;
+
+  if (status) {
+    updateData.status = status.toUpperCase();
+    if (updateData.status === 'RESOLVED' || updateData.status === 'CLOSED') {
+      updateData.resolved_at = new Date();
+    }
+  }
+
+  const updated = await prisma.pilotIssue.update({
+    where: { id: issueId },
+    data: updateData
+  });
+
+  await createAuditLog({
+    user_id: user.id,
+    action: `PILOT_ISSUE_${updated.status}`,
+    entity_type: 'PILOT_ISSUE',
+    entity_id: issueId,
+    details: {
+      pilot_id: pilotId,
+      previousStatus: existing.status,
+      newStatus: updated.status,
+      resolution: updated.resolution
+    },
+    ip_address
+  });
+
+  return updated;
+};
+
 export default {
   createPilot,
   getPilots,
@@ -560,5 +882,14 @@ export default {
   updatePilot,
   startPilot,
   completePilot,
-  getPilotDashboard
+  getPilotDashboard,
+  getComplianceChecklist,
+  updateComplianceItem,
+  addPilotFeedback,
+  getPilotFeedbacks,
+  createPilotIssue,
+  getPilotIssues,
+  updatePilotIssue
 };
+
+

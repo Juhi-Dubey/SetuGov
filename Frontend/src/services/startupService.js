@@ -15,6 +15,10 @@ export const getStartupById = async (id) => {
   return apiRequest(`/startups/${id}`);
 };
 
+export const getStartupPerformance = async (id) => {
+  return apiRequest(`/startups/${id}/performance`);
+};
+
 export const createStartup = async (startupData) => {
   return apiRequest("/startups", {
     method: "POST",
@@ -44,9 +48,13 @@ export const getStartupDocuments = async (startupId) => {
 };
 
 export const verifyStartup = async (startupId, verificationData) => {
+  const payload = typeof verificationData === "string"
+    ? { verification_status: verificationData }
+    : verificationData;
+
   return apiRequest(`/startups/${startupId}/verification`, {
     method: "PATCH",
-    body: JSON.stringify(verificationData),
+    body: JSON.stringify(payload),
   });
 };
 
@@ -61,6 +69,7 @@ export const getStartupPilots = async (startupId) => {
 export default {
   getStartups,
   getStartupById,
+  getStartupPerformance,
   createStartup,
   updateStartup,
   uploadStartupDocument,

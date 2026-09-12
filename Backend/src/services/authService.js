@@ -9,8 +9,10 @@ export const register = async ({
   name,
   email,
   password,
-  role,
+  role = 'STARTUP',
   department_id = null,
+  designation = null,
+  phone = null,
   ip_address = null
 }) => {
   const normalizedEmail = email.trim().toLowerCase();
@@ -41,6 +43,10 @@ export const register = async ({
   // Hash password with 12 bcrypt salt rounds (P1-2)
   const password_hash = await bcrypt.hash(password, 12);
 
+  // For GOVERNMENT or EVALUATOR, default is_verified is false until verified by Admin.
+  // For STARTUP, basic public registration is active and verified.
+  const isVerified = role === 'STARTUP';
+
   // Create User
   const user = await prisma.user.create({
     data: {
@@ -48,8 +54,11 @@ export const register = async ({
       email: normalizedEmail,
       password_hash,
       role,
-      department_id,
-      is_active: true
+      department_id: role === 'GOVERNMENT' ? department_id : null,
+      designation: designation ? designation.trim() : null,
+      phone: phone ? phone.trim() : null,
+      is_active: true,
+      is_verified: isVerified
     },
     select: {
       id: true,
@@ -57,7 +66,10 @@ export const register = async ({
       email: true,
       role: true,
       department_id: true,
+      designation: true,
+      phone: true,
       is_active: true,
+      is_verified: true,
       created_at: true,
       updated_at: true,
       department: {
@@ -69,6 +81,19 @@ export const register = async ({
       }
     }
   });
+
+  // If Evaluator, create basic pending profile
+  if (role === 'EVALUATOR') {
+    await prisma.evaluatorProfile.create({
+      data: {
+        user_id: user.id,
+        organization: 'Independent Evaluator',
+        designation: designation || 'Domain Specialist',
+        domain_expertise: ['General Innovation'],
+        verification_status: 'PENDING'
+      }
+    }).catch(() => {});
+  }
 
   // Generate JWT token
   const token = jwt.sign(
@@ -83,7 +108,7 @@ export const register = async ({
     action: 'USER_REGISTERED',
     entity_type: 'USER',
     entity_id: user.id,
-    details: { role: user.role, email: user.email },
+    details: { role: user.role, email: user.email, is_verified: user.is_verified },
     ip_address
   });
 
@@ -100,13 +125,24 @@ export const login = async ({ email, password, ip_address = null }) => {
         select: {
           id: true,
           name: true,
-          state: true
+          state: true,
+          verification_status: true
         }
       },
       startups: {
         select: {
           id: true,
           company_name: true,
+          verification_status: true,
+          dpiit_number: true
+        }
+      },
+      evaluator_profile: {
+        select: {
+          id: true,
+          organization: true,
+          designation: true,
+          domain_expertise: true,
           verification_status: true
         }
       }
@@ -158,7 +194,10 @@ export const getCurrentUser = async (userId) => {
       email: true,
       role: true,
       department_id: true,
+      designation: true,
+      phone: true,
       is_active: true,
+      is_verified: true,
       created_at: true,
       updated_at: true,
       department: {
@@ -166,7 +205,8 @@ export const getCurrentUser = async (userId) => {
           id: true,
           name: true,
           state: true,
-          contact_email: true
+          contact_email: true,
+          verification_status: true
         }
       },
       startups: {
@@ -174,6 +214,16 @@ export const getCurrentUser = async (userId) => {
           id: true,
           company_name: true,
           domain: true,
+          verification_status: true,
+          dpiit_number: true
+        }
+      },
+      evaluator_profile: {
+        select: {
+          id: true,
+          organization: true,
+          designation: true,
+          domain_expertise: true,
           verification_status: true
         }
       }
@@ -192,3 +242,4 @@ export default {
   login,
   getCurrentUser
 };
+

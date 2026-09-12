@@ -93,6 +93,16 @@ export const getStartupPilots = async (req, res, next) => {
   }
 };
 
+export const getStartupPerformance = async (req, res, next) => {
+  try {
+    const startupId = req.params.startup_id || req.params.id;
+    const performance = await startupService.getStartupPerformance(startupId, req.user);
+    return successResponse(res, performance, 'Startup performance track record retrieved', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   createStartup,
   getStartups,
@@ -102,5 +112,7 @@ export default {
   getStartupDocuments,
   verifyStartup,
   getStartupApplications,
-  getStartupPilots
+  getStartupPilots,
+  getStartupPerformance
 };
+

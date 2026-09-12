@@ -43,13 +43,22 @@ export const getApplicationEvaluations = async (applicationId) => {
 };
 
 export const getEvaluationById = async (id) => {
-  // Try loading application details by ID if it's an application ID
   return apiRequest(`/applications/${id}`);
 };
 
 export const saveEvaluationDraft = async (id, evaluationData) => {
-  // For draft evaluations, if evaluation exists, update it, else we can hold state or submit
   return { success: true, message: "Evaluation draft saved in workspace" };
+};
+
+export const declareConflictOfInterest = async (applicationId, data) => {
+  return apiRequest(`/applications/${applicationId}/conflict-declaration`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
+export const getConflictDeclaration = async (applicationId) => {
+  return apiRequest(`/applications/${applicationId}/conflict-declaration`);
 };
 
 export default {
@@ -58,4 +67,6 @@ export default {
   getApplicationEvaluations,
   getEvaluationById,
   saveEvaluationDraft,
+  declareConflictOfInterest,
+  getConflictDeclaration,
 };

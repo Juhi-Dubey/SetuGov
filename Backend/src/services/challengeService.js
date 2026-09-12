@@ -49,6 +49,7 @@ export const createChallenge = async (data, user, ip_address = null) => {
       budget_max: data.budget_max,
       pilot_duration_days: data.pilot_duration_days,
       required_technologies: data.required_technologies,
+      application_deadline: data.application_deadline ? new Date(data.application_deadline) : null,
       status: 'DRAFT',
       created_by: user.id,
       embedding
@@ -221,13 +222,18 @@ export const updateChallenge = async (id, data, user, ip_address = null) => {
     'budget_min',
     'budget_max',
     'pilot_duration_days',
-    'required_technologies'
+    'required_technologies',
+    'application_deadline'
   ];
 
   const updateData = {};
   for (const field of allowedFields) {
     if (data[field] !== undefined) {
-      updateData[field] = typeof data[field] === 'string' ? data[field].trim() : data[field];
+      if (field === 'application_deadline') {
+        updateData[field] = data[field] ? new Date(data[field]) : null;
+      } else {
+        updateData[field] = typeof data[field] === 'string' ? data[field].trim() : data[field];
+      }
     }
   }
 
@@ -382,6 +388,60 @@ export const closeChallenge = async (id, user, ip_address = null) => {
   return updated;
 };
 
+/**
+ * Generic transition method for Challenge lifecycle progression
+ * (DRAFT -> PUBLISHED -> CLOSED/EVALUATION -> PILOT -> COMPLETED)
+ */
+export const transitionChallengeStatus = async (id, nextStatus, user, ip_address = null, reason = null) => {
+  const challenge = await prisma.challenge.findUnique({ where: { id } });
+  if (!challenge) {
+    throw new NotFoundError(`Challenge with ID ${id} not found.`);
+  }
+
+  // Authorization: ADMIN or GOVERNMENT within the same department
+  if (user.role === 'ADMIN') {
+    // Admin has cross-department management authorization
+  } else if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only update challenges belonging to your assigned department.');
+    }
+  } else {
+    throw new ForbiddenError('You are not authorized to update challenge lifecycle status.');
+  }
+
+  // Validate state machine transition
+  validateTransition('CHALLENGE', challenge.status, nextStatus);
+
+  const updated = await prisma.challenge.update({
+    where: { id },
+    data: { status: nextStatus },
+    include: { department: true }
+  });
+
+  await createAuditLog({
+    user_id: user.id,
+    action: `CHALLENGE_${nextStatus}`,
+    entity_type: 'CHALLENGE',
+    entity_id: id,
+    details: {
+      previousStatus: challenge.status,
+      newStatus: nextStatus,
+      reason
+    },
+    ip_address
+  });
+
+  await sendNotification({
+    user_id: user.id,
+    title: `Challenge Status: ${nextStatus}`,
+    message: `Challenge "${challenge.title}" transitioned to ${nextStatus}.`,
+    type: `CHALLENGE_${nextStatus}`,
+    link: `/government/challenges/${id}/overview`
+  });
+
+  return updated;
+};
+
 export const getChallengeApplications = async (challengeId, user) => {
   if (!user || (user.role !== 'ADMIN' && user.role !== 'GOVERNMENT')) {
     throw new ForbiddenError('You are not authorized to view applications for this challenge.');
@@ -512,7 +572,8 @@ export default {
   deleteChallenge,
   publishChallenge,
   closeChallenge,
+  transitionChallengeStatus,
   getChallengeApplications,
   getChallengeMatches,
   getChallengePilot
-};
+};

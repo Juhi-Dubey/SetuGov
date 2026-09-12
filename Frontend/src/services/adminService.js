@@ -44,8 +44,61 @@ export const updateUserStatus = async (userId, isActive) => {
   });
 };
 
+export const updateUserRole = async (userId, role, department_id = null) => {
+  return apiRequest(`/admin/users/${userId}/role`, {
+    method: "PATCH",
+    body: JSON.stringify({ role, department_id }),
+  });
+};
+
 export const getDepartments = async () => {
   return apiRequest("/departments");
+};
+
+export const verifyDepartment = async (departmentId, verificationStatus) => {
+  return apiRequest(`/admin/departments/${departmentId}/verify`, {
+    method: "PATCH",
+    body: JSON.stringify({ verification_status: verificationStatus }),
+  });
+};
+
+export const getEvaluators = async (params = {}) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.append(key, value);
+    }
+  });
+  const queryString = query.toString();
+  return apiRequest(`/evaluators${queryString ? `?${queryString}` : ""}`);
+};
+
+export const verifyEvaluator = async (evaluatorId, verificationStatus) => {
+  return apiRequest(`/evaluators/${evaluatorId}/verify`, {
+    method: "PATCH",
+    body: JSON.stringify({ verification_status: verificationStatus }),
+  });
+};
+
+export const nominateEvaluator = async (data) => {
+  return apiRequest("/evaluators/nominate", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
+export const verifyStartupDpiit = async (startupId, data) => {
+  return apiRequest(`/admin/startups/${startupId}/verify-dpiit`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+};
+
+export const provisionUser = async (data) => {
+  return apiRequest("/admin/users/provision", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 };
 
 export default {
@@ -55,5 +108,13 @@ export default {
   getUserById,
   updateUser,
   updateUserStatus,
+  updateUserRole,
   getDepartments,
+  verifyDepartment,
+  getEvaluators,
+  verifyEvaluator,
+  nominateEvaluator,
+  verifyStartupDpiit,
+  provisionUser,
 };
+

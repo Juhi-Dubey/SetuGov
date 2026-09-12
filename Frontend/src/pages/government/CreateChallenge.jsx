@@ -32,6 +32,7 @@ const initialFormData = {
   currentProcess: "",
   currentBaseline: "",
   location: "",
+  applicationDeadline: "",
 
   // Step 2
   desiredOutcome: "",

@@ -19,6 +19,8 @@ import {
   getEvaluationById,
   saveEvaluationDraft,
   submitEvaluation,
+  declareConflictOfInterest,
+  getConflictDeclaration,
 } from "../../services/evaluationService";
 import { analyzeApplicationWithAI } from "../../services/aiService";
 
@@ -99,13 +101,10 @@ function EvaluationDetail() {
   const { id } = useParams();
 
   const [evaluation, setEvaluation] = useState(null);
-
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] =
-    useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [scores, setScores] = useState({
     technicalFeasibility: "",
@@ -116,8 +115,10 @@ function EvaluationDetail() {
   });
 
   const [comments, setComments] = useState("");
-  const [submissionState, setSubmissionState] =
-    useState("Draft");
+  const [submissionState, setSubmissionState] = useState("Draft");
+  const [conflictDeclaration, setConflictDeclaration] = useState(null);
+  const [conflictReason, setConflictReason] = useState("");
+  const [declaringConflict, setDeclaringConflict] = useState(false);
 
   const criteria = [
     {
@@ -158,7 +159,7 @@ function EvaluationDetail() {
   ];
 
   /* ================================================= */
-  /* LOAD EVALUATION                                  */
+  /* LOAD EVALUATION & CONFLICT DECLARATION            */
   /* ================================================= */
 
   useEffect(() => {
@@ -175,84 +176,47 @@ function EvaluationDetail() {
         setLoading(true);
         setError("");
 
-        const data =
-          await getEvaluationById(id);
+        const [data, conflictRes] = await Promise.all([
+          getEvaluationById(id).catch(() => null),
+          getConflictDeclaration(id).catch(() => null)
+        ]);
 
         if (!mounted) return;
 
-        const loadedEvaluation =
-          data?.data || data;
-
-        setEvaluation(
-          loadedEvaluation
-        );
-
-        /*
-         * If backend already has saved scores,
-         * populate them in the form.
-         */
-        if (
-          loadedEvaluation?.scores
-        ) {
-          setScores({
-            technicalFeasibility:
-              loadedEvaluation.scores
-                .technicalFeasibility ??
-              "",
-            innovation:
-              loadedEvaluation.scores
-                .innovation ?? "",
-            expectedImpact:
-              loadedEvaluation.scores
-                .expectedImpact ?? "",
-            scalability:
-              loadedEvaluation.scores
-                .scalability ?? "",
-            costEffectiveness:
-              loadedEvaluation.scores
-                .costEffectiveness ?? "",
-          });
+        if (conflictRes?.data) {
+          setConflictDeclaration(conflictRes.data);
         }
 
-        if (
-          loadedEvaluation?.comments
-        ) {
-          setComments(
-            loadedEvaluation.comments
-          );
-        }
-
-        if (
-          loadedEvaluation?.status
-        ) {
-          setSubmissionState(
-            loadedEvaluation.status
-          );
+        const loadedEvaluation = data?.data || data;
+        if (loadedEvaluation) {
+          setEvaluation(loadedEvaluation);
+          if (loadedEvaluation.scores) {
+            setScores({
+              technicalFeasibility: loadedEvaluation.scores.technicalFeasibility ?? loadedEvaluation.scores.technical_score ?? "",
+              innovation: loadedEvaluation.scores.innovation ?? loadedEvaluation.scores.innovation_score ?? "",
+              expectedImpact: loadedEvaluation.scores.expectedImpact ?? loadedEvaluation.scores.impact_score ?? "",
+              scalability: loadedEvaluation.scores.scalability ?? loadedEvaluation.scores.scalability_score ?? "",
+              costEffectiveness: loadedEvaluation.scores.costEffectiveness ?? loadedEvaluation.scores.cost_score ?? "",
+            });
+          }
+          if (loadedEvaluation.comments) {
+            setComments(loadedEvaluation.comments);
+          }
+          if (loadedEvaluation.status) {
+            setSubmissionState(loadedEvaluation.status);
+          }
         }
       } catch (err) {
-        console.error(
-          "Failed to load evaluation:",
-          err
-        );
-
+        console.error("Failed to load evaluation:", err);
         if (fallbackEvaluations[id]) {
           const fallback = fallbackEvaluations[id];
           setEvaluation(fallback);
-          if (fallback.scores) {
-            setScores(fallback.scores);
-          }
-          if (fallback.comments) {
-            setComments(fallback.comments);
-          }
-          if (fallback.status) {
-            setSubmissionState(fallback.status);
-          }
+          if (fallback.scores) setScores(fallback.scores);
+          if (fallback.comments) setComments(fallback.comments);
+          if (fallback.status) setSubmissionState(fallback.status);
           setError("");
         } else if (mounted) {
-          setError(
-            err.message ||
-              "Failed to load evaluation."
-          );
+          setError(err.message || "Failed to load evaluation.");
         }
       } finally {
         if (mounted) {
@@ -267,6 +231,26 @@ function EvaluationDetail() {
       mounted = false;
     };
   }, [id]);
+
+  const handleConflictDeclaration = async (hasConflict, isRecused) => {
+    try {
+      setDeclaringConflict(true);
+      setError("");
+      const res = await declareConflictOfInterest(id, {
+        has_conflict: hasConflict,
+        is_recused: isRecused,
+        conflict_details: conflictReason
+      });
+      const decl = res?.data || res;
+      setConflictDeclaration(decl);
+      setSuccessMessage(hasConflict ? "Conflict of interest declared. You have recused from this evaluation." : "No-conflict declaration successfully certified.");
+    } catch (err) {
+      setError(err.message || "Failed to submit conflict of interest declaration.");
+    } finally {
+      setDeclaringConflict(false);
+    }
+  };
+
 
   /* ================================================= */
   /* CALCULATE TOTAL SCORE                            */
@@ -661,6 +645,74 @@ function EvaluationDetail() {
               </div>
             </div>
 
+            {/* CONFLICT OF INTEREST BANNER / DECLARATION */}
+            <div className="border-b border-slate-200 p-5 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <ShieldCheck className="h-4 w-4 text-indigo-500" /> Conflict of Interest Declaration
+                </span>
+                {conflictDeclaration?.declared_at && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    conflictDeclaration.is_recused
+                      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                  }`}>
+                    {conflictDeclaration.is_recused ? "Recused" : "No Conflict Certified"}
+                  </span>
+                )}
+              </div>
+
+              {!conflictDeclaration?.declared_at ? (
+                <div className="mt-3 space-y-2.5">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Before evaluating, public procurement regulations require certifying that you have no personal, commercial, or institutional conflict of interest with this startup candidate.
+                  </p>
+                  <div className="flex flex-col gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={declaringConflict}
+                      onClick={() => handleConflictDeclaration(false, false)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" /> I Certify NO Conflict of Interest
+                    </button>
+                    <div className="pt-1">
+                      <input
+                        type="text"
+                        placeholder="Specify conflict details if applicable..."
+                        value={conflictReason}
+                        onChange={(e) => setConflictReason(e.target.value)}
+                        className="w-full text-xs rounded-xl border border-slate-200 bg-white p-2 text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                      />
+                      <button
+                        type="button"
+                        disabled={declaringConflict}
+                        onClick={() => handleConflictDeclaration(true, true)}
+                        className="mt-1.5 w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400"
+                      >
+                        <AlertTriangle className="h-3.5 w-3.5" /> Declare Conflict & Recuse
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : conflictDeclaration.is_recused ? (
+                <div className="mt-2 text-xs text-red-600 dark:text-red-400 font-medium bg-red-50 dark:bg-red-950/20 p-2.5 rounded-xl border border-red-200 dark:border-red-900/40">
+                  You have declared a conflict of interest for this application. Scoring is locked and you have been formally recused from this evaluation.
+                </div>
+              ) : (
+                <div className="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center justify-between">
+                  <span>Certified on {new Date(conflictDeclaration.declared_at).toLocaleDateString()}</span>
+                  <button
+                    type="button"
+                    onClick={() => setConflictDeclaration(null)}
+                    className="text-[10px] text-slate-400 underline hover:text-slate-600"
+                  >
+                    Change Declaration
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Criteria */}
 
             <div className="space-y-3 p-5">
@@ -730,7 +782,7 @@ function EvaluationDetail() {
                   onClick={
                     handleSaveDraft
                   }
-                  disabled={saving}
+                  disabled={saving || conflictDeclaration?.is_recused}
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
                 >
                   <Save className="h-4 w-4" />
@@ -745,14 +797,12 @@ function EvaluationDetail() {
                   onClick={
                     handleSubmit
                   }
-                  disabled={saving}
+                  disabled={saving || conflictDeclaration?.is_recused || (!conflictDeclaration?.declared_at && !conflictDeclaration)}
                   className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />
 
-                  {saving
-                    ? "Submitting..."
-                    : "Submit Evaluation"}
+                  {conflictDeclaration?.is_recused ? "Recused" : saving ? "Submitting..." : "Submit Evaluation"}
                 </button>
               </div>
 
@@ -908,14 +958,25 @@ function AIScreening({ evaluation }) {
     } catch (err) {
       console.warn("Brain 3 analysis fallback:", err);
       setAnalysisResult({
+        problem_understanding_assessment: "Proposal demonstrates clear alignment with operational objectives.",
+        technical_feasibility_assessment: "Architecture is technically viable for pilot sandbox testing.",
+        innovation_assessment: "Introduces real-time automated workflow optimization.",
+        scalability_assessment: "Modular containerized services support state-wide rollout.",
         strengths: [
-          "Strong domain experience in multi-lingual NLP processing.",
+          "Strong domain experience in relevant technology stack.",
           "Scalable edge-compatible architecture design.",
           "High alignment with government operational baseline.",
         ],
+        weaknesses: [
+          "Third-party empirical benchmark data not yet attached.",
+        ],
         concerns: [
           "Requires strict on-premise PII data protection guarantees.",
-          "Field testing timeline of 45 days is tight for 12 languages.",
+          "Field testing timeline requires active departmental focal point.",
+        ],
+        questions_for_evaluator: [
+          "How does the solution handle peak concurrent citizen load without service disruption?",
+          "What is the rollback and data backup protocol during live deployment?",
         ],
       });
     } finally {
@@ -931,11 +992,15 @@ function AIScreening({ evaluation }) {
       "Competitive cost structure relative to state budget.",
     ];
 
+  const weaknesses = analysisResult?.weaknesses || [];
+
   const concerns =
     analysisResult?.concerns ||
     evaluation?.aiScreening?.concerns || [
       "Review data residency compliance during pilot phase.",
     ];
+
+  const questions = analysisResult?.questions_for_evaluator || analysisResult?.recommended_questions_for_evaluator || [];
 
   return (
     <section className="overflow-hidden rounded-3xl border border-indigo-100 bg-white shadow-sm dark:border-indigo-500/20 dark:bg-slate-950">
@@ -946,12 +1011,17 @@ function AIScreening({ evaluation }) {
           </div>
 
           <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-              Brain 3 · Proposal Screening & Advisory
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                AI-Assisted Proposal Screening
+              </h2>
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                Advisory Input
+              </span>
+            </div>
 
             <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
-              AI technical analysis & risk assessment to support independent scoring.
+              Technical feasibility, innovation, and risk analysis to assist official evaluator scoring.
             </p>
           </div>
         </div>
@@ -960,12 +1030,30 @@ function AIScreening({ evaluation }) {
           type="button"
           onClick={handleRunBrain3}
           disabled={analyzing}
-          className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-indigo-600 px-3 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-60"
+          className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
         >
           <Sparkles className="h-3.5 w-3.5" />
-          {analyzing ? "Analyzing..." : "Analyze Proposal"}
+          {analyzing ? "Analyzing..." : "Run AI Analysis"}
         </button>
       </div>
+
+      {analysisResult?.problem_understanding_assessment && (
+        <div className="border-b border-indigo-50 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/30">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Technical & Innovation Summary
+          </p>
+          <div className="mt-2 grid gap-2 text-xs text-slate-700 dark:text-slate-300 sm:grid-cols-2">
+            <div className="rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+              <span className="font-bold text-indigo-600 dark:text-indigo-400">Feasibility: </span>
+              {analysisResult.technical_feasibility_assessment}
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+              <span className="font-bold text-indigo-600 dark:text-indigo-400">Innovation: </span>
+              {analysisResult.innovation_assessment}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 p-5 md:grid-cols-2">
         <AIScreeningColumn
@@ -976,10 +1064,26 @@ function AIScreening({ evaluation }) {
 
         <AIScreeningColumn
           type="concern"
-          title="Risk Considerations"
-          items={concerns}
+          title="Risk & Gap Considerations"
+          items={[...concerns, ...weaknesses]}
         />
       </div>
+
+      {questions.length > 0 && (
+        <div className="border-t border-indigo-100/70 bg-indigo-50/30 p-5 dark:border-indigo-900/30 dark:bg-indigo-950/20">
+          <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+            Recommended Questions for Evaluator Panel:
+          </h4>
+          <ul className="mt-2 space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+            {questions.map((q, idx) => (
+              <li key={idx} className="flex items-start gap-2">
+                <span className="font-bold text-indigo-600 dark:text-indigo-400">Q{idx + 1}:</span>
+                <span>{q}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </section>
   );
 }

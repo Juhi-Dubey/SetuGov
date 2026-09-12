@@ -15,7 +15,7 @@ import {
 
 import AppLayout from "../../components/layout/AppLayout";
 import PageHeader from "../../components/layout/PageHeader";
-import { getChallenges } from "../../services/challengeService";
+import { getChallenges, getGovernmentAnalytics } from "../../services/challengeService";
 import { getPilots } from "../../services/pilotService";
 import { useAuth } from "../../context/AuthContext";
 
@@ -31,6 +31,7 @@ function GovernmentDashboard() {
   const { user } = useAuth();
 
   const [data, setData] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [state, setState] = useState("loading");
   const [error, setError] = useState("");
 
@@ -43,9 +44,10 @@ function GovernmentDashboard() {
       setState("loading");
       setError("");
 
-      const [challengesRes, pilotsRes] = await Promise.all([
+      const [challengesRes, pilotsRes, analyticsRes] = await Promise.all([
         getChallenges().catch(() => ({ data: { challenges: [] } })),
         getPilots().catch(() => ({ data: { pilots: [] } })),
+        getGovernmentAnalytics().catch(() => null),
       ]);
 
       const rawChallenges =
@@ -60,14 +62,19 @@ function GovernmentDashboard() {
         (Array.isArray(pilotsRes?.data) ? pilotsRes.data : []) ||
         [];
 
+      const analyticsData = analyticsRes?.data || analyticsRes || null;
+      if (analyticsData) {
+        setAnalytics(analyticsData);
+      }
+
       // Calculate total applications
-      const totalApplications = rawChallenges.reduce((sum, ch) => {
+      const totalApplications = analyticsData?.overview?.total_applications ?? rawChallenges.reduce((sum, ch) => {
         const count = ch._count?.applications ?? (Array.isArray(ch.applications) ? ch.applications.length : 0);
         return sum + count;
       }, 0);
 
       // Pilot status counts
-      const atRiskPilots = rawPilots.filter((p) => p.status === "AT_RISK").length;
+      const atRiskPilots = analyticsData?.overview?.at_risk_pilots ?? rawPilots.filter((p) => p.status === "AT_RISK").length;
       const onTrackPilots = rawPilots.filter((p) => ["RUNNING", "VALIDATION", "SCALED", "COMPLETED"].includes(p.status)).length;
       const criticalPilots = rawPilots.filter((p) => p.status === "STOPPED").length;
 
@@ -80,6 +87,7 @@ function GovernmentDashboard() {
         stage: ch.status,
         status: ch.status,
         budget: ch.budget_max ? `₹${Number(ch.budget_max).toLocaleString("en-IN")}` : "—",
+        application_deadline: ch.application_deadline,
       }));
 
       const dashboardData = {
@@ -92,7 +100,7 @@ function GovernmentDashboard() {
           {
             id: "challenges",
             label: "Total Challenges",
-            value: rawChallenges.length,
+            value: analyticsData?.overview?.total_challenges ?? rawChallenges.length,
             trend: "up",
           },
           {
@@ -104,7 +112,7 @@ function GovernmentDashboard() {
           {
             id: "pilots",
             label: "Active Pilots",
-            value: rawPilots.length,
+            value: analyticsData?.overview?.total_pilots ?? rawPilots.length,
             trend: "up",
           },
           {
@@ -169,6 +177,61 @@ function GovernmentDashboard() {
                 ))}
               </div>
             </section>
+
+            {/* Financial & Milestone Intelligence */}
+            {analytics?.financials && (
+              <section className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Department Budget Utilization</p>
+                      <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+                        ₹{Number(analytics.financials.total_paid_budget || 0).toLocaleString("en-IN")}
+                        <span className="text-sm font-normal text-slate-400"> / ₹{Number(analytics.financials.total_allocated_budget || 0).toLocaleString("en-IN")}</span>
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                      {analytics.financials.budget_utilization_rate}% Disbursed
+                    </span>
+                  </div>
+                  <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div
+                      className="h-full bg-emerald-500 transition-all duration-500"
+                      style={{ width: `${Math.min(100, Number(analytics.financials.budget_utilization_rate || 0))}%` }}
+                    />
+                  </div>
+                  <div className="mt-3 flex justify-between text-xs text-slate-400">
+                    <span>Disbursed: ₹{Number(analytics.financials.total_paid_budget || 0).toLocaleString("en-IN")}</span>
+                    <span>Pending: ₹{Number(analytics.financials.total_pending_budget || 0).toLocaleString("en-IN")}</span>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Milestone Execution Rate</p>
+                      <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+                        {analytics.milestone_analytics?.completed_milestones || 0}
+                        <span className="text-sm font-normal text-slate-400"> / {analytics.milestone_analytics?.total_milestones || 0} Delivered</span>
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                      {analytics.milestone_analytics?.completion_rate || 0}% Complete
+                    </span>
+                  </div>
+                  <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div
+                      className="h-full bg-indigo-600 transition-all duration-500"
+                      style={{ width: `${Math.min(100, Number(analytics.milestone_analytics?.completion_rate || 0))}%` }}
+                    />
+                  </div>
+                  <div className="mt-3 flex justify-between text-xs text-slate-400">
+                    <span>In Progress: {analytics.milestone_analytics?.in_progress_milestones || 0}</span>
+                    <span>Pending: {analytics.milestone_analytics?.pending_milestones || 0}</span>
+                  </div>
+                </div>
+              </section>
+            )}
 
             {/* Main Grid */}
             <div className="grid gap-6 xl:grid-cols-[1fr_340px]">

@@ -14,12 +14,14 @@ import {
   X,
   CheckCircle2,
   FileText,
+  AlertTriangle,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
+import { getChallenges } from "../../services/challengeService";
 
-const challenges = [
+const initialChallenges = [
   {
-    id: 1,
+    id: "1",
     title: "AI-Based Citizen Grievance Management",
     department: "Department of Public Services",
     category: "Artificial Intelligence",
@@ -32,7 +34,7 @@ const challenges = [
     daysLeft: 5,
   },
   {
-    id: 2,
+    id: "2",
     title: "Smart Waste Collection System",
     department: "Urban Development Department",
     category: "Smart City",
@@ -45,7 +47,7 @@ const challenges = [
     daysLeft: 12,
   },
   {
-    id: 3,
+    id: "3",
     title: "Digital Healthcare Access Platform",
     department: "Department of Health",
     category: "Healthcare",
@@ -58,7 +60,7 @@ const challenges = [
     daysLeft: 15,
   },
   {
-    id: 4,
+    id: "4",
     title: "Agricultural Market Intelligence",
     department: "Department of Agriculture",
     category: "Agriculture",
@@ -71,7 +73,7 @@ const challenges = [
     daysLeft: 20,
   },
   {
-    id: 5,
+    id: "5",
     title: "Digital Public Transport Monitoring",
     department: "Transport Department",
     category: "Transportation",
@@ -84,7 +86,7 @@ const challenges = [
     daysLeft: 28,
   },
   {
-    id: 6,
+    id: "6",
     title: "Government Document Intelligence",
     department: "Department of Administration",
     category: "Artificial Intelligence",
@@ -111,27 +113,56 @@ function StartupChallenges() {
   const navigate = useNavigate();
   const { id } = useParams();
 
+  const [challengesList, setChallengesList] = useState(initialChallenges);
   const [search, setSearch] = useState("");
-  const [category, setCategory] =
-    useState("All Categories");
-  const [sortBy, setSortBy] =
-    useState("deadline");
-  const [selectedChallenge, setSelectedChallenge] =
-    useState(null);
+  const [category, setCategory] = useState("All Categories");
+  const [sortBy, setSortBy] = useState("deadline");
+  const [selectedChallenge, setSelectedChallenge] = useState(null);
+
+  useEffect(() => {
+    getChallenges()
+      .then((res) => {
+        const raw = res?.data?.challenges || res?.challenges || (Array.isArray(res?.data) ? res.data : []) || [];
+        if (raw.length > 0) {
+          const mapped = raw.map((c) => {
+            const daysLeft = c.application_deadline
+              ? Math.max(0, Math.ceil((new Date(c.application_deadline) - new Date()) / (1000 * 60 * 60 * 24)))
+              : 30;
+            const isExpired = c.application_deadline && new Date(c.application_deadline) < new Date();
+            return {
+              id: c.id,
+              title: c.title,
+              department: c.department?.name || "Government",
+              category: c.sector || "GovTech",
+              description: c.problem_description || "",
+              budget: c.budget_max ? `₹${(Number(c.budget_max) / 100000).toFixed(0)} Lakhs` : "₹25 Lakhs",
+              deadline: c.application_deadline
+                ? new Date(c.application_deadline).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                : "Open Rolling",
+              deadlineRaw: c.application_deadline,
+              isExpired,
+              applicants: c._count?.applications || (Array.isArray(c.applications) ? c.applications.length : 0),
+              status: isExpired ? "Closed" : c.status === "PUBLISHED" ? "Open" : c.status,
+              daysLeft,
+            };
+          });
+          setChallengesList(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (id) {
-      const match = challenges.find(
-        (c) => String(c.id) === String(id)
-      );
+      const match = challengesList.find((c) => String(c.id) === String(id));
       if (match) {
         setSelectedChallenge(match);
       }
     }
-  }, [id]);
+  }, [id, challengesList]);
 
   const filteredChallenges = useMemo(() => {
-    let result = challenges.filter((challenge) => {
+    let result = challengesList.filter((challenge) => {
       const searchText = search.toLowerCase().trim();
 
       const matchesSearch =

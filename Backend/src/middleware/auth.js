@@ -39,19 +39,31 @@ export const authenticate = async (req, res, next) => {
           role: true,
           department_id: true,
           is_active: true,
+          is_verified: true,
+          designation: true,
           created_at: true,
           updated_at: true,
           department: {
             select: {
               id: true,
               name: true,
-              state: true
+              state: true,
+              verification_status: true
             }
           },
           startups: {
             select: {
               id: true,
               company_name: true,
+              verification_status: true,
+              dpiit_number: true
+            }
+          },
+          evaluator_profile: {
+            select: {
+              id: true,
+              organization: true,
+              designation: true,
               verification_status: true
             }
           }
@@ -70,19 +82,31 @@ export const authenticate = async (req, res, next) => {
             role: true,
             department_id: true,
             is_active: true,
+            is_verified: true,
+            designation: true,
             created_at: true,
             updated_at: true,
             department: {
               select: {
                 id: true,
                 name: true,
-                state: true
+                state: true,
+                verification_status: true
               }
             },
             startups: {
               select: {
                 id: true,
                 company_name: true,
+                verification_status: true,
+                dpiit_number: true
+              }
+            },
+            evaluator_profile: {
+              select: {
+                id: true,
+                organization: true,
+                designation: true,
                 verification_status: true
               }
             }
@@ -97,6 +121,7 @@ export const authenticate = async (req, res, next) => {
             role: decoded.role || 'GOVERNMENT',
             department_id: decoded.department_id || null,
             is_active: true,
+            is_verified: true,
             startups: []
           };
         } else {

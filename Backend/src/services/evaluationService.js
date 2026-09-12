@@ -44,6 +44,30 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
     throw new BadRequestError(`Cannot evaluate application in '${application.status}' status. Must be SUBMITTED or SHORTLISTED.`);
   }
 
+  // 2. Evaluator Verification Enforcement (Phase 1-4 & Phase 3-10)
+  if (user.role === 'EVALUATOR') {
+    const evaluatorProfile = await prisma.evaluatorProfile.findUnique({
+      where: { user_id: user.id }
+    });
+    if (!user.is_verified || (evaluatorProfile && evaluatorProfile.verification_status === 'REJECTED')) {
+      throw new ForbiddenError('Evaluator credentials must be officially VERIFIED by an administrator before evaluating applications.');
+    }
+  }
+
+  // 3. Check for Conflict of Interest declaration
+  const conflict = await prisma.conflictDeclaration.findUnique({
+    where: {
+      application_id_evaluator_id: {
+        application_id: applicationId,
+        evaluator_id: user.id
+      }
+    }
+  });
+
+  if (conflict && (conflict.has_conflict || conflict.is_recused)) {
+    throw new ForbiddenError('Cannot submit evaluation: You have declared a conflict of interest or recused yourself from evaluating this application.');
+  }
+
   // Calculate weighted total score
   const total_score = calculateTotalScore(data);
 
@@ -332,10 +356,87 @@ export const getChallengeEvaluationSummary = async (challengeId, user = null) =>
   };
 };
 
+export const declareConflictOfInterest = async (applicationId, data, user, ip_address = null) => {
+  const application = await prisma.application.findUnique({
+    where: { id: applicationId },
+    include: { challenge: true, startup: true }
+  });
+
+  if (!application) {
+    throw new NotFoundError(`Application with ID ${applicationId} not found.`);
+  }
+
+  const { has_conflict = false, conflict_details = null, is_recused = false } = data;
+
+  const declaration = await prisma.conflictDeclaration.upsert({
+    where: {
+      application_id_evaluator_id: {
+        application_id: applicationId,
+        evaluator_id: user.id
+      }
+    },
+    create: {
+      application_id: applicationId,
+      evaluator_id: user.id,
+      has_conflict: Boolean(has_conflict),
+      conflict_details: conflict_details ? conflict_details.trim() : null,
+      is_recused: Boolean(is_recused || has_conflict),
+      declared_at: new Date()
+    },
+    update: {
+      has_conflict: Boolean(has_conflict),
+      conflict_details: conflict_details ? conflict_details.trim() : null,
+      is_recused: Boolean(is_recused || has_conflict),
+      declared_at: new Date()
+    }
+  });
+
+  await createAuditLog({
+    user_id: user.id,
+    action: has_conflict ? 'CONFLICT_OF_INTEREST_DECLARED' : 'NO_CONFLICT_CERTIFIED',
+    entity_type: 'APPLICATION',
+    entity_id: applicationId,
+    details: {
+      has_conflict,
+      is_recused: declaration.is_recused,
+      conflict_details: declaration.conflict_details
+    },
+    ip_address
+  });
+
+  if (has_conflict && application.challenge?.created_by) {
+    await sendNotification({
+      user_id: application.challenge.created_by,
+      title: 'Evaluator Recusal / Conflict Declared',
+      message: `Evaluator ${user.name} declared a conflict of interest and recused from evaluating application "${application.startup?.company_name}".`,
+      type: 'EVALUATOR_RECUSED',
+      link: `/government/challenges/${application.challenge_id}/evaluation`
+    });
+  }
+
+  return declaration;
+};
+
+export const getConflictDeclaration = async (applicationId, user) => {
+  const declaration = await prisma.conflictDeclaration.findUnique({
+    where: {
+      application_id_evaluator_id: {
+        application_id: applicationId,
+        evaluator_id: user.id
+      }
+    }
+  });
+
+  return declaration || { has_conflict: false, is_recused: false, declared_at: null };
+};
+
 export default {
   calculateTotalScore,
   submitEvaluation,
   getApplicationEvaluations,
   updateEvaluation,
-  getChallengeEvaluationSummary
+  getChallengeEvaluationSummary,
+  declareConflictOfInterest,
+  getConflictDeclaration
 };
+

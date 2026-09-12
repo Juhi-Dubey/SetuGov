@@ -130,6 +130,10 @@ export const normalizeChallengePayload = (raw = {}) => {
     required_technologies,
   };
 
+  if (raw.application_deadline || raw.applicationDeadline || raw.deadline) {
+    payload.application_deadline = new Date(raw.application_deadline || raw.applicationDeadline || raw.deadline).toISOString();
+  }
+
   const isUUID = (str) =>
     typeof str === "string" &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
@@ -204,8 +208,12 @@ export const getChallengePilot = async (challengeId) => {
   return apiRequest(`/challenges/${challengeId}/pilot`);
 };
 
+export const getGovernmentAnalytics = async () => {
+  return apiRequest("/departments/analytics");
+};
+
 export const getGovernmentDashboard = async () => {
-  return getChallenges();
+  return getGovernmentAnalytics().catch(() => getChallenges());
 };
 
 export default {
@@ -223,5 +231,7 @@ export default {
   getChallengeEvaluationSummary,
   getChallengeDecisions,
   getChallengePilot,
+  getGovernmentAnalytics,
   getGovernmentDashboard,
 };
+

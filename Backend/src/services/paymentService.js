@@ -77,7 +77,10 @@ export const getPaymentById = async (id, user = null) => {
 };
 
 export const updatePaymentStatus = async (id, status, paymentDate = null, user, ip_address = null) => {
-  const payment = await prisma.payment.findUnique({ where: { id } });
+  const payment = await prisma.payment.findUnique({
+    where: { id },
+    include: { milestone: true }
+  });
   if (!payment) {
     throw new NotFoundError(`Payment with ID ${id} not found.`);
   }
@@ -85,11 +88,21 @@ export const updatePaymentStatus = async (id, status, paymentDate = null, user, 
   // P0-3: Verify user has PAYMENT_MANAGE access to parent pilot
   await verifyPilotAccess(payment.pilot_id, user, 'PAYMENT_MANAGE');
 
+  // Phase 4-13: Milestone Review & Approval Enforcement before Payment Disbursal
+  if (status === 'PAID' && payment.milestone) {
+    if (payment.milestone.status !== 'COMPLETED' && payment.milestone.completion_percentage < 100) {
+      throw new BadRequestError(
+        `Cannot disburse payment (${payment.milestone.payment_percentage}%). Milestone "${payment.milestone.name}" must be reviewed and marked COMPLETED with verified evidence first.`
+      );
+    }
+  }
+
   const updated = await prisma.payment.update({
     where: { id },
     data: {
       status,
-      payment_date: status === 'PAID' ? (paymentDate ? new Date(paymentDate) : new Date()) : payment.payment_date
+      payment_date: status === 'PAID' ? (paymentDate ? new Date(paymentDate) : new Date()) : payment.payment_date,
+      approved_by: user.id
     },
     include: {
       milestone: true
@@ -101,7 +114,12 @@ export const updatePaymentStatus = async (id, status, paymentDate = null, user, 
     action: `PAYMENT_${status}`,
     entity_type: 'PAYMENT',
     entity_id: id,
-    details: { previousStatus: payment.status, newStatus: status, amount: payment.amount },
+    details: {
+      previousStatus: payment.status,
+      newStatus: status,
+      amount: payment.amount,
+      milestone_id: payment.milestone_id
+    },
     ip_address
   });
 

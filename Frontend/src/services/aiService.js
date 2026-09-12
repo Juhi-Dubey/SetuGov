@@ -52,10 +52,46 @@ export const generateDocumentDraftWithAI = async (documentParams) => {
   });
 };
 
+/**
+ * Brain 2: Startup Match Explanation
+ * Calls POST /ai/matching/explain for qualitative analysis.
+ */
+export const explainMatchWithAI = async (matchPayload) => {
+  return apiRequest("/ai/matching/explain", {
+    method: "POST",
+    body: JSON.stringify(matchPayload),
+  });
+};
+
+/**
+ * Brain 4: Scale Recommendation Engine (Advisory)
+ * Analyzes pilot KPI achievement, risk profile, and returns advisory SCALE / EXTEND / STOP advice.
+ */
+export const getScaleRecommendationWithAI = async (pilotId) => {
+  return apiRequest(`/ai/pilots/${pilotId}/scale-recommendation`, {
+    method: "POST",
+  });
+};
+
+/**
+ * Risk Analysis (7 Dimensions)
+ * Analyzes potential risks across technical, operational, security, and scalability dimensions.
+ */
+export const analyzeRisksWithAI = async (riskPayload) => {
+  return apiRequest("/ai/risks/analyze", {
+    method: "POST",
+    body: JSON.stringify(riskPayload),
+  });
+};
+
 export default {
   generateChallengeWithAI,
   matchStartupsWithAI,
+  explainMatchWithAI,
   analyzeApplicationWithAI,
   analyzePilotWithAI,
+  getScaleRecommendationWithAI,
+  analyzeRisksWithAI,
   generateDocumentDraftWithAI,
 };
+

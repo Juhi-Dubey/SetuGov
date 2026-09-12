@@ -301,25 +301,41 @@ function StartupProfile() {
       </ProfileSection>
 
       {/* ================================================= */}
-      {/* REGISTRATION                                      */}
+      {/* REGISTRATION & STATUTORY COMPLIANCE                */}
       {/* ================================================= */}
 
       <ProfileSection
         icon={ShieldCheck}
-        title="Registration & Compliance"
-        description="Government and statutory registration details."
+        title="DPIIT & Statutory Registration"
+        description="Government recognition and statutory compliance identifiers."
       >
         <div className="grid gap-5 md:grid-cols-2">
           <InputField
-            label="Company Registration Number"
-            name="registrationNumber"
-            value={profile.registrationNumber}
+            label="DPIIT Recognition Number"
+            name="dpiitNumber"
+            value={profile.dpiitNumber || "DIPP108429"}
             onChange={handleChange}
             editing={editing}
           />
 
           <InputField
-            label="GST Number"
+            label="Certificate / Registration Number"
+            name="certificateNumber"
+            value={profile.certificateNumber || "CERT-2024-8842"}
+            onChange={handleChange}
+            editing={editing}
+          />
+
+          <InputField
+            label="CIN (Corporate Identity Number)"
+            name="cinNumber"
+            value={profile.cinNumber || profile.registrationNumber || "U72900JH2024PTC012345"}
+            onChange={handleChange}
+            editing={editing}
+          />
+
+          <InputField
+            label="GSTIN Number"
             name="gstNumber"
             value={profile.gstNumber}
             onChange={handleChange}
@@ -327,12 +343,21 @@ function StartupProfile() {
           />
         </div>
 
-        <div className="mt-5 flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 dark:bg-emerald-500/10">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-
-          <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
-            Registration information verified
-          </p>
+        <div className="mt-5 flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3 dark:bg-emerald-500/10">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <div>
+              <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                DPIIT Recognition & Registration Details Recorded
+              </p>
+              <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80">
+                Eligible for state innovation procurement challenges and pilot opportunities.
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 px-2.5 py-1 rounded-full">
+            Verified Entity
+          </span>
         </div>
       </ProfileSection>
 

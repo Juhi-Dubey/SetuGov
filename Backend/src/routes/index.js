@@ -17,6 +17,7 @@ import paymentRoutes from './paymentRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
 import auditLogRoutes from './auditLogRoutes.js';
 import adminRoutes from './adminRoutes.js';
+import evaluatorRoutes from './evaluatorRoutes.js';
 import aiRoutes from './aiRoutes.js';
 import decisionRoutes from './decisionRoutes.js';
 import uploadRoutes from './uploadRoutes.js';
@@ -38,6 +39,7 @@ router.get('/', (req, res) => {
       departments: '/api/v1/departments',
       challenges: '/api/v1/challenges',
       startups: '/api/v1/startups',
+      evaluators: '/api/v1/evaluators',
       applications: '/api/v1/applications',
       evaluations: '/api/v1/evaluations',
       decisions: '/api/v1/decisions',
@@ -64,6 +66,7 @@ router.use('/users', userRoutes);
 router.use('/departments', departmentRoutes);
 router.use('/challenges', challengeRoutes);
 router.use('/startups', startupRoutes);
+router.use('/evaluators', evaluatorRoutes);
 router.use('/applications', applicationRoutes);
 router.use('/evaluations', evaluationRoutes);
 router.use('/decisions', decisionRoutes);
@@ -81,3 +84,4 @@ router.use('/ai', aiRoutes);
 router.use('/upload', uploadRoutes);
 
 export default router;
+

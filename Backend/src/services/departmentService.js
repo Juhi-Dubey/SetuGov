@@ -177,9 +177,139 @@ export const updateDepartment = async (id, data, user, ip_address = null) => {
   return updated;
 };
 
+/**
+ * Phase 5: Real Database Government Analytics & Budget Utilization
+ */
+export const getGovernmentAnalytics = async (user) => {
+  const whereChallenge = {};
+  const wherePilot = {};
+  if (user && user.role === 'GOVERNMENT' && user.department_id) {
+    whereChallenge.department_id = user.department_id;
+    wherePilot.challenge = { department_id: user.department_id };
+  }
+
+  const [
+    totalChallenges,
+    challengesByStatus,
+    challengesList,
+    totalApplications,
+    applicationsByStatus,
+    pilotsList,
+    totalPilots,
+    pilotsByStatus
+  ] = await Promise.all([
+    prisma.challenge.count({ where: whereChallenge }),
+    prisma.challenge.groupBy({
+      by: ['status'],
+      where: whereChallenge,
+      _count: { id: true }
+    }),
+    prisma.challenge.findMany({
+      where: whereChallenge,
+      select: {
+        id: true,
+        budget_min: true,
+        budget_max: true,
+        status: true
+      }
+    }),
+    prisma.application.count({
+      where: user?.role === 'GOVERNMENT' && user.department_id
+        ? { challenge: { department_id: user.department_id } }
+        : {}
+    }),
+    prisma.application.groupBy({
+      by: ['status'],
+      where: user?.role === 'GOVERNMENT' && user.department_id
+        ? { challenge: { department_id: user.department_id } }
+        : {},
+      _count: { id: true }
+    }),
+    prisma.pilot.findMany({
+      where: wherePilot,
+      include: {
+        payments: true,
+        kpis: true,
+        scale_decisions: true
+      }
+    }),
+    prisma.pilot.count({ where: wherePilot }),
+    prisma.pilot.groupBy({
+      by: ['status'],
+      where: wherePilot,
+      _count: { id: true }
+    })
+  ]);
+
+  const publishedChallenges = challengesByStatus.find(c => c.status === 'PUBLISHED')?._count?.id || 0;
+  const activeChallenges = challengesList.filter(c => ['PUBLISHED', 'EVALUATION', 'PILOT'].includes(c.status)).length;
+  const shortlistedApps = applicationsByStatus.find(a => a.status === 'SHORTLISTED')?._count?.id || 0;
+  const selectedApps = applicationsByStatus.find(a => a.status === 'SELECTED')?._count?.id || 0;
+  const activePilots = pilotsList.filter(p => ['PLANNED', 'RUNNING', 'VALIDATION'].includes(p.status)).length;
+  const completedPilots = pilotsList.filter(p => p.status === 'COMPLETED').length;
+  const scaledPilots = pilotsList.filter(p => p.status === 'SCALED').length;
+  const successfulPilots = completedPilots + scaledPilots;
+  const atRiskPilots = pilotsList.filter(p => p.status === 'AT_RISK').length;
+
+  // Real database budget calculations
+  const totalAllocatedBudget = challengesList.reduce((sum, ch) => {
+    return sum + (parseFloat(ch.budget_max?.toString() || '0') || 0);
+  }, 0);
+
+  const totalPilotBudget = pilotsList.reduce((sum, p) => {
+    return sum + (parseFloat(p.budget?.toString() || '0') || 0);
+  }, 0);
+
+  let totalPaidAmount = 0;
+  let totalPendingAmount = 0;
+  pilotsList.forEach(p => {
+    (p.payments || []).forEach(pay => {
+      const amt = parseFloat(pay.amount?.toString() || '0') || 0;
+      if (pay.status === 'PAID') {
+        totalPaidAmount += amt;
+      } else if (pay.status === 'PENDING' || pay.status === 'UPCOMING') {
+        totalPendingAmount += amt;
+      }
+    });
+  });
+
+  const remainingBudget = Math.max(0, totalAllocatedBudget - totalPaidAmount);
+
+  return {
+    metrics: {
+      total_challenges: totalChallenges,
+      published_challenges: publishedChallenges,
+      active_challenges: activeChallenges,
+      total_applications: totalApplications,
+      shortlisted_applications: shortlistedApps,
+      selected_startups: selectedApps,
+      total_pilots: totalPilots,
+      active_pilots: activePilots,
+      completed_pilots: completedPilots,
+      successful_pilots: successfulPilots,
+      pilots_at_risk: atRiskPilots
+    },
+    budget: {
+      allocated_budget: totalAllocatedBudget,
+      pilot_budget: totalPilotBudget,
+      paid_amount: totalPaidAmount,
+      pending_amount: totalPendingAmount,
+      remaining_amount: remainingBudget,
+      utilization_percentage: totalAllocatedBudget > 0 ? Math.round((totalPaidAmount / totalAllocatedBudget) * 100) : 0
+    },
+    status_breakdowns: {
+      challenges: challengesByStatus.reduce((acc, c) => ({ ...acc, [c.status]: c._count.id }), {}),
+      applications: applicationsByStatus.reduce((acc, a) => ({ ...acc, [a.status]: a._count.id }), {}),
+      pilots: pilotsByStatus.reduce((acc, p) => ({ ...acc, [p.status]: p._count.id }), {})
+    }
+  };
+};
+
 export default {
   createDepartment,
   getDepartments,
   getDepartmentById,
-  updateDepartment
+  updateDepartment,
+  getGovernmentAnalytics
 };
+
