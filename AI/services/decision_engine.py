@@ -313,24 +313,17 @@ class DecisionEngine:
 
         # ── Experience (0–15) ─────────────────────────────────────────
         experience_score = 0.0
-<<<<<<< HEAD
         if startup.years_experience is not None:
             experience_score = 15.0 * min(1.0, startup.years_experience / 10.0)
         else:
             if startup.experience:
-                experience_score += 8.0
+                relevance = SemanticMatcher.evaluate_experience_relevance(
+                    startup.experience, challenge.domain, challenge.technology_categories
+                )
+                # Base 6.0 + up to 2.0 relevance bonus based on GovTech/domain alignment
+                experience_score += 6.0 + (2.0 * relevance)
             if startup.deployments:
                 experience_score += min(7.0, len(startup.deployments) * 3.5)
-=======
-        if startup.experience:
-            relevance = SemanticMatcher.evaluate_experience_relevance(
-                startup.experience, challenge.domain, challenge.technology_categories
-            )
-            # Base 6.0 + up to 2.0 relevance bonus based on GovTech/domain alignment
-            experience_score += 6.0 + (2.0 * relevance)
-        if startup.deployments:
-            experience_score += min(7.0, len(startup.deployments) * 3.5)
->>>>>>> 4e522a0d6502bf56bbc7c370015666ba39d69e04
 
         # ── Deployment Fit (0–10) ─────────────────────────────────────
         deployment_score = 0.0

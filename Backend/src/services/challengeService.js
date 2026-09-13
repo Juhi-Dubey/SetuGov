@@ -2,6 +2,7 @@ import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { validateTransition } from '../utils/lifecycle.js';
 import embeddingService from './embeddingService.js';
+import { getChallengeMatches as getAuthoritativeChallengeMatches } from './matchingService.js';
 import { logger } from '../utils/logger.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
@@ -292,11 +293,6 @@ export const updateChallenge = async (id, data, user, ip_address = null) => {
     }
   }
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 4e522a0d6502bf56bbc7c370015666ba39d69e04
   const updated = await prisma.challenge.update({
     where: { id },
     data: updateData,
@@ -549,39 +545,7 @@ export const getChallengeApplications = async (challengeId, user) => {
 };
 
 export const getChallengeMatches = async (challengeId, user = null) => {
-  const challenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
-  if (!challenge) {
-    throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
-  }
-
-  // P1-8: Consistent tenant check on matches
-  if (user && user.role === 'GOVERNMENT') {
-    if (!user.department_id || challenge.department_id !== user.department_id) {
-      throw new ForbiddenError('You can only view match scores for challenges in your assigned department.');
-    }
-  }
-
-  const matches = await prisma.matchScore.findMany({
-    where: { challenge_id: challengeId },
-    orderBy: { overall_score: 'desc' },
-    include: {
-      startup: {
-        select: {
-          id: true,
-          company_name: true,
-          description: true,
-          domain: true,
-          technologies: true,
-          readiness_level: true,
-          years_experience: true,
-          verification_status: true,
-          location: true
-        }
-      }
-    }
-  });
-
-  return matches;
+  return getAuthoritativeChallengeMatches(challengeId, user);
 };
 
 export const getChallengePilot = async (challengeId, user = null) => {
