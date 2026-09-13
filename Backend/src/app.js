@@ -36,9 +36,14 @@ export const createApp = () => {
     allowedHeaders: ['Content-Type', 'Authorization']
   }));
 
-  // Body Parsers
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  // Configure trust proxy for production reverse proxy / load balancers
+  if (config.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+  }
+
+  // Body Parsers (1MB limit for JSON; multipart uploads handled separately by multer)
+  app.use(express.json({ limit: '1mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
   // General API Rate Limiting (P2-2)
   app.use('/api/v1', apiRateLimiter);

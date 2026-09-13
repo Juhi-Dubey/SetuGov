@@ -17,7 +17,7 @@ export const loginSchema = z.object({
 
 export const acceptInvitationSchema = z.object({
   token: z.string().min(10, 'Invitation token is required'),
-  password: z.string().min(6, 'Password must be at least 6 characters')
+  password: z.string().min(12, 'Password must be at least 12 characters long')
 });
 
 export const validateInvitationSchema = z.object({

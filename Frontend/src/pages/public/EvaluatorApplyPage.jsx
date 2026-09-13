@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { submitEvaluatorApplication } from "../../services/accessRequestService";
 import { useTheme } from "../../context/ThemeContext";
+import TurnstileWidget from "../../components/common/TurnstileWidget";
 
 const DOMAINS = [
   "Artificial Intelligence & Machine Learning",
@@ -52,6 +53,8 @@ export default function EvaluatorApplyPage() {
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submittedData, setSubmittedData] = useState(null);
+  const [turnstileToken, setTurnstileToken] = useState(null);
+  const [resetTurnstile, setResetTurnstile] = useState(0);
 
   const validate = () => {
     const errs = {};
@@ -61,14 +64,7 @@ export default function EvaluatorApplyPage() {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       errs.email = "Please enter a valid email address";
     }
-
-    if (formData.employment_type === "EMPLOYED" && !formData.organization.trim()) {
-      errs.organization = "Organization name is required for employed evaluators";
-    }
-
-    if (!formData.designation.trim()) errs.designation = "Designation / Professional Title is required";
-    if (!formData.bio.trim()) errs.bio = "Please provide a brief bio highlighting technical background";
-    if (!formData.reason.trim()) errs.reason = "Please specify motivation to evaluate state innovation";
+    if (!formData.reason.trim()) errs.reason = "Please state your reason / motivation for joining";
 
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -93,14 +89,17 @@ export default function EvaluatorApplyPage() {
     try {
       const res = await submitEvaluatorApplication({
         ...formData,
+        turnstileToken,
         requested_role: "EVALUATOR",
-        request_source: "EVALUATOR_SELF_APPLICATION",
+        request_source: "EVALUATOR_SELF_REQUEST",
       });
       const data = res?.data || res;
       setSubmittedData(data);
     } catch (err) {
       console.error("Evaluator application failed:", err);
       setSubmitError(err?.message || "Failed to submit evaluator application. Please try again.");
+      setResetTurnstile((prev) => prev + 1);
+      setTurnstileToken(null);
     } finally {
       setLoading(false);
     }
@@ -481,6 +480,14 @@ export default function EvaluatorApplyPage() {
                 />
                 {errors.reason && <p className="mt-1 text-[11px] text-red-500">{errors.reason}</p>}
               </div>
+
+              {/* Cloudflare Turnstile Verification Widget */}
+              <TurnstileWidget
+                onVerify={(token) => setTurnstileToken(token)}
+                onExpire={() => setTurnstileToken(null)}
+                onError={() => setTurnstileToken(null)}
+                resetTrigger={resetTurnstile}
+              />
 
               {/* Submit Button */}
               <div className="pt-2">

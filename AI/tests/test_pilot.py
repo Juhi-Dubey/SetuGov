@@ -547,3 +547,35 @@ class TestAIServiceInterpretPilotAsync:
         assert not hasattr(response, "decision")
         assert isinstance(response, PilotIntelligenceResponse)
 
+    @pytest.mark.asyncio
+    async def test_interpret_pilot_confidence_and_anomalies(self):
+        """Brain 4 parses confidence level, anomalies, and scale readiness."""
+        request = _full_pilot_request()
+        raw_llm = {
+            "overall_assessment": "Pilot demonstrates positive initial trends with some data gaps.",
+            "observations": ["Obs 1"],
+            "concerns": ["Concern 1"],
+            "evidence_gaps": ["Gap 1"],
+            "recommended_actions": ["Action 1"],
+            "confidence_level": "MEDIUM",
+            "confidence_reasoning": "Sufficient for trend analysis but lacks third-party audit.",
+            "anomalies": ["Outpatient satisfaction dropped sharply in week 3."],
+            "scale_readiness": "Conditionally ready pending resolution of server latency bottlenecks.",
+        }
+
+        mock_ollama = AsyncMock(spec=OllamaClient)
+        mock_ollama.generate_json.return_value = raw_llm
+
+        service = AIService(ollama_client=mock_ollama)
+        response = await service.interpret_pilot(request)
+
+        assert response.confidence_level == "MEDIUM"
+        assert response.confidence_reasoning is not None
+        assert "third-party audit" in response.confidence_reasoning
+        assert response.anomalies is not None
+        assert len(response.anomalies) == 1
+        assert "week 3" in response.anomalies[0]
+        assert response.scale_readiness is not None
+        assert "server latency" in response.scale_readiness
+
+

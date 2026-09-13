@@ -31,6 +31,7 @@ from schemas.responses import (
     MatchScoreBreakdown,
     ReadinessScore,
 )
+from services.semantic import SemanticMatcher
 
 logger = logging.getLogger("setugov.ai.decision")
 
@@ -262,7 +263,12 @@ class DecisionEngine:
             startup_tech = {t.lower().strip() for t in startup.technologies}
             if challenge_tech:
                 overlap = len(challenge_tech & startup_tech)
-                tech_score = 30.0 * min(1.0, overlap / len(challenge_tech))
+                exact_ratio = overlap / len(challenge_tech)
+                semantic_ratio = SemanticMatcher.technology_similarity(
+                    challenge.technology_categories, startup.technologies
+                )
+                best_ratio = max(exact_ratio, semantic_ratio)
+                tech_score = 30.0 * min(1.0, best_ratio)
         elif startup.technologies:
             # Startup has tech but no challenge tech specified — partial credit
             tech_score = 10.0
@@ -270,13 +276,18 @@ class DecisionEngine:
         # ── Domain Fit (0–25) ─────────────────────────────────────────
         domain_score = 0.0
         if challenge.domain and startup.domain:
-            if challenge.domain.lower().strip() == startup.domain.lower().strip():
+            c_dom = challenge.domain.lower().strip()
+            s_dom = startup.domain.lower().strip()
+            if c_dom == s_dom:
                 domain_score = 25.0
-            elif (
-                challenge.domain.lower().strip() in startup.domain.lower()
-                or startup.domain.lower().strip() in challenge.domain.lower()
-            ):
+            elif c_dom in s_dom or s_dom in c_dom:
                 domain_score = 15.0
+            else:
+                sim = SemanticMatcher.domain_similarity(challenge.domain, startup.domain)
+                if sim >= 0.75:
+                    domain_score = round(20.0 * sim, 1)
+                elif sim > 0.3:
+                    domain_score = round(15.0 * sim, 1)
         elif startup.domain:
             domain_score = 5.0
 
@@ -302,6 +313,7 @@ class DecisionEngine:
 
         # ── Experience (0–15) ─────────────────────────────────────────
         experience_score = 0.0
+<<<<<<< HEAD
         if startup.years_experience is not None:
             experience_score = 15.0 * min(1.0, startup.years_experience / 10.0)
         else:
@@ -309,6 +321,16 @@ class DecisionEngine:
                 experience_score += 8.0
             if startup.deployments:
                 experience_score += min(7.0, len(startup.deployments) * 3.5)
+=======
+        if startup.experience:
+            relevance = SemanticMatcher.evaluate_experience_relevance(
+                startup.experience, challenge.domain, challenge.technology_categories
+            )
+            # Base 6.0 + up to 2.0 relevance bonus based on GovTech/domain alignment
+            experience_score += 6.0 + (2.0 * relevance)
+        if startup.deployments:
+            experience_score += min(7.0, len(startup.deployments) * 3.5)
+>>>>>>> 4e522a0d6502bf56bbc7c370015666ba39d69e04
 
         # ── Deployment Fit (0–10) ─────────────────────────────────────
         deployment_score = 0.0

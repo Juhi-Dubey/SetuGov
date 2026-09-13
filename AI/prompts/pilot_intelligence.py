@@ -35,6 +35,15 @@ that interprets actual pilot evidence and pre-computed KPI results.
    - Clearly distinguish observed evidence from inferences and recommendations.
    - Explicitly identify missing evidence and unverified claims.
 
+4. Anomaly Detection:
+   - Identify unusual KPI patterns, such as negative improvement, baseline-to-actual divergences, or severe underperformance.
+
+5. Scale Readiness:
+   - Provide a balanced qualitative assessment of whether the pilot evidence demonstrates operational and technical stability for broader rollout.
+
+6. Assessment Confidence:
+   - State your confidence level (HIGH / MEDIUM / LOW) based on evidence completeness and verification rigor.
+
 ## OUTPUT FORMAT
 Return a JSON object:
 {
@@ -42,7 +51,11 @@ Return a JSON object:
   "observations": ["string — evidence-grounded patterns, trends, and notable findings"],
   "concerns": ["string — operational, technical, or adoption issues requiring evaluator attention"],
   "evidence_gaps": ["string — specific missing data, unverified claims, or omitted validation"],
-  "recommended_actions": ["string — advisory investigative or follow-up actions for evaluators"]
+  "recommended_actions": ["string — advisory investigative or follow-up actions for evaluators"],
+  "confidence_level": "string or null — HIGH|MEDIUM|LOW",
+  "confidence_reasoning": "string or null — explanation of confidence level based on evidence gaps",
+  "anomalies": ["string — detected metric or operational anomalies"],
+  "scale_readiness": "string or null — qualitative readiness assessment"
 }
 
 CRITICAL: Return ONLY valid JSON matching this schema.

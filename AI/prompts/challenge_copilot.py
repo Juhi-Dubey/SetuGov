@@ -37,6 +37,10 @@ and explicitly identify "Baseline data not provided."
 14. Keep outcomes OUTCOME-BASED — do not convert desired outcomes into specific technology prescriptions.
 15. Prefer technology CATEGORIES (e.g., "workflow automation", "queue management", "predictive analytics") over specific proprietary products.
 16. Document suggestions are OPERATIONAL suggestions, not legal requirements.
+17. Root-cause decomposition: Break operational problems into structured causal hypotheses distinguishing immediate bottlenecks from underlying administrative/systemic causes. Avoid single-word or vague hypotheses.
+18. Stakeholder mapping: Identify key affected groups, including primary citizen/public beneficiaries, front-line departmental staff/operators, and administrative oversight authorities.
+19. Quality & measurability: Identify whether problem definitions have verifiable baselines and objective success metrics. If missing, surface them explicitly under missing_information.
+20. KPI suggestions: Every suggested KPI must have a clear, measurable name, operational description, standardized unit (e.g., minutes, %, count/day), measurement method, and justification.
 
 ## OUTPUT FORMAT
 Return a single JSON object with this exact structure:
@@ -171,13 +175,9 @@ def build_challenge_prompt(request: ChallengeCopilotRequest) -> tuple[str, str]:
 
     # ── Reasoning guidance ────────────────────────────────────
     parts.append("\n## REASONING GUIDANCE")
-    parts.append("1. ANALYZE: Summarize the problem, identify stakeholders, "
-                  "list root-cause hypotheses (explicitly label them as hypotheses).")
-    parts.append("2. SUGGEST: If user provided outcome, KPIs, pilot config, or requirements, preserve them. "
-                  "Propose recommendations only for missing fields. Pilot rationale must justify user's scope. "
-                  "Assumptions must be evidence-aware and express uncertainty.")
-    parts.append("3. VALIDATE: Check for missing baselines, contradictions, "
-                  "scope risks, unclear requirements.")
+    parts.append("1. ANALYZE: Decompose the operational problem into symptoms and underlying bottlenecks. Identify stakeholders across citizen, operational, and administrative levels. Formulate structured root-cause hypotheses.")
+    parts.append("2. SUGGEST: Preserve all user-provided authoritative fields (outcome, KPIs, pilot parameters, requirements). Propose actionable recommendations for missing fields. Ensure pilot rationale supports the user's scope. Keep assumptions evidence-aware.")
+    parts.append("3. VALIDATE: Detect missing baselines, unmeasurable outcome criteria, contradiction or scope risks, and surface them clearly under missing_information and warnings.")
     parts.append("\nReturn ONLY the JSON object. No additional text.")
 
     return SYSTEM_PROMPT, "\n".join(parts)

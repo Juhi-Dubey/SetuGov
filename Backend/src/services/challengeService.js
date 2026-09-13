@@ -292,6 +292,11 @@ export const updateChallenge = async (id, data, user, ip_address = null) => {
     }
   }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 4e522a0d6502bf56bbc7c370015666ba39d69e04
   const updated = await prisma.challenge.update({
     where: { id },
     data: updateData,

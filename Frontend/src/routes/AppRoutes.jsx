@@ -68,6 +68,7 @@ import AdminEvaluators from "../pages/admin/AdminEvaluators";
 // =====================================================
 import NotFound from "../pages/NotFound";
 import AppLayout from "../components/layout/AppLayout";
+import InviteAccept from "../pages/auth/InviteAccept";
 
 function AppRoutes() {
   return (
@@ -80,6 +81,9 @@ function AppRoutes() {
       <Route path="/signup" element={<StartupSignup />} />
       <Route path="/government/request-access" element={<GovernmentAccessRequestPage />} />
       <Route path="/evaluator/apply" element={<EvaluatorApplyPage />} />
+      <Route path="/invite/accept" element={<InviteAccept />} />
+      <Route path="/government/set-password" element={<InviteAccept />} />
+      <Route path="/set-password" element={<InviteAccept />} />
 
       {/* Role Selection (Requires Login) */}
       <Route

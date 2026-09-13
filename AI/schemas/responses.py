@@ -1,7 +1,7 @@
 """
 SetuGov AI Service — Response Schemas
 
-Typed Pydantic models for all five AI brain outputs,
+Typed Pydantic models for all AI brain outputs,
 the decision engine, and the API envelope.
 """
 
@@ -174,6 +174,18 @@ class ProposalRisk(BaseModel):
     mitigation_suggestion: Optional[str] = None
 
 
+class RequirementTrace(BaseModel):
+    """Maps a challenge requirement to proposal evidence (or lack thereof)."""
+
+    requirement: str = Field(..., description="The challenge requirement being traced")
+    evidence: Optional[str] = Field(
+        None, description="Corresponding proposal evidence, or null if not addressed"
+    )
+    status: str = Field(
+        ..., description="'addressed', 'partially_addressed', or 'not_addressed'"
+    )
+
+
 class ProposalAnalysisResponse(BaseModel):
     """Brain 3 output — evaluator assistance."""
 
@@ -186,6 +198,11 @@ class ProposalAnalysisResponse(BaseModel):
     implementation_timeline: Optional[str] = None
     missing_information: list[str] = Field(default_factory=list)
     questions_for_evaluator: list[str] = Field(default_factory=list)
+
+    # Enhanced AI intelligence fields (optional — backward compatible)
+    requirement_traceability: Optional[list[RequirementTrace]] = None
+    unsupported_claims: Optional[list[str]] = None
+    evidence_quality: Optional[str] = None
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -222,6 +239,12 @@ class PilotIntelligenceResponse(BaseModel):
     evidence_gaps: list[str] = Field(default_factory=list)
     recommended_actions: list[str] = Field(default_factory=list)
 
+    # Enhanced AI intelligence fields (optional — backward compatible)
+    confidence_level: Optional[str] = None
+    confidence_reasoning: Optional[str] = None
+    anomalies: Optional[list[str]] = None
+    scale_readiness: Optional[str] = None
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Brain 5 — Document Assistance Response
@@ -245,28 +268,9 @@ class DocumentAssistanceResponse(BaseModel):
 # Decision Engine — SCALE / EXTEND / STOP
 # ═══════════════════════════════════════════════════════════════════════════
 
-
-class DecisionInput(BaseModel):
-    """Structured input for the deterministic decision engine."""
-
-    kpi_achievement_pct: float = Field(
-        ..., ge=0, le=100, description="Average KPI target achievement"
-    )
-    evidence_quality: float = Field(
-        ..., ge=0, le=100, description="Evidence completeness/quality score"
-    )
-    validation_status: str = Field(
-        ..., description="'completed', 'partial', 'not_started'"
-    )
-    technical_stability: float = Field(
-        ..., ge=0, le=100, description="Technical stability score"
-    )
-    user_feedback_score: float = Field(
-        ..., ge=0, le=100, description="User satisfaction score"
-    )
-    risk_score: float = Field(
-        ..., ge=0, le=100, description="Aggregate risk score (0=no risk, 100=critical)"
-    )
+# DecisionInput is a request schema — canonical definition is in schemas/requests.py.
+# Re-exported here for backward compatibility.
+from schemas.requests import DecisionInput as DecisionInput  # noqa: F401
 
 
 class DecisionCondition(BaseModel):
@@ -285,3 +289,56 @@ class DecisionEngineResponse(BaseModel):
     conditions: list[DecisionCondition] = Field(default_factory=list)
     uncertainties: list[str] = Field(default_factory=list)
     score_breakdown: dict[str, float] = Field(default_factory=dict)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Brain 6 — Startup Comparator Response
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class RecommendationLabel(str, Enum):
+    """Deterministic label assigned based on total match score."""
+
+    HIGHLY_RECOMMENDED = "Highly Recommended"
+    RECOMMENDED = "Recommended"
+    MARGINAL = "Marginal"
+    NOT_RECOMMENDED = "Not Recommended"
+
+
+class StartupRank(BaseModel):
+    """Single ranked startup entry — scores are deterministic, narrative is LLM."""
+
+    rank: int = Field(..., ge=1, description="Rank position (1 = best fit)")
+    startup_name: str
+    total_score: float = Field(..., ge=0, le=100, description="Overall match score (deterministic)")
+    score_breakdown: MatchScoreBreakdown
+    recommendation_label: RecommendationLabel
+    explanation: str = Field(
+        ..., description="LLM narrative explaining this startup's fit with the challenge"
+    )
+    strengths: list[str] = Field(default_factory=list)
+    concerns: list[str] = Field(default_factory=list)
+
+
+class StartupComparatorResponse(BaseModel):
+    """Brain 6 output — ranked startup list with explanations and comparisons."""
+
+    recommended_startup: str = Field(
+        ..., description="Name of the top-ranked startup"
+    )
+    recommendation_rationale: str = Field(
+        ..., description="LLM explanation for why this startup is recommended"
+    )
+    ranked_startups: list[StartupRank] = Field(
+        ..., description="All startups ordered by score, rank 1 = best"
+    )
+    comparative_observations: list[str] = Field(
+        default_factory=list,
+        description="Cross-startup insights highlighting key differentiators",
+    )
+    evaluation_disclaimer: str = Field(
+        default=(
+            "AI-generated comparative analysis — scores are deterministic; "
+            "qualitative explanations require authorized evaluator review before use."
+        )
+    )

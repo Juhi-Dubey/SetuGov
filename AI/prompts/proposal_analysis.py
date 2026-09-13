@@ -62,6 +62,16 @@ The human evaluator retains full authority over all evaluation, scoring, and sel
     - FACT: explicitly supplied input data
     - INFERENCE: reasonable interpretation of supplied claims
     - UNKNOWN: information not provided
+11. Requirement Traceability:
+    - Map challenge requirements (domain, technology categories, problem description) to evidence supplied in the proposal.
+    - For each requirement, determine if it is:
+      - "addressed": supported by clear quantitative or qualitative proposal evidence.
+      - "partially_addressed": mentioned but lacking substantive operational evidence.
+      - "not_addressed": absent from the submission.
+12. Unsupported Claims:
+    - Flag assertions made in the proposal that lack empirical evidence, baseline metrics, or verifiable details.
+13. Evidence Quality:
+    - Assess whether the overall proposal evidence is "Strong" (concrete metrics, verified deployments), "Moderate" (descriptive with some operational details), or "Weak" (purely aspirational claims without data).
 
 ## OUTPUT FORMAT
 Return a JSON object with this exact structure:
@@ -81,7 +91,16 @@ Return a JSON object with this exact structure:
   "estimated_cost": "string or null — cost stated in proposal, or null if omitted",
   "implementation_timeline": "string or null — timeline stated in proposal, or null if omitted",
   "missing_information": ["string — unstated or incomplete proposal, technical, cost, or eligibility information"],
-  "questions_for_evaluator": ["string — due diligence and verification questions for human evaluators"]
+  "questions_for_evaluator": ["string — due diligence and verification questions for human evaluators"],
+  "requirement_traceability": [
+    {
+      "requirement": "string — challenge requirement",
+      "evidence": "string or null — proposal evidence",
+      "status": "addressed|partially_addressed|not_addressed"
+    }
+  ],
+  "unsupported_claims": ["string — proposal claims lacking evidence"],
+  "evidence_quality": "string or null — Strong, Moderate, or Weak with brief rationale"
 }
 
 CRITICAL: Return ONLY valid JSON. No markdown fences. No text outside the JSON.

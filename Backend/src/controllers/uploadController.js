@@ -1,4 +1,6 @@
-import { BadRequestError } from '../utils/errors.js';
+import path from 'path';
+import fs from 'fs';
+import { BadRequestError, NotFoundError, ForbiddenError } from '../utils/errors.js';
 import { successResponse } from '../utils/response.js';
 import { getFileUrl } from '../middleware/upload.js';
 
@@ -27,6 +29,34 @@ export const handleFileUpload = async (req, res, next) => {
   }
 };
 
+export const getPrivateFile = async (req, res, next) => {
+  try {
+    const { filename } = req.params;
+    if (!filename) {
+      throw new BadRequestError('Filename is required.');
+    }
+
+    // Path traversal defense
+    const safeFilename = path.basename(filename);
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    const filePath = path.join(uploadsDir, safeFilename);
+
+    if (!fs.existsSync(filePath)) {
+      throw new NotFoundError('Requested document not found.');
+    }
+
+    // Role-based access control: Only ADMIN or authorized users
+    if (req.user.role !== 'ADMIN') {
+      throw new ForbiddenError('Access to private verification documents requires administrator authorization.');
+    }
+
+    return res.sendFile(filePath);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
-  handleFileUpload
+  handleFileUpload,
+  getPrivateFile
 };

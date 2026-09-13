@@ -11,6 +11,7 @@ import uuid
 from contextlib import asynccontextmanager
 
 import httpx
+import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -18,6 +19,7 @@ from fastapi.responses import JSONResponse
 from config import get_settings
 from schemas.requests import (
     ChallengeCopilotRequest,
+    DecisionInput,
     DocumentAssistanceRequest,
     MatchExplanationRequest,
     PilotIntelligenceRequest,
@@ -25,6 +27,7 @@ from schemas.requests import (
 )
 from schemas.responses import APIResponse, ErrorDetail, ErrorResponse
 from services.ai_service import AIService
+from services.decision_engine import DecisionEngine
 from services.ollama_client import (
     InvalidAIResponseError,
     OllamaClient,
@@ -80,7 +83,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -161,7 +164,8 @@ async def health():
 @app.get("/health/ollama")
 async def health_ollama():
     """Check Ollama connectivity."""
-    assert _ollama_client is not None
+    if _ollama_client is None:
+        raise OllamaUnavailableError("AI service not initialized.")
     try:
         async with httpx.AsyncClient(timeout=5) as client:
             resp = await client.get(f"{settings.ollama_base_url}/api/tags")
@@ -238,11 +242,23 @@ async def document_assistance(request: DocumentAssistanceRequest):
 
 
 # ---------------------------------------------------------------------------
+# Decision Engine — deterministic SCALE / EXTEND / STOP recommendation
+# ---------------------------------------------------------------------------
+@app.post("/ai/decision", response_model=APIResponse)
+async def decision_engine_endpoint(request: DecisionInput):
+    """
+    Run a deterministic SCALE / EXTEND / STOP recommendation.
+    No LLM call — pure Python scoring against KPI, milestone, and risk data.
+    """
+    engine = DecisionEngine()
+    result = engine.recommend(request)
+    return APIResponse(success=True, data=result.model_dump())
+
+
+# ---------------------------------------------------------------------------
 # Run
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    import uvicorn
-
     uvicorn.run(
         "main:app",
         host=settings.ai_service_host,

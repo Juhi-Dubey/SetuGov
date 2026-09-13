@@ -533,3 +533,43 @@ class TestAIServiceAnalyzeProposalAsync:
         response = await service.analyze_proposal(request)
 
         assert response.estimated_cost == "€10,000"
+
+    @pytest.mark.asyncio
+    async def test_requirement_traceability_and_evidence_quality(self):
+        """Brain 3 parses requirement traceability, unsupported claims, and evidence quality."""
+        request = _full_proposal_request()
+        raw_llm = {
+            "executive_summary": "Proposal executive summary",
+            "requirement_traceability": [
+                {
+                    "requirement": "Queue Management System",
+                    "evidence": "Startup reports QMS deployment in 3 hospitals",
+                    "status": "addressed",
+                },
+                {
+                    "requirement": "Real-time SMS Integration",
+                    "evidence": None,
+                    "status": "not_addressed",
+                },
+            ],
+            "unsupported_claims": [
+                "Claims 99.99% uptime without providing SLA or system architecture logs",
+            ],
+            "evidence_quality": "Moderate — relies on self-reported deployment claims.",
+        }
+
+        mock_ollama = AsyncMock(spec=OllamaClient)
+        mock_ollama.generate_json.return_value = raw_llm
+
+        service = AIService(ollama_client=mock_ollama)
+        response = await service.analyze_proposal(request)
+
+        assert response.requirement_traceability is not None
+        assert len(response.requirement_traceability) == 2
+        assert response.requirement_traceability[0].status == "addressed"
+        assert response.requirement_traceability[1].status == "not_addressed"
+        assert response.unsupported_claims is not None
+        assert len(response.unsupported_claims) == 1
+        assert "99.99% uptime" in response.unsupported_claims[0]
+        assert response.evidence_quality == "Moderate — relies on self-reported deployment claims."
+

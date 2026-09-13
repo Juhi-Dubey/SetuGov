@@ -1,7 +1,7 @@
 """
 SetuGov AI Service — Request Schemas
 
-Canonical Pydantic models for all five AI brain inputs.
+Canonical Pydantic models for all AI brain inputs.
 These models define the AI contract independently of any frontend.
 """
 
@@ -290,3 +290,61 @@ class DocumentAssistanceRequest(BaseModel):
     kpis: list[KPIInput] = Field(default_factory=list)
     objectives: Optional[list[str]] = None
     additional_context: Optional[str] = None
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Decision Engine Input
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class DecisionInput(BaseModel):
+    """Structured input for the deterministic SCALE / EXTEND / STOP decision engine."""
+
+    kpi_achievement_pct: float = Field(
+        ..., ge=0, le=100, description="Average KPI target achievement"
+    )
+    evidence_quality: float = Field(
+        ..., ge=0, le=100, description="Evidence completeness/quality score"
+    )
+    validation_status: str = Field(
+        ..., description="'completed', 'partial', 'not_started'"
+    )
+    technical_stability: float = Field(
+        ..., ge=0, le=100, description="Technical stability score"
+    )
+    user_feedback_score: float = Field(
+        ..., ge=0, le=100, description="User satisfaction score"
+    )
+    risk_score: float = Field(
+        ..., ge=0, le=100, description="Aggregate risk score (0=no risk, 100=critical)"
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Brain 6 — Startup Comparator
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class StartupComparatorRequest(BaseModel):
+    """Brain 6 input — compare and rank multiple startup candidates for a challenge.
+
+    Requires at least two startups. The AI scores every startup
+    deterministically using the same engine as Brain 2 (MatchScoreBreakdown)
+    and the LLM provides qualitative explanations and comparative observations.
+    """
+
+    challenge: ChallengeContext = Field(
+        ..., description="The challenge all startups are being evaluated against"
+    )
+    startups: list[StartupProfile] = Field(
+        ..., min_length=2, description="List of startup candidates (minimum 2)"
+    )
+    evaluation_weights: Optional[dict[str, float]] = Field(
+        None,
+        description=(
+            "Optional custom scoring weights per dimension. "
+            "Keys: 'technology_fit', 'domain_fit', 'readiness', 'experience', 'deployment_fit'. "
+            "Values: 0–100 (relative, need not sum to 100). "
+            "If omitted, default engine weights are used."
+        ),
+    )

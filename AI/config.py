@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     ai_service_host: str = "0.0.0.0"
     ai_service_port: int = 8000
 
+    # CORS — restrict to known frontend origins in production
+    # Override via ALLOWED_ORIGINS env var: ALLOWED_ORIGINS=["https://app.setugov.in"]
+    allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:8080"]
+
     # Logging
     log_level: str = "INFO"
 

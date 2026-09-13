@@ -24,9 +24,22 @@ export const logoutUser = async () => {
   });
 };
 
+export const validateInvitationToken = async (token) => {
+  return apiRequest(`/auth/invitations/validate?token=${encodeURIComponent(token)}`);
+};
+
+export const acceptInvitationAndSetPassword = async ({ token, password }) => {
+  return apiRequest("/auth/invitations/accept", {
+    method: "POST",
+    body: JSON.stringify({ token, password }),
+  });
+};
+
 export default {
   loginUser,
   registerUser,
   getCurrentUser,
   logoutUser,
+  validateInvitationToken,
+  acceptInvitationAndSetPassword,
 };

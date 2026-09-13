@@ -405,10 +405,10 @@ function AdminAccessRequests() {
               <div className="my-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs dark:border-emerald-900/40 dark:bg-emerald-950/40">
                 <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-200 mb-1">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  Account Provisioned & Invitation Token Generated
+                  Invitation Generated (Awaiting Credential Setup)
                 </div>
                 <p className="text-emerald-700 dark:text-emerald-300 mb-2">
-                  The user has been provisioned as a verified {selectedRequest.requested_role}. Share this secure one-time password setup link with the user:
+                  The request has been approved for <strong>{selectedRequest.requested_role}</strong> access. The account will become fully active once the applicant completes password setup via this secure link:
                 </p>
                 <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded-lg border border-emerald-200 dark:border-emerald-800 font-mono text-[11px]">
                   <span className="truncate flex-1">
@@ -418,7 +418,7 @@ function AdminAccessRequests() {
                     onClick={() =>
                       copyToClipboard(`${window.location.origin}${approvalResult.invitation.setup_link}`)
                     }
-                    className="inline-flex items-center gap-1 rounded bg-emerald-600 px-2 py-1 text-white font-semibold hover:bg-emerald-700"
+                    className="inline-flex items-center gap-1 rounded bg-emerald-600 px-2.5 py-1 text-white font-semibold hover:bg-emerald-700"
                   >
                     {copiedLink ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                     {copiedLink ? "Copied" : "Copy Link"}
@@ -443,15 +443,40 @@ function AdminAccessRequests() {
                   </span>
                 </div>
                 <div>
-                  <span className="font-semibold text-slate-500 block mb-0.5">Organization</span>
+                  <span className="font-semibold text-slate-500 block mb-0.5">Organization / Dept</span>
                   <span className="text-slate-800 dark:text-slate-200">
-                    {selectedRequest.organization || selectedRequest.department?.name || "Independent"}
+                    {selectedRequest.department_name || selectedRequest.organization || selectedRequest.department?.name || "Independent"}
                   </span>
                 </div>
                 <div>
                   <span className="font-semibold text-slate-500 block mb-0.5">Designation</span>
                   <span className="text-slate-800 dark:text-slate-200">{selectedRequest.designation || "N/A"}</span>
                 </div>
+                {selectedRequest.state && (
+                  <div>
+                    <span className="font-semibold text-slate-500 block mb-0.5">State / Jurisdiction</span>
+                    <span className="text-slate-800 dark:text-slate-200">{selectedRequest.state}</span>
+                  </div>
+                )}
+                {selectedRequest.department_code && (
+                  <div>
+                    <span className="font-semibold text-slate-500 block mb-0.5">Department Code</span>
+                    <span className="text-slate-800 dark:text-slate-200">{selectedRequest.department_code}</span>
+                  </div>
+                )}
+                {selectedRequest.official_website && (
+                  <div>
+                    <span className="font-semibold text-slate-500 block mb-0.5">Official Website</span>
+                    <a
+                      href={selectedRequest.official_website.startsWith("http") ? selectedRequest.official_website : `https://${selectedRequest.official_website}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-indigo-600 hover:underline dark:text-indigo-400 truncate block"
+                    >
+                      {selectedRequest.official_website}
+                    </a>
+                  </div>
+                )}
                 <div>
                   <span className="font-semibold text-slate-500 block mb-0.5">Employment Type</span>
                   <span className="text-slate-800 dark:text-slate-200">{selectedRequest.employment_type || "N/A"}</span>
