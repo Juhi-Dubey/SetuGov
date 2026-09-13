@@ -52,11 +52,124 @@ export const provisionUser = async (req, res, next) => {
   }
 };
 
+// System Settings
+export const getSettings = async (req, res, next) => {
+  try {
+    const data = await adminService.getSystemSettings();
+    return successResponse(res, data, 'System settings retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateSettings = async (req, res, next) => {
+  try {
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const data = await adminService.updateSystemSettings(req.body, req.user, ip_address);
+    return successResponse(res, data, 'System settings saved successfully to database', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Evaluation Criteria
+export const getCriteria = async (req, res, next) => {
+  try {
+    const data = await adminService.getEvaluationCriteria();
+    return successResponse(res, data, 'Evaluation criteria retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createCriterion = async (req, res, next) => {
+  try {
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const data = await adminService.createEvaluationCriterion(req.body, req.user, ip_address);
+    return successResponse(res, data, 'Evaluation criterion created successfully', 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateCriterion = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const data = await adminService.updateEvaluationCriterion(id, req.body, req.user, ip_address);
+    return successResponse(res, data, 'Evaluation criterion updated successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteCriterion = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await adminService.deleteEvaluationCriterion(id, req.user, ip_address);
+    return successResponse(res, result, 'Evaluation criterion deleted successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// System Templates
+export const getTemplates = async (req, res, next) => {
+  try {
+    const data = await adminService.getSystemTemplates(req.query);
+    return successResponse(res, data, 'System templates retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createTemplate = async (req, res, next) => {
+  try {
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const data = await adminService.createSystemTemplate(req.body, req.user, ip_address);
+    return successResponse(res, data, 'System template created successfully', 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateTemplate = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const data = await adminService.updateSystemTemplate(id, req.body, req.user, ip_address);
+    return successResponse(res, data, 'System template updated successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteTemplate = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await adminService.deleteSystemTemplate(id, req.user, ip_address);
+    return successResponse(res, result, 'System template deleted successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getDashboard,
   getAuditLogs,
   verifyDepartment,
   updateUserRole,
-  provisionUser
+  provisionUser,
+  getSettings,
+  updateSettings,
+  getCriteria,
+  createCriterion,
+  updateCriterion,
+  deleteCriterion,
+  getTemplates,
+  createTemplate,
+  updateTemplate,
+  deleteTemplate
 };
-

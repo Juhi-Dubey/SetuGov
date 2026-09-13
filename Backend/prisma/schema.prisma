@@ -44,6 +44,9 @@ model User {
   nominated_access_requests AccessRequest[]    @relation("AccessRequestNominator")
   evaluator_assignments    EvaluatorAssignment[] @relation("EvaluatorAssigned")
   created_evaluator_assignments EvaluatorAssignment[] @relation("EvaluatorAssigner")
+  initiated_procurements   ProcurementRecord[]   @relation("ProcurementInitiator")
+  approved_procurements    ProcurementRecord[]   @relation("ProcurementApprover")
+  accepted_deliveries      ProcurementRecord[]   @relation("DeliveryAcceptor")
 
   @@index([role])
   @@index([department_id])
@@ -67,6 +70,7 @@ model Department {
   challenges                 Challenge[]
   users                      User[]
   access_requests            AccessRequest[]
+  procurements               ProcurementRecord[]
 
   @@map("departments")
 }
@@ -100,6 +104,7 @@ model Challenge {
   department                 Department      @relation(fields: [department_id], references: [id], onDelete: Cascade)
   match_scores               MatchScore[]
   pilots                     Pilot[]
+  procurements               ProcurementRecord[]
 
   @@index([status])
   @@index([department_id])
@@ -153,6 +158,7 @@ model Startup {
   match_scores         MatchScore[]
   pilots               Pilot[]
   documents            StartupDocument[]
+  procurements         ProcurementRecord[]
   user                 User                      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   verifier             User?                     @relation("StartupVerifier", fields: [verified_by], references: [id])
 
@@ -288,6 +294,7 @@ model Pilot {
   issues                     PilotIssue[]
   scale_decisions            ScaleDecision[]
   validations                Validation[]
+  procurements               ProcurementRecord[]
 
   @@index([status])
   @@map("pilots")
@@ -422,20 +429,22 @@ model Validation {
 }
 
 model Payment {
-  id                 String        @id @default(uuid())
+  id                 String             @id @default(uuid())
   pilot_id           String
   milestone_id       String?
-  amount             Decimal       @db.Decimal(14, 2)
+  procurement_id     String?
+  amount             Decimal            @db.Decimal(14, 2)
   payment_percentage Float
-  status             PaymentStatus @default(UPCOMING)
+  status             PaymentStatus      @default(UPCOMING)
   payment_date       DateTime?
   invoice_url        String?
   reference_number   String?
   approved_by        String?
-  created_at         DateTime      @default(now())
-  updated_at         DateTime      @updatedAt
-  milestone          Milestone?    @relation(fields: [milestone_id], references: [id])
-  pilot              Pilot         @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+  created_at         DateTime           @default(now())
+  updated_at         DateTime           @updatedAt
+  milestone          Milestone?         @relation(fields: [milestone_id], references: [id])
+  pilot              Pilot              @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+  procurement        ProcurementRecord? @relation(fields: [procurement_id], references: [id])
 
   @@map("payments")
 }
@@ -608,6 +617,42 @@ enum EvaluatorAssignmentStatus {
   RECUSED
 }
 
+enum ProcurementStatus {
+  DRAFT
+  READINESS_CHECK
+  APPROVED
+  HANDED_OFF
+  CONTRACT_ISSUED
+  DELIVERY_SUBMITTED
+  ACCEPTED
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+enum ProcurementRoute {
+  GEM
+  OTHER_APPROVED_ROUTE
+  DIRECT_APPROVED_ROUTE
+  OFFLINE_HANDOFF
+}
+
+enum GeMHandoffStatus {
+  NOT_STARTED
+  READY
+  HANDED_OFF
+  EXTERNAL_PROCESSING
+  COMPLETED
+  FAILED_RETURNED
+}
+
+enum AcceptanceStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CONDITIONAL_ACCEPTANCE
+}
+
 model AccessRequest {
   id                      String              @id @default(uuid())
   name                    String
@@ -674,3 +719,108 @@ model EvaluatorAssignment {
   @@index([status])
   @@map("evaluator_assignments")
 }
+
+model ProcurementRecord {
+  id                         String              @id @default(uuid())
+  pilot_id                   String
+  challenge_id               String
+  startup_id                 String
+  department_id              String
+  status                     ProcurementStatus   @default(DRAFT)
+  route                      ProcurementRoute    @default(GEM)
+  estimated_value            Decimal             @db.Decimal(14, 2)
+  final_contract_value       Decimal?            @db.Decimal(14, 2)
+  justification              String
+  technical_readiness        Boolean             @default(false)
+  compliance_readiness       Boolean             @default(false)
+  cybersecurity_clearance    Boolean             @default(false)
+  data_protection_clearance  Boolean             @default(false)
+  initiated_by               String
+  approved_by                String?
+  approved_at                DateTime?
+  approval_notes             String?
+  rejection_reason           String?
+
+  // External GeM / Approved Route Handoff
+  gem_handoff_status         GeMHandoffStatus    @default(NOT_STARTED)
+  gem_handoff_date           DateTime?
+  gem_reference_number       String?
+  gem_officer_name           String?
+  gem_notes                  String?
+  gem_supporting_doc         String?
+
+  // PO & Contract Lifecycle
+  po_reference_number        String?
+  contract_reference         String?
+  contract_document_url      String?
+  contract_issued_at         DateTime?
+  contract_effective_date    DateTime?
+  contract_duration_days     Int?
+
+  // Delivery & Formal Acceptance
+  delivery_date              DateTime?
+  delivery_scope             String?
+  delivery_evidence_url      String?
+  delivery_notes             String?
+  acceptance_status          AcceptanceStatus    @default(PENDING)
+  accepted_by                String?
+  accepted_at                DateTime?
+  acceptance_remarks         String?
+
+  created_at                 DateTime            @default(now())
+  updated_at                 DateTime            @updatedAt
+
+  pilot                      Pilot               @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+  challenge                  Challenge           @relation(fields: [challenge_id], references: [id], onDelete: Cascade)
+  startup                    Startup             @relation(fields: [startup_id], references: [id], onDelete: Cascade)
+  department                 Department          @relation(fields: [department_id], references: [id], onDelete: Cascade)
+  initiator                  User                @relation("ProcurementInitiator", fields: [initiated_by], references: [id])
+  approver                   User?               @relation("ProcurementApprover", fields: [approved_by], references: [id])
+  acceptor                   User?               @relation("DeliveryAcceptor", fields: [accepted_by], references: [id])
+  payments                   Payment[]
+
+  @@index([status])
+  @@index([route])
+  @@index([pilot_id])
+  @@index([department_id])
+  @@index([startup_id])
+  @@map("procurement_records")
+}
+
+model SystemSetting {
+  id         String   @id @default(uuid())
+  key        String   @unique
+  value      Json
+  updated_by String?
+  updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+
+  @@map("system_settings")
+}
+
+model EvaluationCriterion {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  weight      Float
+  status      String   @default("Active")
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("evaluation_criteria")
+}
+
+model SystemTemplate {
+  id                String   @id @default(uuid())
+  name              String
+  type              String
+  description       String
+  fields_count      Int      @default(0)
+  status            String   @default("Active")
+  schema_definition Json?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  @@map("system_templates")
+}
+

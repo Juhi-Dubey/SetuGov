@@ -18,12 +18,11 @@ export const createApp = () => {
     crossOriginResourcePolicy: { policy: "cross-origin" }
   }));
 
-  // Ensure uploads directory exists and mount static serving
+  // Ensure private uploads directory exists (No public static mount - Phase 1 Security Hardening)
   const uploadsDir = path.join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
-  app.use('/uploads', express.static(uploadsDir));
 
   // CORS Configuration (P1-7: Restrict origins)
   const allowedOrigins = config.CORS_ORIGIN === '*'

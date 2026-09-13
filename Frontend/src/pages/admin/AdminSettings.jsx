@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Settings,
@@ -13,13 +13,17 @@ import {
   Database,
   RefreshCw,
   ArrowLeft,
+  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getAdminSettings, updateAdminSettings } from "../../services/adminService";
 
 function AdminSettings() {
   const navigate = useNavigate();
 
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("general");
 
   const initialSettings = {
@@ -36,25 +40,46 @@ function AdminSettings() {
     autoBackupEnabled: true,
   };
 
-  const [settings, setSettings] = useState(() => {
+  const [settings, setSettings] = useState(initialSettings);
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
     try {
-      const saved = localStorage.getItem("setugov_admin_settings");
-      return saved ? JSON.parse(saved) : initialSettings;
-    } catch {
-      return initialSettings;
+      setLoading(true);
+      const res = await getAdminSettings();
+      if (res?.data) {
+        setSettings(res.data);
+      }
+    } catch (err) {
+      console.warn("Could not load backend settings:", err);
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
   const handleChange = (field, value) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
     setSaved(false);
   };
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    localStorage.setItem("setugov_admin_settings", JSON.stringify(settings));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      setSaving(true);
+      const res = await updateAdminSettings(settings);
+      if (res?.data) {
+        setSettings(res.data);
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      alert(`Failed to save settings: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

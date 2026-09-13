@@ -17,99 +17,6 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const initialCompletedEvaluations = [
-  {
-    id: 1,
-    startupName: "TechNova Solutions",
-    challengeTitle: "AI-Based Citizen Grievance Management",
-    domain: "Artificial Intelligence",
-    submittedDate: "28 Aug 2026",
-    overallScore: 88,
-    scores: {
-      technicalFeasibility: 90,
-      innovation: 85,
-      expectedImpact: 90,
-      scalability: 85,
-      costEffectiveness: 90,
-    },
-    recommendation: "Recommended for Pilot",
-    verdict: "Strong technical architecture with proven multilingual NLP capability for regional governance.",
-    status: "Completed",
-  },
-  {
-    id: 2,
-    startupName: "GreenGrid Technologies",
-    challengeTitle: "Smart Waste Collection System",
-    domain: "Smart City",
-    submittedDate: "25 Aug 2026",
-    overallScore: 92,
-    scores: {
-      technicalFeasibility: 95,
-      innovation: 90,
-      expectedImpact: 90,
-      scalability: 90,
-      costEffectiveness: 95,
-    },
-    recommendation: "Recommended for Pilot",
-    verdict: "Exceptional IoT sensor efficiency with low energy consumption and robust mesh routing.",
-    status: "Completed",
-  },
-  {
-    id: 3,
-    startupName: "AgriConnect Labs",
-    challengeTitle: "Agricultural Market Intelligence",
-    domain: "Agriculture",
-    submittedDate: "20 Aug 2026",
-    overallScore: 78,
-    scores: {
-      technicalFeasibility: 80,
-      innovation: 75,
-      expectedImpact: 80,
-      scalability: 75,
-      costEffectiveness: 80,
-    },
-    recommendation: "Conditional Approval",
-    verdict: "Good data predictive model but requires offline syncing capability for deep rural deployment.",
-    status: "Completed",
-  },
-  {
-    id: 4,
-    startupName: "AeroScan Dynamics",
-    challengeTitle: "Drone-Based Infrastructure Surveillance",
-    domain: "Drones & Robotics",
-    submittedDate: "15 Aug 2026",
-    overallScore: 85,
-    scores: {
-      technicalFeasibility: 85,
-      innovation: 90,
-      expectedImpact: 85,
-      scalability: 80,
-      costEffectiveness: 85,
-    },
-    recommendation: "Recommended for Pilot",
-    verdict: "High-accuracy photogrammetry pipeline ready for pilot trial in municipal flyover inspections.",
-    status: "Completed",
-  },
-  {
-    id: 5,
-    startupName: "CleanWater IoT",
-    challengeTitle: "Automated Water Quality Monitoring",
-    domain: "Sustainability",
-    submittedDate: "10 Aug 2026",
-    overallScore: 68,
-    scores: {
-      technicalFeasibility: 70,
-      innovation: 65,
-      expectedImpact: 70,
-      scalability: 65,
-      costEffectiveness: 70,
-    },
-    recommendation: "Needs Revision",
-    verdict: "Sensor calibration drift issues need resolution before municipal deployment.",
-    status: "Completed",
-  },
-];
-
 import { getMyAssignments } from "../../services/evaluatorService";
 
 function EvaluatorEvaluations() {
@@ -165,15 +72,11 @@ function EvaluatorEvaluations() {
               };
             });
 
-          if (completed.length > 0) {
-            setEvaluations(completed);
-          } else {
-            setEvaluations(initialCompletedEvaluations);
-          }
+          setEvaluations(completed);
         }
       } catch (err) {
-        console.warn("Could not fetch evaluation history, using mock dataset:", err);
-        if (mounted) setEvaluations(initialCompletedEvaluations);
+        console.warn("Could not fetch evaluation history:", err);
+        if (mounted) setEvaluations([]);
       } finally {
         if (mounted) setLoading(false);
       }

@@ -101,6 +101,75 @@ export const provisionUser = async (data) => {
   });
 };
 
+// System Settings
+export const getAdminSettings = async () => {
+  return apiRequest("/admin/settings");
+};
+
+export const updateAdminSettings = async (data) => {
+  return apiRequest("/admin/settings", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+};
+
+// Evaluation Criteria
+export const getAdminCriteria = async () => {
+  return apiRequest("/admin/criteria");
+};
+
+export const createAdminCriterion = async (data) => {
+  return apiRequest("/admin/criteria", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
+export const updateAdminCriterion = async (id, data) => {
+  return apiRequest(`/admin/criteria/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+};
+
+export const deleteAdminCriterion = async (id) => {
+  return apiRequest(`/admin/criteria/${id}`, {
+    method: "DELETE",
+  });
+};
+
+// System Templates
+export const getAdminTemplates = async (params = {}) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.append(key, value);
+    }
+  });
+  const queryString = query.toString();
+  return apiRequest(`/admin/templates${queryString ? `?${queryString}` : ""}`);
+};
+
+export const createAdminTemplate = async (data) => {
+  return apiRequest("/admin/templates", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
+export const updateAdminTemplate = async (id, data) => {
+  return apiRequest(`/admin/templates/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+};
+
+export const deleteAdminTemplate = async (id) => {
+  return apiRequest(`/admin/templates/${id}`, {
+    method: "DELETE",
+  });
+};
+
 export default {
   getAdminDashboard,
   getAdminAuditLogs,
@@ -116,5 +185,14 @@ export default {
   nominateEvaluator,
   verifyStartupDpiit,
   provisionUser,
+  getAdminSettings,
+  updateAdminSettings,
+  getAdminCriteria,
+  createAdminCriterion,
+  updateAdminCriterion,
+  deleteAdminCriterion,
+  getAdminTemplates,
+  createAdminTemplate,
+  updateAdminTemplate,
+  deleteAdminTemplate,
 };
-

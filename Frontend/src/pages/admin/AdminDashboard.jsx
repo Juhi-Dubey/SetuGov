@@ -47,25 +47,25 @@ function AdminDashboard() {
   const userStats = [
     {
       title: "Total Users",
-      value: String(summary?.totalUsers || 14),
+      value: String(summary?.totalUsers ?? 0),
       change: "Active in platform",
       icon: Users,
     },
     {
       title: "Government Officers",
-      value: String(usersBreakdown?.GOVERNMENT || 3),
+      value: String(usersBreakdown?.GOVERNMENT ?? 0),
       change: "Department nodal officers",
       icon: ShieldCheck,
     },
     {
       title: "Registered Startups",
-      value: String(summary?.totalStartups || usersBreakdown?.STARTUP || 6),
+      value: String(summary?.totalStartups ?? (usersBreakdown?.STARTUP ?? 0)),
       change: "Innovation enterprises",
       icon: Building2,
     },
     {
       title: "Domain Evaluators",
-      value: String(summary?.totalEvaluators || usersBreakdown?.EVALUATOR || 4),
+      value: String(summary?.totalEvaluators ?? (usersBreakdown?.EVALUATOR ?? 0)),
       change: "Technical experts",
       icon: UserCheck,
     },
@@ -74,22 +74,22 @@ function AdminDashboard() {
   const systemStats = [
     {
       title: "Active Challenges",
-      value: String(summary?.totalChallenges || 5),
+      value: String(summary?.totalChallenges ?? 0),
       icon: ClipboardList,
     },
     {
       title: "Verified Startups",
-      value: String(data?.startupsBreakdown?.VERIFIED || 4),
+      value: String(data?.startupsBreakdown?.VERIFIED ?? 0),
       icon: FileCheck2,
     },
     {
       title: "Total Pilots",
-      value: String(summary?.totalPilots || 2),
+      value: String(summary?.totalPilots ?? 0),
       icon: Activity,
     },
     {
       title: "Audit Log Entries",
-      value: String(data?.recentAuditLogs?.length || 28),
+      value: String(data?.recentAuditLogs?.length ?? 0),
       icon: History,
     },
   ];

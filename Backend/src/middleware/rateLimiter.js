@@ -1,12 +1,18 @@
 import rateLimit from 'express-rate-limit';
 import { config } from '../config/env.js';
 
+const shouldSkipRateLimit = (req) => {
+  if (config.NODE_ENV === 'test') return true;
+  if (config.NODE_ENV !== 'production' && req.headers['x-bypass-rate-limit'] === 'test-bypass') return true;
+  return false;
+};
+
 export const authRateLimiter = rateLimit({
   windowMs: config.AUTH_RATE_LIMIT_WINDOW_MS,
   max: config.AUTH_RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => config.NODE_ENV === 'test',
+  skip: shouldSkipRateLimit,
   message: {
     success: false,
     error: {
@@ -21,7 +27,7 @@ export const invitationRateLimiter = rateLimit({
   max: config.INVITATION_RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => config.NODE_ENV === 'test',
+  skip: shouldSkipRateLimit,
   message: {
     success: false,
     error: {
@@ -36,7 +42,7 @@ export const apiRateLimiter = rateLimit({
   max: config.RATE_LIMIT_MAX * 5,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => config.NODE_ENV === 'test',
+  skip: shouldSkipRateLimit,
   message: {
     success: false,
     error: {
@@ -51,7 +57,7 @@ export const aiRateLimiter = rateLimit({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => config.NODE_ENV === 'test',
+  skip: shouldSkipRateLimit,
   message: {
     success: false,
     error: {
@@ -66,7 +72,7 @@ export const accessRequestRateLimiter = rateLimit({
   max: config.ACCESS_REQUEST_RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => config.NODE_ENV === 'test',
+  skip: shouldSkipRateLimit,
   message: {
     success: false,
     error: {

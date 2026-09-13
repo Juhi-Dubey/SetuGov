@@ -21,8 +21,8 @@ import evaluatorRoutes from './evaluatorRoutes.js';
 import aiRoutes from './aiRoutes.js';
 import decisionRoutes from './decisionRoutes.js';
 import uploadRoutes from './uploadRoutes.js';
-
 import accessRequestRoutes from './accessRequestRoutes.js';
+import procurementRoutes from './procurementRoutes.js';
 
 const router = Router();
 
@@ -47,6 +47,7 @@ router.get('/', (req, res) => {
       evaluations: '/api/v1/evaluations',
       decisions: '/api/v1/decisions',
       pilots: '/api/v1/pilots',
+      procurements: '/api/v1/procurements',
       kpis: '/api/v1/kpis',
       milestones: '/api/v1/milestones',
       evidence: '/api/v1/evidence',
@@ -57,6 +58,7 @@ router.get('/', (req, res) => {
       auditLogs: '/api/v1/audit-logs',
       admin: '/api/v1/admin',
       ai: '/api/v1/ai',
+      documents: '/api/v1/documents',
       upload: '/api/v1/upload'
     }
   });
@@ -76,6 +78,8 @@ router.use('/applications', applicationRoutes);
 router.use('/evaluations', evaluationRoutes);
 router.use('/decisions', decisionRoutes);
 router.use('/pilots', pilotRoutes);
+router.use('/procurements', procurementRoutes);
+router.use('/procurement', procurementRoutes);
 router.use('/kpis', kpiRoutes);
 router.use('/milestones', milestoneRoutes);
 router.use('/evidence', evidenceRoutes);
@@ -87,6 +91,7 @@ router.use('/audit-logs', auditLogRoutes);
 router.use('/admin', adminRoutes);
 router.use('/ai', aiRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/uploads', uploadRoutes);
+router.use('/documents', uploadRoutes);
 
 export default router;
-

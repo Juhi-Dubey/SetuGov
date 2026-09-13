@@ -72,7 +72,8 @@ export const createGovernmentNominationSchema = z.object({
 }).strict();
 
 export const approveAccessRequestSchema = z.object({
-  department_id: z.string().uuid('Invalid department ID').optional().nullable().or(z.literal(''))
+  department_id: z.string().uuid('Invalid department ID').optional().nullable().or(z.literal('')),
+  notes: z.string().trim().max(1000).optional().nullable().or(z.literal(''))
 }).strict();
 
 export const rejectAccessRequestSchema = z.object({

@@ -17,54 +17,6 @@ import {
   ShieldCheck
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-const defaultAssignments = [
-  {
-    id: "assign-demo-1",
-    application_id: "app-demo-1",
-    challenge_title: "AI-Based Healthcare Queue Optimization & Patient Flow",
-    department_name: "Department of Health & Family Welfare",
-    state: "Karnataka",
-    startup_name: "MediQueue AI Technologies Pvt Ltd",
-    domain: "Healthcare",
-    assigned_at: "2026-09-01T10:00:00Z",
-    status: "PENDING",
-    is_recused: false,
-    is_evaluated: false,
-    has_conflict: null,
-    notes: "Assigned for evaluating technical architecture, ABDM compliance, and edge AI capability."
-  },
-  {
-    id: "assign-demo-2",
-    application_id: "app-demo-2",
-    challenge_title: "Smart Waste Collection & IoT Route Optimization",
-    department_name: "Department of Urban Mobility & Transport",
-    state: "Karnataka",
-    startup_name: "GreenGrid Technologies",
-    domain: "Smart City",
-    assigned_at: "2026-08-28T14:30:00Z",
-    status: "ACCEPTED",
-    is_recused: false,
-    is_evaluated: false,
-    has_conflict: false,
-    notes: "Accepted evaluation assignment. Reviewing prototype and sensor telemetry."
-  },
-  {
-    id: "assign-demo-3",
-    application_id: "app-demo-3",
-    challenge_title: "Urban Traffic Congestion & Signal Control",
-    department_name: "Department of Urban Mobility & Transport",
-    state: "Karnataka",
-    startup_name: "UrbanFlow Systems",
-    domain: "Transportation",
-    assigned_at: "2026-08-20T09:15:00Z",
-    status: "COMPLETED",
-    is_recused: false,
-    is_evaluated: true,
-    has_conflict: false,
-    notes: "Evaluation submitted with score 91%. Solution recommended for sandbox pilot trial."
-  }
-];
-
 function EvaluatorAssignments() {
   const navigate = useNavigate();
   const [assignments, setAssignments] = useState([]);
@@ -99,14 +51,11 @@ function EvaluatorAssignments() {
         has_conflict: Boolean(a.application?.conflict_declarations?.length)
       }));
 
-      if (mapped.length > 0) {
-        setAssignments(mapped);
-      } else {
-        setAssignments(defaultAssignments);
-      }
+      setAssignments(mapped);
     } catch (err) {
-      console.warn("Using default assignments fallback:", err);
-      setAssignments(defaultAssignments);
+      console.warn("Error fetching evaluator assignments:", err);
+      setError(err?.response?.data?.message || "Failed to load assigned evaluations.");
+      setAssignments([]);
     } finally {
       setLoading(false);
     }

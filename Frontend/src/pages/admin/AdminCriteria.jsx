@@ -12,84 +12,25 @@ import {
   Scale,
   AlertCircle,
   Percent,
+  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const initialCriteria = [
-  {
-    id: 1,
-    name: "Innovation",
-    description:
-      "Measures the originality and innovative nature of the proposed solution.",
-    weight: 25,
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Technical Feasibility",
-    description:
-      "Evaluates whether the proposed technology can realistically be implemented.",
-    weight: 20,
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Scalability",
-    description:
-      "Measures the ability of the solution to scale across departments and locations.",
-    weight: 15,
-    status: "Active",
-  },
-  {
-    id: 4,
-    name: "Cost Effectiveness",
-    description:
-      "Evaluates the value delivered compared with implementation and operational costs.",
-    weight: 15,
-    status: "Active",
-  },
-  {
-    id: 5,
-    name: "Social Impact",
-    description:
-      "Measures the expected social and public-service impact of the solution.",
-    weight: 15,
-    status: "Active",
-  },
-  {
-    id: 6,
-    name: "Implementation Readiness",
-    description:
-      "Evaluates the startup's readiness to deploy and support the solution.",
-    weight: 10,
-    status: "Inactive",
-  },
-];
+import {
+  getAdminCriteria,
+  createAdminCriterion,
+  updateAdminCriterion,
+  deleteAdminCriterion
+} from "../../services/adminService";
 
 function AdminCriteria() {
   const navigate = useNavigate();
 
-  const [criteria, setCriteria] = useState(() => {
-    try {
-      const saved = localStorage.getItem("setugov_criteria");
-      return saved ? JSON.parse(saved) : initialCriteria;
-    } catch {
-      return initialCriteria;
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem("setugov_criteria", JSON.stringify(criteria));
-  }, [criteria]);
-
-  const [showModal, setShowModal] =
-    useState(false);
-
-  const [editingCriteria, setEditingCriteria] =
-    useState(null);
-
-  const [deleteId, setDeleteId] =
-    useState(null);
+  const [criteria, setCriteria] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [editingCriteria, setEditingCriteria] = useState(null);
+  const [deleteId, setDeleteId] = useState(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -98,49 +39,51 @@ function AdminCriteria() {
     status: "Active",
   });
 
+  useEffect(() => {
+    loadCriteria();
+  }, []);
+
+  const loadCriteria = async () => {
+    try {
+      setLoading(true);
+      const res = await getAdminCriteria();
+      const list = res?.data || res || [];
+      setCriteria(list);
+    } catch (err) {
+      console.warn("Could not load criteria from backend:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const totalWeight = useMemo(() => {
     return criteria
-      .filter(
-        (item) => item.status === "Active"
-      )
-      .reduce(
-        (total, item) =>
-          total + Number(item.weight),
-        0
-      );
+      .filter((item) => item.status === "Active")
+      .reduce((total, item) => total + Number(item.weight), 0);
   }, [criteria]);
 
-  const activeCount = criteria.filter(
-    (item) => item.status === "Active"
-  ).length;
-
-  const inactiveCount = criteria.filter(
-    (item) => item.status === "Inactive"
-  ).length;
+  const activeCount = criteria.filter((item) => item.status === "Active").length;
+  const inactiveCount = criteria.filter((item) => item.status === "Inactive").length;
 
   const openAddModal = () => {
     setEditingCriteria(null);
-
     setForm({
       name: "",
       description: "",
       weight: "",
       status: "Active",
     });
-
     setShowModal(true);
   };
 
   const openEditModal = (item) => {
     setEditingCriteria(item);
-
     setForm({
       name: item.name,
       description: item.description,
       weight: String(item.weight),
       status: item.status,
     });
-
     setShowModal(true);
   };
 
@@ -150,86 +93,67 @@ function AdminCriteria() {
   };
 
   const handleChange = (event) => {
-    const { name, value } =
-      event.target;
-
+    const { name, value } = event.target;
     setForm((current) => ({
       ...current,
       [name]: value,
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-
     const weight = Number(form.weight);
-
-    if (
-      !form.name.trim() ||
-      !form.description.trim() ||
-      !weight ||
-      weight <= 0 ||
-      weight > 100
-    ) {
+    if (!form.name.trim() || !form.description.trim() || !weight || weight <= 0 || weight > 100) {
       return;
     }
 
-    if (editingCriteria) {
-      setCriteria((current) =>
-        current.map((item) =>
-          item.id === editingCriteria.id
-            ? {
-                ...item,
-                name: form.name.trim(),
-                description:
-                  form.description.trim(),
-                weight,
-                status: form.status,
-              }
-            : item
-        )
-      );
-    } else {
-      setCriteria((current) => [
-        ...current,
-        {
-          id: Date.now(),
+    try {
+      setSaving(true);
+      if (editingCriteria) {
+        await updateAdminCriterion(editingCriteria.id, {
           name: form.name.trim(),
-          description:
-            form.description.trim(),
+          description: form.description.trim(),
           weight,
           status: form.status,
-        },
-      ]);
+        });
+      } else {
+        await createAdminCriterion({
+          name: form.name.trim(),
+          description: form.description.trim(),
+          weight,
+          status: form.status,
+        });
+      }
+      closeModal();
+      loadCriteria();
+    } catch (err) {
+      alert(`Error saving criterion: ${err.message}`);
+    } finally {
+      setSaving(false);
     }
-
-    closeModal();
   };
 
-  const toggleStatus = (id) => {
-    setCriteria((current) =>
-      current.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status:
-                item.status === "Active"
-                  ? "Inactive"
-                  : "Active",
-            }
-          : item
-      )
-    );
+  const toggleStatus = async (itemOrId) => {
+    try {
+      const item = typeof itemOrId === 'object' ? itemOrId : criteria.find(c => c.id === itemOrId);
+      if (!item) return;
+      const newStatus = item.status === "Active" ? "Inactive" : "Active";
+      await updateAdminCriterion(item.id, { status: newStatus });
+      loadCriteria();
+    } catch (err) {
+      alert(`Error updating status: ${err.message}`);
+    }
   };
 
-  const handleDelete = () => {
-    setCriteria((current) =>
-      current.filter(
-        (item) => item.id !== deleteId
-      )
-    );
-
-    setDeleteId(null);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await deleteAdminCriterion(deleteId);
+      setDeleteId(null);
+      loadCriteria();
+    } catch (err) {
+      alert(`Error deleting criterion: ${err.message}`);
+    }
   };
 
   return (

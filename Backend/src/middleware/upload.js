@@ -113,12 +113,20 @@ export const uploadSingle = (fieldName = 'file') => {
 };
 
 /**
- * Helper to construct the absolute public HTTP URL for an uploaded file
+ * NOTE ON MALWARE SCANNING (Phase 1 Production Requirement):
+ * In local and sandbox environments, file extension, MIME type, and binary magic bytes
+ * (PDF %PDF, PNG \x89PNG, JPG \xFF\xD8\xFF) are verified prior to storage.
+ * In production deployment, an asynchronous or streaming ClamAV / AWS GuardDuty S3 malware
+ * scanning pipe must inspect all uploaded streams prior to persistence.
+ */
+
+/**
+ * Helper to construct the authenticated document URL for an uploaded file
  */
 export const getFileUrl = (req, filename) => {
   const host = req.get('host') || 'localhost:5000';
   const protocol = req.protocol || 'http';
-  return `${protocol}://${host}/uploads/${filename}`;
+  return `${protocol}://${host}/api/v1/documents/${filename}`;
 };
 
 export default {

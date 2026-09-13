@@ -1,9 +1,11 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { prisma } from '../config/prisma.js';
-import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
+import { NotFoundError, ForbiddenError, BadRequestError, ConflictError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
+import { sendInvitationEmail } from './emailService.js';
+import { config } from '../config/env.js';
 
 /**
  * Evaluator independently submits access request (Employed or Independent/Freelance)
@@ -24,32 +26,10 @@ export const createEvaluatorSelfApplication = async (data, ip_address = null) =>
   } = data;
 
   if (!name || !email || !reason) {
-    throw new BadRequestError('Full name, professional email, and reason for joining are required.');
+    throw new BadRequestError('Evaluator name, professional email, and motivation statement are required.');
   }
 
   const normalizedEmail = email.trim().toLowerCase();
-
-  // Check if active verified user already exists
-  const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-  if (existingUser && existingUser.is_active && existingUser.is_verified) {
-    throw new BadRequestError(`An active verified account with email '${normalizedEmail}' already exists.`);
-  }
-
-  // Duplicate Active Request Protection
-  const existingActiveRequest = await prisma.accessRequest.findFirst({
-    where: {
-      email: normalizedEmail,
-      status: { in: ['PENDING', 'UNDER_REVIEW', 'APPROVED'] }
-    }
-  });
-  if (existingActiveRequest) {
-    if (existingActiveRequest.status === 'PENDING' || existingActiveRequest.status === 'UNDER_REVIEW') {
-      throw new BadRequestError('An access request for this email is currently pending review.');
-    }
-    if (existingActiveRequest.status === 'APPROVED') {
-      throw new BadRequestError('An approved access request already exists for this email. Please check your invitation or contact support.');
-    }
-  }
 
   const expertiseArray = Array.isArray(domain_expertise)
     ? domain_expertise
@@ -59,24 +39,48 @@ export const createEvaluatorSelfApplication = async (data, ip_address = null) =>
     ? (organization?.trim() || 'Independent Consultant')
     : organization.trim();
 
-  const accessRequest = await prisma.accessRequest.create({
-    data: {
-      name: name.trim(),
-      email: normalizedEmail,
-      phone: phone ? phone.trim() : null,
-      requested_role: 'EVALUATOR', // Enforce EVALUATOR
-      request_source: 'SELF_REQUEST',
-      organization: orgName,
-      designation: designation ? designation.trim() : 'Innovation Evaluator',
-      employment_type,
-      domain_expertise: expertiseArray,
-      years_experience: Number(years_experience) || 0,
-      bio: bio ? bio.trim() : null,
-      reason: reason.trim(),
-      supporting_document_url: supporting_document_url ? supporting_document_url.trim() : null,
-      status: 'PENDING'
+  const accessRequest = await prisma.$transaction(async (tx) => {
+    // Check if active verified user already exists
+    const existingUser = await tx.user.findUnique({ where: { email: normalizedEmail } });
+    if (existingUser && existingUser.is_active && existingUser.is_verified) {
+      throw new BadRequestError(`An active verified account with email '${normalizedEmail}' already exists.`);
     }
-  });
+
+    // Atomic Duplicate Active Request Protection (Phase 3 Concurrency Hardening)
+    const existingActiveRequest = await tx.accessRequest.findFirst({
+      where: {
+        email: normalizedEmail,
+        status: { in: ['PENDING', 'UNDER_REVIEW', 'APPROVED'] }
+      }
+    });
+    if (existingActiveRequest) {
+      if (existingActiveRequest.status === 'PENDING' || existingActiveRequest.status === 'UNDER_REVIEW') {
+        throw new ConflictError('An access request for this email is currently pending review.');
+      }
+      if (existingActiveRequest.status === 'APPROVED') {
+        throw new ConflictError('An approved access request already exists for this email. Please check your invitation or contact support.');
+      }
+    }
+
+    return await tx.accessRequest.create({
+      data: {
+        name: name.trim(),
+        email: normalizedEmail,
+        phone: phone ? phone.trim() : null,
+        requested_role: 'EVALUATOR', // Enforce EVALUATOR
+        request_source: 'SELF_REQUEST',
+        organization: orgName,
+        designation: designation ? designation.trim() : 'Innovation Evaluator',
+        employment_type,
+        domain_expertise: expertiseArray,
+        years_experience: Number(years_experience) || 0,
+        bio: bio ? bio.trim() : null,
+        reason: reason.trim(),
+        supporting_document_url: supporting_document_url ? supporting_document_url.trim() : null,
+        status: 'PENDING'
+      }
+    });
+  }, { maxWait: 10000, timeout: 15000 });
 
   await createAuditLog({
     user_id: null,
@@ -138,75 +142,77 @@ export const createGovernmentAccessRequest = async (data, ip_address = null) => 
 
   const normalizedEmail = email.trim().toLowerCase();
 
-  // Check if active verified user already exists or belongs to another role
-  const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-  if (existingUser) {
-    if (existingUser.role !== 'GOVERNMENT') {
-      throw new ForbiddenError(
-        `Cannot submit Government access request: an account with email '${normalizedEmail}' already exists with role '${existingUser.role}'. Cross-role privilege escalation is prohibited.`
-      );
+  const accessRequest = await prisma.$transaction(async (tx) => {
+    // Check if active verified user already exists or belongs to another role
+    const existingUser = await tx.user.findUnique({ where: { email: normalizedEmail } });
+    if (existingUser) {
+      if (existingUser.role !== 'GOVERNMENT') {
+        throw new ForbiddenError(
+          `Cannot submit Government access request: an account with email '${normalizedEmail}' already exists with role '${existingUser.role}'. Cross-role privilege escalation is prohibited.`
+        );
+      }
+      if (existingUser.is_active && existingUser.is_verified) {
+        throw new BadRequestError(`An active verified Government account with email '${normalizedEmail}' already exists.`);
+      }
     }
-    if (existingUser.is_active && existingUser.is_verified) {
-      throw new BadRequestError(`An active verified Government account with email '${normalizedEmail}' already exists.`);
-    }
-  }
 
-  // Duplicate Active Request Protection
-  const existingActiveRequest = await prisma.accessRequest.findFirst({
-    where: {
-      email: normalizedEmail,
-      status: { in: ['PENDING', 'UNDER_REVIEW', 'APPROVED'] }
-    }
-  });
-  if (existingActiveRequest) {
-    if (existingActiveRequest.status === 'PENDING' || existingActiveRequest.status === 'UNDER_REVIEW') {
-      throw new BadRequestError('An access request for this email is currently pending review.');
-    }
-    if (existingActiveRequest.status === 'APPROVED') {
-      throw new BadRequestError('An approved access request already exists for this email. Please check your invitation or contact support.');
-    }
-  }
-
-  // Department Security: Match existing department if possible, otherwise keep department_id null for Admin review
-  let matchedDepartmentId = null;
-  if (department_id) {
-    const dep = await prisma.department.findUnique({ where: { id: department_id } });
-    if (dep) matchedDepartmentId = dep.id;
-  }
-
-  if (!matchedDepartmentId) {
-    const existingDept = await prisma.department.findFirst({
+    // Atomic Duplicate Active Request Protection (Phase 3 Concurrency Hardening)
+    const existingActiveRequest = await tx.accessRequest.findFirst({
       where: {
-        name: { equals: department_name.trim(), mode: 'insensitive' },
-        state: { equals: state.trim(), mode: 'insensitive' }
+        email: normalizedEmail,
+        status: { in: ['PENDING', 'UNDER_REVIEW', 'APPROVED'] }
       }
     });
-    if (existingDept) {
-      matchedDepartmentId = existingDept.id;
+    if (existingActiveRequest) {
+      if (existingActiveRequest.status === 'PENDING' || existingActiveRequest.status === 'UNDER_REVIEW') {
+        throw new ConflictError('An access request for this email is currently pending review.');
+      }
+      if (existingActiveRequest.status === 'APPROVED') {
+        throw new ConflictError('An approved access request already exists for this email. Please check your invitation or contact support.');
+      }
     }
-  }
 
-  const accessRequest = await prisma.accessRequest.create({
-    data: {
-      name: name.trim(),
-      email: normalizedEmail,
-      phone: phone ? phone.trim() : null,
-      requested_role: 'GOVERNMENT', // Backend is strictly authoritative: always GOVERNMENT
-      request_source: 'SELF_REQUEST',
-      department_id: matchedDepartmentId,
-      department_name: department_name.trim(),
-      state: state.trim(),
-      department_code: department_code ? department_code.trim() : null,
-      official_website: official_website ? official_website.trim() : null,
-      organization: organization ? organization.trim() : department_name.trim(),
-      designation: designation ? designation.trim() : 'Department Nodal Officer',
-      employment_type: employment_type || 'EMPLOYED',
-      domain_expertise: ['Public Procurement', 'Government Administration'],
-      reason: reason.trim(),
-      supporting_document_url: supporting_document_url ? supporting_document_url.trim() : null,
-      status: 'PENDING'
+    // Department Security: Match existing department if possible, otherwise keep department_id null for Admin review
+    let matchedDepartmentId = null;
+    if (department_id) {
+      const dep = await tx.department.findUnique({ where: { id: department_id } });
+      if (dep) matchedDepartmentId = dep.id;
     }
-  });
+
+    if (!matchedDepartmentId) {
+      const existingDept = await tx.department.findFirst({
+        where: {
+          name: { equals: department_name.trim(), mode: 'insensitive' },
+          state: { equals: state.trim(), mode: 'insensitive' }
+        }
+      });
+      if (existingDept) {
+        matchedDepartmentId = existingDept.id;
+      }
+    }
+
+    return await tx.accessRequest.create({
+      data: {
+        name: name.trim(),
+        email: normalizedEmail,
+        phone: phone ? phone.trim() : null,
+        requested_role: 'GOVERNMENT', // Backend is strictly authoritative: always GOVERNMENT
+        request_source: 'SELF_REQUEST',
+        department_id: matchedDepartmentId,
+        department_name: department_name.trim(),
+        state: state.trim(),
+        department_code: department_code ? department_code.trim() : null,
+        official_website: official_website ? official_website.trim() : null,
+        organization: organization ? organization.trim() : department_name.trim(),
+        designation: designation ? designation.trim() : 'Department Nodal Officer',
+        employment_type: employment_type || 'EMPLOYED',
+        domain_expertise: ['Public Procurement', 'Government Administration'],
+        reason: reason.trim(),
+        supporting_document_url: supporting_document_url ? supporting_document_url.trim() : null,
+        status: 'PENDING'
+      }
+    });
+  }, { maxWait: 10000, timeout: 15000 });
 
   await createAuditLog({
     user_id: null,
@@ -217,7 +223,7 @@ export const createGovernmentAccessRequest = async (data, ip_address = null) => 
       requested_role: 'GOVERNMENT',
       request_source: 'SELF_REQUEST',
       email: normalizedEmail,
-      department_id: matchedDepartmentId,
+      department_id: accessRequest.department_id,
       department_name: department_name.trim(),
       state: state.trim()
     },
@@ -273,35 +279,6 @@ export const createGovernmentNomination = async (data, currentUser, ip_address =
 
   const normalizedEmail = email.trim().toLowerCase();
 
-  // Check if active verified user already exists or belongs to another role
-  const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-  if (existingUser) {
-    if (existingUser.role !== 'EVALUATOR') {
-      throw new ForbiddenError(
-        `Cannot nominate evaluator: an account with email '${normalizedEmail}' already exists with role '${existingUser.role}'. Cross-role conversion is prohibited.`
-      );
-    }
-    if (existingUser.is_active && existingUser.is_verified) {
-      throw new BadRequestError(`An active verified Evaluator account with email '${normalizedEmail}' already exists.`);
-    }
-  }
-
-  // Duplicate Active Request Protection
-  const existingActiveRequest = await prisma.accessRequest.findFirst({
-    where: {
-      email: normalizedEmail,
-      status: { in: ['PENDING', 'UNDER_REVIEW', 'APPROVED'] }
-    }
-  });
-  if (existingActiveRequest) {
-    if (existingActiveRequest.status === 'PENDING' || existingActiveRequest.status === 'UNDER_REVIEW') {
-      throw new BadRequestError('An access request for this email is currently pending review.');
-    }
-    if (existingActiveRequest.status === 'APPROVED') {
-      throw new BadRequestError('An approved access request already exists for this email. Please check your invitation or contact support.');
-    }
-  }
-
   const expertiseArray = Array.isArray(domain_expertise)
     ? domain_expertise
     : (domain_expertise ? domain_expertise.split(',').map(s => s.trim()).filter(Boolean) : ['General Innovation']);
@@ -310,45 +287,76 @@ export const createGovernmentNomination = async (data, currentUser, ip_address =
     ? (organization?.trim() || 'Independent Consultant')
     : organization.trim();
 
-  // Challenge Authorization Scoping: If challenge_id is provided, verify authorization
-  let validatedChallengeId = null;
-  if (challenge_id) {
-    const challenge = await prisma.challenge.findUnique({ where: { id: challenge_id } });
-    if (!challenge) {
-      throw new BadRequestError(`Challenge with ID '${challenge_id}' not found.`);
-    }
-    if (currentUser.role === 'GOVERNMENT') {
-      const isCreator = challenge.created_by === currentUser.id;
-      const isDeptMatch = currentUser.department_id && challenge.department_id === currentUser.department_id;
-      if (!isCreator && !isDeptMatch) {
-        throw new ForbiddenError('You are not authorized to nominate evaluators for a challenge belonging to another department.');
+  const accessRequest = await prisma.$transaction(async (tx) => {
+    // Check if active verified user already exists or belongs to another role
+    const existingUser = await tx.user.findUnique({ where: { email: normalizedEmail } });
+    if (existingUser) {
+      if (existingUser.role !== 'EVALUATOR') {
+        throw new ForbiddenError(
+          `Cannot nominate evaluator: an account with email '${normalizedEmail}' already exists with role '${existingUser.role}'. Cross-role conversion is prohibited.`
+        );
+      }
+      if (existingUser.is_active && existingUser.is_verified) {
+        throw new BadRequestError(`An active verified Evaluator account with email '${normalizedEmail}' already exists.`);
       }
     }
-    validatedChallengeId = challenge.id;
-  }
 
-  // Create PENDING access request sourced from government nomination
-  const accessRequest = await prisma.accessRequest.create({
-    data: {
-      name: name.trim(),
-      email: normalizedEmail,
-      phone: phone ? phone.trim() : null,
-      requested_role: 'EVALUATOR',
-      request_source: 'GOVERNMENT_NOMINATION',
-      department_id: currentUser.department_id || null,
-      nominated_by_user_id: currentUser.id,
-      challenge_id: validatedChallengeId,
-      organization: orgName,
-      designation: designation ? designation.trim() : 'Evaluation Specialist',
-      employment_type,
-      domain_expertise: expertiseArray,
-      years_experience: Number(years_experience) || 0,
-      bio: bio ? bio.trim() : null,
-      reason: reason.trim(),
-      supporting_document_url: supporting_document_url ? supporting_document_url.trim() : null,
-      status: 'PENDING'
+    // Atomic Duplicate Active Request Protection (Phase 3 Concurrency Hardening)
+    const existingActiveRequest = await tx.accessRequest.findFirst({
+      where: {
+        email: normalizedEmail,
+        status: { in: ['PENDING', 'UNDER_REVIEW', 'APPROVED'] }
+      }
+    });
+    if (existingActiveRequest) {
+      if (existingActiveRequest.status === 'PENDING' || existingActiveRequest.status === 'UNDER_REVIEW') {
+        throw new ConflictError('An access request for this email is currently pending review.');
+      }
+      if (existingActiveRequest.status === 'APPROVED') {
+        throw new ConflictError('An approved access request already exists for this email. Please check your invitation or contact support.');
+      }
     }
-  });
+
+    // Challenge Authorization Scoping: If challenge_id is provided, verify authorization
+    let validatedChallengeId = null;
+    if (challenge_id) {
+      const challenge = await tx.challenge.findUnique({ where: { id: challenge_id } });
+      if (!challenge) {
+        throw new BadRequestError(`Challenge with ID '${challenge_id}' not found.`);
+      }
+      if (currentUser.role === 'GOVERNMENT') {
+        const isCreator = challenge.created_by === currentUser.id;
+        const isDeptMatch = currentUser.department_id && challenge.department_id === currentUser.department_id;
+        if (!isCreator && !isDeptMatch) {
+          throw new ForbiddenError('You are not authorized to nominate evaluators for a challenge belonging to another department.');
+        }
+      }
+      validatedChallengeId = challenge.id;
+    }
+
+    // Create PENDING access request sourced from government nomination
+    return await tx.accessRequest.create({
+      data: {
+        name: name.trim(),
+        email: normalizedEmail,
+        phone: phone ? phone.trim() : null,
+        requested_role: 'EVALUATOR',
+        request_source: 'GOVERNMENT_NOMINATION',
+        department_id: currentUser.department_id || null,
+        nominated_by_user_id: currentUser.id,
+        challenge_id: validatedChallengeId,
+        organization: orgName,
+        designation: designation ? designation.trim() : 'Evaluation Specialist',
+        employment_type,
+        domain_expertise: expertiseArray,
+        years_experience: Number(years_experience) || 0,
+        bio: bio ? bio.trim() : null,
+        reason: reason.trim(),
+        supporting_document_url: supporting_document_url ? supporting_document_url.trim() : null,
+        status: 'PENDING'
+      }
+    });
+  }, { maxWait: 10000, timeout: 15000 });
 
   await createAuditLog({
     user_id: currentUser.id,
@@ -379,15 +387,6 @@ export const createGovernmentNomination = async (data, currentUser, ip_address =
       link: '/admin/access-requests'
     });
   }
-
-  // Notify Nominator
-  await sendNotification({
-    user_id: currentUser.id,
-    title: 'Evaluator Nomination Submitted',
-    message: `Your nomination for ${name.trim()} has been submitted for Administrative verification.`,
-    type: 'NOMINATION_SUBMITTED',
-    link: '/government/challenges'
-  });
 
   return {
     ...accessRequest,
@@ -715,6 +714,15 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
       ip_address
     });
 
+    // Real Email Delivery Service (Phase 2): Send secure setup email to applicant
+    await sendInvitationEmail({
+      email: normalizedEmail,
+      name: request.name,
+      role: request.requested_role,
+      rawToken: rawInvitationToken,
+      departmentName: request.department_name || (request.department ? request.department.name : null)
+    });
+
     return {
       request: updatedRequest,
       user: {
@@ -726,10 +734,11 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
         is_verified: user.is_verified
       },
       invitation: {
-        setup_token: rawInvitationToken,
+        setup_token: config.NODE_ENV === 'production' ? undefined : rawInvitationToken,
         setup_link: `/invite/accept?token=${rawInvitationToken}`,
         government_setup_link: `/government/set-password?token=${rawInvitationToken}`,
-        expires_at: invitation_expires_at.toISOString()
+        expires_at: invitation_expires_at.toISOString(),
+        email_delivered: true
       }
     };
   });
@@ -860,13 +869,23 @@ export const resendInvitation = async (id, adminUser, ip_address = null) => {
       ip_address
     });
 
+    // Real Email Delivery Service (Phase 2): Send secure setup email on resend
+    await sendInvitationEmail({
+      email: normalizedEmail,
+      name: request.name,
+      role: request.requested_role,
+      rawToken: rawInvitationToken,
+      departmentName: request.department_name || (request.department ? request.department.name : null)
+    });
+
     return {
-      message: 'Invitation re-generated successfully. Old invitation tokens have been invalidated.',
+      message: 'Invitation re-generated and sent via email successfully. Old invitation tokens have been invalidated.',
       invitation: {
-        setup_token: rawInvitationToken,
+        setup_token: config.NODE_ENV === 'production' ? undefined : rawInvitationToken,
         setup_link: `/invite/accept?token=${rawInvitationToken}`,
         government_setup_link: `/government/set-password?token=${rawInvitationToken}`,
-        expires_at: invitation_expires_at.toISOString()
+        expires_at: invitation_expires_at.toISOString(),
+        email_delivered: true
       }
     };
   });

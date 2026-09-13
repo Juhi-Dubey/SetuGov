@@ -32,7 +32,7 @@ function StartupDashboard() {
   const [loading, setLoading] = useState(true);
 
   const startupId = user?.startups?.[0]?.id || user?.id;
-  const startupName = user?.startups?.[0]?.name || user?.name || "MediQueue AI";
+  const startupName = user?.startups?.[0]?.name || user?.name || "Startup Portal";
 
   useEffect(() => {
     loadData();
@@ -58,7 +58,7 @@ function StartupDashboard() {
       setPilots(pilotList);
       setPerformance(perfData);
     } catch (err) {
-      console.warn("Startup dashboard load fallback:", err);
+      console.warn("Startup dashboard load error:", err);
     } finally {
       setLoading(false);
     }
@@ -72,25 +72,25 @@ function StartupDashboard() {
     return [
       {
         title: "Active Applications",
-        value: String(applications.length || 2),
+        value: String(applications.length),
         description: "Submitted procurement proposals",
         icon: FileText,
       },
       {
         title: "Under Evaluation",
-        value: String(underReview || 1),
+        value: String(underReview),
         description: "Awaiting evaluator scoring",
         icon: Clock3,
       },
       {
         title: "Pilot Sandboxes",
-        value: String(selectedCount || 1),
+        value: String(selectedCount),
         description: "Active government field trials",
         icon: Rocket,
       },
       {
         title: "Milestone Funding",
-        value: totalBudget > 0 ? `₹${(totalBudget / 100000).toFixed(1)}L` : "₹15.0L",
+        value: totalBudget > 0 ? `₹${(totalBudget / 100000).toFixed(1)}L` : "₹0.0L",
         description: "Committed escrow grants",
         icon: Wallet,
       },

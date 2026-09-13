@@ -42,7 +42,16 @@ export const config = {
   ACCESS_REQUEST_RATE_LIMIT_MAX: parseInt(process.env.ACCESS_REQUEST_RATE_LIMIT_MAX || '5', 10),
   TURNSTILE_ENABLED: process.env.TURNSTILE_ENABLED === 'true',
   TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
-  CORS_ORIGIN: process.env.CORS_ORIGIN || '*'
+  CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
+  EMAIL_PROVIDER: process.env.EMAIL_PROVIDER || 'console',
+  EMAIL_FROM: process.env.EMAIL_FROM || 'noreply@setugov.gov.in',
+  EMAIL_API_KEY: process.env.EMAIL_API_KEY || '',
+  SMTP_HOST: process.env.SMTP_HOST || '',
+  SMTP_PORT: parseInt(process.env.SMTP_PORT || '587', 10),
+  SMTP_USER: process.env.SMTP_USER || '',
+  SMTP_PASS: process.env.SMTP_PASS || '',
+  SMTP_SECURE: process.env.SMTP_SECURE === 'true',
+  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173'
 };
 
 export default config;

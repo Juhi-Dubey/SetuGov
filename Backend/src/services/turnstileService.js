@@ -16,6 +16,11 @@ export const verifyTurnstileToken = async (token, remoteIp = null, expectedActio
     return { success: true, bypassed: true };
   }
 
+  // Non-production test bypass support
+  if (config.NODE_ENV !== 'production' && (token === 'test_dummy_turnstile_pass' || token === 'XXXX.DUMMY.TOKEN.XXXX')) {
+    return { success: true, bypassed: true };
+  }
+
   // If enabled in production but secret key is not configured, fail safely
   if (!config.TURNSTILE_SECRET_KEY) {
     console.error('[SECURITY ERROR] TURNSTILE_ENABLED is true, but TURNSTILE_SECRET_KEY is missing from environment configuration.');

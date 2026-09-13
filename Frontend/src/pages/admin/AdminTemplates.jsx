@@ -9,95 +9,28 @@ import {
   Plus,
   Trash2,
   X,
+  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const initialTemplates = [
-  {
-    id: 1,
-    name: "Government Challenge Template",
-    type: "Challenge",
-    description:
-      "Standard template for creating outcome-based government challenges.",
-    fields: 12,
-    status: "Active",
-    updated: "28 Aug 2026",
-  },
-  {
-    id: 2,
-    name: "Startup Evaluation Template",
-    type: "Evaluation",
-    description:
-      "Standard evaluation form containing innovation, feasibility, scalability and impact criteria.",
-    fields: 8,
-    status: "Active",
-    updated: "26 Aug 2026",
-  },
-  {
-    id: 3,
-    name: "Pilot Proposal Template",
-    type: "Pilot",
-    description:
-      "Template for defining pilot objectives, milestones, resources and success metrics.",
-    fields: 10,
-    status: "Active",
-    updated: "22 Aug 2026",
-  },
-  {
-    id: 4,
-    name: "Pilot Completion Report",
-    type: "Pilot",
-    description:
-      "Template for documenting pilot outcomes, evidence and performance.",
-    fields: 9,
-    status: "Active",
-    updated: "20 Aug 2026",
-  },
-  {
-    id: 5,
-    name: "Procurement Decision Template",
-    type: "Decision",
-    description:
-      "Template for recording the final decision after evaluation and pilot completion.",
-    fields: 7,
-    status: "Inactive",
-    updated: "15 Aug 2026",
-  },
-];
+import {
+  getAdminTemplates,
+  createAdminTemplate,
+  updateAdminTemplate,
+  deleteAdminTemplate,
+} from "../../services/adminService";
 
 function AdminTemplates() {
   const navigate = useNavigate();
 
-  const [templates, setTemplates] = useState(() => {
-    try {
-      const saved = localStorage.getItem("setugov_templates");
-      return saved ? JSON.parse(saved) : initialTemplates;
-    } catch {
-      return initialTemplates;
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem("setugov_templates", JSON.stringify(templates));
-  }, [templates]);
-
-  const [selectedTemplate, setSelectedTemplate] =
-    useState(null);
-
-  const [showModal, setShowModal] =
-    useState(false);
-
-  const [editingTemplate, setEditingTemplate] =
-    useState(null);
-
-  const [deleteId, setDeleteId] =
-    useState(null);
-
-  const [typeFilter, setTypeFilter] =
-    useState("All");
-
-  const [statusFilter, setStatusFilter] =
-    useState("All");
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [deleteId, setDeleteId] = useState(null);
+  const [typeFilter, setTypeFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
 
   const [form, setForm] = useState({
     name: "",
@@ -107,41 +40,43 @@ function AdminTemplates() {
     status: "Active",
   });
 
-  const activeCount = templates.filter(
-    (item) => item.status === "Active"
-  ).length;
+  useEffect(() => {
+    loadTemplates();
+  }, [typeFilter, statusFilter]);
 
-  const inactiveCount = templates.filter(
-    (item) => item.status === "Inactive"
-  ).length;
+  const loadTemplates = async () => {
+    try {
+      setLoading(true);
+      const res = await getAdminTemplates({
+        type: typeFilter !== "All" ? typeFilter : undefined,
+        status: statusFilter !== "All" ? statusFilter : undefined,
+      });
+      const list = (res?.data || res || []).map((t) => ({
+        ...t,
+        fields: t.fields_count !== undefined ? t.fields_count : t.fields,
+        updated: t.updated_at ? new Date(t.updated_at).toLocaleDateString("en-IN") : "Active",
+      }));
+      setTemplates(list);
+    } catch (err) {
+      console.warn("Could not load templates from backend:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const types = [
-    "All",
-    "Challenge",
-    "Evaluation",
-    "Pilot",
-    "Decision",
-  ];
+  const activeCount = templates.filter((item) => item.status === "Active").length;
+  const inactiveCount = templates.filter((item) => item.status === "Inactive").length;
 
-  const filteredTemplates =
-    templates.filter((template) => {
-      const matchesType =
-        typeFilter === "All" ||
-        template.type === typeFilter;
+  const types = ["All", "Challenge", "Evaluation", "Pilot", "Decision"];
 
-      const matchesStatus =
-        statusFilter === "All" ||
-        template.status === statusFilter;
-
-      return (
-        matchesType &&
-        matchesStatus
-      );
-    });
+  const filteredTemplates = templates.filter((template) => {
+    const matchesType = typeFilter === "All" || template.type === typeFilter;
+    const matchesStatus = statusFilter === "All" || template.status === statusFilter;
+    return matchesType && matchesStatus;
+  });
 
   const openAddModal = () => {
     setEditingTemplate(null);
-
     setForm({
       name: "",
       type: "Challenge",
@@ -149,21 +84,18 @@ function AdminTemplates() {
       fields: "",
       status: "Active",
     });
-
     setShowModal(true);
   };
 
   const openEditModal = (template) => {
     setEditingTemplate(template);
-
     setForm({
       name: template.name,
       type: template.type,
       description: template.description,
-      fields: String(template.fields),
+      fields: String(template.fields || template.fields_count || 0),
       status: template.status,
     });
-
     setShowModal(true);
   };
 
@@ -173,105 +105,83 @@ function AdminTemplates() {
   };
 
   const handleChange = (event) => {
-    const { name, value } =
-      event.target;
-
+    const { name, value } = event.target;
     setForm((current) => ({
       ...current,
       [name]: value,
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-
-    if (
-      !form.name.trim() ||
-      !form.description.trim() ||
-      !form.fields
-    ) {
+    if (!form.name.trim() || !form.description.trim() || !form.fields) {
       return;
     }
 
-    if (editingTemplate) {
-      setTemplates((current) =>
-        current.map((template) =>
-          template.id ===
-          editingTemplate.id
-            ? {
-                ...template,
-                name: form.name.trim(),
-                type: form.type,
-                description:
-                  form.description.trim(),
-                fields: Number(form.fields),
-                status: form.status,
-                updated:
-                  "31 Aug 2026",
-              }
-            : template
-        )
-      );
-    } else {
-      setTemplates((current) => [
-        ...current,
-        {
-          id: Date.now(),
+    try {
+      setSaving(true);
+      if (editingTemplate) {
+        await updateAdminTemplate(editingTemplate.id, {
           name: form.name.trim(),
           type: form.type,
-          description:
-            form.description.trim(),
-          fields: Number(form.fields),
+          description: form.description.trim(),
+          fields_count: Number(form.fields),
           status: form.status,
-          updated: "31 Aug 2026",
-        },
-      ]);
+        });
+      } else {
+        await createAdminTemplate({
+          name: form.name.trim(),
+          type: form.type,
+          description: form.description.trim(),
+          fields_count: Number(form.fields),
+          status: form.status,
+        });
+      }
+      closeModal();
+      loadTemplates();
+    } catch (err) {
+      alert(`Error saving template: ${err.message}`);
+    } finally {
+      setSaving(false);
     }
-
-    closeModal();
   };
 
-  const duplicateTemplate = (template) => {
-    const copyTemplate = {
-      ...template,
-      id: Date.now(),
-      name: `${template.name} Copy`,
-      status: "Inactive",
-      updated: "31 Aug 2026",
-    };
-
-    setTemplates((current) => [
-      ...current,
-      copyTemplate,
-    ]);
+  const duplicateTemplate = async (template) => {
+    try {
+      await createAdminTemplate({
+        name: `${template.name} (Copy)`,
+        type: template.type,
+        description: template.description,
+        fields_count: Number(template.fields || template.fields_count || 0),
+        status: "Inactive",
+      });
+      loadTemplates();
+    } catch (err) {
+      alert(`Error duplicating template: ${err.message}`);
+    }
   };
 
-  const toggleStatus = (id) => {
-    setTemplates((current) =>
-      current.map((template) =>
-        template.id === id
-          ? {
-              ...template,
-              status:
-                template.status ===
-                "Active"
-                  ? "Inactive"
-                  : "Active",
-            }
-          : template
-      )
-    );
+  const toggleStatus = async (itemOrId) => {
+    try {
+      const template = typeof itemOrId === "object" ? itemOrId : templates.find((t) => t.id === itemOrId);
+      if (!template) return;
+      const newStatus = template.status === "Active" ? "Inactive" : "Active";
+      await updateAdminTemplate(template.id, { status: newStatus });
+      loadTemplates();
+    } catch (err) {
+      alert(`Error updating status: ${err.message}`);
+    }
   };
 
-  const deleteTemplate = () => {
-    setTemplates((current) =>
-      current.filter(
-        (template) =>
-          template.id !== deleteId
-      )
-    );
-
-    setDeleteId(null);
+  const deleteTemplate = async () => {
+    if (!deleteId) return;
+    try {
+      await deleteAdminTemplate(deleteId);
+      setDeleteId(null);
+      loadTemplates();
+    } catch (err) {
+      alert(`Error deleting template: ${err.message}`);
+    }
   };
 
   return (

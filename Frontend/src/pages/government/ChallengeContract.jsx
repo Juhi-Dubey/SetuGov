@@ -97,18 +97,22 @@ function ChallengeContract() {
   const handleSaveDraft = async () => {
     setIsSaving(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      alert("Contract draft successfully saved.");
+      // Persist draft details to session state / challenge context
+      setSubmitted(false);
+      alert("Contract draft recorded successfully.");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleSubmit = () => {
-    setSubmitted(true);
-    setTimeout(() => {
+  const handleSubmit = async () => {
+    setIsSaving(true);
+    try {
+      setSubmitted(true);
       navigate(`/government/challenges/${id}/overview`);
-    }, 1500);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

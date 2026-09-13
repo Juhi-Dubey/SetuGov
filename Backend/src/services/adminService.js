@@ -411,10 +411,386 @@ export const provisionUser = async (data, adminUser, ip_address = null) => {
   };
 };
 
+/**
+ * ----------------------------------------------------
+ * SYSTEM SETTINGS (Phase 5: PostgreSQL Persistence)
+ * ----------------------------------------------------
+ */
+const DEFAULT_SETTINGS = {
+  platformName: "SetuGov Procurement OS",
+  supportEmail: "support@setugov.gov.in",
+  timezone: "IST (UTC+05:30)",
+  currency: "INR (₹)",
+  mfaRequired: true,
+  sessionTimeout: "30",
+  auditRetentionDays: "365",
+  emailNotifications: true,
+  challengeSubmissionAlerts: true,
+  evaluationReminders: true,
+  autoBackupEnabled: true
+};
+
+export const getSystemSettings = async () => {
+  const settingsRecords = await prisma.systemSetting.findMany();
+  if (settingsRecords.length === 0) {
+    // Seed default settings into PostgreSQL
+    for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
+      await prisma.systemSetting.upsert({
+        where: { key },
+        update: { value },
+        create: { key, value }
+      });
+    }
+    return DEFAULT_SETTINGS;
+  }
+
+  const result = { ...DEFAULT_SETTINGS };
+  for (const record of settingsRecords) {
+    result[record.key] = record.value;
+  }
+  return result;
+};
+
+export const updateSystemSettings = async (settingsData, adminUser, ip_address = null) => {
+  if (adminUser.role !== 'ADMIN') {
+    throw new ForbiddenError('Only Administrators can update system configurations.');
+  }
+
+  for (const [key, value] of Object.entries(settingsData)) {
+    await prisma.systemSetting.upsert({
+      where: { key },
+      update: { value, updated_by: adminUser.id },
+      create: { key, value, updated_by: adminUser.id }
+    });
+  }
+
+  await createAuditLog({
+    user_id: adminUser.id,
+    action: 'SYSTEM_SETTINGS_UPDATED',
+    entity_type: 'SYSTEM',
+    entity_id: 'SYSTEM_CONFIG',
+    details: { updated_keys: Object.keys(settingsData) },
+    ip_address
+  });
+
+  return getSystemSettings();
+};
+
+/**
+ * ----------------------------------------------------
+ * EVALUATION CRITERIA (Phase 5: PostgreSQL Persistence)
+ * ----------------------------------------------------
+ */
+const DEFAULT_CRITERIA = [
+  {
+    name: "Innovation",
+    description: "Measures the originality and innovative nature of the proposed solution.",
+    weight: 25.0,
+    status: "Active"
+  },
+  {
+    name: "Technical Feasibility",
+    description: "Evaluates whether the proposed technology can realistically be implemented.",
+    weight: 20.0,
+    status: "Active"
+  },
+  {
+    name: "Scalability",
+    description: "Measures the ability of the solution to scale across departments and locations.",
+    weight: 15.0,
+    status: "Active"
+  },
+  {
+    name: "Cost Effectiveness",
+    description: "Evaluates the value delivered compared with implementation and operational costs.",
+    weight: 15.0,
+    status: "Active"
+  },
+  {
+    name: "Social Impact",
+    description: "Measures the expected social and public-service impact of the solution.",
+    weight: 15.0,
+    status: "Active"
+  },
+  {
+    name: "Compliance & Security",
+    description: "Measures adherence to government data boundary and cybersecurity standards.",
+    weight: 10.0,
+    status: "Active"
+  }
+];
+
+export const getEvaluationCriteria = async () => {
+  const criteria = await prisma.evaluationCriterion.findMany({
+    orderBy: { created_at: 'asc' }
+  });
+
+  if (criteria.length === 0) {
+    for (const item of DEFAULT_CRITERIA) {
+      await prisma.evaluationCriterion.create({ data: item });
+    }
+    return prisma.evaluationCriterion.findMany({ orderBy: { created_at: 'asc' } });
+  }
+
+  return criteria;
+};
+
+export const createEvaluationCriterion = async (data, adminUser, ip_address = null) => {
+  if (adminUser.role !== 'ADMIN') {
+    throw new ForbiddenError('Only Administrators can create evaluation criteria.');
+  }
+
+  const { name, description, weight, status = 'Active' } = data;
+  if (!name || weight === undefined) {
+    throw new BadRequestError('Criterion name and weight percentage are required.');
+  }
+
+  const criterion = await prisma.evaluationCriterion.create({
+    data: {
+      name: name.trim(),
+      description: description ? description.trim() : '',
+      weight: parseFloat(weight),
+      status: status || 'Active'
+    }
+  });
+
+  await createAuditLog({
+    user_id: adminUser.id,
+    action: 'EVALUATION_CRITERION_CREATED',
+    entity_type: 'CRITERION',
+    entity_id: criterion.id,
+    details: { name: criterion.name, weight: criterion.weight },
+    ip_address
+  });
+
+  return criterion;
+};
+
+export const updateEvaluationCriterion = async (id, data, adminUser, ip_address = null) => {
+  if (adminUser.role !== 'ADMIN') {
+    throw new ForbiddenError('Only Administrators can update evaluation criteria.');
+  }
+
+  const existing = await prisma.evaluationCriterion.findUnique({ where: { id } });
+  if (!existing) {
+    throw new NotFoundError(`Criterion with ID ${id} not found.`);
+  }
+
+  const updated = await prisma.evaluationCriterion.update({
+    where: { id },
+    data: {
+      name: data.name !== undefined ? data.name.trim() : existing.name,
+      description: data.description !== undefined ? data.description.trim() : existing.description,
+      weight: data.weight !== undefined ? parseFloat(data.weight) : existing.weight,
+      status: data.status !== undefined ? data.status : existing.status
+    }
+  });
+
+  await createAuditLog({
+    user_id: adminUser.id,
+    action: 'EVALUATION_CRITERION_UPDATED',
+    entity_type: 'CRITERION',
+    entity_id: id,
+    details: { updated_fields: data },
+    ip_address
+  });
+
+  return updated;
+};
+
+export const deleteEvaluationCriterion = async (id, adminUser, ip_address = null) => {
+  if (adminUser.role !== 'ADMIN') {
+    throw new ForbiddenError('Only Administrators can delete evaluation criteria.');
+  }
+
+  const existing = await prisma.evaluationCriterion.findUnique({ where: { id } });
+  if (!existing) {
+    throw new NotFoundError(`Criterion with ID ${id} not found.`);
+  }
+
+  await prisma.evaluationCriterion.delete({ where: { id } });
+
+  await createAuditLog({
+    user_id: adminUser.id,
+    action: 'EVALUATION_CRITERION_DELETED',
+    entity_type: 'CRITERION',
+    entity_id: id,
+    details: { deleted_name: existing.name },
+    ip_address
+  });
+
+  return { success: true, message: `Criterion "${existing.name}" deleted successfully.` };
+};
+
+/**
+ * ----------------------------------------------------
+ * SYSTEM TEMPLATES (Phase 5: PostgreSQL Persistence)
+ * ----------------------------------------------------
+ */
+const DEFAULT_TEMPLATES = [
+  {
+    name: "Government Challenge Template",
+    type: "Challenge",
+    description: "Standard template for creating outcome-based government challenges.",
+    fields_count: 12,
+    status: "Active"
+  },
+  {
+    name: "Startup Evaluation Template",
+    type: "Evaluation",
+    description: "Standard evaluation form containing innovation, feasibility, scalability and impact criteria.",
+    fields_count: 8,
+    status: "Active"
+  },
+  {
+    name: "Pilot Proposal Template",
+    type: "Pilot",
+    description: "Template for defining pilot objectives, milestones, resources and success metrics.",
+    fields_count: 10,
+    status: "Active"
+  },
+  {
+    name: "Pilot Completion Report",
+    type: "Pilot",
+    description: "Template for documenting pilot outcomes, evidence and performance.",
+    fields_count: 9,
+    status: "Active"
+  },
+  {
+    name: "Procurement Decision Template",
+    type: "Decision",
+    description: "Template for recording the final decision after evaluation and pilot completion.",
+    fields_count: 7,
+    status: "Active"
+  }
+];
+
+export const getSystemTemplates = async (query = {}) => {
+  const where = {};
+  if (query.type && query.type !== 'All') where.type = query.type;
+  if (query.status && query.status !== 'All') where.status = query.status;
+
+  const templates = await prisma.systemTemplate.findMany({
+    where,
+    orderBy: { created_at: 'asc' }
+  });
+
+  if (templates.length === 0 && Object.keys(where).length === 0) {
+    for (const item of DEFAULT_TEMPLATES) {
+      await prisma.systemTemplate.create({ data: item });
+    }
+    return prisma.systemTemplate.findMany({ orderBy: { created_at: 'asc' } });
+  }
+
+  return templates;
+};
+
+export const createSystemTemplate = async (data, adminUser, ip_address = null) => {
+  if (adminUser.role !== 'ADMIN') {
+    throw new ForbiddenError('Only Administrators can create system templates.');
+  }
+
+  const { name, type, description, fields_count = 0, status = 'Active', schema_definition } = data;
+  if (!name || !type) {
+    throw new BadRequestError('Template name and type are required.');
+  }
+
+  const template = await prisma.systemTemplate.create({
+    data: {
+      name: name.trim(),
+      type: type.trim(),
+      description: description ? description.trim() : '',
+      fields_count: parseInt(fields_count, 10) || 0,
+      status: status || 'Active',
+      schema_definition: schema_definition || null
+    }
+  });
+
+  await createAuditLog({
+    user_id: adminUser.id,
+    action: 'SYSTEM_TEMPLATE_CREATED',
+    entity_type: 'TEMPLATE',
+    entity_id: template.id,
+    details: { name: template.name, type: template.type },
+    ip_address
+  });
+
+  return template;
+};
+
+export const updateSystemTemplate = async (id, data, adminUser, ip_address = null) => {
+  if (adminUser.role !== 'ADMIN') {
+    throw new ForbiddenError('Only Administrators can update system templates.');
+  }
+
+  const existing = await prisma.systemTemplate.findUnique({ where: { id } });
+  if (!existing) {
+    throw new NotFoundError(`Template with ID ${id} not found.`);
+  }
+
+  const updated = await prisma.systemTemplate.update({
+    where: { id },
+    data: {
+      name: data.name !== undefined ? data.name.trim() : existing.name,
+      type: data.type !== undefined ? data.type.trim() : existing.type,
+      description: data.description !== undefined ? data.description.trim() : existing.description,
+      fields_count: data.fields_count !== undefined ? parseInt(data.fields_count, 10) : existing.fields_count,
+      status: data.status !== undefined ? data.status : existing.status,
+      schema_definition: data.schema_definition !== undefined ? data.schema_definition : existing.schema_definition
+    }
+  });
+
+  await createAuditLog({
+    user_id: adminUser.id,
+    action: 'SYSTEM_TEMPLATE_UPDATED',
+    entity_type: 'TEMPLATE',
+    entity_id: id,
+    details: { updated_fields: data },
+    ip_address
+  });
+
+  return updated;
+};
+
+export const deleteSystemTemplate = async (id, adminUser, ip_address = null) => {
+  if (adminUser.role !== 'ADMIN') {
+    throw new ForbiddenError('Only Administrators can delete system templates.');
+  }
+
+  const existing = await prisma.systemTemplate.findUnique({ where: { id } });
+  if (!existing) {
+    throw new NotFoundError(`Template with ID ${id} not found.`);
+  }
+
+  await prisma.systemTemplate.delete({ where: { id } });
+
+  await createAuditLog({
+    user_id: adminUser.id,
+    action: 'SYSTEM_TEMPLATE_DELETED',
+    entity_type: 'TEMPLATE',
+    entity_id: id,
+    details: { deleted_name: existing.name },
+    ip_address
+  });
+
+  return { success: true, message: `Template "${existing.name}" deleted successfully.` };
+};
+
 export default {
   getDashboardOverview,
   verifyDepartment,
   updateUserRole,
-  provisionUser
+  provisionUser,
+  getSystemSettings,
+  updateSystemSettings,
+  getEvaluationCriteria,
+  createEvaluationCriterion,
+  updateEvaluationCriterion,
+  deleteEvaluationCriterion,
+  getSystemTemplates,
+  createSystemTemplate,
+  updateSystemTemplate,
+  deleteSystemTemplate
 };
+
 

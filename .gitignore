@@ -31,3 +31,8 @@ build/
 .next/
 .pgdata/
 *.log
+
+# Uploads / Private Documents
+uploads/*
+Backend/uploads/*
+!Backend/uploads/.gitkeep

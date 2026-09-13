@@ -8,7 +8,8 @@ const router = Router();
 // Upload a single document / evidence file (Max 10MB; PDF, PNG, JPG)
 router.post('/', authenticate, uploadSingle('file'), handleFileUpload);
 
-// Retrieve private verification document (Protected: Authentication + ADMIN authorization)
+// Retrieve private verification / supporting document (Protected: Authentication + Authorization)
 router.get('/private/:filename', authenticate, getPrivateFile);
+router.get('/:filename', authenticate, getPrivateFile);
 
 export default router;
