@@ -1,7 +1,8 @@
 import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { validateTransition } from '../utils/lifecycle.js';
-import { generateMockEmbedding } from '../utils/vector.js';
+import embeddingService from './embeddingService.js';
+import { logger } from '../utils/logger.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
 
@@ -33,10 +34,6 @@ export const createChallenge = async (data, user, ip_address = null) => {
     throw new BadRequestError(`Department with ID ${department_id} does not exist.`);
   }
 
-  // Generate semantic embedding vector for challenge
-  const embeddingText = `${data.title} ${data.problem_description} ${data.desired_outcome} ${data.required_technologies.join(' ')}`;
-  const embedding = generateMockEmbedding(embeddingText);
-
   const challenge = await prisma.challenge.create({
     data: {
       department_id,
@@ -57,8 +54,7 @@ export const createChallenge = async (data, user, ip_address = null) => {
       licensing_terms: data.licensing_terms ? data.licensing_terms.trim() : null,
       confidentiality_terms: data.confidentiality_terms ? data.confidentiality_terms.trim() : null,
       status: 'DRAFT',
-      created_by: user.id,
-      embedding
+      created_by: user.id
     },
     include: {
       department: {
@@ -87,6 +83,15 @@ export const createChallenge = async (data, user, ip_address = null) => {
     details: { title: challenge.title, status: challenge.status },
     ip_address
   });
+
+  // Attempt real 768-dim semantic embedding generation
+  try {
+    const text = embeddingService.buildChallengeEmbeddingText(challenge);
+    const emb = await embeddingService.generateEmbedding(text);
+    await embeddingService.persistChallengeEmbedding(challenge.id, emb);
+  } catch (embErr) {
+    logger.warn(`Challenge ${challenge.id} created; embedding generation deferred: ${embErr.message}`);
+  }
 
   return challenge;
 };
@@ -287,14 +292,6 @@ export const updateChallenge = async (id, data, user, ip_address = null) => {
     }
   }
 
-  if (updateData.title || updateData.problem_description || updateData.required_technologies || updateData.desired_outcome) {
-    const title = updateData.title || challenge.title;
-    const desc = updateData.problem_description || challenge.problem_description;
-    const outcome = updateData.desired_outcome || challenge.desired_outcome;
-    const techs = updateData.required_technologies || challenge.required_technologies;
-    updateData.embedding = generateMockEmbedding(`${title} ${desc} ${outcome} ${techs.join(' ')}`);
-  }
-
   const updated = await prisma.challenge.update({
     where: { id },
     data: updateData,
@@ -302,6 +299,16 @@ export const updateChallenge = async (id, data, user, ip_address = null) => {
       department: true
     }
   });
+
+  if (updateData.title || updateData.problem_description || updateData.required_technologies || updateData.desired_outcome) {
+    try {
+      const text = embeddingService.buildChallengeEmbeddingText(updated);
+      const emb = await embeddingService.generateEmbedding(text);
+      await embeddingService.persistChallengeEmbedding(updated.id, emb);
+    } catch (embErr) {
+      logger.warn(`Challenge ${updated.id} updated; embedding refresh deferred: ${embErr.message}`);
+    }
+  }
 
   await createAuditLog({
     user_id: user.id,

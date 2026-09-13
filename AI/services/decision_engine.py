@@ -237,6 +237,21 @@ class DecisionEngine:
             Experience          15%
             Deployment Fit      10%
         """
+        # If authoritative backend score is provided, strictly respect it
+        if request.authoritative_score is not None:
+            auth = request.authoritative_score
+            if isinstance(auth, dict):
+                return MatchScoreBreakdown(
+                    technology_fit=min(30.0, max(0.0, float(auth.get("technology_fit", 0.0)))),
+                    domain_fit=min(25.0, max(0.0, float(auth.get("domain_fit", 0.0)))),
+                    readiness=min(20.0, max(0.0, float(auth.get("readiness", 0.0)))),
+                    experience=min(15.0, max(0.0, float(auth.get("experience", 0.0)))),
+                    deployment_fit=min(10.0, max(0.0, float(auth.get("deployment_fit", 0.0)))),
+                    total=min(100.0, max(0.0, float(auth.get("total", 0.0)))),
+                )
+            elif isinstance(auth, MatchScoreBreakdown):
+                return auth
+
         challenge = request.challenge
         startup = request.startup
 
@@ -265,38 +280,53 @@ class DecisionEngine:
         elif startup.domain:
             domain_score = 5.0
 
+        # If semantic similarity is supplied, blend with domain keyword score
+        if request.semantic_similarity is not None:
+            raw_sim = max(0.0, min(1.0, float(request.semantic_similarity)))
+            domain_keyword_pct = (domain_score / 25.0)
+            domain_score = 25.0 * (raw_sim * 0.60 + domain_keyword_pct * 0.40)
+
         # ── Readiness (0–20) ─────────────────────────────────────────
         readiness_score = 0.0
-        if startup.description and len(startup.description.strip()) > 20:
-            readiness_score += 5.0
-        if startup.technologies:
-            readiness_score += 5.0
-        if startup.team_size and startup.team_size > 0:
-            readiness_score += 5.0
-        if startup.certifications:
-            readiness_score += 5.0
+        if startup.readiness_level is not None and startup.readiness_level >= 1:
+            readiness_score = 20.0 * (min(9, startup.readiness_level) / 9.0)
+        else:
+            if startup.description and len(startup.description.strip()) > 20:
+                readiness_score += 5.0
+            if startup.technologies:
+                readiness_score += 5.0
+            if startup.team_size and startup.team_size > 0:
+                readiness_score += 5.0
+            if startup.certifications:
+                readiness_score += 5.0
 
         # ── Experience (0–15) ─────────────────────────────────────────
         experience_score = 0.0
-        if startup.experience:
-            experience_score += 8.0
-        if startup.deployments:
-            experience_score += min(7.0, len(startup.deployments) * 3.5)
+        if startup.years_experience is not None:
+            experience_score = 15.0 * min(1.0, startup.years_experience / 10.0)
+        else:
+            if startup.experience:
+                experience_score += 8.0
+            if startup.deployments:
+                experience_score += min(7.0, len(startup.deployments) * 3.5)
 
         # ── Deployment Fit (0–10) ─────────────────────────────────────
         deployment_score = 0.0
-        if startup.deployments:
-            deployment_score += 5.0
-        if startup.location and challenge.location:
-            if (
-                startup.location.lower().strip()
-                == challenge.location.lower().strip()
-            ):
+        if startup.previous_deployments is not None:
+            deployment_score = 10.0 * min(1.0, startup.previous_deployments / 5.0)
+        else:
+            if startup.deployments:
                 deployment_score += 5.0
-            else:
+            if startup.location and challenge.location:
+                if (
+                    startup.location.lower().strip()
+                    == challenge.location.lower().strip()
+                ):
+                    deployment_score += 5.0
+                else:
+                    deployment_score += 2.0
+            elif startup.location:
                 deployment_score += 2.0
-        elif startup.location:
-            deployment_score += 2.0
 
         # ── Clamp ────────────────────────────────────────────────────
         tech_score = min(round(tech_score, 1), 30.0)

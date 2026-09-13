@@ -68,8 +68,21 @@ export const matchExplanationSchema = z.object({
     deployments: z.array(z.string()).optional().nullable(),
     certifications: z.array(z.string()).optional().nullable(),
     team_size: z.number().int().optional().nullable(),
-    location: z.string().optional().nullable()
-  })
+    location: z.string().optional().nullable(),
+    readiness_level: z.number().int().optional().nullable(),
+    years_experience: z.number().int().optional().nullable(),
+    previous_deployments: z.number().int().optional().nullable()
+  }),
+  authoritative_score: z.any().optional().nullable(),
+  eligibility_status: z.string().optional().nullable(),
+  reasons: z.array(z.string()).optional().nullable(),
+  review_reasons: z.array(z.string()).optional().nullable(),
+  ineligibility_reasons: z.array(z.string()).optional().nullable(),
+  semantic_similarity: z.number().optional().nullable(),
+  technology_coverage: z.any().optional().nullable(),
+  gaps: z.array(z.string()).optional().nullable(),
+  relevant_risks: z.array(z.string()).optional().nullable(),
+  missing_information: z.array(z.string()).optional().nullable()
 });
 
 /**

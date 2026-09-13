@@ -8,7 +8,7 @@ These models define the AI contract independently of any frontend.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -142,6 +142,9 @@ class StartupProfile(BaseModel):
     certifications: Optional[list[str]] = None
     team_size: Optional[int] = None
     location: Optional[str] = None
+    readiness_level: Optional[int] = None
+    years_experience: Optional[int] = None
+    previous_deployments: Optional[int] = None
 
 
 class MatchExplanationRequest(BaseModel):
@@ -149,6 +152,12 @@ class MatchExplanationRequest(BaseModel):
 
     challenge: ChallengeContext
     startup: StartupProfile
+    authoritative_score: Optional[Any] = None
+    eligibility_status: Optional[str] = None
+    reasons: Optional[list[str]] = None
+    review_reasons: Optional[list[str]] = None
+    ineligibility_reasons: Optional[list[str]] = None
+    semantic_similarity: Optional[float] = None
 
 
 # ═══════════════════════════════════════════════════════════════════════════

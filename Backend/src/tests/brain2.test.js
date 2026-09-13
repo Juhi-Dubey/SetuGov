@@ -179,24 +179,41 @@ const runBrain2Tests = async () => {
     }, adminToken);
     const deptBId = deptBRes.body.data.department.id;
 
-    // 2. Setup Government Users
+    // 2. Setup Government Users (Registered and promoted to GOVERNMENT via Admin)
     const govARes = await request('POST', '/api/v1/auth/register', {
       name: `Gov Official A ${timestamp}`,
       email: `gov.a.${timestamp}@health.gov.in`,
       password: 'GovPassword123!',
+      role: 'STARTUP'
+    });
+    const govAUser = govARes.body.data.user;
+    await request('PATCH', `/api/v1/admin/users/${govAUser.id}/role`, {
       role: 'GOVERNMENT',
       department_id: deptAId
+    }, adminToken);
+    // Login to obtain GOVERNMENT token
+    const govALogin = await request('POST', '/api/v1/auth/login', {
+      email: `gov.a.${timestamp}@health.gov.in`,
+      password: 'GovPassword123!'
     });
-    const govAToken = govARes.body.data.token;
+    const govAToken = govALogin.body.data.token;
 
     const govBRes = await request('POST', '/api/v1/auth/register', {
       name: `Gov Official B ${timestamp}`,
       email: `gov.b.${timestamp}@transport.gov.in`,
       password: 'GovPassword123!',
+      role: 'STARTUP'
+    });
+    const govBUser = govBRes.body.data.user;
+    await request('PATCH', `/api/v1/admin/users/${govBUser.id}/role`, {
       role: 'GOVERNMENT',
       department_id: deptBId
+    }, adminToken);
+    const govBLogin = await request('POST', '/api/v1/auth/login', {
+      email: `gov.b.${timestamp}@transport.gov.in`,
+      password: 'GovPassword123!'
     });
-    const govBToken = govBRes.body.data.token;
+    const govBToken = govBLogin.body.data.token;
 
     // 3. Create Challenge in Dept A
     const chalRes = await request('POST', '/api/v1/challenges', {

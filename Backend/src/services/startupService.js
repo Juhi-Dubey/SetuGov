@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
-import { generateMockEmbedding } from '../utils/vector.js';
+import embeddingService from './embeddingService.js';
+import { logger } from '../utils/logger.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
 
@@ -13,9 +14,6 @@ export const createStartup = async (data, user, ip_address = null) => {
   if (existing && user.role !== 'ADMIN') {
     throw new BadRequestError('You already have an existing startup profile.');
   }
-
-  const embeddingText = `${data.company_name} ${data.domain} ${data.description} ${data.technologies.join(' ')}`;
-  const embedding = generateMockEmbedding(embeddingText);
 
   const startup = await prisma.startup.create({
     data: {
@@ -33,8 +31,7 @@ export const createStartup = async (data, user, ip_address = null) => {
       incorporation_date: data.incorporation_date ? new Date(data.incorporation_date) : null,
       cin_number: data.cin_number ? data.cin_number.trim() : null,
       gstin: data.gstin ? data.gstin.trim() : null,
-      location: data.location.trim(),
-      embedding
+      location: data.location.trim()
     },
     include: {
       user: {
@@ -46,6 +43,15 @@ export const createStartup = async (data, user, ip_address = null) => {
       }
     }
   });
+
+  // Attempt real 768-dim semantic embedding generation
+  try {
+    const text = embeddingService.buildStartupEmbeddingText(startup);
+    const emb = await embeddingService.generateEmbedding(text);
+    await embeddingService.persistStartupEmbedding(startup.id, emb);
+  } catch (embErr) {
+    logger.warn(`Startup ${startup.id} created; embedding generation deferred: ${embErr.message}`);
+  }
 
   await createAuditLog({
     user_id: user.id,
@@ -192,14 +198,6 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
     }
   }
 
-  if (updateData.company_name || updateData.domain || updateData.description || updateData.technologies) {
-    const name = updateData.company_name || startup.company_name;
-    const dom = updateData.domain || startup.domain;
-    const desc = updateData.description || startup.description;
-    const techs = updateData.technologies || startup.technologies;
-    updateData.embedding = generateMockEmbedding(`${name} ${dom} ${desc} ${techs.join(' ')}`);
-  }
-
   const updated = await prisma.startup.update({
     where: { id },
     data: updateData,
@@ -207,6 +205,16 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
       documents: true
     }
   });
+
+  if (updateData.company_name || updateData.domain || updateData.description || updateData.technologies) {
+    try {
+      const text = embeddingService.buildStartupEmbeddingText(updated);
+      const emb = await embeddingService.generateEmbedding(text);
+      await embeddingService.persistStartupEmbedding(updated.id, emb);
+    } catch (embErr) {
+      logger.warn(`Startup ${updated.id} updated; embedding refresh deferred: ${embErr.message}`);
+    }
+  }
 
   await createAuditLog({
     user_id: user.id,

@@ -1,6 +1,5 @@
 import bcrypt from 'bcrypt';
 import { prisma } from '../src/config/prisma.js';
-import { generateMockEmbedding } from '../src/utils/vector.js';
 import { calculateTotalScore } from '../src/services/evaluationService.js';
 import { logger } from '../src/utils/logger.js';
 
@@ -238,10 +237,6 @@ const seedDatabase = async () => {
       }
     });
 
-    const sEmbedding = generateMockEmbedding(
-      `${sDef.startup.company_name} ${sDef.startup.domain} ${sDef.startup.description} ${sDef.startup.technologies.join(' ')}`
-    );
-
     const sStartup = await prisma.startup.create({
       data: {
         user_id: sUser.id,
@@ -253,8 +248,7 @@ const seedDatabase = async () => {
         years_experience: sDef.startup.years_experience,
         previous_deployments: sDef.startup.previous_deployments,
         verification_status: sDef.startup.verification_status,
-        location: sDef.startup.location,
-        embedding: sEmbedding
+        location: sDef.startup.location
       }
     });
 
@@ -277,9 +271,6 @@ const seedDatabase = async () => {
 
   // 3. Create Main Demo Challenge: Hospital Waiting Time Reduction
   logger.info('Creating Demo Challenge: Hospital Waiting Time Reduction...');
-  const challengeEmbedding = generateMockEmbedding(
-    'Hospital Waiting Time Reduction Overcrowding in OPD triage and emergency registration AI Queue Management Computer Vision FHIR / ABDM API Predictive Analytics'
-  );
 
   const demoChallenge = await prisma.challenge.create({
     data: {
@@ -294,8 +285,7 @@ const seedDatabase = async () => {
       pilot_duration_days: 60,
       required_technologies: ['AI Queue Management', 'Computer Vision', 'FHIR / ABDM API', 'Predictive Analytics'],
       status: 'PUBLISHED',
-      created_by: govUser1.id,
-      embedding: challengeEmbedding
+      created_by: govUser1.id
     }
   });
 

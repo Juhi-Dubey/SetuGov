@@ -124,6 +124,20 @@ def build_match_prompt(
     if request.startup.location:
         parts.append(f"Location: {request.startup.location}")
 
+    # ── Eligibility & Deterministic Status (authoritative) ───────────
+    if request.eligibility_status:
+        parts.append("\n## ELIGIBILITY STATUS (authoritative — DO NOT OVERRIDE)")
+        parts.append(f"Status: {request.eligibility_status}")
+        if request.reasons:
+            parts.append(f"Eligibility Reasons: {', '.join(request.reasons)}")
+        if request.review_reasons:
+            parts.append(f"Review Reasons: {', '.join(request.review_reasons)}")
+        if request.ineligibility_reasons:
+            parts.append(f"Ineligibility Reasons: {', '.join(request.ineligibility_reasons)}")
+
+    if request.semantic_similarity is not None:
+        parts.append(f"\nSemantic Vector Cosine Similarity: {request.semantic_similarity:.4f}")
+
     # ── Deterministic Score (read-only for LLM) ──────────────────────
     parts.append("\n## DETERMINISTIC MATCH SCORE (computed by system — DO NOT MODIFY)")
     parts.append(f"Technology Fit: {score.technology_fit}/30")
@@ -137,6 +151,7 @@ def build_match_prompt(
         "\nProvide an objective explanation consistent with this score. "
         "Do not describe profile claims as 'verified' or 'proven'. "
         "Do not invent unstated capabilities, certifications, or deployments. "
+        "Do not override or recalculate the eligibility status or numerical score. "
         "Return ONLY the JSON object."
     )
 

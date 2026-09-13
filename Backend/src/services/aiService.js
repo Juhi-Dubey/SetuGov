@@ -245,6 +245,9 @@ export const explainMatch = async (input) => {
   );
 
   const strengths = [];
+  if (Array.isArray(input.reasons) && input.reasons.length > 0) {
+    strengths.push(...input.reasons);
+  }
   if (overlap.length > 0) {
     strengths.push(`Stated alignment in core technologies: ${overlap.join(', ')}.`);
   } else if (startupTechs.length > 0) {
@@ -260,12 +263,19 @@ export const explainMatch = async (input) => {
     strengths.push(`Verified startup profile in ${startup.domain || 'innovation'} sector.`);
   }
 
-  const concerns = [
+  const concerns = [];
+  if (Array.isArray(input.ineligibility_reasons) && input.ineligibility_reasons.length > 0) {
+    concerns.push(...input.ineligibility_reasons);
+  }
+  if (Array.isArray(input.review_reasons) && input.review_reasons.length > 0) {
+    concerns.push(...input.review_reasons);
+  }
+  concerns.push(
     'Capabilities based on self-reported startup profile; independent technical audit recommended prior to deployment.',
     'Integration readiness with legacy departmental infrastructure must be validated during pilot.'
-  ];
+  );
 
-  const missingInfo = [];
+  const missingInfo = Array.isArray(input.missing_information) ? [...input.missing_information] : [];
   if (!startup.certifications || startup.certifications.length === 0) {
     missingInfo.push('Third-party certifications and security compliance audits not attached to profile.');
   }
@@ -278,16 +288,25 @@ export const explainMatch = async (input) => {
     'Requires departmental nodal officer coordination for milestone tracking.'
   ];
 
+  const score = input.authoritative_score || {
+    technology_fit: overlap.length > 0 ? 25.0 : 10.0,
+    domain_fit: 20.0,
+    readiness: 15.0,
+    experience: 10.0,
+    deployment_fit: 8.0,
+    total: 78.0
+  };
+
+  let whyMatched = `Startup ${startup.name || 'Entity'} demonstrates relevant operational capabilities for "${challenge.title || 'the Challenge'}" in ${challenge.domain || 'the target domain'}.`;
+  if (input.eligibility_status === 'INELIGIBLE') {
+    whyMatched = `Startup ${startup.name || 'Entity'} does not satisfy mandatory eligibility criteria for "${challenge.title || 'the Challenge'}".`;
+  } else if (input.eligibility_status === 'NEEDS_REVIEW') {
+    whyMatched = `Startup ${startup.name || 'Entity'} demonstrates relevant operational capabilities for "${challenge.title || 'the Challenge'}", but requires nodal officer review for borderline or unverified criteria.`;
+  }
+
   return {
-    score: {
-      technology_fit: overlap.length > 0 ? 25.0 : 10.0,
-      domain_fit: 20.0,
-      readiness: 15.0,
-      experience: 10.0,
-      deployment_fit: 8.0,
-      total: 78.0
-    },
-    why_matched: `Startup ${startup.name || 'Entity'} demonstrates relevant operational capabilities for "${challenge.title || 'the Challenge'}" in ${challenge.domain || 'the target domain'}.`,
+    score,
+    why_matched: whyMatched,
     strengths,
     concerns,
     missing_information: missingInfo,
