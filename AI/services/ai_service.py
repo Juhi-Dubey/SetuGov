@@ -1,7 +1,7 @@
 """
 SetuGov AI Service — AI Service Orchestrator
 
-Coordinates the five AI brains:
+Coordinates the AI brains:
 1. Receives typed requests
 2. Runs deterministic calculations (via DecisionEngine)
 3. Builds prompts
@@ -18,15 +18,10 @@ from typing import Any, Optional
 
 from pydantic import ValidationError
 
-# pyrefly: ignore [missing-import]
 from prompts.challenge_copilot import build_challenge_prompt
-# pyrefly: ignore [missing-import]
 from prompts.document_assistance import build_document_prompt
-# pyrefly: ignore [missing-import]
 from prompts.match_explanation import build_match_prompt
-# pyrefly: ignore [missing-import]
 from prompts.pilot_intelligence import build_pilot_prompt
-# pyrefly: ignore [missing-import]
 from prompts.proposal_analysis import build_proposal_prompt
 from prompts.startup_comparator import build_comparator_prompt
 from schemas.requests import (
@@ -53,9 +48,9 @@ from schemas.responses import (
     StartupComparatorResponse,
     SuggestedKPI,
 )
-# pyrefly: ignore [missing-import]
+from services.confidence import ConfidenceAssessor
 from services.decision_engine import DecisionEngine
-# pyrefly: ignore [missing-import]
+from services.input_sanitizer import sanitize_user_input
 from services.ollama_client import InvalidAIResponseError, OllamaClient
 from services.parsers.challenge_parser import parse_challenge_response
 from services.parsers.comparator_parser import parse_comparator_response
@@ -331,10 +326,8 @@ def _reconcile_proposal_missing_information(
 
         # Filter items that contradict supplied data
         if has_cost:
-            # If cost is supplied, filter out claims that "estimated cost" or general "cost" is missing
             if "estimated cost" in lower or (("cost" in lower or "budget" in lower) and "breakdown" not in lower):
                 continue
-            # If item combines cost and timeline, filter if both are supplied
             if has_timeline and ("cost" in lower and "timeline" in lower):
                 continue
 
@@ -355,7 +348,6 @@ def _reconcile_proposal_missing_information(
                 continue
 
         if has_certs:
-            # Do not claim certification is missing if it was provided (verification of cert is ok)
             if "certification" in lower and not any(v in lower for v in ["verif", "valid", "authent", "document"]):
                 continue
 
@@ -647,7 +639,6 @@ def _sanitize_document_content(
     # ───────────────────────────────────────────────────────────────────
     # 1. Standardize Placeholders & Prevent Template Leaks
     # ───────────────────────────────────────────────────────────────────
-    # Standardize review placeholders that may contain underscores
     cleaned = re.sub(r"\[SUBJECT_TO_AUTHORIZED_LEGAL_REVIEW\]", "[SUBJECT TO AUTHORIZED LEGAL REVIEW]", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\[SUBJECT_TO_AUTHORIZED_LEGAL REVIEW\]", "[SUBJECT TO AUTHORIZED LEGAL REVIEW]", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\[CYBERSECURITY_STANDARDS\s*—\s*REQUIRES\s*AUTHORIZED\s*REVIEW\]", "[CYBERSECURITY STANDARDS — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
@@ -661,7 +652,7 @@ def _sanitize_document_content(
         r"\bstarting\s+on\s+\[STARTUP(?:_|\s+)NAME\]",
         r"\bterminate\s+on\s+\[STARTUP(?:_|\s+)NAME\]",
         r"\[STARTUP(?:_|\s+)NAME\]\s*day\b",
-        r"\[STARTUP(?:_|\s+)NAME\]\s*[(‘']Commencement Date[’')]",
+        r"\[STARTUP(?:_|\s+)NAME\]\s*[('']Commencement Date['')]",
     ]
     start_date_rep = supplied_start_date or "[START DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]"
     for pat in date_startup_patterns:
@@ -669,48 +660,49 @@ def _sanitize_document_content(
 
     # Standardize or resolve date placeholders
     if supplied_start_date:
-        cleaned = re.sub(r"\[(?:(?:STARTUP_)?START\s*DATE|(?:STARTUP_)?START_DATE|(?:STARTUP_)?STARTDATE|(?:STARTUP)?_?COMMENCEMENT_DATE|COMMENCEMENT\s*DATE)(?:\s*[—–-][^\]]*)?\]", supplied_start_date, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[(?:(?:STARTUP_)?START\s*DATE|(?:STARTUP_)?START_DATE|(?:STARTUP_)?STARTDATE|(?:STARTUP)?_?COMMENCEMENT_DATE|COMMENCEMENT\s*DATE)(?:\s*[—–-][^\]]*)?]", supplied_start_date, cleaned, flags=re.IGNORECASE)
     else:
-        cleaned = re.sub(r"\[(?:(?:STARTUP_)?START\s*DATE|(?:STARTUP_)?START_DATE|(?:STARTUP_)?STARTDATE|(?:STARTUP)?_?COMMENCEMENT_DATE|COMMENCEMENT\s*DATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\]", "[START DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[(?:(?:STARTUP_)?START\s*DATE|(?:STARTUP_)?START_DATE|(?:STARTUP_)?STARTDATE|(?:STARTUP)?_?COMMENCEMENT_DATE|COMMENCEMENT\s*DATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?]", "[START DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
 
     if supplied_end_date:
-        cleaned = re.sub(r"\[(?:END\s*DATE|END_DATE|ENDDATE|COMPLETION\s*DATE|COMPLETION_DATE|COMPLETIONDATE)(?:\s*[—–-][^\]]*)?\]", supplied_end_date, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[(?:END\s*DATE|END_DATE|ENDDATE|COMPLETION\s*DATE|COMPLETION_DATE|COMPLETIONDATE)(?:\s*[—–-][^\]]*)?]", supplied_end_date, cleaned, flags=re.IGNORECASE)
     else:
-        cleaned = re.sub(r"\[(?:END\s*DATE|END_DATE|ENDDATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\]", "[END DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"\[(?:COMPLETION\s*DATE|COMPLETION_DATE|COMPLETIONDATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\]", "[COMPLETION DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[(?:END\s*DATE|END_DATE|ENDDATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?]", "[END DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[(?:COMPLETION\s*DATE|COMPLETION_DATE|COMPLETIONDATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?]", "[COMPLETION DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
 
-    cleaned = re.sub(r"\[(?:DEPLOYMENT\s*DATE|DEPLOYMENT_DATE|DEPLOYMENTDATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\]", "[DEPLOYMENT DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\[(?:TERMINATION\s*NOTICE|TERMINATION_NOTICE|TERMINATIONNOTICE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\]", "[TERMINATION NOTICE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\[DATE(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\]", "[DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"\[(?:TIMEFRAME|TIMELINE_NOT_SPECIFIED)\]", "[TIMEFRAME — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\[(?:DEPLOYMENT\s*DATE|DEPLOYMENT_DATE|DEPLOYMENTDATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?]", "[DEPLOYMENT DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\[(?:TERMINATION\s*NOTICE|TERMINATION_NOTICE|TERMINATIONNOTICE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?]", "[TERMINATION NOTICE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\[DATE(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?]", "[DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\[(?:TIMEFRAME|TIMELINE_NOT_SPECIFIED)]", "[TIMEFRAME — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
 
     if supplied_signatories:
-        cleaned = re.sub(r"\[(?:AUTHORIZED\s+)?SIGNATORIES[^\]]*\]", supplied_signatories, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[(?:AUTHORIZED\s+)?SIGNATORIES[^\]]*]", supplied_signatories, cleaned, flags=re.IGNORECASE)
     else:
-        cleaned = re.sub(r"\[SIGNATORIES\]", "[AUTHORIZED SIGNATORIES AND OFFICIAL ENTITY ADDRESSES NOT PROVIDED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[SIGNATORIES]", "[AUTHORIZED SIGNATORIES AND OFFICIAL ENTITY ADDRESSES NOT PROVIDED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
 
     if supplied_govt:
-        cleaned = re.sub(r"\[GOVERNMENT(?:_|\s+)(?:NAME|ENTITY|DEPARTMENT)[^\]]*\]", supplied_govt, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[GOVERNMENT(?:_|\s+)(?:NAME|ENTITY|DEPARTMENT)[^\]]*]", supplied_govt, cleaned, flags=re.IGNORECASE)
     else:
-        cleaned = re.sub(r"\[GOVERNMENT(?:_|\s+)NAME\]", "Government Entity", cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"\[GOVERNMENT(?:_|\s+)(?:ENTITY|DEPARTMENT)(?:\s*[—–-]\s*NOT\s*SPECIFIED)?(?:\s*[—–-]\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\]", "[GOVERNMENT ENTITY — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[GOVERNMENT(?:_|\s+)NAME]", "Government Entity", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[GOVERNMENT(?:_|\s+)(?:ENTITY|DEPARTMENT)(?:\s*[—–-]\s*NOT\s*SPECIFIED)?(?:\s*[—–-]\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?]", "[GOVERNMENT ENTITY — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
 
     if supplied_payment:
-        cleaned = re.sub(r"\[(?:PAYMENT\s+SCHEDULE|PAYMENT|DISBURSEMENT\s+TERMS)[^\]]*\]", f"Payment Schedule: {supplied_payment}", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[(?:PAYMENT\s+SCHEDULE|PAYMENT|DISBURSEMENT\s+TERMS)[^\]]*]", f"Payment Schedule: {supplied_payment}", cleaned, flags=re.IGNORECASE)
 
     if supplied_cyber:
-        cleaned = re.sub(r"\[(?:CYBERSECURITY(?:\s+STANDARDS)?|SECURITY\s+PROTOCOLS)[^\]]*\]", f"Cybersecurity Standards: {supplied_cyber}", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[(?:CYBERSECURITY(?:\s+STANDARDS)?|SECURITY\s+PROTOCOLS)[^\]]*]", f"Cybersecurity Standards: {supplied_cyber}", cleaned, flags=re.IGNORECASE)
 
     if supplied_ip:
-        cleaned = re.sub(r"\[(?:IP\s+OWNERSHIP(?:\s+TERMS)?|INTELLECTUAL\s+PROPERTY)[^\]]*\]", f"IP Ownership Terms: {supplied_ip}", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[(?:IP\s+OWNERSHIP(?:\s+TERMS)?|INTELLECTUAL\s+PROPERTY)[^\]]*]", f"IP Ownership Terms: {supplied_ip}", cleaned, flags=re.IGNORECASE)
 
     if supplied_jurisdiction:
-        cleaned = re.sub(r"\[(?:DISPUTE\s+RESOLUTION|GOVERNING\s+JURISDICTION)[^\]]*\]", f"Dispute Resolution & Jurisdiction: {supplied_jurisdiction}", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[(?:DISPUTE\s+RESOLUTION|GOVERNING\s+JURISDICTION)[^\]]*]", f"Dispute Resolution & Jurisdiction: {supplied_jurisdiction}", cleaned, flags=re.IGNORECASE)
 
     if supplied_termination:
-        cleaned = re.sub(r"\[(?:TERMINATION\s+NOTICE|EXTENSION\s+CONDITIONS)[^\]]*\]", f"Termination Notice: {supplied_termination}", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[(?:TERMINATION\s+NOTICE|EXTENSION\s+CONDITIONS)[^\]]*]", f"Termination Notice: {supplied_termination}", cleaned, flags=re.IGNORECASE)
 
-    # Normalize accidental duplicated punctuation (e.g. ".." -> ".", "!!" -> "!", "??" -> "?")
+    # Normalize accidental duplicated punctuation
+    cleaned = re.sub(r"(?<!\.)\.\.\.", ".", cleaned)
     cleaned = re.sub(r"(?<!\.)\.\.(?!\.)", ".", cleaned)
     cleaned = re.sub(r"!{2,}", "!", cleaned)
     cleaned = re.sub(r"\?{2,}", "?", cleaned)
@@ -719,10 +711,10 @@ def _sanitize_document_content(
     # 2. Authoritative Fact Injection (Replace template placeholders)
     # ───────────────────────────────────────────────────────────────────
     if request.startup_name:
-        cleaned = re.sub(r"\[STARTUP(?:_|\s+)NAME\]", request.startup_name, cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"\[STARTUP\]", request.startup_name, cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"\[COMPANY(?:_|\s+)NAME\]", request.startup_name, cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"\[VENDOR(?:_|\s+)NAME\]", request.startup_name, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[STARTUP(?:_|\s+)NAME]", request.startup_name, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[STARTUP]", request.startup_name, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[COMPANY(?:_|\s+)NAME]", request.startup_name, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[VENDOR(?:_|\s+)NAME]", request.startup_name, cleaned, flags=re.IGNORECASE)
         if request.startup_name not in cleaned:
             if re.search(r"\bThe\s+Startup\b", cleaned):
                 cleaned = re.sub(r"\bThe\s+Startup\b", request.startup_name, cleaned)
@@ -731,13 +723,12 @@ def _sanitize_document_content(
             elif "## 1. Pilot Scope" in cleaned:
                 cleaned = re.sub(r"(##\s*1\.\s*Pilot\s*Scope[^\n]*\n+)", r"\1Pilot deployment for " + request.startup_name + r".\n\n", cleaned)
     else:
-        cleaned = re.sub(r"\[STARTUP(?:_|\s+)NAME\]", "[STARTUP NAME NOT PROVIDED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"\[STARTUP\]", "[STARTUP NAME NOT PROVIDED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[STARTUP(?:_|\s+)NAME]", "[STARTUP NAME NOT PROVIDED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[STARTUP]", "[STARTUP NAME NOT PROVIDED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
 
     if request.pilot_duration:
-        cleaned = re.sub(r"\[PILOT(?:_|\s+)DURATION\](?:\s*days)?", request.pilot_duration, cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"\[DURATION\](?:\s*days)?", request.pilot_duration, cleaned, flags=re.IGNORECASE)
-        # Ensure duration is present in Duration & Timeline section
+        cleaned = re.sub(r"\[PILOT(?:_|\s+)DURATION](?:\s*days)?", request.pilot_duration, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[DURATION](?:\s*days)?", request.pilot_duration, cleaned, flags=re.IGNORECASE)
         if request.pilot_duration not in cleaned:
             cleaned = re.sub(
                 r"(##\s*3\.\s*Duration\s*&\s*Timeline[^\n]*\n+)",
@@ -747,17 +738,16 @@ def _sanitize_document_content(
             )
 
     if request.pilot_budget:
-        cleaned = re.sub(r"\[PILOT(?:_|\s+)BUDGET\]", request.pilot_budget, cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"\[BUDGET\]", request.pilot_budget, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[PILOT(?:_|\s+)BUDGET]", request.pilot_budget, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[BUDGET]", request.pilot_budget, cleaned, flags=re.IGNORECASE)
         if request.pilot_budget not in cleaned:
             if "## 8. Budget" in cleaned or "## 8. Pilot Budget" in cleaned:
                 cleaned = re.sub(r"(##\s*8\.\s*[^\n]*\n+)", r"\1Total Pilot Budget: " + request.pilot_budget + r"\n\n", cleaned)
 
     if request.pilot_sites:
         sites_str = ", ".join(request.pilot_sites)
-        cleaned = re.sub(r"\[PILOT(?:_|\s+)SITES\]", sites_str, cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"\[SITES\]", sites_str, cleaned, flags=re.IGNORECASE)
-        # Ensure pilot sites are present if omitted
+        cleaned = re.sub(r"\[PILOT(?:_|\s+)SITES]", sites_str, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[SITES]", sites_str, cleaned, flags=re.IGNORECASE)
         if not any(site in cleaned for site in request.pilot_sites):
             sites_lines = "\n".join(f"- {s}" for s in request.pilot_sites)
             if "## 4. Pilot Sites" in cleaned:
@@ -766,9 +756,9 @@ def _sanitize_document_content(
                 cleaned += f"\n\n## 4. Pilot Sites\n{sites_lines}"
 
     if request.challenge_title:
-        cleaned = re.sub(r"\[CHALLENGE(?:_|\s+)TITLE\]", request.challenge_title, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[CHALLENGE(?:_|\s+)TITLE]", request.challenge_title, cleaned, flags=re.IGNORECASE)
 
-    # Clean programming variable leaks (e.g. {{startup_name}}, {startup_name}, <START_DATE>)
+    # Clean programming variable leaks
     programming_leaks = [
         (r"\{\{\s*startup_name\s*\}\}", request.startup_name or "[STARTUP NAME NOT PROVIDED — REQUIRES AUTHORIZED REVIEW]"),
         (r"\{\s*startup_name\s*\}", request.startup_name or "[STARTUP NAME NOT PROVIDED — REQUIRES AUTHORIZED REVIEW]"),
@@ -794,16 +784,13 @@ def _sanitize_document_content(
             pct_match = re.search(r"(\d+(?:\.\d+)?)\s*%", obj)
             if pct_match:
                 authoritative_pct = pct_match.group(1)
-                # Replace [PERCENTAGE] placeholder if output by LLM
-                cleaned = re.sub(r"\[PERCENTAGE\]", f"{authoritative_pct}%", cleaned, flags=re.IGNORECASE)
-                # Replace any altered percentages in waiting times reduction/improvement milestones
+                cleaned = re.sub(r"\[PERCENTAGE]", f"{authoritative_pct}%", cleaned, flags=re.IGNORECASE)
                 cleaned = re.sub(
                     r"\b(?!(?:" + re.escape(authoritative_pct) + r"))\d+(?:\.\d+)?%\s*(?:reduction|decrease|improvement|drop)\b",
                     f"{authoritative_pct}% reduction",
                     cleaned,
                     flags=re.IGNORECASE,
                 )
-        # Ensure objectives are present in content if omitted entirely
         if not any(o in cleaned for o in request.objectives):
             obj_lines = "\n".join(f"- {o}" for o in request.objectives)
             if "## 2. Objectives" in cleaned:
@@ -816,7 +803,6 @@ def _sanitize_document_content(
             if kpi.target is not None:
                 target_val = int(kpi.target) if kpi.target == int(kpi.target) else kpi.target
                 unit_str = f" {kpi.unit}" if kpi.unit else ""
-                # Replace altered targets like "target=50.0", "target: 50", "target of 50 minutes"
                 cleaned = re.sub(
                     r"\btarget\s*[=:]\s*(?:(?!" + re.escape(str(target_val)) + r"\b)\d+(?:\.\d+)?)",
                     f"target={target_val}",
@@ -832,15 +818,15 @@ def _sanitize_document_content(
             if kpi.baseline is not None:
                 baseline_val = int(kpi.baseline) if kpi.baseline == int(kpi.baseline) else kpi.baseline
                 unit_str = f" {kpi.unit}" if kpi.unit else ""
-                # Replace altered baselines like "baseline=100.0", "baseline: 100", "baseline of 100 minutes"
                 cleaned = re.sub(
                     r"\bbaseline\s*[=:]\s*(?:(?!" + re.escape(str(baseline_val)) + r"\b)\d+(?:\.\d+)?)",
                     f"baseline={baseline_val}",
                     cleaned,
                     flags=re.IGNORECASE,
                 )
-            # If KPI is mentioned in text but baseline or target is omitted, format the full authoritative line
             if kpi.baseline is not None and kpi.target is not None:
+                baseline_val = int(kpi.baseline) if kpi.baseline == int(kpi.baseline) else kpi.baseline
+                target_val = int(kpi.target) if kpi.target == int(kpi.target) else kpi.target
                 if str(baseline_val) not in cleaned or str(target_val) not in cleaned:
                     kpi_pat = r"-\s*" + re.escape(kpi.name) + r"[^\n]*"
                     if re.search(kpi_pat, cleaned):
@@ -851,7 +837,6 @@ def _sanitize_document_content(
                             count=1,
                         )
 
-        # Ensure KPIs are present in content if omitted entirely
         if not any(k.name in cleaned for k in request.kpis):
             kpi_lines = "\n".join(
                 f"- {k.name} ({k.unit}): baseline={k.baseline}, target={k.target}"
@@ -1048,42 +1033,18 @@ def _reconcile_document_missing_information(
     raw_sanitized: list[str] = [_sanitize_claim(m) for m in raw_missing if m and m.strip()]
     sanitized: list[str] = []
 
-    # Extract supplied items
-    supplied_start_date = _extract_supplied_field(
-        request.additional_context, ["start date", "commencement date", "pilot start date", "commencing on", "commences on", "start_date"]
-    )
-    supplied_end_date = _extract_supplied_field(
-        request.additional_context, ["end date", "completion date", "pilot end date", "pilot completion date", "end_date"]
-    )
-    supplied_govt = _extract_supplied_field(
-        request.additional_context, ["government entity", "government department", "department", "procuring agency", "client entity", "government_name", "government_entity"]
-    ) or _extract_supplied_field(request.challenge_description, ["department of", "ministry of"])
-    supplied_reviewer = _extract_supplied_field(
-        request.additional_context, ["reviewer", "reviewed by", "authorizing officer", "nodal officer"]
-    )
-    supplied_payment = _extract_supplied_field(
-        request.additional_context, ["payment schedule", "disbursement schedule", "payment milestone", "payment terms"]
-    )
-    supplied_ip = _extract_supplied_field(
-        request.additional_context, ["ip ownership", "intellectual property", "ip terms", "ip rights"]
-    )
-    supplied_cyber = _extract_supplied_field(
-        request.additional_context, ["cybersecurity standards", "cybersecurity", "security standards", "security compliance"]
-    )
-    supplied_signatories = _extract_supplied_field(
-        request.additional_context, ["signatories", "authorized signatories", "authorized signers", "signatory"]
-    )
-    supplied_jurisdiction = _extract_supplied_field(
-        request.additional_context, ["jurisdiction", "dispute resolution", "governing jurisdiction", "arbitration"]
-    )
-    supplied_termination = _extract_supplied_field(
-        request.additional_context, ["termination conditions", "termination notice", "notice period"]
-    )
-    supplied_extension = _extract_supplied_field(
-        request.additional_context, ["extension conditions", "extension terms", "extension timeline"]
-    )
+    supplied_start_date = _extract_supplied_field(request.additional_context, ["start date", "commencement date", "pilot start date", "commencing on", "commences on", "start_date"])
+    supplied_end_date = _extract_supplied_field(request.additional_context, ["end date", "completion date", "pilot end date", "pilot completion date", "end_date"])
+    supplied_govt = _extract_supplied_field(request.additional_context, ["government entity", "government department", "department", "procuring agency", "client entity", "government_name", "government_entity"]) or _extract_supplied_field(request.challenge_description, ["department of", "ministry of"])
+    supplied_reviewer = _extract_supplied_field(request.additional_context, ["reviewer", "reviewed by", "authorizing officer", "nodal officer"])
+    supplied_payment = _extract_supplied_field(request.additional_context, ["payment schedule", "disbursement schedule", "payment milestone", "payment terms"])
+    supplied_ip = _extract_supplied_field(request.additional_context, ["ip ownership", "intellectual property", "ip terms", "ip rights"])
+    supplied_cyber = _extract_supplied_field(request.additional_context, ["cybersecurity standards", "cybersecurity", "security standards", "security compliance"])
+    supplied_signatories = _extract_supplied_field(request.additional_context, ["signatories", "authorized signatories", "authorized signers", "signatory"])
+    supplied_jurisdiction = _extract_supplied_field(request.additional_context, ["jurisdiction", "dispute resolution", "governing jurisdiction", "arbitration"])
+    supplied_termination = _extract_supplied_field(request.additional_context, ["termination conditions", "termination notice", "notice period"])
+    supplied_extension = _extract_supplied_field(request.additional_context, ["extension conditions", "extension terms", "extension timeline"])
 
-    # Generic placeholder junk patterns to reject
     generic_patterns = [
         r"^\[?\s*(?:requires|subject to)\s+authorized(?:\s+legal)?\s+review\s*\]?(?:\s*[—–-]\s*(?:requires|subject to)\s+authorized(?:\s+legal)?\s+review\.?)?$",
         r"^\[?\s*requires\s+authorized\s+review\s*\]?$",
@@ -1111,16 +1072,13 @@ def _reconcile_document_missing_information(
 
     for item in raw_sanitized:
         item_str = item.strip()
-        # Skip generic boilerplate items
         if any(re.match(p, item_str, flags=re.IGNORECASE) for p in generic_patterns):
             continue
 
         item_lower = item_str.lower()
-        # Skip if subject is just generic placeholder bracket
         if item_lower.startswith("[requires authorized review]") or item_lower.startswith("[subject to authorized"):
             continue
 
-        # Filter out false missing claims if data was actually supplied
         if request.pilot_budget and ("budget" in item_lower or "cost" in item_lower) and "schedule" not in item_lower and "installment" not in item_lower and "disbursement" not in item_lower:
             continue
         if request.pilot_duration and ("duration" in item_lower or "timeline" in item_lower) and "milestone" not in item_lower and "start date" not in item_lower and "end date" not in item_lower:
@@ -1154,7 +1112,6 @@ def _reconcile_document_missing_information(
         if supplied_termination and ("termination" in item_lower or "notice period" in item_lower):
             continue
 
-        # Transform raw bracketed items into clean descriptive missing info strings
         transformed = None
         item_str_nobrackets = re.sub(r"[\[\]]", "", item_str).strip()
         for pat, replacement in raw_bracket_map:
@@ -1167,7 +1124,6 @@ def _reconcile_document_missing_information(
         elif "not provided" in item_str.lower() and "requires authorized review" in item_str.lower() and not any(p in item_str.upper() for p in ["STARTDATE", "ENDDATE", "MILESTONE"]):
             sanitized.append(item_str)
         else:
-            # Clean generic bracket wrapping and strip redundant suffix if present
             item_clean = re.sub(r"[\[\]]", "", item_str).replace("_", " ").strip()
             item_clean = re.sub(r"\s*:\s*Not provided.*$", "", item_clean, flags=re.IGNORECASE).strip()
             item_clean = re.sub(r"\s*[—–-]?\s*(?:NOT PROVIDED|NOT SPECIFIED)?\s*[—–-]?\s*(?:REQUIRES|SUBJECT TO)\s*(?:AUTHORIZED\s*)?(?:LEGAL\s*)?REVIEW\.?$", "", item_clean, flags=re.IGNORECASE).strip()
@@ -1222,7 +1178,6 @@ def _reconcile_document_missing_information(
     deduped: list[str] = []
     for item in sanitized:
         norm = re.sub(r"\s+", " ", item.strip().lower())
-        # Canonical category extraction for semantic deduplication
         category = norm
         if "start date" in norm or "commencement" in norm:
             category = "cat_start_date"
@@ -1384,216 +1339,6 @@ class AIService:
         """Delegates to services.parsers.challenge_parser.parse_challenge_response."""
         return parse_challenge_response(raw, request=request)
 
-    # ── Legacy parse helpers kept below for reference — logic now lives in ──
-    # ── services/parsers/  and  services/sanitizers.py                     ──
-    @staticmethod
-    def _parse_challenge_response_legacy(
-        raw: dict[str, Any], request: Optional[ChallengeCopilotRequest] = None
-    ) -> ChallengeCopilotResponse:
-        """Original inline implementation — preserved for reference only. Do not call."""
-        try:
-            # ── Root Causes (Hypotheses) ──────────────────────────────
-            raw_hypotheses = _extract_str_list(raw.get("root_cause_hypotheses"))
-            hypotheses = [_ensure_hypothesis(h) for h in raw_hypotheses]
-
-            # ── Desired Outcome & Success Definition ──────────────────
-            if request and request.outcome and request.outcome.desired_outcome and request.outcome.desired_outcome.strip():
-                desired_outcome = request.outcome.desired_outcome
-            else:
-                desired_outcome = raw.get("desired_outcome")
-
-            if request and request.outcome and request.outcome.success_definition and request.outcome.success_definition.strip():
-                success_definition = request.outcome.success_definition
-            else:
-                success_definition = raw.get("success_definition")
-
-            # ── KPIs Reconciliation ───────────────────────────────────
-            raw_kpis = raw.get("suggested_kpis", [])
-            if not isinstance(raw_kpis, list):
-                raw_kpis = []
-
-            kpis: list[SuggestedKPI] = []
-            warnings: list[str] = _extract_str_list(raw.get("warnings"))
-
-            if request and request.measurement and request.measurement.kpis:
-                # User provided authoritative KPIs
-                user_weights: list[float] = []
-                has_user_weights = False
-
-                for i, user_kpi in enumerate(request.measurement.kpis):
-                    match = _match_kpi(user_kpi, raw_kpis, i)
-
-                    kpi_name = user_kpi.name
-                    kpi_desc = user_kpi.description or (
-                        match.get("description") if match else None
-                    ) or f"Measures {user_kpi.name}"
-                    kpi_unit = user_kpi.unit or (match.get("unit") if match else None)
-                    # Baseline: strictly user-provided (None if not provided)
-                    kpi_baseline = user_kpi.baseline
-                    # Target: user-provided if present, else AI suggestion
-                    kpi_target = user_kpi.target if user_kpi.target is not None else (
-                        match.get("target") if match and isinstance(match.get("target"), (int, float)) else None
-                    )
-                    kpi_direction = user_kpi.direction or (
-                        match.get("direction") if match else None
-                    )
-                    kpi_method = user_kpi.measurement_method or (
-                        match.get("measurement_method") if match else None
-                    )
-
-                    # Weight: user-provided weight is authoritative
-                    if user_kpi.weight is not None:
-                        kpi_weight = float(user_kpi.weight)
-                        user_weights.append(kpi_weight)
-                        has_user_weights = True
-                    else:
-                        kpi_weight = float(match.get("suggested_weight")) if match and match.get("suggested_weight") is not None else None
-
-                    kpi_reason = (match.get("reason") if match else None) or "User-provided KPI"
-
-                    kpis.append(
-                        SuggestedKPI(
-                            name=kpi_name,
-                            description=kpi_desc,
-                            unit=kpi_unit,
-                            baseline=kpi_baseline,
-                            target=kpi_target,
-                            direction=kpi_direction,
-                            measurement_method=kpi_method,
-                            suggested_weight=kpi_weight,
-                            reason=kpi_reason,
-                        )
-                    )
-
-                # Only warn if explicitly provided weights exceed 100%
-                # Do NOT warn if weights sum to < 100% when additional KPIs/weights are undefined
-                if has_user_weights and user_weights:
-                    total_w = sum(user_weights)
-                    if total_w > 100.0:
-                        warnings.append(
-                            f"User-provided KPI weights sum to {total_w:.0f}%, which exceeds 100%. Please review weight allocation."
-                        )
-            else:
-                # User provided NO KPIs — parse AI suggestions
-                for k in raw_kpis:
-                    if isinstance(k, dict):
-                        k_copy = dict(k)
-                        # AI must never invent a baseline
-                        k_copy["baseline"] = None
-                        if not k_copy.get("description"):
-                            k_copy["description"] = f"Measures {k_copy.get('name', 'KPI')}"
-                        try:
-                            kpis.append(SuggestedKPI(**k_copy))
-                        except Exception:
-                            pass
-
-                # Normalize pure AI-suggested weights if they don't sum to 100
-                if kpis:
-                    ai_weights = [
-                        k.suggested_weight
-                        for k in kpis
-                        if k.suggested_weight is not None
-                    ]
-                    if ai_weights and not DecisionEngine.validate_kpi_weights(ai_weights):
-                        normalized = DecisionEngine.normalize_kpi_weights(ai_weights)
-                        wi = 0
-                        for kpi in kpis:
-                            if kpi.suggested_weight is not None:
-                                kpi.suggested_weight = normalized[wi]
-                                wi += 1
-
-            # ── Pilot Recommendation ──────────────────────────────────
-            pilot_rec: Optional[PilotRecommendation] = None
-            raw_pilot = raw.get("pilot_recommendation")
-            if not isinstance(raw_pilot, dict):
-                raw_pilot = {}
-
-            if request and request.pilot:
-                s_duration = request.pilot.duration or raw_pilot.get("suggested_duration")
-                s_sites = list(request.pilot.sites) if request.pilot.sites is not None else _extract_str_list(raw_pilot.get("suggested_sites"))
-                s_budget = request.pilot.budget or raw_pilot.get("suggested_budget_considerations")
-                s_rationale = _reconcile_pilot_rationale(request.pilot, raw_pilot.get("rationale"))
-                pilot_rec = PilotRecommendation(
-                    suggested_duration=s_duration,
-                    suggested_sites=s_sites,
-                    suggested_budget_considerations=s_budget,
-                    rationale=s_rationale,
-                )
-            elif raw_pilot:
-                try:
-                    pilot_rec = PilotRecommendation(
-                        suggested_duration=raw_pilot.get("suggested_duration"),
-                        suggested_sites=_extract_str_list(raw_pilot.get("suggested_sites")),
-                        suggested_budget_considerations=raw_pilot.get("suggested_budget_considerations"),
-                        rationale=raw_pilot.get("rationale"),
-                    )
-                except Exception:
-                    pilot_rec = None
-
-            # ── Requirements & Domain ─────────────────────────────────
-            if request and request.requirements and request.requirements.technologies and len(request.requirements.technologies) > 0:
-                tech_categories = list(request.requirements.technologies)
-            else:
-                tech_categories = _extract_str_list(raw.get("technology_categories"))
-
-            if request and request.requirements and request.requirements.domain and request.requirements.domain.strip():
-                domain = request.requirements.domain
-            else:
-                domain = raw.get("domain")
-
-            if request and request.requirements and request.requirements.eligibility and len(request.requirements.eligibility) > 0:
-                eligibility = list(request.requirements.eligibility)
-            else:
-                eligibility = _extract_str_list(raw.get("eligibility_considerations"))
-
-            if request and request.requirements and request.requirements.documents and len(request.requirements.documents) > 0:
-                user_docs = list(request.requirements.documents)
-                raw_docs = _extract_str_list(raw.get("suggested_documents"))
-                ai_docs = [d for d in raw_docs if d not in user_docs]
-                suggested_docs = user_docs + ai_docs
-            else:
-                suggested_docs = _extract_str_list(raw.get("suggested_documents"))
-
-            # ── Missing Information ───────────────────────────────────
-            missing_info = _extract_str_list(raw.get("missing_information"))
-            if request:
-                has_measurable_problem_baseline = (
-                    request.problem.baseline is not None
-                    and DecisionEngine.is_measurable_baseline(request.problem.baseline)
-                )
-                has_kpi_baseline = (
-                    request.measurement is not None
-                    and any(k.baseline is not None for k in request.measurement.kpis)
-                )
-                if not has_measurable_problem_baseline and not has_kpi_baseline:
-                    if not any("baseline" in m.lower() for m in missing_info):
-                        missing_info.append("Quantitative baseline data not provided or not consistently measured.")
-
-            # ── Assumptions ───────────────────────────────────────────
-            raw_assumptions = _extract_str_list(raw.get("assumptions"))
-            assumptions = [_ensure_evidence_aware_assumption(a) for a in raw_assumptions]
-
-            return ChallengeCopilotResponse(
-                problem_summary=raw.get("problem_summary", "No summary provided."),
-                stakeholders=_extract_str_list(raw.get("stakeholders")),
-                root_cause_hypotheses=hypotheses,
-                desired_outcome=desired_outcome,
-                success_definition=success_definition,
-                suggested_kpis=kpis,
-                pilot_recommendation=pilot_rec,
-                technology_categories=tech_categories,
-                domain=domain,
-                eligibility_considerations=eligibility,
-                suggested_documents=suggested_docs,
-                missing_information=missing_info,
-                assumptions=assumptions,
-                warnings=warnings,
-            )
-        except (ValidationError, TypeError, KeyError) as exc:
-            raise InvalidAIResponseError(
-                f"Failed to parse challenge response: {exc}"
-            ) from exc
-
     # ══════════════════════════════════════════════════════════════════
     # Brain 2 — Startup Match Explanation
     # ══════════════════════════════════════════════════════════════════
@@ -1642,7 +1387,12 @@ class AIService:
         system_prompt, user_prompt = build_proposal_prompt(request)
         raw = await self._ollama.generate_json(prompt=user_prompt, system=system_prompt)
 
-        return parse_proposal_response(raw, request=request)
+        response = parse_proposal_response(raw, request=request)
+        if not response.evidence_quality:
+            response.evidence_quality = ConfidenceAssessor.assess_evidence_quality(
+                request.available_documents or []
+            )
+        return response
 
     # ══════════════════════════════════════════════════════════════════
     # Brain 4 — Pilot Intelligence
@@ -1682,7 +1432,7 @@ class AIService:
         raw = await self._ollama.generate_json(prompt=user_prompt, system=system_prompt)
 
         # 3. Build response — calculations from Python, interpretation from LLM
-        return parse_pilot_response(
+        response = parse_pilot_response(
             raw,
             request=request,
             kpi_analyses=kpi_analyses,
@@ -1690,6 +1440,22 @@ class AIService:
             risk_counts=risk_counts,
             risk_summary=risk_summary,
         )
+
+        # 4. Confidence framework enrichment
+        if not response.confidence_level:
+            completeness = ConfidenceAssessor.assess_input_completeness(request)
+            ev_quality = ConfidenceAssessor.assess_evidence_quality(request.evidence)
+            has_gaps = bool(response.evidence_gaps)
+            conf_level, conf_reason = ConfidenceAssessor.compute_confidence(
+                completeness=completeness,
+                evidence_quality_str=ev_quality,
+                has_critical_gaps=has_gaps,
+            )
+            response.confidence_level = conf_level
+            if not response.confidence_reasoning:
+                response.confidence_reasoning = conf_reason
+
+        return response
 
     # ══════════════════════════════════════════════════════════════════
     # Brain 5 — Document Assistance
@@ -1749,4 +1515,3 @@ class AIService:
 
         # 4. Parse — scores from Python, text from LLM
         return parse_comparator_response(raw, request=request, scores=scores)
-

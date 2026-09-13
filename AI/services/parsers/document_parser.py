@@ -1,4 +1,4 @@
-﻿"""
+"""
 SetuGov AI Service — Brain 5: Document Assistance Parser
 
 Parses LLM document draft JSON and applies comprehensive sanitization:
@@ -297,12 +297,12 @@ def _sanitize_document_content(
         cleaned = re.sub(pat, f"commence on {start_date_rep}", cleaned, flags=re.IGNORECASE)
 
     if supplied_start_date:
-        cleaned = re.sub(r"\[(?:(?:STARTUP_)?START\s*DATE|(?:STARTUP_)?START_DATE|(?:STARTUP_)?STARTDATE|(?:STARTUP)?_?COMMENCEMENT_DATE|COMMENCEMENT\s*DATE)(?:\s*[—–-][^\]]*)?\\]", supplied_start_date, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[(?:(?:STARTUP_)?START\s*DATE|(?:STARTUP_)?START_DATE|(?:STARTUP_)?STARTDATE|(?:STARTUP)?_?COMMENCEMENT_DATE|COMMENCEMENT\s*DATE)(?:\s*[—–-][^\]]*)?\]", supplied_start_date, cleaned, flags=re.IGNORECASE)
     else:
         cleaned = re.sub(r"\[(?:(?:STARTUP_)?START\s*DATE|(?:STARTUP_)?START_DATE|(?:STARTUP_)?STARTDATE|(?:STARTUP)?_?COMMENCEMENT_DATE|COMMENCEMENT\s*DATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\]", "[START DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
 
     if supplied_end_date:
-        cleaned = re.sub(r"\[(?:END\s*DATE|END_DATE|ENDDATE|COMPLETION\s*DATE|COMPLETION_DATE|COMPLETIONDATE)(?:\s*[—–-][^\]]*)?\\]", supplied_end_date, cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\[(?:END\s*DATE|END_DATE|ENDDATE|COMPLETION\s*DATE|COMPLETION_DATE|COMPLETIONDATE)(?:\s*[—–-][^\]]*)?\]", supplied_end_date, cleaned, flags=re.IGNORECASE)
     else:
         cleaned = re.sub(r"\[(?:END\s*DATE|END_DATE|ENDDATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\]", "[END DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
         cleaned = re.sub(r"\[(?:COMPLETION\s*DATE|COMPLETION_DATE|COMPLETIONDATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\]", "[COMPLETION DATE — NOT SPECIFIED — REQUIRES AUTHORIZED REVIEW]", cleaned, flags=re.IGNORECASE)
@@ -339,7 +339,7 @@ def _sanitize_document_content(
         cleaned = re.sub(r"\[(?:TERMINATION\s+NOTICE|EXTENSION\s+CONDITIONS)[^\]]*\]", f"Termination Notice: {supplied_termination}", cleaned, flags=re.IGNORECASE)
 
     # Normalize accidental duplicated punctuation
-    cleaned = re.sub(r"(?<!\.)\.\. (?!\.)", ".", cleaned)
+    cleaned = re.sub(r"\.{2,}", ".", cleaned)
     cleaned = re.sub(r"!{2,}", "!", cleaned)
     cleaned = re.sub(r"\?{2,}", "?", cleaned)
 
@@ -624,6 +624,11 @@ def _sanitize_document_content(
         for pat in legal_patterns:
             cleaned = re.sub(pat, "[DISPUTE RESOLUTION AND GOVERNING JURISDICTION NOT SPECIFIED — SUBJECT TO AUTHORIZED LEGAL REVIEW]\n", cleaned, flags=re.IGNORECASE)
 
+    # Final cleanup of repeated punctuation
+    cleaned = re.sub(r"\.{2,}", ".", cleaned)
+    cleaned = re.sub(r"!{2,}", "!", cleaned)
+    cleaned = re.sub(r"\?{2,}", "?", cleaned)
+
     # ── 9. Mandatory Review Label ─────────────────────────────────────
     review_label = "AI-generated draft — requires authorized review."
     if review_label not in cleaned:
@@ -700,21 +705,21 @@ def _reconcile_document_missing_information(
     ]
 
     raw_bracket_map = [
-        (r"^\[?(?:(?:STARTUP_)?START\s*DATE|(?:STARTUP_)?START_DATE|COMMENCEMENT\s*DATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\\.?\\]?$", "Pilot start date: Not provided — requires authorized review."),
-        (r"^\[?(?:END\s*DATE|END_DATE|COMPLETION\s*DATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\\.?\\]?$", "Pilot end/completion date: Not provided — requires authorized review."),
-        (r"^\[?DEPLOYMENT\s*DATE(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\\.?\\]?$", "Deployment date: Not provided — requires authorized review."),
-        (r"^\[?DATE(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\\.?\\]?$", "Execution date: Not provided — requires authorized review."),
-        (r"^\[?GOVERNMENT\s*(?:ENTITY|NAME|DEPARTMENT)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\\.?\\]?$", "Government entity and department: Not provided — requires authorized review."),
-        (r"^\[?REVIEWER(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\\.?\\]?$", "Authorizing reviewer: Not provided — requires authorized review."),
-        (r"^\[?TERMINATION\s*NOTICE(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\\.?\\]?$", "Termination notice period: Not provided — requires authorized review."),
-        (r"^\[?TERMINATION\s*CONDITIONS(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*(?:REQUIRES|SUBJECT\s*TO)\s*AUTHORIZED\s*REVIEW)?\\.?\\]?$", "Termination notice and extension conditions: Not provided — requires authorized review."),
-        (r"^\[?PAYMENT\s*SCHEDULE(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\\.?\\]?$", "Payment milestone disbursement schedule: Not provided — requires authorized review."),
-        (r"^\[?IP\s*OWNERSHIP(?:\s*TERMS)?(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*SUBJECT\s*TO\s*AUTHORIZED\s*LEGAL\s*REVIEW)?\\.?\\]?$", "Intellectual property ownership and licensing terms: Not provided — requires authorized review."),
-        (r"^\[?EXTENSION\s*CONDITIONS(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\\.?\\]?$", "Termination notice and extension conditions: Not provided — requires authorized review."),
-        (r"^\[?CYBERSECURITY\s*STANDARDS(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\\.?\\]?$", "Cybersecurity standards and protocols: Not provided — requires authorized review."),
-        (r"^\[?DATA\s*GOVERNANCE(?:\s*PROTOCOL)?(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*SUBJECT\s*TO\s*AUTHORIZED\s*REVIEW)?\\.?\\]?$", "Data governance protocol: Not provided — requires authorized review."),
-        (r"^\[?AUTHORIZED\s*SIGNATORIES(?:\s*AND\s*OFFICIAL\s*ENTITY\s*ADDRESSES)?(?:\s*[—–-]?\s*NOT\s*PROVIDED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\\.?\\]?$", "Authorized signatories and official entity addresses: Not provided — requires authorized review."),
-        (r"^\[?DISPUTE\s*RESOLUTION(?:\s*AND\s*GOVERNING\s*JURISDICTION)?(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*SUBJECT\s*TO\s*AUTHORIZED\s*LEGAL\s*REVIEW)?\\.?\\]?$", "Dispute resolution and governing jurisdiction: Not provided — requires authorized review."),
+        (r"^\[?(?:(?:STARTUP_)?START\s*DATE|(?:STARTUP_)?START_DATE|COMMENCEMENT\s*DATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\.?\]?$", "Pilot start date: Not provided — requires authorized review."),
+        (r"^\[?(?:END\s*DATE|END_DATE|COMPLETION\s*DATE)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\.?\]?$", "Pilot end/completion date: Not provided — requires authorized review."),
+        (r"^\[?DEPLOYMENT\s*DATE(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\.?\]?$", "Deployment date: Not provided — requires authorized review."),
+        (r"^\[?DATE(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\.?\]?$", "Execution date: Not provided — requires authorized review."),
+        (r"^\[?GOVERNMENT\s*(?:ENTITY|NAME|DEPARTMENT)(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\.?\]?$", "Government entity and department: Not provided — requires authorized review."),
+        (r"^\[?REVIEWER(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\.?\]?$", "Authorizing reviewer: Not provided — requires authorized review."),
+        (r"^\[?TERMINATION\s*NOTICE(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\.?\]?$", "Termination notice period: Not provided — requires authorized review."),
+        (r"^\[?TERMINATION\s*CONDITIONS(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*(?:REQUIRES|SUBJECT\s*TO)\s*AUTHORIZED\s*REVIEW)?\.?\]?$", "Termination notice and extension conditions: Not provided — requires authorized review."),
+        (r"^\[?PAYMENT\s*SCHEDULE(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\.?\]?$", "Payment milestone disbursement schedule: Not provided — requires authorized review."),
+        (r"^\[?IP\s*OWNERSHIP(?:\s*TERMS)?(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*SUBJECT\s*TO\s*AUTHORIZED\s*LEGAL\s*REVIEW)?\.?\]?$", "Intellectual property ownership and licensing terms: Not provided — requires authorized review."),
+        (r"^\[?EXTENSION\s*CONDITIONS(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\.?\]?$", "Termination notice and extension conditions: Not provided — requires authorized review."),
+        (r"^\[?CYBERSECURITY\s*STANDARDS(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\.?\]?$", "Cybersecurity standards and protocols: Not provided — requires authorized review."),
+        (r"^\[?DATA\s*GOVERNANCE(?:\s*PROTOCOL)?(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*SUBJECT\s*TO\s*AUTHORIZED\s*REVIEW)?\.?\]?$", "Data governance protocol: Not provided — requires authorized review."),
+        (r"^\[?AUTHORIZED\s*SIGNATORIES(?:\s*AND\s*OFFICIAL\s*ENTITY\s*ADDRESSES)?(?:\s*[—–-]?\s*NOT\s*PROVIDED)?(?:\s*[—–-]?\s*REQUIRES\s*AUTHORIZED\s*REVIEW)?\.?\]?$", "Authorized signatories and official entity addresses: Not provided — requires authorized review."),
+        (r"^\[?DISPUTE\s*RESOLUTION(?:\s*AND\s*GOVERNING\s*JURISDICTION)?(?:\s*[—–-]?\s*NOT\s*SPECIFIED)?(?:\s*[—–-]?\s*SUBJECT\s*TO\s*AUTHORIZED\s*LEGAL\s*REVIEW)?\.?\]?$", "Dispute resolution and governing jurisdiction: Not provided — requires authorized review."),
     ]
 
     for item in raw_sanitized:

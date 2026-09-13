@@ -1,0 +1,1043 @@
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Download,
+  File,
+  FileCheck2,
+  FileText,
+  Plus,
+  Upload,
+  X,
+  ExternalLink,
+  AlertCircle,
+  Loader2
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { getStartups, getStartupDocuments, addStartupDocument } from "../../services/startupService.js";
+
+const documentTypeOptions = [
+  { label: "DPIIT Recognition Certificate", value: "DPIIT_RECOGNITION", category: "Government Recognition" },
+  { label: "Certificate of Incorporation", value: "INCORPORATION_CERTIFICATE", category: "Company Registration" },
+  { label: "GST Registration Certificate", value: "GST_REGISTRATION", category: "Tax & Compliance" },
+  { label: "Tax / Financial Compliance", value: "TAX_COMPLIANCE", category: "Tax & Compliance" },
+  { label: "Pilot Agreement & NDA", value: "PILOT_AGREEMENT", category: "Pilot Documents" },
+  { label: "Other Supporting Document", value: "OTHER", category: "Other" }
+];
+
+const reverseTypeMap = {
+  DPIIT_RECOGNITION: { name: "DPIIT Recognition Certificate", category: "Government Recognition" },
+  INCORPORATION_CERTIFICATE: { name: "Certificate of Incorporation", category: "Company Registration" },
+  GST_REGISTRATION: { name: "GST Registration Certificate", category: "Tax & Compliance" },
+  TAX_COMPLIANCE: { name: "Tax Compliance Certificate", category: "Tax & Compliance" },
+  PILOT_AGREEMENT: { name: "Pilot Agreement & NDA", category: "Pilot Documents" },
+  OTHER: { name: "Supporting Document", category: "Other" }
+};
+
+const documentCategories = [
+  "All",
+  "Government Recognition",
+  "Company Registration",
+  "Tax & Compliance",
+  "Pilot Documents",
+  "Other"
+];
+
+function StartupDocuments() {
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+
+  const [startupId, setStartupId] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadSuccess, setUploadSuccess] = useState("");
+
+  const [showUpload, setShowUpload] = useState(false);
+  const [selectedType, setSelectedType] = useState(documentTypeOptions[0].value);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [selectedDocument, setSelectedDocument] = useState(null);
+
+  // Fetch current startup and documents from Backend
+  useEffect(() => {
+    let mounted = true;
+    const fetchStartupAndDocs = async () => {
+      try {
+        setLoading(true);
+        const startupsRes = await getStartups({ limit: 50 });
+        const startups = startupsRes?.data?.startups || [];
+        if (startups.length > 0 && mounted) {
+          const s = startups[0];
+          setStartupId(s.id);
+
+          const docsRes = await getStartupDocuments(s.id);
+          const rawDocs = docsRes?.data?.documents || [];
+          const formatted = rawDocs.map((d) => {
+            const meta = reverseTypeMap[d.document_type] || {
+              name: d.document_type?.replace(/_/g, " "),
+              category: "Company Documents"
+            };
+            const filename = d.document_url ? d.document_url.split("/").pop() : "document.pdf";
+            return {
+              id: d.id,
+              name: meta.name,
+              category: meta.category,
+              fileName: filename,
+              size: "Uploaded",
+              uploaded: d.created_at
+                ? new Date(d.created_at).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric"
+                  })
+                : "Recently",
+              status: d.verification_status === "VERIFIED" ? "Verified" : d.verification_status === "REJECTED" ? "Rejected" : "Under Review",
+              document_url: d.document_url,
+              rawDoc: d
+            };
+          });
+
+          if (mounted) {
+            setDocuments(formatted);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load startup documents:", err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchStartupAndDocs();
+    return () => { mounted = false; };
+  }, []);
+
+  const handleFileSelect = (event) => {
+    setUploadError("");
+    setUploadSuccess("");
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    const allowed = [".pdf", ".png", ".jpg", ".jpeg"];
+    const invalid = files.find((f) => {
+      const ext = f.name.substring(f.name.lastIndexOf(".")).toLowerCase();
+      return !allowed.includes(ext) || f.size > 10 * 1024 * 1024;
+    });
+
+    if (invalid) {
+      setUploadError("Files must be PDF, PNG, or JPG/JPEG and under 10MB each.");
+      return;
+    }
+
+    setSelectedFiles((prev) => [...prev, ...files]);
+  };
+
+  const handleRemoveFile = (indexToRemove) => {
+    setSelectedFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleUpload = async () => {
+    if (selectedFiles.length === 0) {
+      setUploadError("Please choose at least one file to upload.");
+      return;
+    }
+    if (!startupId) {
+      setUploadError("No active startup profile found. Please complete startup profile first.");
+      return;
+    }
+
+    setUploading(true);
+    setUploadError("");
+    setUploadSuccess("");
+
+    try {
+      const uploadedDocs = [];
+      for (const file of selectedFiles) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("document_type", selectedType);
+
+        const res = await addStartupDocument(startupId, formData);
+        const raw = res?.data?.document;
+        if (raw) {
+          const meta = reverseTypeMap[raw.document_type] || {
+            name: file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
+            category: "Company Documents"
+          };
+          uploadedDocs.push({
+            id: raw.id,
+            name: meta.name,
+            category: meta.category,
+            fileName: raw.document_url ? raw.document_url.split("/").pop() : file.name,
+            size: formatFileSize(file.size),
+            uploaded: new Date(raw.created_at || Date.now()).toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric"
+            }),
+            status: raw.verification_status === "VERIFIED" ? "Verified" : "Under Review",
+            document_url: raw.document_url,
+            rawDoc: raw
+          });
+        }
+      }
+
+      setDocuments((prev) => [...uploadedDocs, ...prev]);
+      setSelectedFiles([]);
+      setUploadSuccess(`Successfully uploaded ${uploadedDocs.length} document(s)!`);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      setTimeout(() => {
+        setShowUpload(false);
+        setUploadSuccess("");
+      }, 1200);
+    } catch (err) {
+      console.error("Document upload failed:", err);
+      setUploadError(err?.message || "Failed to upload document. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const filteredDocuments =
+    documents.filter((document) => {
+      const matchesSearch =
+        document.name
+          .toLowerCase()
+          .includes(
+            search.toLowerCase()
+          ) ||
+        document.fileName
+          .toLowerCase()
+          .includes(
+            search.toLowerCase()
+          );
+
+      const matchesCategory =
+        categoryFilter === "All" ||
+        document.category ===
+          categoryFilter;
+
+      return (
+        matchesSearch &&
+        matchesCategory
+      );
+    });
+
+  const verifiedCount =
+    documents.filter(
+      (document) =>
+        document.status === "Verified"
+    ).length;
+
+  const reviewCount =
+    documents.filter(
+      (document) =>
+        document.status === "Under Review"
+    ).length;
+
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 12,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+      transition={{
+        duration: 0.35,
+      }}
+      className="space-y-6"
+    >
+      {/* ================================================= */}
+      {/* HEADER                                            */}
+      {/* ================================================= */}
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-8">
+        <button
+          type="button"
+          onClick={() =>
+            navigate("/startup")
+          }
+          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Dashboard
+        </button>
+
+        <div className="mt-6 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+              <FileText className="h-6 w-6" />
+            </div>
+
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                Startup Workspace
+              </p>
+
+              <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+                Documents
+              </h1>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+                Manage company, compliance, pilot and
+                supporting documents required during
+                the government innovation process.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              setShowUpload(true)
+            }
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-bold text-white transition-colors hover:bg-indigo-700"
+          >
+            <Plus className="h-4 w-4" />
+            Upload Document
+          </button>
+        </div>
+      </section>
+
+      {/* ================================================= */}
+      {/* SUMMARY                                           */}
+      {/* ================================================= */}
+
+      <section className="grid gap-4 sm:grid-cols-3">
+        <SummaryCard
+          icon={FileText}
+          title="Total Documents"
+          value={documents.length}
+          description="Uploaded documents"
+        />
+
+        <SummaryCard
+          icon={FileCheck2}
+          title="Verified"
+          value={verifiedCount}
+          description="Documents verified"
+          type="success"
+        />
+
+        <SummaryCard
+          icon={Upload}
+          title="Under Review"
+          value={reviewCount}
+          description="Awaiting verification"
+          type="warning"
+        />
+      </section>
+
+      {/* ================================================= */}
+      {/* UPLOAD AREA                                       */}
+      {/* ================================================= */}
+
+      {showUpload && (
+        <UploadPanel
+          fileInputRef={fileInputRef}
+          selectedFiles={selectedFiles}
+          selectedType={selectedType}
+          setSelectedType={setSelectedType}
+          handleFileSelect={handleFileSelect}
+          handleRemoveFile={handleRemoveFile}
+          handleUpload={handleUpload}
+          uploading={uploading}
+          uploadError={uploadError}
+          uploadSuccess={uploadSuccess}
+          onClose={() => {
+            setShowUpload(false);
+            setUploadError("");
+            setUploadSuccess("");
+          }}
+        />
+      )}
+
+      {/* ================================================= */}
+      {/* DOCUMENT LIST                                     */}
+      {/* ================================================= */}
+
+      <section className="rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div className="border-b border-slate-200 p-5 dark:border-slate-800 sm:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                My Documents
+              </h2>
+
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                All official documents and certificates uploaded by your startup.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input
+                type="search"
+                value={search}
+                onChange={(event) =>
+                  setSearch(
+                    event.target.value
+                  )
+                }
+                placeholder="Search documents..."
+                className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+              />
+
+              <select
+                value={categoryFilter}
+                onChange={(event) =>
+                  setCategoryFilter(
+                    event.target.value
+                  )
+                }
+                className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+              >
+                {documentCategories.map(
+                  (cat) => (
+                    <option
+                      key={cat}
+                      value={cat}
+                    >
+                      {cat === "All" ? "All Categories" : cat}
+                    </option>
+                  )
+                )}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {filteredDocuments.length === 0 ? (
+          <EmptyState
+            onUpload={() =>
+              setShowUpload(true)
+            }
+          />
+        ) : (
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {filteredDocuments.map(
+              (document, index) => (
+                <DocumentRow
+                  key={document.id}
+                  document={document}
+                  index={index}
+                  onView={() =>
+                    setSelectedDocument(
+                      document
+                    )
+                  }
+                />
+              )
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* ================================================= */}
+      {/* DOCUMENT REQUIREMENTS                             */}
+      {/* ================================================= */}
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+            <FileCheck2 className="h-5 w-5" />
+          </div>
+
+          <div>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              Document Guidelines
+            </h2>
+
+            <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+              Make sure documents are clear, valid and
+              uploaded in an accepted format.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <Guideline
+            title="Accepted Formats"
+            text="PDF, DOC, DOCX, JPG and PNG."
+          />
+
+          <Guideline
+            title="Clear Documents"
+            text="Upload readable and complete documents."
+          />
+
+          <Guideline
+            title="Valid Information"
+            text="Use current registration and compliance records."
+          />
+        </div>
+      </section>
+
+      {/* ================================================= */}
+      {/* DOCUMENT MODAL                                   */}
+      {/* ================================================= */}
+
+      {selectedDocument && (
+        <DocumentModal
+          document={selectedDocument}
+          onClose={() =>
+            setSelectedDocument(null)
+          }
+        />
+      )}
+    </motion.div>
+  );
+}
+
+/* ===================================================== */
+/* SUMMARY CARD                                          */
+/* ===================================================== */
+
+function SummaryCard({
+  icon: Icon,
+  title,
+  value,
+  description,
+  type,
+}) {
+  let iconClasses =
+    "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400";
+
+  if (type === "success") {
+    iconClasses =
+      "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400";
+  }
+
+  if (type === "warning") {
+    iconClasses =
+      "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400";
+  }
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+      <div
+        className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconClasses}`}
+      >
+        <Icon className="h-5 w-5" />
+      </div>
+
+      <p className="mt-5 text-2xl font-bold text-slate-900 dark:text-white">
+        {value}
+      </p>
+
+      <p className="mt-1 text-xs font-bold text-slate-700 dark:text-slate-300">
+        {title}
+      </p>
+
+      <p className="mt-1 text-[10px] text-slate-400">
+        {description}
+      </p>
+    </div>
+  );
+}
+
+/* ===================================================== */
+/* UPLOAD PANEL                                          */
+/* ===================================================== */
+
+function UploadPanel({
+  fileInputRef,
+  selectedFiles,
+  selectedType,
+  setSelectedType,
+  handleFileSelect,
+  handleRemoveFile,
+  handleUpload,
+  uploading,
+  uploadError,
+  uploadSuccess,
+  onClose,
+}) {
+  return (
+    <motion.section
+      initial={{
+        opacity: 0,
+        y: -8,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+      className="rounded-3xl border border-indigo-100 bg-indigo-50/50 p-5 dark:border-indigo-500/20 dark:bg-indigo-500/5 sm:p-6"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">
+            Upload Documents
+          </h2>
+
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Select an official document category and choose files (PDF, PNG, JPG/JPEG max 10MB).
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-xl p-2 text-slate-400 hover:bg-white dark:hover:bg-slate-900"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {uploadError && (
+        <div className="mt-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{uploadError}</span>
+        </div>
+      )}
+
+      {uploadSuccess && (
+        <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-medium text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-400">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <span>{uploadSuccess}</span>
+        </div>
+      )}
+
+      <div className="mt-5 grid gap-4 md:grid-cols-2">
+        <div>
+          <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+            Document Category <span className="text-red-500">*</span>
+          </label>
+
+          <select
+            value={selectedType}
+            onChange={(event) =>
+              setSelectedType(
+                event.target.value
+              )
+            }
+            className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+          >
+            {documentTypeOptions.map(
+              (opt) => (
+                <option
+                  key={opt.value}
+                  value={opt.value}
+                >
+                  {opt.label}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+
+        <div>
+          <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+            Select Files (PDF, PNG, JPG max 10MB) <span className="text-red-500">*</span>
+          </label>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept=".pdf,.png,.jpg,.jpeg"
+            onChange={handleFileSelect}
+            className="mt-2 block h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-white text-xs text-slate-500 file:mr-3 file:h-full file:border-0 file:bg-slate-100 file:px-3 file:text-[10px] file:font-bold dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:file:bg-slate-900"
+          />
+        </div>
+      </div>
+
+      {selectedFiles.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Selected Files ({selectedFiles.length})
+          </p>
+          <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+            {selectedFiles.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                  <File className="h-4 w-4" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold text-slate-700 dark:text-slate-200">
+                    {file.name}
+                  </p>
+                  <p className="mt-0.5 text-[9px] text-slate-400">
+                    {formatFileSize(file.size)}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFile(index)}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-red-500 dark:hover:bg-slate-900"
+                  title="Remove file"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-5 flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500 hover:bg-white dark:hover:bg-slate-900"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          disabled={selectedFiles.length === 0 || uploading}
+          onClick={handleUpload}
+          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Upload className="h-4 w-4" />
+
+          {uploading
+            ? "Uploading..."
+            : `Upload ${selectedFiles.length > 1 ? `${selectedFiles.length} Documents` : "Document"}`}
+        </button>
+      </div>
+    </motion.section>
+  );
+}
+
+/* ===================================================== */
+/* DOCUMENT ROW                                         */
+/* ===================================================== */
+
+function DocumentRow({
+  document,
+  index,
+  onView,
+}) {
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        x: 10,
+      }}
+      animate={{
+        opacity: 1,
+        x: 0,
+      }}
+      transition={{
+        delay: index * 0.04,
+      }}
+      className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:p-6"
+    >
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+        <FileText className="h-5 w-5" />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-xs font-bold capitalize text-slate-800 dark:text-slate-200">
+            {document.name}
+          </h3>
+
+          <DocumentStatus
+            status={document.status}
+          />
+        </div>
+
+        <p className="mt-1 text-[10px] text-slate-400">
+          {document.category}
+        </p>
+
+        <div className="mt-2 flex flex-wrap gap-3 text-[9px] text-slate-400">
+          <span>{document.fileName}</span>
+          <span>{document.size}</span>
+          <span>
+            Uploaded {document.uploaded}
+          </span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onView}
+        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-[10px] font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-indigo-400"
+      >
+        View
+      </button>
+    </motion.div>
+  );
+}
+
+/* ===================================================== */
+/* STATUS                                               */
+/* ===================================================== */
+
+function DocumentStatus({
+  status,
+}) {
+  const verified =
+    status === "Verified";
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-bold ${
+        verified
+          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
+          : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
+      }`}
+    >
+      {verified ? (
+        <CheckCircle2 className="h-3 w-3" />
+      ) : (
+        <Upload className="h-3 w-3" />
+      )}
+
+      {status}
+    </span>
+  );
+}
+
+/* ===================================================== */
+/* EMPTY STATE                                          */
+/* ===================================================== */
+
+function EmptyState({
+  onUpload,
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-900">
+        <FileText className="h-6 w-6" />
+      </div>
+
+      <h3 className="mt-4 text-sm font-bold text-slate-800 dark:text-slate-200">
+        No documents found
+      </h3>
+
+      <p className="mt-1 max-w-sm text-xs leading-5 text-slate-400">
+        Try changing your search or upload a new
+        document.
+      </p>
+
+      <button
+        type="button"
+        onClick={onUpload}
+        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-indigo-700"
+      >
+        <Plus className="h-4 w-4" />
+        Upload Document
+      </button>
+    </div>
+  );
+}
+
+/* ===================================================== */
+/* GUIDELINE                                            */
+/* ===================================================== */
+
+function Guideline({
+  title,
+  text,
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+        {title}
+      </h3>
+
+      <p className="mt-1.5 text-[10px] leading-5 text-slate-400">
+        {text}
+      </p>
+    </div>
+  );
+}
+
+/* ===================================================== */
+/* DOCUMENT MODAL                                       */
+/* ===================================================== */
+
+function DocumentModal({
+  document,
+  onClose,
+}) {
+  const handleDownload = () => {
+    if (document.document_url) {
+      window.open(document.document_url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    if (document.fileUrl) {
+      const link = window.document.createElement("a");
+      link.href = document.fileUrl;
+      link.download = document.fileName || "document";
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      return;
+    }
+
+    if (document.file) {
+      const url = URL.createObjectURL(document.file);
+      const link = window.document.createElement("a");
+      link.href = url;
+      link.download = document.fileName || "document";
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      return;
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+      <motion.div
+        initial={{
+          opacity: 0,
+          scale: 0.96,
+        }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+        }}
+        className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-950"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+              <FileText className="h-5 w-5" />
+            </div>
+
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-wider text-indigo-500">
+                Document
+              </p>
+
+              <h2 className="mt-1 text-sm font-bold capitalize text-slate-900 dark:text-white">
+                {document.name}
+              </h2>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-6 space-y-3">
+          <ModalDetail
+            label="Category"
+            value={document.category}
+          />
+
+          <ModalDetail
+            label="File Name"
+            value={document.fileName}
+          />
+
+          <ModalDetail
+            label="File Size"
+            value={document.size}
+          />
+
+          <ModalDetail
+            label="Uploaded"
+            value={document.uploaded}
+          />
+
+          <ModalDetail
+            label="Status"
+            value={document.status}
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={handleDownload}
+          className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-bold text-white hover:bg-indigo-700"
+        >
+          <Download className="h-4 w-4" />
+          Download Document
+        </button>
+      </motion.div>
+    </div>
+  );
+}
+
+/* ===================================================== */
+/* MODAL DETAIL                                         */
+/* ===================================================== */
+
+function ModalDetail({
+  label,
+  value,
+}) {
+  return (
+    <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-900">
+      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+        {label}
+      </p>
+
+      <p className="mt-1 break-words text-xs font-bold text-slate-700 dark:text-slate-200">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+/* ===================================================== */
+/* HELPERS                                              */
+/* ===================================================== */
+
+function formatFileSize(bytes) {
+  if (!bytes) return "0 KB";
+
+  const units = [
+    "Bytes",
+    "KB",
+    "MB",
+    "GB",
+  ];
+
+  const index = Math.floor(
+    Math.log(bytes) /
+      Math.log(1024)
+  );
+
+  return `${(
+    bytes /
+    Math.pow(1024, index)
+  ).toFixed(index === 0 ? 0 : 1)} ${
+    units[index]
+  }`;
+}
+
+function formatCurrentDate() {
+  return new Intl.DateTimeFormat(
+    "en-IN",
+    {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }
+  ).format(new Date());
+}
+
+export default StartupDocuments;

@@ -1,4 +1,4 @@
-﻿"""
+"""
 SetuGov AI Service — Brain 4: Pilot Intelligence Parser
 
 Parses LLM pilot interpretation JSON.
@@ -140,6 +140,21 @@ def parse_pilot_response(
         _sanitize_claim(a) for a in _extract_str_list(raw.get("recommended_actions"))
     ]
 
+    conf_lvl = raw.get("confidence_level")
+    confidence_level = _sanitize_claim(str(conf_lvl).strip()) if conf_lvl else None
+    conf_rsn = raw.get("confidence_reasoning")
+    confidence_reasoning = _sanitize_claim(str(conf_rsn).strip()) if conf_rsn else None
+
+    raw_anomalies = _extract_str_list(raw.get("anomalies"))
+    anomalies = (
+        [_sanitize_claim(a) for a in raw_anomalies if a and a.strip()]
+        if raw_anomalies
+        else None
+    )
+
+    scale_r = raw.get("scale_readiness")
+    scale_readiness = _sanitize_claim(str(scale_r).strip()) if scale_r else None
+
     try:
         return PilotIntelligenceResponse(
             kpi_analyses=kpi_analyses,               # deterministic
@@ -151,6 +166,10 @@ def parse_pilot_response(
             concerns=concerns,
             evidence_gaps=evidence_gaps,
             recommended_actions=recommended_actions,
+            confidence_level=confidence_level,
+            confidence_reasoning=confidence_reasoning,
+            anomalies=anomalies,
+            scale_readiness=scale_readiness,
         )
     except (ValidationError, TypeError) as exc:
         raise InvalidAIResponseError(

@@ -1,0 +1,32 @@
+import { Router } from 'express';
+import {
+  createDepartment,
+  getDepartments,
+  getDepartmentById,
+  updateDepartment,
+  getGovernmentAnalytics
+} from '../controllers/departmentController.js';
+import { authenticate, optionalAuthenticate } from '../middleware/auth.js';
+import { authorizeRoles } from '../middleware/rbac.js';
+import { validate } from '../middleware/validate.js';
+import { createDepartmentSchema, updateDepartmentSchema } from '../schemas/departmentSchemas.js';
+
+const router = Router();
+
+// Government / Admin Analytics and Budget Utilization (Phase 5)
+router.get('/analytics', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), getGovernmentAnalytics);
+
+// Create department (Admin only)
+router.post('/', authenticate, authorizeRoles('ADMIN'), validate(createDepartmentSchema), createDepartment);
+
+// List departments (Public/Authenticated)
+router.get('/', getDepartments);
+
+// Get department by ID
+router.get('/:department_id', optionalAuthenticate, getDepartmentById);
+
+// Update department (Admin & Government)
+router.patch('/:department_id', authenticate, authorizeRoles('ADMIN', 'GOVERNMENT'), validate(updateDepartmentSchema), updateDepartment);
+
+export default router;
+

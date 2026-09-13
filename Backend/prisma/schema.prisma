@@ -1,0 +1,661 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String                 @id @default(uuid())
+  name                 String
+  email                String                 @unique
+  password_hash        String
+  role                 UserRole
+  department_id        String?
+  is_active            Boolean                @default(true)
+  is_verified          Boolean                @default(false)
+  designation          String?
+  phone                String?
+  invitation_token_hash  String?
+  invitation_expires_at  DateTime?
+  invitation_accepted_at DateTime?
+  created_at           DateTime               @default(now())
+  updated_at           DateTime               @updatedAt
+  audit_logs           AuditLog[]
+  created_challenges   Challenge[]            @relation("ChallengeCreator")
+  evaluations          Evaluation[]           @relation("Evaluator")
+  uploaded_evidence    Evidence[]             @relation("EvidenceUploader")
+  notifications        Notification[]
+  approved_decisions   ScaleDecision[]        @relation("DecisionApprover")
+  verified_documents   StartupDocument[]      @relation("DocumentVerifier")
+  startups             Startup[]
+  department           Department?            @relation(fields: [department_id], references: [id])
+  validations          Validation[]           @relation("Validator")
+  evaluator_profile    EvaluatorProfile?
+  conflict_declarations ConflictDeclaration[]  @relation("ConflictDeclarer")
+  verified_startups    Startup[]              @relation("StartupVerifier")
+  verified_evaluators  EvaluatorProfile[]     @relation("EvaluatorProfileVerifier")
+  verified_compliance  ComplianceItem[]       @relation("ComplianceVerifier")
+  reviewed_access_requests AccessRequest[]     @relation("AccessRequestReviewer")
+  nominated_access_requests AccessRequest[]    @relation("AccessRequestNominator")
+  evaluator_assignments    EvaluatorAssignment[] @relation("EvaluatorAssigned")
+  created_evaluator_assignments EvaluatorAssignment[] @relation("EvaluatorAssigner")
+
+  @@map("users")
+}
+
+model Department {
+  id                         String                    @id @default(uuid())
+  name                       String
+  state                      String
+  contact_email              String
+  department_code            String?
+  nodal_officer_name         String?
+  nodal_officer_designation  String?
+  nodal_officer_phone        String?
+  official_website           String?
+  verification_status        StartupVerificationStatus @default(PENDING)
+  created_at                 DateTime                  @default(now())
+  updated_at                 DateTime                  @updatedAt
+  challenges                 Challenge[]
+  users                      User[]
+  access_requests            AccessRequest[]
+
+  @@map("departments")
+}
+
+model Challenge {
+  id                         String          @id @default(uuid())
+  department_id              String
+  title                      String
+  problem_description        String
+  current_baseline           String
+  desired_outcome            String
+  location                   String
+  budget_min                 Decimal         @db.Decimal(14, 2)
+  budget_max                 Decimal         @db.Decimal(14, 2)
+  pilot_duration_days        Int
+  required_technologies      String[]
+  application_deadline       DateTime?
+  status                     ChallengeStatus @default(DRAFT)
+  created_by                 String
+  embedding                  Float[]
+  data_classification        String?         @default("INTERNAL")
+  data_access_requirements   String?
+  data_retention_period      String?
+  ip_ownership               String?         @default("STARTUP_OWNED")
+  licensing_terms            String?
+  confidentiality_terms      String?
+  created_at                 DateTime        @default(now())
+  updated_at                 DateTime        @updatedAt
+  applications               Application[]
+  creator                    User            @relation("ChallengeCreator", fields: [created_by], references: [id])
+  department                 Department      @relation(fields: [department_id], references: [id], onDelete: Cascade)
+  match_scores               MatchScore[]
+  pilots                     Pilot[]
+
+  @@index([status])
+  @@index([department_id])
+  @@map("challenges")
+}
+
+model MatchScore {
+  id               String    @id @default(uuid())
+  challenge_id     String
+  startup_id       String
+  technology_score Float
+  domain_score     Float
+  readiness_score  Float
+  experience_score Float
+  deployment_score Float
+  overall_score    Float
+  ai_reasoning     String?
+  created_at       DateTime  @default(now())
+  challenge        Challenge @relation(fields: [challenge_id], references: [id], onDelete: Cascade)
+  startup          Startup   @relation(fields: [startup_id], references: [id], onDelete: Cascade)
+
+  @@unique([challenge_id, startup_id])
+  @@index([overall_score])
+  @@map("match_scores")
+}
+
+model Startup {
+  id                   String                    @id @default(uuid())
+  user_id              String
+  company_name         String
+  description          String
+  domain               String
+  technologies         String[]
+  readiness_level      Int                       @default(1)
+  years_experience     Int                       @default(0)
+  previous_deployments Int                       @default(0)
+  verification_status  StartupVerificationStatus @default(PENDING)
+  dpiit_number         String?
+  certificate_number   String?
+  incorporation_date   DateTime?
+  cin_number           String?
+  gstin                String?
+  verification_notes   String?
+  verified_at          DateTime?
+  verified_by          String?
+  location             String
+  embedding            Float[]
+  created_at           DateTime                  @default(now())
+  updated_at           DateTime                  @updatedAt
+  applications         Application[]
+  match_scores         MatchScore[]
+  pilots               Pilot[]
+  documents            StartupDocument[]
+  user                 User                      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  verifier             User?                     @relation("StartupVerifier", fields: [verified_by], references: [id])
+
+  @@index([verification_status])
+  @@index([domain])
+  @@map("startups")
+}
+
+model StartupDocument {
+  id                  String                    @id @default(uuid())
+  startup_id          String
+  document_type       String
+  document_url        String
+  verification_status StartupVerificationStatus @default(PENDING)
+  verified_by         String?
+  verified_at         DateTime?
+  created_at          DateTime                  @default(now())
+  startup             Startup                   @relation(fields: [startup_id], references: [id], onDelete: Cascade)
+  verifier            User?                     @relation("DocumentVerifier", fields: [verified_by], references: [id])
+
+  @@map("startup_documents")
+}
+
+model Application {
+  id                    String                @id @default(uuid())
+  challenge_id          String
+  startup_id            String
+  proposal              String
+  technical_approach    String
+  expected_impact       String
+  estimated_cost        Decimal               @db.Decimal(14, 2)
+  timeline              String
+  status                ApplicationStatus     @default(DRAFT)
+  submitted_at          DateTime?
+  created_at            DateTime              @default(now())
+  updated_at            DateTime              @updatedAt
+  challenge             Challenge             @relation(fields: [challenge_id], references: [id], onDelete: Cascade)
+  startup               Startup               @relation(fields: [startup_id], references: [id], onDelete: Cascade)
+  evaluations           Evaluation[]
+  conflict_declarations ConflictDeclaration[]
+  evaluator_assignments EvaluatorAssignment[]
+
+  @@unique([challenge_id, startup_id])
+  @@index([status])
+  @@map("applications")
+}
+
+model EvaluatorProfile {
+  id                  String                    @id @default(uuid())
+  user_id             String                    @unique
+  organization        String
+  designation         String
+  employment_type     String?
+  domain_expertise    String[]
+  years_experience    Int                       @default(0)
+  bio                 String?
+  verification_status StartupVerificationStatus @default(PENDING)
+  verified_by         String?
+  verified_at         DateTime?
+  created_at          DateTime                  @default(now())
+  updated_at          DateTime                  @updatedAt
+  user                User                      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  verifier            User?                     @relation("EvaluatorProfileVerifier", fields: [verified_by], references: [id])
+
+  @@map("evaluator_profiles")
+}
+
+model ConflictDeclaration {
+  id               String      @id @default(uuid())
+  application_id   String
+  evaluator_id     String
+  has_conflict     Boolean     @default(false)
+  conflict_details String?
+  is_recused       Boolean     @default(false)
+  declared_at      DateTime    @default(now())
+  created_at       DateTime    @default(now())
+  application      Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  evaluator        User        @relation("ConflictDeclarer", fields: [evaluator_id], references: [id], onDelete: Cascade)
+
+  @@unique([application_id, evaluator_id])
+  @@map("conflict_declarations")
+}
+
+model Evaluation {
+  id                String      @id @default(uuid())
+  application_id    String
+  evaluator_id      String
+  technical_score   Float
+  innovation_score  Float
+  impact_score      Float
+  scalability_score Float
+  cost_score        Float
+  total_score       Float
+  comments          String?
+  created_at        DateTime    @default(now())
+  updated_at        DateTime    @updatedAt
+  application       Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  evaluator         User        @relation("Evaluator", fields: [evaluator_id], references: [id])
+
+  @@unique([application_id, evaluator_id])
+  @@map("evaluations")
+}
+
+model Pilot {
+  id                         String             @id @default(uuid())
+  challenge_id               String
+  startup_id                 String
+  location                   String
+  start_date                 DateTime
+  end_date                   DateTime
+  budget                     Decimal            @db.Decimal(14, 2)
+  status                     PilotStatus        @default(PLANNED)
+  overall_score              Float?
+  final_recommendation       String?
+  data_classification        String?            @default("INTERNAL")
+  data_access_requirements   String?
+  data_retention_period      String?
+  ip_ownership               String?            @default("STARTUP_OWNED")
+  licensing_terms            String?
+  confidentiality_terms      String?
+  created_at                 DateTime           @default(now())
+  updated_at                 DateTime           @updatedAt
+  evidence                   Evidence[]
+  milestones                 Milestone[]
+  payments                   Payment[]
+  kpis                       PilotKpi[]
+  measurements               PilotMeasurement[]
+  compliance_items           ComplianceItem[]
+  feedback                   PilotFeedback[]
+  challenge                  Challenge          @relation(fields: [challenge_id], references: [id])
+  startup                    Startup            @relation(fields: [startup_id], references: [id])
+  risks                      Risk[]
+  issues                     PilotIssue[]
+  scale_decisions            ScaleDecision[]
+  validations                Validation[]
+
+  @@index([status])
+  @@map("pilots")
+}
+
+model PilotKpi {
+  id             String             @id @default(uuid())
+  pilot_id       String
+  name           String
+  description    String?
+  unit           String
+  baseline_value Float
+  target_value   Float
+  actual_value   Float?
+  weight         Float              @default(1.0)
+  status         String             @default("ACTIVE")
+  created_at     DateTime           @default(now())
+  updated_at     DateTime           @updatedAt
+  pilot          Pilot              @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+  measurements   PilotMeasurement[]
+  evidence       Evidence[]
+
+  @@map("pilot_kpis")
+}
+
+model PilotMeasurement {
+  id               String   @id @default(uuid())
+  pilot_id         String
+  kpi_id           String
+  measurement_date DateTime @default(now())
+  value            Float
+  source           String
+  verified         Boolean  @default(false)
+  created_at       DateTime @default(now())
+  kpi              PilotKpi @relation(fields: [kpi_id], references: [id], onDelete: Cascade)
+  pilot            Pilot    @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+
+  @@index([pilot_id, kpi_id])
+  @@map("pilot_measurements")
+}
+
+model Milestone {
+  id                    String    @id @default(uuid())
+  pilot_id              String
+  name                  String
+  description           String?
+  due_date              DateTime
+  status                String    @default("PENDING")
+  completion_percentage Float     @default(0)
+  payment_percentage    Float     @default(0)
+  evidence_url          String?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+  pilot                 Pilot     @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+  payments              Payment[]
+
+  @@map("milestones")
+}
+
+model Evidence {
+  id                  String    @id @default(uuid())
+  pilot_id            String
+  kpi_id              String?
+  type                String
+  description         String
+  file_url            String
+  date                DateTime  @default(now())
+  source              String
+  verification_status String    @default("PENDING")
+  uploaded_by         String
+  created_at          DateTime  @default(now())
+  pilot               Pilot     @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+  kpi                 PilotKpi? @relation(fields: [kpi_id], references: [id])
+  uploader            User      @relation("EvidenceUploader", fields: [uploaded_by], references: [id])
+
+  @@map("evidence")
+}
+
+model Risk {
+  id          String       @id @default(uuid())
+  pilot_id    String
+  category    RiskCategory
+  description String
+  severity    String
+  probability String       @default("MEDIUM")
+  mitigation  String
+  owner       String
+  due_date    DateTime?
+  status      String       @default("IDENTIFIED")
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
+  pilot       Pilot        @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+
+  @@map("risks")
+}
+
+model PilotIssue {
+  id           String      @id @default(uuid())
+  pilot_id     String
+  title        String
+  description  String
+  severity     String      @default("MEDIUM")
+  status       String      @default("OPEN")
+  assigned_to  String?
+  resolution   String?
+  reported_at  DateTime    @default(now())
+  resolved_at  DateTime?
+  created_at   DateTime    @default(now())
+  updated_at   DateTime    @updatedAt
+  pilot        Pilot       @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+
+  @@map("pilot_issues")
+}
+
+model Validation {
+  id                        String           @id @default(uuid())
+  pilot_id                  String
+  validator_id              String
+  performance_score         Float
+  kpi_achievement_score     Float
+  evidence_quality_score    Float
+  technical_stability_score Float
+  user_satisfaction_score   Float
+  comments                  String?
+  status                    ValidationStatus @default(NOT_VALIDATED)
+  created_at                DateTime         @default(now())
+  updated_at                DateTime         @updatedAt
+  pilot                     Pilot            @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+  validator                 User             @relation("Validator", fields: [validator_id], references: [id])
+
+  @@map("validations")
+}
+
+model Payment {
+  id                 String        @id @default(uuid())
+  pilot_id           String
+  milestone_id       String?
+  amount             Decimal       @db.Decimal(14, 2)
+  payment_percentage Float
+  status             PaymentStatus @default(UPCOMING)
+  payment_date       DateTime?
+  invoice_url        String?
+  reference_number   String?
+  approved_by        String?
+  created_at         DateTime      @default(now())
+  updated_at         DateTime      @updatedAt
+  milestone          Milestone?    @relation(fields: [milestone_id], references: [id])
+  pilot              Pilot         @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model ScaleDecision {
+  id            String            @id @default(uuid())
+  pilot_id      String
+  decision      ScaleDecisionType
+  score         Float?
+  reasoning     String
+  approved_by   String
+  decision_date DateTime          @default(now())
+  status        String            @default("FINALIZED")
+  created_at    DateTime          @default(now())
+  approver      User              @relation("DecisionApprover", fields: [approved_by], references: [id])
+  pilot         Pilot             @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+
+  @@map("scale_decisions")
+}
+
+model ComplianceItem {
+  id          String    @id @default(uuid())
+  pilot_id    String
+  category    String
+  item_name   String
+  description String?
+  status      String    @default("PENDING")
+  verified_by String?
+  verified_at DateTime?
+  notes       String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  pilot       Pilot     @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+  verifier    User?     @relation("ComplianceVerifier", fields: [verified_by], references: [id])
+
+  @@map("compliance_items")
+}
+
+model PilotFeedback {
+  id               String   @id @default(uuid())
+  pilot_id         String
+  citizen_name     String?
+  beneficiary_type String   @default("CITIZEN")
+  rating           Int      @default(5)
+  comments         String
+  feedback_date    DateTime @default(now())
+  created_at       DateTime @default(now())
+  pilot            Pilot    @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+
+  @@map("pilot_feedbacks")
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  user_id    String
+  title      String
+  message    String
+  type       String   @default("INFO")
+  is_read    Boolean  @default(false)
+  link       String?
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, is_read])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  user_id     String?
+  action      String
+  entity_type String
+  entity_id   String?
+  details     Json?
+  ip_address  String?
+  created_at  DateTime @default(now())
+  user        User?    @relation(fields: [user_id], references: [id])
+
+  @@index([action])
+  @@index([entity_type, entity_id])
+  @@map("audit_logs")
+}
+
+enum UserRole {
+  GOVERNMENT
+  STARTUP
+  EVALUATOR
+  ADMIN
+}
+
+enum ChallengeStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  EVALUATION
+  PILOT
+  COMPLETED
+}
+
+enum StartupVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  SHORTLISTED
+  REJECTED
+  SELECTED
+}
+
+enum PilotStatus {
+  PLANNED
+  RUNNING
+  AT_RISK
+  VALIDATION
+  COMPLETED
+  SCALED
+  EXTENDED
+  STOPPED
+}
+
+enum RiskCategory {
+  TECHNICAL
+  CYBERSECURITY
+  DATA
+  PERFORMANCE
+  OPERATIONAL
+  FINANCIAL
+}
+
+enum ValidationStatus {
+  VALIDATED
+  VALIDATED_WITH_CONDITIONS
+  NOT_VALIDATED
+}
+
+enum PaymentStatus {
+  UPCOMING
+  PENDING
+  PAID
+  REJECTED
+}
+
+enum ScaleDecisionType {
+  SCALE
+  EXTEND
+  STOP
+}
+
+enum AccessRequestSource {
+  SELF_REQUEST
+  GOVERNMENT_NOMINATION
+}
+
+enum AccessRequestStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum EvaluatorAssignmentStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COMPLETED
+  RECUSED
+}
+
+model AccessRequest {
+  id                      String              @id @default(uuid())
+  name                    String
+  email                   String
+  phone                   String?
+  requested_role          UserRole            @default(EVALUATOR)
+  request_source          AccessRequestSource @default(SELF_REQUEST)
+  department_id           String?
+  organization            String?
+  designation             String?
+  employment_type         String?             // "EMPLOYED", "INDEPENDENT"
+  domain_expertise        String[]
+  years_experience        Int                 @default(0)
+  bio                     String?
+  reason                  String?
+  supporting_document_url String?
+  status                  AccessRequestStatus @default(PENDING)
+  reviewed_by             String?
+  reviewed_at             DateTime?
+  rejection_reason        String?
+  nominated_by_user_id    String?
+  challenge_id            String?
+  created_at              DateTime            @default(now())
+  updated_at              DateTime            @updatedAt
+
+  department              Department?         @relation(fields: [department_id], references: [id])
+  reviewer                User?               @relation("AccessRequestReviewer", fields: [reviewed_by], references: [id])
+  nominator               User?               @relation("AccessRequestNominator", fields: [nominated_by_user_id], references: [id])
+
+  @@index([status])
+  @@index([requested_role])
+  @@index([request_source])
+  @@map("access_requests")
+}
+
+model EvaluatorAssignment {
+  id             String                    @id @default(uuid())
+  application_id String
+  evaluator_id   String
+  assigned_by    String
+  status         EvaluatorAssignmentStatus @default(PENDING)
+  notes          String?
+  assigned_at    DateTime                  @default(now())
+  accepted_at    DateTime?
+  completed_at   DateTime?
+  created_at     DateTime                  @default(now())
+  updated_at     DateTime                  @updatedAt
+
+  application    Application               @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  evaluator      User                      @relation("EvaluatorAssigned", fields: [evaluator_id], references: [id], onDelete: Cascade)
+  assigner       User                      @relation("EvaluatorAssigner", fields: [assigned_by], references: [id])
+
+  @@unique([application_id, evaluator_id])
+  @@index([status])
+  @@map("evaluator_assignments")
+}

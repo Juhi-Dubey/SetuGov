@@ -1,4 +1,4 @@
-﻿"""
+"""
 SetuGov AI Service — Brain 3: Proposal Analysis Parser
 
 Parses LLM proposal analysis JSON and applies deterministic sanitization:
@@ -19,6 +19,7 @@ from schemas.requests import ProposalAnalysisRequest
 from schemas.responses import (
     ProposalAnalysisResponse,
     ProposalRisk,
+    RequirementTrace,
     RiskSeverity,
 )
 from services.ollama_client import InvalidAIResponseError
@@ -285,6 +286,31 @@ def _reconcile_proposal_missing_information(
     return filtered
 
 
+def _parse_requirement_traceability(
+    raw_traces: Any, request: ProposalAnalysisRequest
+) -> Optional[list[RequirementTrace]]:
+    """Safely parse requirement traceability items."""
+    traces: list[RequirementTrace] = []
+    if isinstance(raw_traces, list):
+        for item in raw_traces:
+            if isinstance(item, dict):
+                req = str(item.get("requirement", "")).strip()
+                ev = item.get("evidence")
+                ev_str = str(ev).strip() if ev and str(ev).strip() else None
+                status = str(item.get("status", "addressed")).strip().lower()
+                if status not in {"addressed", "partially_addressed", "not_addressed"}:
+                    status = "addressed" if ev_str else "not_addressed"
+                if req:
+                    traces.append(
+                        RequirementTrace(
+                            requirement=_sanitize_claim(req),
+                            evidence=_sanitize_claim(ev_str) if ev_str else None,
+                            status=status,
+                        )
+                    )
+    return traces if traces else None
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Public parser
 # ═══════════════════════════════════════════════════════════════════════════
@@ -337,6 +363,16 @@ def parse_proposal_response(
         for q in _extract_str_list(raw.get("questions_for_evaluator"))
     ]
 
+    req_traces = _parse_requirement_traceability(raw.get("requirement_traceability"), request)
+    raw_unsupported = _extract_str_list(raw.get("unsupported_claims"))
+    unsupported_claims = (
+        [_sanitize_claim(c) for c in raw_unsupported if c and c.strip()]
+        if raw_unsupported
+        else None
+    )
+    raw_ev_qual = raw.get("evidence_quality")
+    evidence_quality = _sanitize_claim(str(raw_ev_qual).strip()) if raw_ev_qual else None
+
     try:
         return ProposalAnalysisResponse(
             executive_summary=exec_summary,
@@ -348,6 +384,9 @@ def parse_proposal_response(
             implementation_timeline=final_timeline,
             missing_information=missing_info,
             questions_for_evaluator=questions,
+            requirement_traceability=req_traces,
+            unsupported_claims=unsupported_claims,
+            evidence_quality=evidence_quality,
         )
     except (ValidationError, TypeError) as exc:
         raise InvalidAIResponseError(

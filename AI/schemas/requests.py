@@ -1,7 +1,7 @@
 """
 SetuGov AI Service — Request Schemas
 
-Canonical Pydantic models for all five AI brain inputs.
+Canonical Pydantic models for all AI brain inputs.
 These models define the AI contract independently of any frontend.
 """
 

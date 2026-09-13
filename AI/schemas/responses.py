@@ -1,7 +1,7 @@
 """
 SetuGov AI Service — Response Schemas
 
-Typed Pydantic models for all five AI brain outputs,
+Typed Pydantic models for all AI brain outputs,
 the decision engine, and the API envelope.
 """
 
@@ -174,6 +174,18 @@ class ProposalRisk(BaseModel):
     mitigation_suggestion: Optional[str] = None
 
 
+class RequirementTrace(BaseModel):
+    """Maps a challenge requirement to proposal evidence (or lack thereof)."""
+
+    requirement: str = Field(..., description="The challenge requirement being traced")
+    evidence: Optional[str] = Field(
+        None, description="Corresponding proposal evidence, or null if not addressed"
+    )
+    status: str = Field(
+        ..., description="'addressed', 'partially_addressed', or 'not_addressed'"
+    )
+
+
 class ProposalAnalysisResponse(BaseModel):
     """Brain 3 output — evaluator assistance."""
 
@@ -186,6 +198,11 @@ class ProposalAnalysisResponse(BaseModel):
     implementation_timeline: Optional[str] = None
     missing_information: list[str] = Field(default_factory=list)
     questions_for_evaluator: list[str] = Field(default_factory=list)
+
+    # Enhanced AI intelligence fields (optional — backward compatible)
+    requirement_traceability: Optional[list[RequirementTrace]] = None
+    unsupported_claims: Optional[list[str]] = None
+    evidence_quality: Optional[str] = None
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -222,6 +239,12 @@ class PilotIntelligenceResponse(BaseModel):
     evidence_gaps: list[str] = Field(default_factory=list)
     recommended_actions: list[str] = Field(default_factory=list)
 
+    # Enhanced AI intelligence fields (optional — backward compatible)
+    confidence_level: Optional[str] = None
+    confidence_reasoning: Optional[str] = None
+    anomalies: Optional[list[str]] = None
+    scale_readiness: Optional[str] = None
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Brain 5 — Document Assistance Response
@@ -248,6 +271,7 @@ class DocumentAssistanceResponse(BaseModel):
 # DecisionInput is a request schema — canonical definition is in schemas/requests.py.
 # Re-exported here for backward compatibility.
 from schemas.requests import DecisionInput as DecisionInput  # noqa: F401
+
 
 class DecisionCondition(BaseModel):
     """A condition attached to the recommendation."""
@@ -318,4 +342,3 @@ class StartupComparatorResponse(BaseModel):
             "qualitative explanations require authorized evaluator review before use."
         )
     )
-
