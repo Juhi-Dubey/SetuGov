@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { submitGovernmentAccessRequest } from "../../services/accessRequestService";
 import { useTheme } from "../../context/ThemeContext";
+import TurnstileWidget from "../../components/common/TurnstileWidget";
 
 const INDIAN_STATES = [
   "Maharashtra",
@@ -63,6 +64,8 @@ export default function GovernmentAccessRequestPage() {
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submittedData, setSubmittedData] = useState(null);
+  const [turnstileToken, setTurnstileToken] = useState(null);
+  const [resetTurnstile, setResetTurnstile] = useState(0);
 
   const validate = () => {
     const errs = {};
@@ -99,6 +102,7 @@ export default function GovernmentAccessRequestPage() {
     try {
       const res = await submitGovernmentAccessRequest({
         ...formData,
+        turnstileToken,
         requested_role: "GOVERNMENT",
         request_source: "GOVERNMENT_SELF_REQUEST",
       });
@@ -107,6 +111,8 @@ export default function GovernmentAccessRequestPage() {
     } catch (err) {
       console.error("Government access request failed:", err);
       setSubmitError(err?.message || "Failed to submit official access request. Please try again.");
+      setResetTurnstile((prev) => prev + 1);
+      setTurnstileToken(null);
     } finally {
       setLoading(false);
     }
@@ -450,6 +456,14 @@ export default function GovernmentAccessRequestPage() {
                   />
                 </div>
               </div>
+
+              {/* Cloudflare Turnstile Verification Widget */}
+              <TurnstileWidget
+                onVerify={(token) => setTurnstileToken(token)}
+                onExpire={() => setTurnstileToken(null)}
+                onError={() => setTurnstileToken(null)}
+                resetTrigger={resetTurnstile}
+              />
 
               {/* Submit Button */}
               <div className="pt-2">

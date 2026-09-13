@@ -33,8 +33,7 @@ export const createStartup = async (data, user, ip_address = null) => {
       incorporation_date: data.incorporation_date ? new Date(data.incorporation_date) : null,
       cin_number: data.cin_number ? data.cin_number.trim() : null,
       gstin: data.gstin ? data.gstin.trim() : null,
-      location: data.location.trim(),
-      embedding
+      location: data.location.trim()
     },
     include: {
       user: {
@@ -192,13 +191,7 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
     }
   }
 
-  if (updateData.company_name || updateData.domain || updateData.description || updateData.technologies) {
-    const name = updateData.company_name || startup.company_name;
-    const dom = updateData.domain || startup.domain;
-    const desc = updateData.description || startup.description;
-    const techs = updateData.technologies || startup.technologies;
-    updateData.embedding = generateMockEmbedding(`${name} ${dom} ${desc} ${techs.join(' ')}`);
-  }
+
 
   const updated = await prisma.startup.update({
     where: { id },

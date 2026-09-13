@@ -45,6 +45,9 @@ model User {
   evaluator_assignments    EvaluatorAssignment[] @relation("EvaluatorAssigned")
   created_evaluator_assignments EvaluatorAssignment[] @relation("EvaluatorAssigner")
 
+  @@index([role])
+  @@index([department_id])
+  @@index([invitation_token_hash])
   @@map("users")
 }
 
@@ -613,6 +616,10 @@ model AccessRequest {
   requested_role          UserRole            @default(EVALUATOR)
   request_source          AccessRequestSource @default(SELF_REQUEST)
   department_id           String?
+  department_name         String?
+  state                   String?
+  department_code         String?
+  official_website        String?
   organization            String?
   designation             String?
   employment_type         String?             // "EMPLOYED", "INDEPENDENT"
@@ -637,6 +644,12 @@ model AccessRequest {
   @@index([status])
   @@index([requested_role])
   @@index([request_source])
+  @@index([email])
+  @@index([department_id])
+  @@index([created_at])
+  @@index([reviewed_by])
+  @@index([requested_role, status])
+  @@index([email, status])
   @@map("access_requests")
 }
 
