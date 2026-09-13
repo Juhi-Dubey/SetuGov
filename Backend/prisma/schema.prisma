@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 model User {
@@ -81,7 +83,7 @@ model Challenge {
   application_deadline       DateTime?
   status                     ChallengeStatus @default(DRAFT)
   created_by                 String
-  embedding                  Float[]
+  embedding                  Unsupported("vector(768)")?
   data_classification        String?         @default("INTERNAL")
   data_access_requirements   String?
   data_retention_period      String?
@@ -141,7 +143,7 @@ model Startup {
   verified_at          DateTime?
   verified_by          String?
   location             String
-  embedding            Float[]
+  embedding            Unsupported("vector(768)")?
   created_at           DateTime                  @default(now())
   updated_at           DateTime                  @updatedAt
   applications         Application[]
