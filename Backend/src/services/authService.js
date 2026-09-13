@@ -37,7 +37,7 @@ export const register = async ({
     throw new ConflictError('A user with this email address already exists.');
   }
 
-  // Hash password with 12 bcrypt salt rounds (P1-2)
+  // Hash password with 12 bcrypt salt rounds
   const password_hash = await bcrypt.hash(password, 12);
 
   // Create User
@@ -105,7 +105,12 @@ export const validateInvitation = async (token) => {
 
   const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
   const user = await prisma.user.findFirst({
-    where: { invitation_token_hash: tokenHash }
+    where: { invitation_token_hash: tokenHash },
+    include: {
+      department: {
+        select: { id: true, name: true, state: true }
+      }
+    }
   });
 
   if (!user) {
@@ -124,20 +129,22 @@ export const validateInvitation = async (token) => {
     valid: true,
     email: user.email,
     name: user.name,
-    role: user.role
+    role: user.role,
+    department: user.department || null
   };
 };
 
 /**
- * Accept invitation and set account password
+ * Accept invitation, create credentials, and activate account
+ * Role is strictly derived from verified User/AccessRequest - applicant cannot alter role.
  */
 export const acceptInvitation = async ({ token, password, ip_address = null }) => {
   if (!token || !password) {
     throw new BadRequestError('Invitation token and password are required.');
   }
 
-  if (password.length < 6) {
-    throw new BadRequestError('Password must be at least 6 characters long.');
+  if (password.length < 12) {
+    throw new BadRequestError('Password must be at least 12 characters long.');
   }
 
   const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
@@ -175,6 +182,7 @@ export const acceptInvitation = async ({ token, password, ip_address = null }) =
 
   const password_hash = await bcrypt.hash(password, 12);
 
+  // Activate the user account and consume token (prevent reuse!)
   const updatedUser = await prisma.user.update({
     where: { id: user.id },
     data: {
@@ -196,9 +204,34 @@ export const acceptInvitation = async ({ token, password, ip_address = null }) =
     }
   });
 
+  const isGov = user.role === 'GOVERNMENT';
+  const isEval = user.role === 'EVALUATOR';
+
+  // Note: Department verification is intentionally decoupled from individual officer onboarding (Section E).
+  // Individual officer onboarding verifies the user account, but department verification remains an independent administrative decision.
+
+  // Audit Logs
   await createAuditLog({
     user_id: user.id,
-    action: 'INVITATION_ACCEPTED',
+    action: isGov ? 'GOVERNMENT_CREDENTIALS_CREATED' : 'CREDENTIALS_CREATED',
+    entity_type: 'USER',
+    entity_id: user.id,
+    details: { email: user.email, role: user.role },
+    ip_address
+  });
+
+  await createAuditLog({
+    user_id: user.id,
+    action: isGov ? 'GOVERNMENT_ACCOUNT_ACTIVATED' : 'ACCOUNT_ACTIVATED',
+    entity_type: 'USER',
+    entity_id: user.id,
+    details: { email: user.email, role: user.role, department_id: user.department_id },
+    ip_address
+  });
+
+  await createAuditLog({
+    user_id: user.id,
+    action: isGov ? 'GOVERNMENT_INVITATION_ACCEPTED' : 'INVITATION_ACCEPTED',
     entity_type: 'USER',
     entity_id: user.id,
     details: { email: user.email, role: user.role },
@@ -207,7 +240,7 @@ export const acceptInvitation = async ({ token, password, ip_address = null }) =
 
   return {
     success: true,
-    message: 'Account password configured successfully. You may now log in.',
+    message: `${user.role} account credentials created and activated successfully. You may now sign in.`,
     user: updatedUser
   };
 };
@@ -250,8 +283,13 @@ export const login = async ({ email, password, ip_address = null }) => {
     throw new UnauthorizedError('Invalid email or password.');
   }
 
+  // If user has an unaccepted invitation token pending
+  if (user.invitation_token_hash && !user.invitation_accepted_at) {
+    throw new UnauthorizedError('Your account invitation has not been accepted yet. Please complete credential setup using your invitation link.');
+  }
+
   if (!user.is_active) {
-    throw new UnauthorizedError('User account has been deactivated. Please contact an administrator.');
+    throw new UnauthorizedError('User account is not active. Please contact an administrator.');
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);
@@ -341,4 +379,3 @@ export default {
   validateInvitation,
   acceptInvitation
 };
-

@@ -57,8 +57,7 @@ export const createChallenge = async (data, user, ip_address = null) => {
       licensing_terms: data.licensing_terms ? data.licensing_terms.trim() : null,
       confidentiality_terms: data.confidentiality_terms ? data.confidentiality_terms.trim() : null,
       status: 'DRAFT',
-      created_by: user.id,
-      embedding
+      created_by: user.id
     },
     include: {
       department: {
@@ -287,13 +286,7 @@ export const updateChallenge = async (id, data, user, ip_address = null) => {
     }
   }
 
-  if (updateData.title || updateData.problem_description || updateData.required_technologies || updateData.desired_outcome) {
-    const title = updateData.title || challenge.title;
-    const desc = updateData.problem_description || challenge.problem_description;
-    const outcome = updateData.desired_outcome || challenge.desired_outcome;
-    const techs = updateData.required_technologies || challenge.required_technologies;
-    updateData.embedding = generateMockEmbedding(`${title} ${desc} ${outcome} ${techs.join(' ')}`);
-  }
+
 
   const updated = await prisma.challenge.update({
     where: { id },

@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 model User {
@@ -43,6 +45,9 @@ model User {
   evaluator_assignments    EvaluatorAssignment[] @relation("EvaluatorAssigned")
   created_evaluator_assignments EvaluatorAssignment[] @relation("EvaluatorAssigner")
 
+  @@index([role])
+  @@index([department_id])
+  @@index([invitation_token_hash])
   @@map("users")
 }
 
@@ -81,7 +86,7 @@ model Challenge {
   application_deadline       DateTime?
   status                     ChallengeStatus @default(DRAFT)
   created_by                 String
-  embedding                  Float[]
+  embedding                  Unsupported("vector(768)")?
   data_classification        String?         @default("INTERNAL")
   data_access_requirements   String?
   data_retention_period      String?
@@ -141,7 +146,7 @@ model Startup {
   verified_at          DateTime?
   verified_by          String?
   location             String
-  embedding            Float[]
+  embedding            Unsupported("vector(768)")?
   created_at           DateTime                  @default(now())
   updated_at           DateTime                  @updatedAt
   applications         Application[]
@@ -611,6 +616,10 @@ model AccessRequest {
   requested_role          UserRole            @default(EVALUATOR)
   request_source          AccessRequestSource @default(SELF_REQUEST)
   department_id           String?
+  department_name         String?
+  state                   String?
+  department_code         String?
+  official_website        String?
   organization            String?
   designation             String?
   employment_type         String?             // "EMPLOYED", "INDEPENDENT"
@@ -635,6 +644,12 @@ model AccessRequest {
   @@index([status])
   @@index([requested_role])
   @@index([request_source])
+  @@index([email])
+  @@index([department_id])
+  @@index([created_at])
+  @@index([reviewed_by])
+  @@index([requested_role, status])
+  @@index([email, status])
   @@map("access_requests")
 }
 

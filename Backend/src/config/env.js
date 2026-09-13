@@ -31,6 +31,14 @@ export const config = {
   NODE_ENV: nodeEnv,
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 mins
   RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+  AUTH_RATE_LIMIT_WINDOW_MS: parseInt(process.env.AUTH_RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 mins
+  AUTH_RATE_LIMIT_MAX: parseInt(process.env.AUTH_RATE_LIMIT_MAX || '15', 10), // 15 attempts / 15 mins
+  INVITATION_RATE_LIMIT_WINDOW_MS: parseInt(process.env.INVITATION_RATE_LIMIT_WINDOW_MS || '900000', 10),
+  INVITATION_RATE_LIMIT_MAX: parseInt(process.env.INVITATION_RATE_LIMIT_MAX || '20', 10),
+  ACCESS_REQUEST_RATE_LIMIT_WINDOW_MS: parseInt(process.env.ACCESS_REQUEST_RATE_LIMIT_WINDOW_MS || '3600000', 10), // 1 hour
+  ACCESS_REQUEST_RATE_LIMIT_MAX: parseInt(process.env.ACCESS_REQUEST_RATE_LIMIT_MAX || '5', 10),
+  TURNSTILE_ENABLED: process.env.TURNSTILE_ENABLED === 'true',
+  TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
   CORS_ORIGIN: process.env.CORS_ORIGIN || '*'
 };
 

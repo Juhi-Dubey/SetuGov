@@ -54,6 +54,31 @@ export const upload = multer({
 });
 
 /**
+ * Validates actual file signature (magic bytes) against declared MIME type and extension
+ * @param {string} filePath 
+ * @returns {boolean}
+ */
+export const validateFileSignature = (filePath) => {
+  try {
+    const buffer = Buffer.alloc(8);
+    const fd = fs.openSync(filePath, 'r');
+    fs.readSync(fd, buffer, 0, 8, 0);
+    fs.closeSync(fd);
+
+    // PDF signature: %PDF (0x25 0x50 0x44 0x46)
+    const isPdf = buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46;
+    // PNG signature: 89 50 4E 47 0D 0A 1A 0A
+    const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
+    // JPEG signature: FF D8 FF
+    const isJpg = buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
+
+    return isPdf || isPng || isJpg;
+  } catch (err) {
+    return false;
+  }
+};
+
+/**
  * Middleware wrapper for single file upload with standard error handling
  * @param {string} fieldName 
  */
@@ -69,6 +94,19 @@ export const uploadSingle = (fieldName = 'file') => {
       } else if (err) {
         return next(err);
       }
+
+      if (req.file) {
+        const isValid = validateFileSignature(req.file.path);
+        if (!isValid) {
+          try {
+            fs.unlinkSync(req.file.path);
+          } catch (unlinkErr) {
+            // ignore unlink error
+          }
+          return next(new BadRequestError('Uploaded file content does not match allowable format signatures (PDF, PNG, JPG). Executables and disguised files are rejected.'));
+        }
+      }
+
       next();
     });
   };
@@ -86,5 +124,6 @@ export const getFileUrl = (req, filename) => {
 export default {
   upload,
   uploadSingle,
+  validateFileSignature,
   getFileUrl
 };

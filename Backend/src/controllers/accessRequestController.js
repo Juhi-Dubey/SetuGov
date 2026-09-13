@@ -103,6 +103,28 @@ export const rejectAccessRequest = async (req, res, next) => {
   }
 };
 
+export const resendInvitation = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await accessRequestService.resendInvitation(id, req.user, ip_address);
+    return successResponse(res, result, 'Invitation re-generated successfully.', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const revokeInvitation = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await accessRequestService.revokeInvitation(id, req.user, ip_address);
+    return successResponse(res, result, 'Invitation revoked successfully and request placed back in review.', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   createEvaluatorSelfApplication,
   createGovernmentAccessRequest,
@@ -111,5 +133,7 @@ export default {
   getAccessRequestById,
   reviewAccessRequest,
   approveAccessRequest,
-  rejectAccessRequest
+  rejectAccessRequest,
+  resendInvitation,
+  revokeInvitation
 };
