@@ -53,7 +53,8 @@ export const updateApplicationStatus = async (req, res, next) => {
       req.body.status,
       req.user,
       ip_address,
-      req.body.reason
+      req.body.reason,
+      req.body.override_justification
     );
     return successResponse(res, { application }, `Application status updated to ${req.body.status}`, 200);
   } catch (error) {

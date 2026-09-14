@@ -104,6 +104,20 @@ export const getChallengePilot = async (req, res, next) => {
   }
 };
 
+export const shortlistStartup = async (req, res, next) => {
+  try {
+    const challengeId = req.params.challenge_id || req.params.id;
+    const startupId = req.params.startup_id || req.body.startup_id;
+    const notes = req.body.notes || req.body.shortlist_notes || null;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+
+    const result = await challengeService.shortlistStartup(challengeId, startupId, req.user, ip_address, notes);
+    return successResponse(res, result, 'Startup shortlisted successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   createChallenge,
   getChallenges,
@@ -112,6 +126,7 @@ export default {
   deleteChallenge,
   publishChallenge,
   closeChallenge,
+  shortlistStartup,
   getChallengeApplications,
   getChallengeMatches,
   getChallengePilot

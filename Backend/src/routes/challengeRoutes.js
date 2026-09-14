@@ -7,6 +7,7 @@ import {
   deleteChallenge,
   publishChallenge,
   closeChallenge,
+  shortlistStartup,
   getChallengeApplications,
   getChallengePilot
 } from '../controllers/challengeController.js';
@@ -24,6 +25,15 @@ import {
 import {
   getChallengeDecisions
 } from '../controllers/decisionController.js';
+import {
+  applyToEvaluateChallenge,
+  getChallengeEvaluatorApplications,
+  reviewEvaluatorApplication,
+  getChallengeEvaluatorMatches,
+  getChallengeEvaluatorPool,
+  addToEvaluatorPool,
+  removeFromEvaluatorPool
+} from '../controllers/evaluatorPoolController.js';
 import { authenticate, optionalAuthenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
@@ -53,6 +63,10 @@ router.post('/:challenge_id/publish', authenticate, authorizeRoles('GOVERNMENT',
 // Close Challenge (PUBLISHED/EVALUATION -> CLOSED)
 router.post('/:challenge_id/close', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), closeChallenge);
 
+// Shortlist Startup for Challenge (GOVERNMENT or ADMIN)
+router.post('/:challenge_id/shortlist/:startup_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), shortlistStartup);
+router.post('/:challenge_id/shortlist', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), shortlistStartup);
+
 // Submit Application for Challenge (STARTUP role only)
 router.post('/:challenge_id/applications', authenticate, authorizeRoles('STARTUP', 'ADMIN'), validate(createApplicationSchema), createApplication);
 
@@ -76,5 +90,18 @@ router.get('/:challenge_id/decision-recommendations', authenticate, authorizeRol
 
 // Get Pilot associated with a Challenge (GOVERNMENT, ADMIN, STARTUP, EVALUATOR)
 router.get('/:challenge_id/pilot', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN', 'STARTUP', 'EVALUATOR'), getChallengePilot);
+
+// Evaluator Self-Application & Pool Management
+router.post('/:challenge_id/evaluator-applications', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), applyToEvaluateChallenge);
+router.get('/:challenge_id/evaluator-applications', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), getChallengeEvaluatorApplications);
+router.patch('/:challenge_id/evaluator-applications/:application_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), reviewEvaluatorApplication);
+
+// Evaluator Matching & Discovery for Challenge
+router.get('/:challenge_id/evaluator-matches', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), getChallengeEvaluatorMatches);
+
+// Challenge Final Evaluator Pool
+router.get('/:challenge_id/evaluator-pool', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), getChallengeEvaluatorPool);
+router.post('/:challenge_id/evaluator-pool', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), addToEvaluatorPool);
+router.delete('/:challenge_id/evaluator-pool/:evaluator_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), removeFromEvaluatorPool);
 
 export default router;

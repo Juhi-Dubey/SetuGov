@@ -15,6 +15,11 @@ export const createPilot = async (data, user, ip_address = null) => {
     throw new NotFoundError(`Challenge with ID ${data.challenge_id} not found.`);
   }
 
+  // Phase 14: CLOSED challenge freezes downstream operations
+  if (challenge.status === 'CLOSED') {
+    throw new BadRequestError('Cannot create pilot for a CLOSED challenge.');
+  }
+
   // Tenant check for GOVERNMENT role
   if (user.role === 'GOVERNMENT') {
     if (!user.department_id || challenge.department_id !== user.department_id) {

@@ -52,6 +52,7 @@ export const evaluateApplicationDecision = async (applicationId, user = null, po
         include: { department: true }
       },
       startup: true,
+      conflict_declarations: true,
       evaluations: {
         include: {
           evaluator: {
@@ -110,8 +111,15 @@ export const evaluateApplicationDecision = async (applicationId, user = null, po
   const budgetMax = Number(challenge.budget_max || 0);
   const isBudgetCompliant = budgetMax > 0 ? estimatedCost <= budgetMax : true;
 
-  // 3. Evaluation Assessment & Quorum
-  const evalCount = evaluations.length;
+  // 3. Evaluation Assessment & Quorum (Phases 10 & 11)
+  const conflictedEvaluatorIds = new Set(
+    (application.conflict_declarations || [])
+      .filter(cd => cd.has_conflict || cd.is_recused)
+      .map(cd => cd.evaluator_id)
+  );
+
+  const validEvaluations = (evaluations || []).filter(e => !conflictedEvaluatorIds.has(e.evaluator_id) && e.is_submitted !== false);
+  const evalCount = validEvaluations.length;
   const quorumMet = evalCount >= requiredQuorum;
 
   let avgEvaluationScore = 0;
@@ -124,12 +132,12 @@ export const evaluateApplicationDecision = async (applicationId, user = null, po
   };
 
   if (evalCount > 0) {
-    const sumTech = evaluations.reduce((s, e) => s + e.technical_score, 0);
-    const sumInnov = evaluations.reduce((s, e) => s + e.innovation_score, 0);
-    const sumImpact = evaluations.reduce((s, e) => s + e.impact_score, 0);
-    const sumScal = evaluations.reduce((s, e) => s + e.scalability_score, 0);
-    const sumCost = evaluations.reduce((s, e) => s + e.cost_score, 0);
-    const sumTotal = evaluations.reduce((s, e) => s + e.total_score, 0);
+    const sumTech = validEvaluations.reduce((s, e) => s + e.technical_score, 0);
+    const sumInnov = validEvaluations.reduce((s, e) => s + e.innovation_score, 0);
+    const sumImpact = validEvaluations.reduce((s, e) => s + e.impact_score, 0);
+    const sumScal = validEvaluations.reduce((s, e) => s + e.scalability_score, 0);
+    const sumCost = validEvaluations.reduce((s, e) => s + e.cost_score, 0);
+    const sumTotal = validEvaluations.reduce((s, e) => s + e.total_score, 0);
 
     avgEvaluationScore = parseFloat((sumTotal / evalCount).toFixed(2));
     categoryAverages = {

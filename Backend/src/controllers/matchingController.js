@@ -15,8 +15,11 @@ export const runChallengeMatching = async (req, res, next) => {
 export const getChallengeMatches = async (req, res, next) => {
   try {
     const challengeId = req.params.challenge_id || req.params.id;
-    const matches = await matchingService.getChallengeMatches(challengeId, req.user);
-    return successResponse(res, { matches }, 'Challenge matches retrieved', 200);
+    const result = await matchingService.getChallengeMatches(challengeId, req.user, req.query);
+    if (result && Array.isArray(result.matches)) {
+      return successResponse(res, result, 'Challenge matches retrieved', 200);
+    }
+    return successResponse(res, { matches: result }, 'Challenge matches retrieved', 200);
   } catch (error) {
     next(error);
   }

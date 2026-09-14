@@ -253,6 +253,48 @@ export const verifyDocumentAuthorization = async (user, identifier) => {
     return false;
   }
 
+  // Check if document belongs to an ApplicationDocument (Finalist Solution Package)
+  const appDoc = await prisma.applicationDocument.findFirst({
+    where: {
+      OR: [
+        { stored_filename: filename },
+        { file_url: { contains: filename } }
+      ]
+    },
+    include: {
+      application: {
+        include: {
+          startup: true,
+          challenge: true,
+          evaluator_assignments: true
+        }
+      }
+    }
+  });
+
+  if (appDoc && appDoc.application) {
+    const app = appDoc.application;
+    // 1. Startup owner of the application
+    if (app.startup && app.startup.user_id === user.id) {
+      return true;
+    }
+    // 2. Government creator of the challenge or matching department
+    if (user.role === 'GOVERNMENT' && (app.challenge.created_by === user.id || (user.department_id && app.challenge.department_id === user.department_id))) {
+      return true;
+    }
+    // 3. Assigned evaluator for this specific application (and not recused/declined)
+    if (user.role === 'EVALUATOR' && app.evaluator_assignments) {
+      const isAssigned = app.evaluator_assignments.some(
+        a => a.evaluator_id === user.id && a.status !== 'RECUSED' && a.status !== 'DECLINED'
+      );
+      if (isAssigned) {
+        return true;
+      }
+    }
+    // Strictly deny access to unauthorized users for this application document
+    return false;
+  }
+
   return false;
 };
 

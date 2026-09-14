@@ -61,5 +61,14 @@ router.get('/:application_id/evaluations', authenticate, getApplicationEvaluatio
 // Get Pre-Award Decision Recommendation for Application (GOVERNMENT, ADMIN, EVALUATOR, STARTUP)
 router.get('/:application_id/decision-recommendation', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN', 'EVALUATOR', 'STARTUP'), getApplicationDecision);
 
+// Finalist Solution Package Documents
+import { uploadDocument, getDocuments, deleteDocument, finalizeSubmission } from '../controllers/applicationDocumentController.js';
+import { uploadSingle } from '../middleware/upload.js';
+
+router.post('/:application_id/documents', authenticate, authorizeRoles('STARTUP', 'ADMIN'), uploadSingle('file'), uploadDocument);
+router.get('/:application_id/documents', authenticate, getDocuments);
+router.delete('/:application_id/documents/:document_id', authenticate, authorizeRoles('STARTUP', 'ADMIN'), deleteDocument);
+router.post('/:application_id/finalize-submission', authenticate, authorizeRoles('STARTUP', 'ADMIN'), finalizeSubmission);
+
 export default router;
 

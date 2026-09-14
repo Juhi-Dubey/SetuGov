@@ -188,8 +188,15 @@ export const runChallengeMatching = async (challengeId) => {
   });
 };
 
-export const getChallengeMatches = async (challengeId) => {
-  return apiRequest(`/challenges/${challengeId}/matches`);
+export const getChallengeMatches = async (challengeId, refresh = false) => {
+  return apiRequest(`/challenges/${challengeId}/matches${refresh ? '?refresh=true' : ''}`);
+};
+
+export const shortlistStartup = async (challengeId, startupId, notes = '') => {
+  return apiRequest(`/challenges/${challengeId}/shortlist/${startupId}`, {
+    method: 'POST',
+    body: JSON.stringify({ notes })
+  });
 };
 
 export const getSpecificMatch = async (challengeId, startupId) => {
@@ -224,6 +231,7 @@ export default {
   deleteChallenge,
   publishChallenge,
   closeChallenge,
+  shortlistStartup,
   getChallengeApplications,
   runChallengeMatching,
   getChallengeMatches,

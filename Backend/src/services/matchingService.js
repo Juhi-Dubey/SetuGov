@@ -1,7 +1,7 @@
 import { prisma } from '../config/prisma.js';
 import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
-import { NotFoundError, ForbiddenError } from '../utils/errors.js';
+import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { cosineSimilarity } from '../utils/vector.js';
 import {
   evaluateEligibility,
@@ -67,6 +67,11 @@ export const matchStartupsForChallenge = async (challengeId, user = null, ip_add
 
   if (!challenge) {
     throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
+  }
+
+  // Freeze candidate pool: Cannot run matching on CLOSED challenge
+  if (challenge.status === 'CLOSED') {
+    throw new BadRequestError('Cannot run matching on a closed problem statement. Candidate pool is frozen.');
   }
 
   // Authorization: ADMIN or GOVERNMENT belonging to the challenge department
@@ -139,6 +144,28 @@ export const matchStartupsForChallenge = async (challengeId, user = null, ip_add
   const challengeDepartmentName = (challenge.department?.name || '').toLowerCase();
   const challengeTitle = (challenge.title || '').toLowerCase();
   const challengeDesc = (challenge.problem_description || '').toLowerCase();
+
+  // Retrieve existing match score records to preserve human shortlist state across re-matching
+  const existingMatchScores = await prisma.matchScore.findMany({
+    where: { challenge_id: challengeId },
+    select: { startup_id: true, ai_reasoning: true }
+  });
+  const existingShortlistMap = new Map();
+  for (const em of existingMatchScores) {
+    if (em.ai_reasoning) {
+      try {
+        const parsed = typeof em.ai_reasoning === 'string' ? JSON.parse(em.ai_reasoning) : em.ai_reasoning;
+        if (parsed.is_shortlisted) {
+          existingShortlistMap.set(em.startup_id, {
+            is_shortlisted: true,
+            shortlisted_at: parsed.shortlisted_at,
+            shortlisted_by: parsed.shortlisted_by,
+            shortlist_notes: parsed.shortlist_notes
+          });
+        }
+      } catch {}
+    }
+  }
 
   // 1. Calculate deterministic scores & qualitative reasoning in memory
   const scoredCandidates = verifiedStartups.map(startup => {
@@ -261,6 +288,15 @@ export const matchStartupsForChallenge = async (challengeId, user = null, ip_add
       },
       ai_explanation_status: 'NOT_REQUESTED'
     };
+
+    // Preserve human shortlist status if previously shortlisted
+    const existingShortlist = existingShortlistMap.get(startup.id);
+    if (existingShortlist) {
+      aiReasoningObj.is_shortlisted = true;
+      aiReasoningObj.shortlisted_at = existingShortlist.shortlisted_at;
+      aiReasoningObj.shortlisted_by = existingShortlist.shortlisted_by;
+      aiReasoningObj.shortlist_notes = existingShortlist.shortlist_notes;
+    }
 
     return {
       startup,
@@ -479,9 +515,13 @@ export const matchStartupsForChallenge = async (challengeId, user = null, ip_add
 /**
  * Retrieve saved MatchScores for a challenge in strict eligibility-aware ranking order.
  * Ensures ELIGIBLE candidates precede NEEDS_REVIEW and INELIGIBLE candidates.
+ * Enriches with application/participation status and partitions into candidate buckets.
  */
-export const getChallengeMatches = async (challengeId, user = null) => {
-  const challenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
+export const getChallengeMatches = async (challengeId, user = null, options = {}) => {
+  const challenge = await prisma.challenge.findUnique({
+    where: { id: challengeId },
+    include: { department: true }
+  });
   if (!challenge) {
     throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
   }
@@ -499,42 +539,91 @@ export const getChallengeMatches = async (challengeId, user = null) => {
     }
   }
 
-  const matches = await prisma.matchScore.findMany({
-    where: { challenge_id: challengeId },
-    include: {
-      startup: true
+  // If challenge is PUBLISHED and has no matches yet, or refresh is requested, auto-compute
+  if (challenge.status === 'PUBLISHED') {
+    const existingCount = await prisma.matchScore.count({ where: { challenge_id: challengeId } });
+    if (existingCount === 0 || options.refresh === true || options.refresh === 'true') {
+      try {
+        await matchStartupsForChallenge(challengeId, user);
+      } catch (err) {
+        logger.warn(`Auto-matching on getChallengeMatches for ${challengeId} failed: ${err.message}`);
+      }
     }
-  });
+  }
 
-  // Sort retrieved matches with authoritative eligibility-aware ordering
+  const [matches, applications] = await Promise.all([
+    prisma.matchScore.findMany({
+      where: { challenge_id: challengeId },
+      include: {
+        startup: true
+      }
+    }),
+    prisma.application.findMany({
+      where: { challenge_id: challengeId },
+      select: {
+        id: true,
+        startup_id: true,
+        status: true,
+        submitted_at: true
+      }
+    })
+  ]);
+
+  const applicationMap = new Map();
+  for (const app of applications) {
+    applicationMap.set(app.startup_id, app);
+  }
+
+  // Process & enrich each match record
+  for (const m of matches) {
+    let parsed = {};
+    if (m.ai_reasoning) {
+      try {
+        parsed = typeof m.ai_reasoning === 'string' ? JSON.parse(m.ai_reasoning) : m.ai_reasoning;
+      } catch {}
+    }
+
+    const app = applicationMap.get(m.startup_id);
+    const has_applied = Boolean(app);
+    const is_shortlisted = Boolean(parsed.is_shortlisted) || app?.status === 'SHORTLISTED';
+    const participation_status = is_shortlisted ? 'SHORTLISTED' : (has_applied ? 'APPLIED' : 'NOT_APPLIED');
+
+    let eligibility_status = ELIGIBILITY_STATUS.ELIGIBLE;
+    if (parsed.eligibility_status) {
+      eligibility_status = parsed.eligibility_status;
+    } else if (parsed.is_eligible === false) {
+      eligibility_status = ELIGIBILITY_STATUS.INELIGIBLE;
+    }
+
+    // Flatten helpful discovery fields onto the match object
+    m.startup_name = m.startup?.company_name || m.startup?.name || 'Unknown Startup';
+    m.company_name = m.startup?.company_name || m.startup?.name;
+    m.eligibility_status = eligibility_status;
+    m.is_eligible = eligibility_status === ELIGIBILITY_STATUS.ELIGIBLE;
+    m.participation_status = participation_status;
+    m.has_applied = has_applied;
+    m.application_id = app?.id || null;
+    m.application_status = app?.status || null;
+    m.is_shortlisted = is_shortlisted;
+    m.shortlisted_at = parsed.shortlisted_at || null;
+    m.shortlisted_by = parsed.shortlisted_by || null;
+    m.shortlist_notes = parsed.shortlist_notes || null;
+    m.why_matched = parsed.why_matched || '';
+    m.strengths = Array.isArray(parsed.strengths) ? parsed.strengths : [];
+    m.concerns = Array.isArray(parsed.concerns) ? parsed.concerns : [];
+    m.missing_information = Array.isArray(parsed.missing_information) ? parsed.missing_information : [];
+    m.deployment_considerations = Array.isArray(parsed.deployment_considerations) ? parsed.deployment_considerations : [];
+    m.reasons = Array.isArray(parsed.reasons) ? parsed.reasons : [];
+    m.review_reasons = Array.isArray(parsed.review_reasons) ? parsed.review_reasons : [];
+    m.ineligibility_reasons = Array.isArray(parsed.ineligibility_reasons) ? parsed.ineligibility_reasons : [];
+    m.technology_coverage = parsed.technology_coverage || null;
+    m.ai_explanation_status = parsed.ai_explanation_status || 'NOT_REQUESTED';
+  }
+
+  // Authoritative sort: Status priority > Overall score DESC > Tech score DESC > Readiness DESC > Exp DESC > startup_id ASC
   matches.sort((a, b) => {
-    let statusA = ELIGIBILITY_STATUS.ELIGIBLE;
-    let statusB = ELIGIBILITY_STATUS.ELIGIBLE;
-
-    if (a.ai_reasoning) {
-      try {
-        const parsed = typeof a.ai_reasoning === 'string' ? JSON.parse(a.ai_reasoning) : a.ai_reasoning;
-        if (parsed.eligibility_status) {
-          statusA = parsed.eligibility_status;
-        } else if (parsed.is_eligible === false) {
-          statusA = ELIGIBILITY_STATUS.INELIGIBLE;
-        }
-      } catch {}
-    }
-
-    if (b.ai_reasoning) {
-      try {
-        const parsed = typeof b.ai_reasoning === 'string' ? JSON.parse(b.ai_reasoning) : b.ai_reasoning;
-        if (parsed.eligibility_status) {
-          statusB = parsed.eligibility_status;
-        } else if (parsed.is_eligible === false) {
-          statusB = ELIGIBILITY_STATUS.INELIGIBLE;
-        }
-      } catch {}
-    }
-
-    const pA = getStatusPriority(statusA);
-    const pB = getStatusPriority(statusB);
+    const pA = getStatusPriority(a.eligibility_status);
+    const pB = getStatusPriority(b.eligibility_status);
     if (pA !== pB) return pA - pB;
     if (b.overall_score !== a.overall_score) return b.overall_score - a.overall_score;
     if (b.technology_score !== a.technology_score) return b.technology_score - a.technology_score;
@@ -543,7 +632,28 @@ export const getChallengeMatches = async (challengeId, user = null) => {
     return (a.startup_id || a.id).localeCompare(b.startup_id || b.id);
   });
 
-  return matches;
+  // Partition into primary candidate categories
+  const eligible_matches = matches.filter(m => m.eligibility_status === ELIGIBILITY_STATUS.ELIGIBLE);
+  const needs_review_matches = matches.filter(m => m.eligibility_status === ELIGIBILITY_STATUS.NEEDS_REVIEW);
+  const ineligible_matches = matches.filter(m => m.eligibility_status === ELIGIBILITY_STATUS.INELIGIBLE);
+  const shortlisted_matches = matches.filter(m => m.is_shortlisted);
+
+  return {
+    challenge_id: challengeId,
+    challenge_title: challenge.title,
+    challenge_status: challenge.status,
+    total_matches: matches.length,
+    eligible_count: eligible_matches.length,
+    needs_review_count: needs_review_matches.length,
+    ineligible_count: ineligible_matches.length,
+    shortlisted_count: shortlisted_matches.length,
+    applied_count: matches.filter(m => m.has_applied).length,
+    eligible_matches,
+    needs_review_matches,
+    ineligible_matches,
+    shortlisted_matches,
+    matches
+  };
 };
 
 export const getSpecificMatch = async (challengeId, startupId, user = null) => {
@@ -596,8 +706,36 @@ export const getSpecificMatch = async (challengeId, startupId, user = null) => {
   return match;
 };
 
+/**
+ * Event-triggered candidate pool refresh across open published challenges.
+ * Triggered when a startup achieves VERIFIED status or updates critical capabilities.
+ */
+export const refreshMatchingForPublishedChallenges = async (startupId) => {
+  try {
+    const publishedChallenges = await prisma.challenge.findMany({
+      where: { status: 'PUBLISHED' },
+      select: { id: true, title: true }
+    });
+
+    if (publishedChallenges.length === 0) return;
+
+    logger.info(`Refreshing candidate pool across ${publishedChallenges.length} published challenges for startup ${startupId}...`);
+
+    for (const ch of publishedChallenges) {
+      try {
+        await matchStartupsForChallenge(ch.id);
+      } catch (err) {
+        logger.warn(`Background match refresh failed for challenge ${ch.id}: ${err.message}`);
+      }
+    }
+  } catch (err) {
+    logger.warn(`Failed to execute refreshMatchingForPublishedChallenges: ${err.message}`);
+  }
+};
+
 export default {
   matchStartupsForChallenge,
   getChallengeMatches,
-  getSpecificMatch
+  getSpecificMatch,
+  refreshMatchingForPublishedChallenges
 };
