@@ -5,8 +5,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from backend root
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+// Load .env from backend root — override: true ensures .env beats any pre-loaded env vars (e.g. dotenvx)
+dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 const jwtSecret = process.env.JWT_SECRET || (nodeEnv === 'development' || nodeEnv === 'test' ? 'setugov_super_secret_jwt_key_2026' : undefined);

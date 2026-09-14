@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import CopilotWidget from "../common/CopilotWidget";
 
 function AppLayout({ children, role = "government" }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -23,6 +24,9 @@ function AppLayout({ children, role = "government" }) {
           </div>
         </main>
       </div>
+
+      {/* Brain 7 — Copilot floating chat widget (all roles) */}
+      <CopilotWidget />
     </div>
   );
 }

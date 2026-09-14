@@ -73,6 +73,17 @@ export const generateDocumentDraft = async (req, res, next) => {
   }
 };
 
+export const copilotChat = async (req, res, next) => {
+  try {
+    const { message, context_hint, history } = req.body;
+    const role = req.user?.role || null;
+    const result = await aiService.copilotChat({ message, role, context_hint, history });
+    return successResponse(res, result, 'Copilot response generated', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   generateChallenge,
   explainMatch,
@@ -80,7 +91,8 @@ export default {
   analyzePilot,
   getScaleRecommendation,
   analyzeRisks,
-  generateDocumentDraft
+  generateDocumentDraft,
+  copilotChat,
 };
 
 

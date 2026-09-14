@@ -84,6 +84,22 @@ export const analyzeRisksWithAI = async (riskPayload) => {
   });
 };
 
+/**
+ * Brain 7: Copilot Chat
+ * Sends a conversational message to the SetuGov Copilot.
+ * Returns { reply: string, suggestions: string[] }
+ */
+export const copilotChat = async (message, contextHint, history = []) => {
+  return apiRequest("/ai/copilot/chat", {
+    method: "POST",
+    body: JSON.stringify({
+      message,
+      context_hint: contextHint || null,
+      history: history.slice(-6),
+    }),
+  });
+};
+
 export default {
   generateChallengeWithAI,
   matchStartupsWithAI,
@@ -93,5 +109,6 @@ export default {
   getScaleRecommendationWithAI,
   analyzeRisksWithAI,
   generateDocumentDraftWithAI,
+  copilotChat,
 };
 

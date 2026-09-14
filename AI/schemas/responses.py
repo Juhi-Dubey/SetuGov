@@ -342,3 +342,19 @@ class StartupComparatorResponse(BaseModel):
             "qualitative explanations require authorized evaluator review before use."
         )
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Brain 7 — Copilot Chat Response
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class CopilotResponse(BaseModel):
+    """Brain 7 output — conversational reply from the Copilot widget."""
+
+    reply: str = Field(..., description="The Copilot's plain-text response.")
+    suggestions: list[str] = Field(
+        default_factory=list,
+        description="2–3 suggested follow-up questions the user might ask next.",
+    )
+

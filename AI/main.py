@@ -19,6 +19,7 @@ from fastapi.responses import JSONResponse
 from config import get_settings
 from schemas.requests import (
     ChallengeCopilotRequest,
+    CopilotRequest,
     DecisionInput,
     DocumentAssistanceRequest,
     MatchExplanationRequest,
@@ -238,6 +239,17 @@ async def document_assistance(request: DocumentAssistanceRequest):
     """Generate document drafts for authorized review."""
     assert _ai_service is not None
     result = await _ai_service.assist_document(request)
+    return APIResponse(success=True, data=result.model_dump())
+
+
+# ---------------------------------------------------------------------------
+# Brain 7 — Copilot Chat
+# ---------------------------------------------------------------------------
+@app.post("/ai/copilot", response_model=APIResponse)
+async def copilot_chat(request: CopilotRequest):
+    """Conversational Copilot: answer user questions about SetuGov, procurement, and pilots."""
+    assert _ai_service is not None
+    result = await _ai_service.chat_copilot(request)
     return APIResponse(success=True, data=result.model_dump())
 
 

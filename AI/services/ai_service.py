@@ -19,6 +19,7 @@ from typing import Any, Optional
 from pydantic import ValidationError
 
 from prompts.challenge_copilot import build_challenge_prompt
+from prompts.copilot import build_copilot_prompt
 from prompts.document_assistance import build_document_prompt
 from prompts.match_explanation import build_match_prompt
 from prompts.pilot_intelligence import build_pilot_prompt
@@ -26,6 +27,7 @@ from prompts.proposal_analysis import build_proposal_prompt
 from prompts.startup_comparator import build_comparator_prompt
 from schemas.requests import (
     ChallengeCopilotRequest,
+    CopilotRequest,
     DocumentAssistanceRequest,
     DocumentType,
     MatchExplanationRequest,
@@ -35,6 +37,7 @@ from schemas.requests import (
 )
 from schemas.responses import (
     ChallengeCopilotResponse,
+    CopilotResponse,
     DocumentAssistanceResponse,
     KPIAnalysis,
     KPIStatus,
@@ -1515,3 +1518,38 @@ class AIService:
 
         # 4. Parse — scores from Python, text from LLM
         return parse_comparator_response(raw, request=request, scores=scores)
+
+    # ── Brain 7 — Copilot Chat ─────────────────────────────────────────────
+
+    async def chat_copilot(self, request: CopilotRequest) -> CopilotResponse:
+        """
+        Brain 7: Conversational Copilot.
+
+        Answers freeform questions about the SetuGov platform, procurement
+        rules, challenges, pilots, and evaluations. Role-aware and page-context
+        aware. Returns a plain-text reply and 2-3 follow-up suggestions.
+        """
+        system_prompt, user_prompt = build_copilot_prompt(request)
+
+        # Use free-text generation (no JSON mode) — Copilot replies are prose
+        raw = await self._ollama.generate(
+            prompt=user_prompt,
+            system=system_prompt,
+            response_format=None,
+        )
+
+        # Extract optional SUGGESTIONS block from the reply
+        reply_text = raw.strip()
+        suggestions: list[str] = []
+
+        if "SUGGESTIONS:" in reply_text:
+            parts = reply_text.split("SUGGESTIONS:", 1)
+            reply_text = parts[0].strip()
+            suggestion_block = parts[1].strip()
+            for line in suggestion_block.splitlines():
+                line = line.strip().lstrip("-•*").strip()
+                if line:
+                    suggestions.append(line)
+            suggestions = suggestions[:3]  # cap at 3
+
+        return CopilotResponse(reply=reply_text, suggestions=suggestions)

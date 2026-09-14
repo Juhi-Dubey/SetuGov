@@ -348,3 +348,38 @@ class StartupComparatorRequest(BaseModel):
             "If omitted, default engine weights are used."
         ),
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Brain 7 — Copilot Chat
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class CopilotRequest(BaseModel):
+    """Brain 7 input — conversational question for the floating Copilot widget."""
+
+    message: str = Field(
+        ...,
+        min_length=1,
+        max_length=2000,
+        description="The user's question or message.",
+    )
+    role: Optional[str] = Field(
+        None,
+        description="Authenticated user role: GOVERNMENT, EVALUATOR, STARTUP, ADMIN",
+    )
+    context_hint: Optional[str] = Field(
+        None,
+        description=(
+            "Current page slug to give the LLM page-level context, "
+            "e.g. 'pilot', 'challenge', 'evaluation', 'dashboard'."
+        ),
+    )
+    history: list[dict] = Field(
+        default_factory=list,
+        description=(
+            "Recent conversation turns for multi-turn context. "
+            "Each entry: {'role': 'user'|'assistant', 'content': str}. "
+            "Last 6 turns are used."
+        ),
+    )

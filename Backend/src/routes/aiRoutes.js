@@ -6,7 +6,8 @@ import {
   analyzePilot,
   getScaleRecommendation,
   analyzeRisks,
-  generateDocumentDraft
+  generateDocumentDraft,
+  copilotChat,
 } from '../controllers/aiController.js';
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
@@ -50,6 +51,9 @@ router.post('/risks/analyze', authenticate, authorizeRoles('GOVERNMENT', 'EVALUA
 // Brain 5 — AI Document Assistance & Governance Drafting (GOVERNMENT, EVALUATOR, ADMIN)
 router.post('/documents/generate', authenticate, authorizeRoles('GOVERNMENT', 'EVALUATOR', 'ADMIN'), validate(documentAssistanceSchema), generateDocumentDraft);
 router.post('/document', authenticate, authorizeRoles('GOVERNMENT', 'EVALUATOR', 'ADMIN'), validate(documentAssistanceSchema), generateDocumentDraft);
+
+// Brain 7 — Copilot Chat (all authenticated roles)
+router.post('/copilot/chat', authenticate, copilotChat);
 
 export default router;
 

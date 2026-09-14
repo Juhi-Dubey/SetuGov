@@ -1428,6 +1428,43 @@ export const analyzeRisks = async (input) => {
   };
 };
 
+/**
+ * Brain 7 — Copilot Chat
+ *
+ * Answers conversational questions about the SetuGov platform.
+ * Calls POST /ai/copilot on the Python AI service.
+ * Falls back to a helpful static response if the AI service is unavailable.
+ */
+export const copilotChat = async ({ message, role, context_hint, history = [] }) => {
+  const payload = {
+    message,
+    role: role || null,
+    context_hint: context_hint || null,
+    history: Array.isArray(history) ? history.slice(-6) : [],
+  };
+
+  try {
+    const externalResult = await callExternalAiService('/ai/copilot', payload);
+    if (externalResult && externalResult.success && externalResult.data) {
+      return externalResult.data;
+    }
+  } catch (err) {
+    logger.warn(`Copilot live call failed: ${err.message}. Using fallback response.`);
+  }
+
+  // Offline / mock fallback — helpful even without Ollama
+  return {
+    reply:
+      'I am the SetuGov Copilot. The AI service is currently unavailable, but I can still help you navigate the platform. ' +
+      'You can manage challenges from the Challenges section, review pilot data under Pilots, and track evaluations in your Evaluations tab.',
+    suggestions: [
+      'How do I create a new challenge?',
+      'What documents do I need to upload for DPIIT eligibility?',
+      'How is the pilot performance score calculated?',
+    ],
+  };
+};
+
 export default {
   generateChallenge,
   explainMatch,
@@ -1437,7 +1474,8 @@ export default {
   analyzePilotById,
   getScaleRecommendation,
   analyzeRisks,
-  generateDocumentDraft
+  generateDocumentDraft,
+  copilotChat,
 };
 
 
