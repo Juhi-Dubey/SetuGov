@@ -2,6 +2,19 @@ import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
 /**
+ * Escapes HTML characters in untrusted strings to prevent email HTML injection attacks
+ */
+export const escapeHtml = (str) => {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
+/**
  * Clean Email Provider Abstraction for SetuGov
  * 
  * Supported Providers:
@@ -19,7 +32,7 @@ import { logger } from '../utils/logger.js';
  * @param {string} options.subject - Email subject
  * @param {string} options.text - Plain text content
  * @param {string} options.html - HTML content
- * @returns {Promise<{ delivered: boolean, provider: string, messageId?: string }>}
+ * @returns {Promise<{ email_accepted_by_provider: boolean, provider: string, messageId?: string }>}
  */
 export const sendEmail = async ({ to, subject, text, html }) => {
   const provider = (config.EMAIL_PROVIDER || 'console').toLowerCase().trim();
@@ -32,8 +45,9 @@ export const sendEmail = async ({ to, subject, text, html }) => {
 
   if (provider === 'console') {
     // Safe logging in development without leaking secrets or tokens
-    logger.info(`[EMAIL SERVICE - DEV CONSOLE] Target: ${to} | Subject: "${subject}" | Status: Delivered (Dev Mode)`);
+    logger.info(`[EMAIL SERVICE - DEV CONSOLE] Target: ${to} | Subject: "${subject}" | Status: Accepted (Dev Mode)`);
     return {
+      email_accepted_by_provider: true,
       delivered: true,
       provider: 'console',
       messageId: `dev-console-${Date.now()}`
@@ -67,6 +81,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
 
     const result = await response.json();
     return {
+      email_accepted_by_provider: true,
       delivered: true,
       provider: 'resend',
       messageId: result.id
@@ -101,6 +116,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
     }
 
     return {
+      email_accepted_by_provider: true,
       delivered: true,
       provider: 'sendgrid',
       messageId: response.headers.get('x-message-id') || `sg-${Date.now()}`
@@ -114,6 +130,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
 
     logger.info(`[EMAIL SERVICE - SMTP] Target: ${to} via ${config.SMTP_HOST}:${config.SMTP_PORT}`);
     return {
+      email_accepted_by_provider: true,
       delivered: true,
       provider: 'smtp',
       messageId: `smtp-${Date.now()}`
@@ -134,9 +151,15 @@ export const sendEmail = async ({ to, subject, text, html }) => {
  * @param {string} [params.departmentName] - Department name if applicable
  */
 export const sendInvitationEmail = async ({ email, name, role, rawToken, departmentName = null }) => {
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeDept = departmentName ? escapeHtml(departmentName) : null;
+  const expiryHours = config.INVITATION_EXPIRY_HOURS || 48;
+
   const setupUrl = `${config.FRONTEND_URL}/invite/accept?token=${rawToken}&email=${encodeURIComponent(email)}`;
   const roleTitle = role === 'GOVERNMENT' ? 'Government Officer' : 'Domain Technical Evaluator';
-  const deptInfo = departmentName ? ` (${departmentName})` : '';
+  const safeRoleTitle = escapeHtml(roleTitle);
+  const deptInfo = safeDept ? ` (${safeDept})` : '';
 
   const subject = `SetuGov Platform Invitation — Complete Your ${roleTitle} Account Setup`;
 
@@ -145,7 +168,7 @@ Dear ${name},
 
 Your access request for the SetuGov National Innovation Procurement Platform has been approved by the platform administrator.
 
-Role: ${roleTitle}${deptInfo}
+Role: ${roleTitle}${departmentName ? ` (${departmentName})` : ''}
 Email: ${email}
 
 To complete your onboarding and activate your secure account, please click the setup link below to establish your account password:
@@ -153,7 +176,7 @@ To complete your onboarding and activate your secure account, please click the s
 ${setupUrl}
 
 SECURITY NOTICE:
-- This invitation setup link is unique, single-use, and valid for 48 hours.
+- This invitation setup link is unique, single-use, and valid for ${expiryHours} hours.
 - Your password must be at least 12 characters long and contain uppercase, lowercase, numbers, and special characters.
 - If you did not request access to SetuGov, please ignore this email or contact security@setugov.gov.in.
 
@@ -187,17 +210,17 @@ Government of India
     </div>
     <div class="content">
       <div class="badge">Official Invitation</div>
-      <p>Dear <strong>${name}</strong>,</p>
+      <p>Dear <strong>${safeName}</strong>,</p>
       <p>Your access request for SetuGov has been approved by the platform administrator.</p>
       
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
         <tr>
           <td style="padding: 8px 0; color: #64748b; width: 140px;">Approved Role:</td>
-          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${roleTitle}${deptInfo}</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${safeRoleTitle}${deptInfo}</td>
         </tr>
         <tr>
           <td style="padding: 8px 0; color: #64748b;">Account Email:</td>
-          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${email}</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${safeEmail}</td>
         </tr>
       </table>
 
@@ -208,7 +231,7 @@ Government of India
       <div class="notice">
         <strong>Security Policy:</strong>
         <ul style="margin: 6px 0 0 0; padding-left: 18px;">
-          <li>This invitation link is valid for 48 hours and can only be used once.</li>
+          <li>This invitation link is valid for ${expiryHours} hours and can only be used once.</li>
           <li>Privileged account passwords must be at least 12 characters with uppercase, lowercase, numbers, and symbols.</li>
           <li>Never share this setup link with anyone.</li>
         </ul>
@@ -241,28 +264,29 @@ Government of India
  * @param {object} params
  * @param {string} params.email - Recipient email address
  * @param {string} params.name - User's full name
- * @param {string} params.rawToken - Cryptographically generated email verification token
+ * @param {string} [params.rawToken] - Cryptographically generated email verification token
+ * @param {string} [params.verificationUrl] - Pre-constructed verification URL
  */
-export const sendEmailVerificationEmail = async ({ email, name, rawToken }) => {
-  const verifyUrl = `${config.FRONTEND_URL}/verify-email?token=${rawToken}&email=${encodeURIComponent(email)}`;
-  const subject = `SetuGov — Verify Your Startup Account Email Address`;
+export const sendEmailVerificationEmail = async ({ email, name, rawToken, verificationUrl }) => {
+  const safeName = escapeHtml(name);
+  const verifyUrl = verificationUrl || `${config.FRONTEND_URL}/verify-email?token=${rawToken}&email=${encodeURIComponent(email)}`;
+  const subject = `Verify your SetuGov account`;
 
   const text = `
-Dear ${name},
+Hello ${name},
 
-Thank you for registering on the SetuGov National Innovation Procurement Platform.
+Welcome to SetuGov.
 
-To verify your email address and continue with your GeM-style organization onboarding, please click the link below:
+Please verify your email address to activate your account and continue your startup registration:
 
 ${verifyUrl}
 
-SECURITY NOTICE:
-- This verification link is valid for 24 hours and can only be used once.
-- Once verified, you will be able to complete your organization profile and submit documents for verification.
-- If you did not create a SetuGov account, please ignore this email.
+This verification link expires in 24 hours.
 
-SetuGov National Innovation Procurement Platform
-Government of India
+If you did not create this account, you can safely ignore this email.
+
+Regards,
+SetuGov Team
 `.trim();
 
   const html = `
@@ -291,8 +315,8 @@ Government of India
     </div>
     <div class="content">
       <div class="badge">Email Verification</div>
-      <p>Dear <strong>${name}</strong>,</p>
-      <p>Thank you for initiating your registration on the SetuGov Innovation Procurement Platform. Please verify your email address to activate your account and proceed with organizational registration.</p>
+      <p>Hello <strong>${safeName}</strong>,</p>
+      <p>Welcome to SetuGov. Please verify your email address to activate your account and continue your startup registration.</p>
       
       <div style="text-align: center;">
         <a href="${verifyUrl}" class="btn">Verify Email Address</a>
@@ -301,14 +325,19 @@ Government of India
       <div class="notice">
         <strong>Important:</strong>
         <ul style="margin: 6px 0 0 0; padding-left: 18px;">
-          <li>This verification link is valid for 24 hours.</li>
-          <li>Email verification activates your user account, allowing you to begin your multi-step organization profile and document submission.</li>
+          <li>This verification link expires in 24 hours.</li>
+          <li>If you did not create this account, you can safely ignore this email.</li>
         </ul>
       </div>
 
       <p style="font-size: 12px; color: #94a3b8; word-break: break-all;">
         If the button above does not work, copy and paste this URL into your browser:<br>
         <a href="${verifyUrl}" style="color: #059669;">${verifyUrl}</a>
+      </p>
+
+      <p style="margin-top: 24px; font-size: 13px; color: #475569;">
+        Regards,<br>
+        <strong>SetuGov Team</strong>
       </p>
     </div>
     <div class="footer">
@@ -327,8 +356,11 @@ Government of India
   });
 };
 
+export const sendVerificationEmail = sendEmailVerificationEmail;
+
 export default {
   sendEmail,
   sendInvitationEmail,
-  sendEmailVerificationEmail
+  sendEmailVerificationEmail,
+  sendVerificationEmail
 };

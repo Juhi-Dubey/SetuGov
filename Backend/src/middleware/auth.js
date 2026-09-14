@@ -2,7 +2,8 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../config/prisma.js';
 import { config } from '../config/env.js';
 import { isTokenRevoked } from '../utils/tokenRevocation.js';
-import { UnauthorizedError, ForbiddenError } from '../utils/errors.js';
+import { UnauthorizedError, ForbiddenError, ServiceUnavailableError } from '../utils/errors.js';
+import { logger } from '../utils/logger.js';
 
 export const authenticate = async (req, res, next) => {
   try {
@@ -16,7 +17,7 @@ export const authenticate = async (req, res, next) => {
       throw new UnauthorizedError('Authentication token missing.');
     }
 
-    // P2-7: Check if token has been explicitly revoked
+    // Check if token has been explicitly revoked
     if (isTokenRevoked(token)) {
       throw new UnauthorizedError('Authentication token has been revoked. Please log in again.');
     }
@@ -70,7 +71,7 @@ export const authenticate = async (req, res, next) => {
         }
       });
     } catch (dbErr) {
-      // Retry once if serverless DB pooler connection was sleeping
+      // Retry once if DB pooler connection was sleeping
       try {
         await new Promise((r) => setTimeout(r, 250));
         user = await prisma.user.findUnique({
@@ -113,20 +114,8 @@ export const authenticate = async (req, res, next) => {
           }
         });
       } catch (retryErr) {
-        // Fallback to verified JWT payload if database compute is waking up
-        if (decoded && decoded.userId) {
-          user = {
-            id: decoded.userId,
-            email: decoded.email,
-            role: decoded.role || 'GOVERNMENT',
-            department_id: decoded.department_id || null,
-            is_active: true,
-            is_verified: true,
-            startups: []
-          };
-        } else {
-          throw retryErr;
-        }
+        logger.error(`Authentication database lookup failed for user ID ${decoded.userId}: ${retryErr.message}`);
+        throw new ServiceUnavailableError('Authentication service is temporarily unavailable. Please try again.');
       }
     }
 

@@ -2,7 +2,11 @@ import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
-import { maskAccountNumber } from './startupService.js';
+import { maskAccountNumber, getRequiredDocumentTypes } from './startupService.js';
+import { sendInvitationEmail } from './emailService.js';
+import { config } from '../config/env.js';
+import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 
 export const getDashboardOverview = async () => {
   const [
@@ -302,15 +306,14 @@ export const provisionUser = async (data, adminUser, ip_address = null) => {
   }
 
   // Generate secure random cryptographic invitation token
-  const crypto = await import('crypto');
-  const bcrypt = await import('bcrypt');
-  const rawInvitationToken = crypto.default.randomBytes(32).toString('hex');
-  const invitation_token_hash = crypto.default.createHash('sha256').update(rawInvitationToken).digest('hex');
-  const invitation_expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days expiry
+  const rawInvitationToken = crypto.randomBytes(32).toString('hex');
+  const invitation_token_hash = crypto.createHash('sha256').update(rawInvitationToken).digest('hex');
+  const expiryHours = config.INVITATION_EXPIRY_HOURS || 48;
+  const invitation_expires_at = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
 
   // Unusable random initial password hash until user sets their own password
-  const randomInitialSecret = crypto.default.randomBytes(32).toString('hex');
-  const password_hash = await bcrypt.default.hash(randomInitialSecret, 12);
+  const randomInitialSecret = crypto.randomBytes(32).toString('hex');
+  const password_hash = await bcrypt.hash(randomInitialSecret, 12);
 
   const user = await prisma.user.create({
     data: {
@@ -323,8 +326,8 @@ export const provisionUser = async (data, adminUser, ip_address = null) => {
       phone: phone ? phone.trim() : null,
       invitation_token_hash,
       invitation_expires_at,
-      is_active: true,
-      is_verified: true
+      is_active: false,
+      is_verified: false
     },
     select: {
       id: true,
@@ -347,7 +350,7 @@ export const provisionUser = async (data, adminUser, ip_address = null) => {
     }
   });
 
-  // If Evaluator, create verified evaluator profile
+  // If Evaluator, create pending evaluator profile
   if (role === 'EVALUATOR') {
     const expertise = Array.isArray(domain_expertise)
       ? domain_expertise
@@ -359,9 +362,9 @@ export const provisionUser = async (data, adminUser, ip_address = null) => {
         organization: organization ? organization.trim() : 'Innovation Evaluation Board',
         designation: designation ? designation.trim() : 'Evaluation Specialist',
         domain_expertise: expertise,
-        verification_status: 'VERIFIED',
-        verified_by: adminUser.id,
-        verified_at: new Date()
+        verification_status: 'PENDING',
+        verified_by: null,
+        verified_at: null
       }
     }).catch(() => {});
   }
@@ -393,21 +396,20 @@ export const provisionUser = async (data, adminUser, ip_address = null) => {
     ip_address
   });
 
-  await sendNotification({
-    user_id: user.id,
-    title: 'Official Account Provisioned',
-    message: `Your SetuGov official ${role} account has been provisioned and verified by ${adminUser.name}.`,
-    type: 'ACCOUNT_PROVISIONED',
-    link: '/login'
+  // Send real invitation email
+  await sendInvitationEmail({
+    email: normalizedEmail,
+    name: user.name,
+    role: user.role,
+    rawToken: rawInvitationToken,
+    departmentName: user.department ? user.department.name : null
   });
 
   return {
     user,
     invitation: {
-      invitation_token: rawInvitationToken,
-      setup_link: `/set-password?token=${rawInvitationToken}`,
-      setup_status: 'INVITATION_GENERATED',
-      expiry: invitation_expires_at.toISOString()
+      expires_at: invitation_expires_at.toISOString(),
+      email_accepted_by_provider: true
     }
   };
 };
@@ -896,7 +898,7 @@ export const reviewStartupVerification = async (id, { action, notes, rejection_r
 
   const startup = await prisma.startup.findUnique({
     where: { id },
-    include: { user: true, documents: true }
+    include: { user: true, documents: true, bank_details: true }
   });
 
   if (!startup) {
@@ -904,12 +906,53 @@ export const reviewStartupVerification = async (id, { action, notes, rejection_r
   }
 
   // State machine transition validation
-  if (action === 'START_REVIEW' && !['SUBMITTED', 'DRAFT'].includes(startup.verification_status)) {
-    throw new BadRequestError(`Cannot start review from status ${startup.verification_status}.`);
+  if (action === 'START_REVIEW' && startup.verification_status !== 'SUBMITTED') {
+    throw new BadRequestError(`Cannot start review from status ${startup.verification_status}. Startup dossier must be SUBMITTED first.`);
   }
-  if (action === 'APPROVE' && !['UNDER_REVIEW', 'SUBMITTED'].includes(startup.verification_status)) {
-    throw new BadRequestError(`Cannot approve startup from status ${startup.verification_status}. Startup must be SUBMITTED or UNDER_REVIEW.`);
+  if (action === 'APPROVE') {
+    if (!['UNDER_REVIEW', 'SUBMITTED'].includes(startup.verification_status)) {
+      throw new BadRequestError(`Cannot approve startup from status ${startup.verification_status}. Startup must be SUBMITTED or UNDER_REVIEW.`);
+    }
+
+    // Account & Email Verification Guard: User email must be verified
+    if (!startup.user.is_verified) {
+      throw new BadRequestError('Cannot verify startup: startup account email address has not been verified yet.');
+    }
+
+    // Completeness Guard: Organization identity and bank details
+    if (!startup.company_name || startup.company_name.length < 2 || !startup.registered_address || !startup.pan_number) {
+      throw new BadRequestError('Cannot verify startup: organization identity is incomplete.');
+    }
+    if (!startup.authorized_person_name || !startup.authorized_person_email) {
+      throw new BadRequestError('Cannot verify startup: authorized signatory information is incomplete.');
+    }
+    if (!startup.bank_details || !startup.bank_details.account_number || !startup.bank_details.ifsc_code) {
+      throw new BadRequestError('Cannot verify startup: company bank account details are missing.');
+    }
+
+    // Mandatory Document Verification Guard:
+    // All entity-specific required documents must exist and have verification_status === 'VERIFIED'
+    const requiredDocTypes = getRequiredDocumentTypes(startup.org_type);
+    const verifiedDocTypes = new Set(
+      (startup.documents || [])
+        .filter(d => d.verification_status === 'VERIFIED')
+        .map(d => d.document_type.toUpperCase())
+    );
+
+    const missingOrUnverifiedDocs = requiredDocTypes.filter(t => !verifiedDocTypes.has(t.toUpperCase()));
+    if (missingOrUnverifiedDocs.length > 0) {
+      throw new BadRequestError(
+        `Cannot verify startup: all required documents for ${startup.org_type} must be individually verified by an administrator before final approval. Missing or unverified documents: ${missingOrUnverifiedDocs.join(', ')}`
+      );
+    }
+
+    // Ensure no uploaded document is currently in REJECTED status
+    const hasRejectedDocs = (startup.documents || []).some(d => d.verification_status === 'REJECTED');
+    if (hasRejectedDocs) {
+      throw new BadRequestError('Cannot verify startup while one or more submitted documents remain REJECTED. Request correction or re-verify documents first.');
+    }
   }
+
   if (action === 'REJECT' && !['UNDER_REVIEW', 'SUBMITTED'].includes(startup.verification_status)) {
     throw new BadRequestError(`Cannot reject startup from status ${startup.verification_status}.`);
   }
@@ -935,8 +978,7 @@ export const reviewStartupVerification = async (id, { action, notes, rejection_r
   } else if (action === 'REJECT') {
     newStatus = 'REJECTED';
     updateData.verification_status = 'REJECTED';
-    updateData.verified_by = adminUser.id;
-    updateData.verified_at = new Date();
+    // Review metadata: verified_by / verified_at must NOT be set on rejection
     updateData.rejection_reason = rejection_reason || notes || 'Organization verification rejected.';
     updateData.verification_notes = notes || null;
   } else if (action === 'REQUEST_CORRECTION') {
@@ -1016,6 +1058,25 @@ export const verifyStartupDocument = async (documentId, { verification_status, r
       }
     }
   });
+
+  // If a required document is rejected, update startup status to CORRECTION_REQUESTED if currently under review or submitted
+  if (verification_status === 'REJECTED' && ['SUBMITTED', 'UNDER_REVIEW'].includes(document.startup.verification_status)) {
+    await prisma.startup.update({
+      where: { id: document.startup_id },
+      data: {
+        verification_status: 'CORRECTION_REQUESTED',
+        correction_notes: `Document '${document.document_type}' was rejected: ${rejection_reason || 'Please upload a valid, authentic copy and resubmit.'}`
+      }
+    });
+
+    await sendNotification({
+      user_id: document.startup.user_id,
+      title: 'Document Correction Requested',
+      message: `Your document (${document.document_type}) was rejected during verification. Reason: ${rejection_reason || 'Please re-upload'}.`,
+      type: 'VERIFICATION',
+      link: '/startup/profile'
+    });
+  }
 
   await createAuditLog({
     user_id: adminUser.id,

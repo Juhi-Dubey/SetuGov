@@ -37,9 +37,16 @@ export const createApplication = async (challengeId, data, user, ip_address = nu
     throw new BadRequestError('You must create a startup profile before applying to government challenges.');
   }
 
+  // Mandatory Verification Check: Only VERIFIED startups can apply
+  if (startup.verification_status !== 'VERIFIED') {
+    throw new ForbiddenError(
+      `Your startup is not verified (current status: ${startup.verification_status || 'UNVERIFIED'}). Only VERIFIED startups can apply to government challenges.`
+    );
+  }
+
   // Mandatory Eligibility Evaluation (Verification, Domain, Capabilities, TRL)
   const eligibility = evaluateEligibility(challenge, startup);
-  if (!eligibility.is_eligible) {
+  if (eligibility.eligibility_status === 'INELIGIBLE') {
     throw new ForbiddenError(
       `Your startup is not eligible to apply for this challenge: ${eligibility.ineligibility_reasons.join('; ')}`
     );

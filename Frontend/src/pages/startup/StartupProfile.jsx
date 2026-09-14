@@ -130,13 +130,13 @@ export default function StartupProfile() {
 
   const [techProfileData, setTechProfileData] = useState({
     description: "",
-    domain: "Technology",
+    domain: "",
     technologies: [],
     products_services: "",
-    readiness_level: 5,
-    years_experience: 2,
-    previous_deployments: 1,
-    location: "India"
+    readiness_level: 1,
+    years_experience: 0,
+    previous_deployments: 0,
+    location: ""
   });
 
   const [techInput, setTechInput] = useState("");
@@ -178,7 +178,7 @@ export default function StartupProfile() {
 
         setAuthPersonData({
           authorized_person_name: s.authorized_person_name || s.user?.name || "",
-          authorized_person_designation: s.authorized_person_designation || "Managing Director / Founder",
+          authorized_person_designation: s.authorized_person_designation || "",
           authorized_person_email: s.authorized_person_email || s.user?.email || "",
           authorized_person_phone: s.authorized_person_phone || s.user?.phone || "",
           authorization_type: s.authorization_type || "BOARD_RESOLUTION"
@@ -194,13 +194,13 @@ export default function StartupProfile() {
 
         setTechProfileData({
           description: s.description || "",
-          domain: s.domain || "Healthcare & MedTech",
-          technologies: s.technologies || ["AI", "Cloud", "IoT"],
+          domain: s.domain || "",
+          technologies: s.technologies || [],
           products_services: s.products_services || "",
-          readiness_level: s.readiness_level || 5,
-          years_experience: s.years_experience || 2,
-          previous_deployments: s.previous_deployments || 1,
-          location: s.location || "Bengaluru, Karnataka"
+          readiness_level: s.readiness_level ?? 1,
+          years_experience: s.years_experience ?? 0,
+          previous_deployments: s.previous_deployments ?? 0,
+          location: s.location || ""
         });
 
         if (s.bank_details) {
@@ -1038,7 +1038,7 @@ export default function StartupProfile() {
                   </div>
                   <h2 className="text-xl font-bold">Step 6: Verified Bank Account (For Procurement & Grants)</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Enter the legal company bank account for milestone funding disbursements. Raw account numbers are encrypted and masked on public pages.
+                    Enter the legal company bank account for milestone funding disbursements. Raw account numbers are protected with strict access controls and masked in public views.
                   </p>
                 </div>
 
@@ -1397,41 +1397,101 @@ export default function StartupProfile() {
                   </p>
                 </div>
 
-                {/* Summary Grid */}
-                <div className="grid gap-4 sm:grid-cols-2 rounded-2xl border border-slate-200 p-5 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-xs">
-                  <div>
-                    <span className="font-bold text-slate-500">Legal Company Name:</span>
-                    <p className="text-sm font-black text-slate-900 dark:text-white">{orgData.company_name}</p>
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-500">Constitution Type:</span>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{orgData.org_type}</p>
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-500">Registered Office:</span>
-                    <p className="font-medium text-slate-700 dark:text-slate-300">{orgData.registered_address}, {orgData.city}, {orgData.state} - {orgData.pincode}</p>
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-500">Authorized Signatory:</span>
-                    <p className="font-medium text-slate-700 dark:text-slate-300">{authPersonData.authorized_person_name} ({authPersonData.authorized_person_designation})</p>
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-500">Business PAN:</span>
-                    <p className="font-mono font-bold text-slate-900 dark:text-white">{bizIdentityData.pan_number || "Not provided"}</p>
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-500">GSTIN / CIN:</span>
-                    <p className="font-mono text-slate-700 dark:text-slate-300">{bizIdentityData.gstin || bizIdentityData.cin_number || "N/A"}</p>
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-500">Bank Account:</span>
-                    <p className="font-mono text-slate-700 dark:text-slate-300">{bankData.bank_name} &bull; {bankData.account_number ? `****${bankData.account_number.slice(-4)}` : "Missing"}</p>
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-500">Documents Attached:</span>
-                    <p className="font-bold text-emerald-600 dark:text-emerald-400">{documents.length} verified/pending files</p>
-                  </div>
-                </div>
+                {/* Step 8 Readiness Breakdown */}
+                {(() => {
+                  const reqDocTypes = getRequiredDocumentTypes(orgData.org_type);
+                  const uploadedDocTypes = new Set(documents.map(d => d.document_type));
+                  const missingDocList = reqDocTypes.filter(t => !uploadedDocTypes.has(t));
+                  const verifiedDocCount = documents.filter(d => d.verification_status === "VERIFIED").length;
+
+                  const missingFields = [];
+                  if (!orgData.company_name) missingFields.push("Legal Company Name");
+                  if (!orgData.registered_address || !orgData.city || !orgData.state || !orgData.pincode) missingFields.push("Registered Address");
+                  if (!authPersonData.authorized_person_name || !authPersonData.authorized_person_email) missingFields.push("Authorized Signatory");
+                  if (!bizIdentityData.pan_number) missingFields.push("Business PAN");
+                  if (!bankData.bank_name || !bankData.account_number || !bankData.ifsc_code) missingFields.push("Bank Details");
+                  if (missingDocList.length > 0) missingFields.push(`Mandatory Documents (${missingDocList.join(", ")})`);
+
+                  const isReady = missingFields.length === 0;
+
+                  return (
+                    <div className="space-y-4">
+                      {/* Readiness Status Box */}
+                      <div className={`rounded-2xl border p-4 text-xs ${
+                        isReady
+                          ? "border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/50 dark:bg-emerald-950/20"
+                          : "border-amber-200 bg-amber-50/60 dark:border-amber-900/50 dark:bg-amber-950/20"
+                      }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-bold uppercase tracking-wider text-[11px]">
+                            {isReady ? "Registration Dossier Complete" : "Dossier Incomplete - Action Required"}
+                          </span>
+                          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                            isReady
+                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                              : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                          }`}>
+                            {isReady ? "Ready for Submission" : `${missingFields.length} Missing Item(s)`}
+                          </span>
+                        </div>
+                        {!isReady && (
+                          <div className="mt-1 text-amber-900 dark:text-amber-300">
+                            <p className="font-semibold mb-1">Please complete the following before submitting:</p>
+                            <ul className="list-disc pl-5 space-y-0.5 text-[11px]">
+                              {missingFields.map((f, idx) => (
+                                <li key={idx}>{f}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Summary Grid */}
+                      <div className="grid gap-4 sm:grid-cols-2 rounded-2xl border border-slate-200 p-5 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-xs">
+                        <div>
+                          <span className="font-bold text-slate-500">Legal Company Name:</span>
+                          <p className="text-sm font-black text-slate-900 dark:text-white">{orgData.company_name || "Missing"}</p>
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-500">Constitution Type:</span>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white">{orgData.org_type}</p>
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-500">Registered Office:</span>
+                          <p className="font-medium text-slate-700 dark:text-slate-300">
+                            {orgData.registered_address ? `${orgData.registered_address}, ${orgData.city}, ${orgData.state} - ${orgData.pincode}` : "Missing"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-500">Authorized Signatory:</span>
+                          <p className="font-medium text-slate-700 dark:text-slate-300">
+                            {authPersonData.authorized_person_name ? `${authPersonData.authorized_person_name} (${authPersonData.authorized_person_designation || "Signatory"})` : "Missing"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-500">Business PAN:</span>
+                          <p className="font-mono font-bold text-slate-900 dark:text-white">{bizIdentityData.pan_number || "Missing"}</p>
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-500">GSTIN / CIN:</span>
+                          <p className="font-mono text-slate-700 dark:text-slate-300">{bizIdentityData.gstin || bizIdentityData.cin_number || "Optional / N/A"}</p>
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-500">Bank Account Details:</span>
+                          <p className="font-mono text-slate-700 dark:text-slate-300">
+                            {bankData.bank_name && bankData.account_number ? `${bankData.bank_name} • ****${bankData.account_number.slice(-4)}` : "Missing"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-500">Statutory Documents Attached:</span>
+                          <p className="font-bold text-emerald-600 dark:text-emerald-400">
+                            {documents.length} attached ({verifiedDocCount} verified by Admin, {documents.length - verifiedDocCount} pending review)
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Legal Declaration Checkbox */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
@@ -1493,12 +1553,16 @@ export default function StartupProfile() {
                       ? "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400"
                       : vStatus === "CORRECTION_REQUESTED"
                       ? "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
+                      : vStatus === "REJECTED"
+                      ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"
                       : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                   }`}>
                     {vStatus === "VERIFIED" ? (
                       <ShieldCheck className="h-8 w-8" />
                     ) : vStatus === "SUBMITTED" || vStatus === "UNDER_REVIEW" ? (
                       <Clock className="h-8 w-8" />
+                    ) : vStatus === "CORRECTION_REQUESTED" ? (
+                      <RefreshCw className="h-8 w-8" />
                     ) : (
                       <AlertCircle className="h-8 w-8" />
                     )}
@@ -1513,6 +1577,8 @@ export default function StartupProfile() {
                       ? "Submitted - Awaiting Review"
                       : vStatus === "CORRECTION_REQUESTED"
                       ? "Action Required: Correction Requested"
+                      : vStatus === "REJECTED"
+                      ? "Registration Verification Rejected"
                       : "Draft Registration"}
                   </h3>
 
@@ -1522,19 +1588,37 @@ export default function StartupProfile() {
                       : vStatus === "UNDER_REVIEW" || vStatus === "SUBMITTED"
                       ? "Your dossier has been submitted to the platform nodal officers for PAN, entity constitution, and private document validation. Verification decisions are completed within 24 to 48 hours."
                       : vStatus === "CORRECTION_REQUESTED"
-                      ? startup?.correction_notes || "Please edit the requested fields and re-submit your verification dossier."
+                      ? (startup?.correction_notes || "Administrative review identified items needing correction. Please update the requested records and re-submit your dossier.")
+                      : vStatus === "REJECTED"
+                      ? (startup?.rejection_reason || "Your registration dossier was reviewed and rejected. Please contact support or submit updated credentials.")
                       : "Please complete all registration steps and submit your dossier for verification."}
                   </p>
 
-                  {/* If Correction requested or Draft, offer edit button */}
-                  {(vStatus === "DRAFT" || vStatus === "CORRECTION_REQUESTED") && (
+                  {/* For CORRECTION_REQUESTED: Show admin correction notes box */}
+                  {vStatus === "CORRECTION_REQUESTED" && startup?.correction_notes && (
+                    <div className="mx-auto mt-4 max-w-md rounded-xl border border-blue-200 bg-blue-50/80 p-3.5 text-left text-xs text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
+                      <p className="font-bold mb-1">Admin Correction Notes:</p>
+                      <p>{startup.correction_notes}</p>
+                    </div>
+                  )}
+
+                  {/* For REJECTED: Show rejection reason box */}
+                  {vStatus === "REJECTED" && startup?.rejection_reason && (
+                    <div className="mx-auto mt-4 max-w-md rounded-xl border border-red-200 bg-red-50/80 p-3.5 text-left text-xs text-red-900 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300">
+                      <p className="font-bold mb-1">Rejection Reason:</p>
+                      <p>{startup.rejection_reason}</p>
+                    </div>
+                  )}
+
+                  {/* If Correction requested, Draft, or Rejected, offer edit button */}
+                  {(vStatus === "DRAFT" || vStatus === "CORRECTION_REQUESTED" || vStatus === "REJECTED") && (
                     <div className="mt-6 flex justify-center">
                       <button
                         type="button"
                         onClick={() => setActiveStep(2)}
                         className="rounded-xl bg-slate-900 px-6 py-2.5 text-xs font-bold text-white hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-700"
                       >
-                        Edit Registration Dossier
+                        {vStatus === "CORRECTION_REQUESTED" ? "Update Requested Records & Resubmit" : "Edit Registration Dossier"}
                       </button>
                     </div>
                   )}

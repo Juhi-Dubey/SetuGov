@@ -47,7 +47,12 @@ export const getEvaluationById = async (id) => {
 };
 
 export const saveEvaluationDraft = async (id, evaluationData) => {
-  return { success: true, message: "Evaluation draft saved in workspace" };
+  try {
+    localStorage.setItem(`evaluation_draft_${id}`, JSON.stringify(evaluationData));
+    return { success: true, message: "Evaluation draft saved to local workspace" };
+  } catch (e) {
+    return { success: false, message: "Failed to persist draft locally" };
+  }
 };
 
 export const declareConflictOfInterest = async (applicationId, data) => {

@@ -339,7 +339,7 @@ function AIChallengeCopilot({ formData, onAutofill }) {
     setGenerationError("");
   };
 
-  const readinessScore = aiResult?.readiness?.score ?? 85;
+  const readinessScore = aiResult?.readiness?.score != null ? aiResult.readiness.score : null;
 
   return (
     <div className="mb-8 overflow-hidden rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50/70 via-white to-sky-50/50 p-6 shadow-sm dark:border-indigo-900/50 dark:from-indigo-950/20 dark:via-slate-900 dark:to-sky-950/20">
@@ -372,7 +372,13 @@ function AIChallengeCopilot({ formData, onAutofill }) {
                 AI Readiness Score
               </p>
               <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
-                {readinessScore} <span className="text-xs font-normal text-slate-400">/ 100</span>
+                {readinessScore !== null ? (
+                  <>
+                    {readinessScore} <span className="text-xs font-normal text-slate-400">/ 100</span>
+                  </>
+                ) : (
+                  <span className="text-xs font-normal text-slate-400">Not available</span>
+                )}
               </p>
             </div>
           </div>

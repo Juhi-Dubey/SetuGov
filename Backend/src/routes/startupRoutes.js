@@ -6,6 +6,7 @@ import {
   getStartupById,
   updateStartup,
   saveBankDetails,
+  getBankDetails,
   addStartupDocument,
   deleteStartupDocument,
   getStartupDocuments,
@@ -32,7 +33,7 @@ const router = Router();
 
 const prepareDocumentUpload = (req, _res, next) => {
   if (req.file) {
-    req.body.document_url = getFileUrl(req, req.file.filename);
+    req.body.document_url = `/api/v1/documents/${req.file.filename}`;
     req.body.file_name = req.file.originalname || req.file.filename;
     req.body.file_size = req.file.size;
     req.body.mime_type = req.file.mimetype;
@@ -56,7 +57,9 @@ router.get('/:startup_id', authenticate, getStartupById);
 router.patch('/:startup_id', authenticate, validate(updateStartupSchema), updateStartup);
 router.patch('/registration/:startup_id', authenticate, validate(updateStartupSchema), updateStartup);
 
-// Save Bank Details (Owner or ADMIN)
+// Bank Details: Get & Save (Owner or ADMIN)
+router.get('/registration/:startup_id/bank-details', authenticate, getBankDetails);
+router.get('/:startup_id/bank-details', authenticate, getBankDetails);
 router.post('/registration/:startup_id/bank-details', authenticate, validate(bankDetailsSchema), saveBankDetails);
 router.post('/:startup_id/bank-details', authenticate, validate(bankDetailsSchema), saveBankDetails);
 

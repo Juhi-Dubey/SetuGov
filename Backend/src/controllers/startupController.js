@@ -123,6 +123,16 @@ export const saveBankDetails = async (req, res, next) => {
   }
 };
 
+export const getBankDetails = async (req, res, next) => {
+  try {
+    const startupId = req.params.startup_id || req.params.id;
+    const bankDetails = await startupService.getBankDetails(startupId, req.user);
+    return successResponse(res, { bank_details: bankDetails }, 'Bank details retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deleteStartupDocument = async (req, res, next) => {
   try {
     const startupId = req.params.startup_id || req.params.id;
@@ -153,6 +163,7 @@ export default {
   getStartupById,
   updateStartup,
   saveBankDetails,
+  getBankDetails,
   addStartupDocument,
   deleteStartupDocument,
   getStartupDocuments,

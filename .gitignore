@@ -1,6 +1,10 @@
 .env
+.env.*
 .env.local
 .env.*.local
+!.env.example
+!Backend/.env.example
+!Frontend/.env.example
 
 node_modules/
 

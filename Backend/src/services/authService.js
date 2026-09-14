@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../config/prisma.js';
 import { config } from '../config/env.js';
 import { ConflictError, UnauthorizedError, NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
+import { logger } from '../utils/logger.js';
 import { createAuditLog } from './auditService.js';
 import { sendEmailVerificationEmail } from './emailService.js';
 
@@ -11,7 +12,7 @@ export const register = async ({
   name,
   email,
   password,
-  role = 'STARTUP',
+  role,
   department_id = null,
   designation = null,
   phone = null,
@@ -19,19 +20,12 @@ export const register = async ({
 }) => {
   const normalizedEmail = email.trim().toLowerCase();
 
-  // Task 1: Public registration is strictly for STARTUP accounts only
-  if (role && role !== 'STARTUP') {
-    throw new ForbiddenError(
-      'Public registration is permitted for STARTUP accounts only. Privileged accounts (GOVERNMENT, EVALUATOR, ADMIN) must be provisioned by an administrator.'
-    );
-  }
-
   // Password length enforcement (min 12 characters)
   if (!password || password.length < 12) {
     throw new BadRequestError('Password must be at least 12 characters long.');
   }
 
-  // Force STARTUP role for all public registrations
+  // Force STARTUP role for all public registrations unconditionally
   const assignedRole = 'STARTUP';
 
   // Check email conflict
@@ -84,32 +78,34 @@ export const register = async ({
     }
   });
 
-  // Create initial Startup record in DRAFT status
+  // Create initial Startup record in DRAFT status without fabricated business defaults
   const startup = await prisma.startup.create({
     data: {
       user_id: user.id,
-      company_name: `${name.trim()}'s Startup`,
-      description: 'Draft organization profile pending GeM-style onboarding completion.',
-      domain: 'Technology',
+      company_name: '',
+      description: '',
+      domain: '',
       technologies: [],
-      location: 'India',
+      readiness_level: 1,
+      years_experience: 0,
+      previous_deployments: 0,
+      location: '',
       verification_status: 'DRAFT',
-      verification_source: 'DOCUMENT_VERIFIED'
+      verification_source: 'SELF_DECLARED'
     }
   });
 
   // Dispatch real email verification
+  let emailDelivered = false;
   try {
     await sendEmailVerificationEmail({
       email: user.email,
       name: user.name,
       rawToken: rawVerificationToken
     });
+    emailDelivered = true;
   } catch (emailErr) {
-    // If in production and email failed, log error
-    if (config.NODE_ENV === 'production') {
-      throw new Error(`Failed to deliver email verification: ${emailErr.message}`);
-    }
+    logger.error(`[AUTH] Verification email delivery failed for ${user.email}: ${emailErr.message}`);
   }
 
   // Create audit log
@@ -118,18 +114,20 @@ export const register = async ({
     action: 'USER_REGISTERED',
     entity_type: 'USER',
     entity_id: user.id,
-    details: { role: user.role, email: user.email },
+    details: { role: user.role, email: user.email, email_delivered: emailDelivered },
     ip_address
   });
 
-  // DO NOT return the raw verification token in the production response
+  // Return safe production response without raw token
   return {
     success: true,
-    message: 'Registration successful. A verification email has been dispatched to your email address.',
+    email_delivered: emailDelivered,
+    message: emailDelivered
+      ? 'Registration successful. Please check your email to verify your account.'
+      : 'Account created, but verification email delivery failed. Please click "Resend Verification Email" to retry.',
     user,
     startup_id: startup.id,
-    email_verification_required: true,
-    ...(config.NODE_ENV !== 'production' ? { dev_verification_token: rawVerificationToken } : {})
+    email_verification_required: true
   };
 };
 
@@ -253,11 +251,17 @@ export const resendVerificationEmail = async ({ email, ip_address = null }) => {
     }
   });
 
-  await sendEmailVerificationEmail({
-    email: user.email,
-    name: user.name,
-    rawToken: rawVerificationToken
-  });
+  let emailAccepted = true;
+  try {
+    await sendEmailVerificationEmail({
+      email: user.email,
+      name: user.name,
+      rawToken: rawVerificationToken
+    });
+  } catch (emailErr) {
+    logger.warn(`[AUTH] Resend verification email provider warning for ${user.email}: ${emailErr.message}`);
+    emailAccepted = false;
+  }
 
   await createAuditLog({
     user_id: user.id,
@@ -270,8 +274,7 @@ export const resendVerificationEmail = async ({ email, ip_address = null }) => {
 
   return {
     success: true,
-    message: 'A fresh verification link has been dispatched to your email address.',
-    ...(config.NODE_ENV !== 'production' ? { dev_verification_token: rawVerificationToken } : {})
+    message: 'Verification email sent. Please check your inbox and click the verification link.'
   };
 };
 

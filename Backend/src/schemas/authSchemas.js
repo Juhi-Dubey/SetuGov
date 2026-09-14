@@ -5,9 +5,7 @@ export const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(12, 'Password must be at least 12 characters long'),
   phone: z.string().optional().nullable(),
-  role: z.enum(['STARTUP'], {
-    errorMap: () => ({ message: 'Public registration is permitted for STARTUP accounts only. Privileged accounts must be provisioned by an administrator.' })
-  }).optional().default('STARTUP'),
+  role: z.string().optional().transform(() => 'STARTUP').default('STARTUP'),
   department_id: z.string().uuid('Invalid department ID format').optional().nullable()
 });
 

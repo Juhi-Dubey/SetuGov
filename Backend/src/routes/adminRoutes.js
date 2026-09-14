@@ -39,8 +39,13 @@ router.get('/audit-logs', authenticate, authorizeRoles('ADMIN'), getAuditLogs);
 // Startup Verifications (Admin only)
 router.get('/startup-verifications', authenticate, authorizeRoles('ADMIN'), getStartupVerifications);
 router.get('/startup-verifications/:id', authenticate, authorizeRoles('ADMIN'), getStartupVerificationById);
+router.get('/startups/:id/verification', authenticate, authorizeRoles('ADMIN'), getStartupVerificationById);
 router.patch('/startup-verifications/:id', authenticate, authorizeRoles('ADMIN'), validate(adminVerifyStartupSchema), reviewStartupVerification);
+router.patch('/startups/:id/verification', authenticate, authorizeRoles('ADMIN'), validate(adminVerifyStartupSchema), reviewStartupVerification);
+router.patch('/startups/:id/verify', authenticate, authorizeRoles('ADMIN'), validate(adminVerifyStartupSchema), reviewStartupVerification);
 router.patch('/startup-documents/:id/verification', authenticate, authorizeRoles('ADMIN'), validate(verifyStartupDocumentSchema), verifyStartupDocument);
+router.patch('/documents/:id/verification', authenticate, authorizeRoles('ADMIN'), validate(verifyStartupDocumentSchema), verifyStartupDocument);
+router.patch('/documents/:id/verify', authenticate, authorizeRoles('ADMIN'), validate(verifyStartupDocumentSchema), verifyStartupDocument);
 
 // Verify Department (Admin only)
 router.patch('/departments/:id/verify', authenticate, authorizeRoles('ADMIN'), verifyDepartment);

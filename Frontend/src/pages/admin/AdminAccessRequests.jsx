@@ -44,9 +44,8 @@ function AdminAccessRequests() {
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  // Approval Success / Invitation Token Display State
+  // Approval Success State
   const [approvalResult, setApprovalResult] = useState(null);
-  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
     fetchRequests();
@@ -178,12 +177,6 @@ function AdminAccessRequests() {
           </span>
         );
     }
-  };
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   return (
@@ -400,30 +393,16 @@ function AdminAccessRequests() {
               </div>
             )}
 
-            {/* If approved, show secure invitation token information */}
+            {/* If approved, show secure invitation email confirmation */}
             {approvalResult && approvalResult.invitation && (
               <div className="my-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs dark:border-emerald-900/40 dark:bg-emerald-950/40">
                 <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-200 mb-1">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  Invitation Generated (Awaiting Credential Setup)
+                  Invitation Dispatched via Secure Email
                 </div>
-                <p className="text-emerald-700 dark:text-emerald-300 mb-2">
-                  The request has been approved for <strong>{selectedRequest.requested_role}</strong> access. The account will become fully active once the applicant completes password setup via this secure link:
+                <p className="text-emerald-700 dark:text-emerald-300">
+                  The request has been approved for <strong>{selectedRequest.requested_role}</strong> access. A secure, single-use invitation email has been sent to <strong>{selectedRequest.email}</strong> (valid for 48 hours). The privileged account will activate once the applicant accepts the email invitation and establishes their credentials.
                 </p>
-                <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded-lg border border-emerald-200 dark:border-emerald-800 font-mono text-[11px]">
-                  <span className="truncate flex-1">
-                    {window.location.origin}{approvalResult.invitation.setup_link}
-                  </span>
-                  <button
-                    onClick={() =>
-                      copyToClipboard(`${window.location.origin}${approvalResult.invitation.setup_link}`)
-                    }
-                    className="inline-flex items-center gap-1 rounded bg-emerald-600 px-2.5 py-1 text-white font-semibold hover:bg-emerald-700"
-                  >
-                    {copiedLink ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                    {copiedLink ? "Copied" : "Copy Link"}
-                  </button>
-                </div>
               </div>
             )}
 

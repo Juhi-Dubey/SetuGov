@@ -55,7 +55,7 @@ const defaultStartupApplications = [
     estimated_cost: "₹2,50,000",
     status: "SHORTLISTED",
     submitted_at: "2026-08-25T14:30:00Z",
-    stage: "Evaluator Review (Technical Score: 88%)"
+    stage: "Evaluator Review Complete"
   },
   {
     id: "app-demo-3",

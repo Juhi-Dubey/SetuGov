@@ -50,3 +50,10 @@ export class LifecycleError extends AppError {
     super(message, 400, 'INVALID_LIFECYCLE_TRANSITION', details);
   }
 }
+
+export class ServiceUnavailableError extends AppError {
+  constructor(message = 'Service Temporarily Unavailable', details = null) {
+    super(message, 503, 'SERVICE_UNAVAILABLE', details);
+  }
+}
+

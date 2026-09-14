@@ -603,7 +603,8 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
     // Generate cryptographically secure random invitation token
     const rawInvitationToken = crypto.randomBytes(32).toString('hex');
     const invitation_token_hash = crypto.createHash('sha256').update(rawInvitationToken).digest('hex');
-    const invitation_expires_at = new Date(Date.now() + 72 * 60 * 60 * 1000); // 72 hours
+    const expiryHours = config.INVITATION_EXPIRY_HOURS || 48;
+    const invitation_expires_at = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
 
     // Create or update User in UNACTIVATED state (is_active: false, is_verified: false)
     const unguessablePlaceholder = crypto.randomBytes(32).toString('hex');
@@ -714,7 +715,7 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
       ip_address
     });
 
-    // Real Email Delivery Service (Phase 2): Send secure setup email to applicant
+    // Real Email Delivery Service: Send secure setup email to applicant
     await sendInvitationEmail({
       email: normalizedEmail,
       name: request.name,
@@ -734,11 +735,8 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
         is_verified: user.is_verified
       },
       invitation: {
-        setup_token: config.NODE_ENV === 'production' ? undefined : rawInvitationToken,
-        setup_link: `/invite/accept?token=${rawInvitationToken}`,
-        government_setup_link: `/government/set-password?token=${rawInvitationToken}`,
         expires_at: invitation_expires_at.toISOString(),
-        email_delivered: true
+        email_accepted_by_provider: true
       }
     };
   });
@@ -813,7 +811,7 @@ export const rejectAccessRequest = async (id, data, adminUser, ip_address = null
 
 /**
  * Resend / Re-generate Invitation Token (Admin only)
- * Invalidates old invitation token and generates a new 72h token.
+ * Invalidates old invitation token and generates a new 48h token.
  */
 export const resendInvitation = async (id, adminUser, ip_address = null) => {
   if (adminUser.role !== 'ADMIN') {
@@ -843,7 +841,8 @@ export const resendInvitation = async (id, adminUser, ip_address = null) => {
     // Generate new secure random token and invalidate old hash
     const rawInvitationToken = crypto.randomBytes(32).toString('hex');
     const invitation_token_hash = crypto.createHash('sha256').update(rawInvitationToken).digest('hex');
-    const invitation_expires_at = new Date(Date.now() + 72 * 60 * 60 * 1000);
+    const expiryHours = config.INVITATION_EXPIRY_HOURS || 48;
+    const invitation_expires_at = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
 
     await tx.user.update({
       where: { id: user.id },
@@ -869,7 +868,7 @@ export const resendInvitation = async (id, adminUser, ip_address = null) => {
       ip_address
     });
 
-    // Real Email Delivery Service (Phase 2): Send secure setup email on resend
+    // Real Email Delivery Service: Send secure setup email on resend
     await sendInvitationEmail({
       email: normalizedEmail,
       name: request.name,
@@ -881,11 +880,8 @@ export const resendInvitation = async (id, adminUser, ip_address = null) => {
     return {
       message: 'Invitation re-generated and sent via email successfully. Old invitation tokens have been invalidated.',
       invitation: {
-        setup_token: config.NODE_ENV === 'production' ? undefined : rawInvitationToken,
-        setup_link: `/invite/accept?token=${rawInvitationToken}`,
-        government_setup_link: `/government/set-password?token=${rawInvitationToken}`,
         expires_at: invitation_expires_at.toISOString(),
-        email_delivered: true
+        email_accepted_by_provider: true
       }
     };
   });

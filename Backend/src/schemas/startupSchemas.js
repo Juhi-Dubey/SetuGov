@@ -90,7 +90,7 @@ export const updateStartupSchema = z.object({
 export const bankDetailsSchema = z.object({
   account_holder_name: z.string().min(2, 'Account holder legal name is required'),
   bank_name: z.string().min(2, 'Bank name is required'),
-  account_number: z.string().regex(/^\d{9,18}$/, 'Account number must be 9 to 18 digits'),
+  account_number: z.string().regex(/^(\d{9,18}|[•*]{4,}\d{4})$/, 'Account number must be 9 to 18 digits or preserved masked value'),
   ifsc_code: z.string().regex(PATTERNS.IFSC, 'Invalid IFSC code (e.g. SBIN0001234)'),
   branch_name: z.string().optional().nullable(),
   account_type: z.enum(['CURRENT', 'SAVINGS', 'ESCROW']).optional().default('CURRENT')

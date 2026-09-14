@@ -126,13 +126,20 @@ export const evaluateEligibility = (challenge, startup, policyOptions = {}) => {
   if (startupDomain) {
     // Direct domain match (exact keyword or core sector stem, e.g. health in healthcare)
     const baseDomain = startupDomain.replace(/(?:care|tech|systems?)$/i, '');
+    const tokens = startupDomain.split(/[\s,/-]+/).filter(t => t.length >= 4);
     const isDirectMatch = challengeDepartmentName.includes(startupDomain) ||
       challengeTitle.includes(startupDomain) ||
       challengeDesc.includes(startupDomain) ||
       (baseDomain.length >= 4 && (
         challengeDepartmentName.includes(baseDomain) ||
         challengeTitle.includes(baseDomain)
-      ));
+      )) ||
+      tokens.some(t => {
+        const stem = t.replace(/(?:care|tech|systems?)$/i, '');
+        return challengeDepartmentName.includes(t) ||
+          challengeTitle.includes(t) ||
+          (stem.length >= 4 && (challengeDepartmentName.includes(stem) || challengeTitle.includes(stem)));
+      });
 
     // Cross-domain sector clusters (symmetrically mapped)
     const domainClusters = [
@@ -151,9 +158,9 @@ export const evaluateEligibility = (challenge, startup, policyOptions = {}) => {
       }
     }
 
-    const tokens = startupDomain.split(/[\s,/-]+/).filter(Boolean);
-    const startupAliases = new Set([startupDomain, ...tokens]);
-    for (const token of tokens) {
+    const allTokens = startupDomain.split(/[\s,/-]+/).filter(Boolean);
+    const startupAliases = new Set([startupDomain, ...allTokens]);
+    for (const token of allTokens) {
       if (domainAliases[token]) {
         domainAliases[token].forEach(a => startupAliases.add(a));
       }

@@ -40,8 +40,8 @@ export default function StartupSignup() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [resendStatus, setResendStatus] = useState("");
+  const [resendError, setResendError] = useState("");
   const [isResending, setIsResending] = useState(false);
-  const [devToken, setDevToken] = useState(null);
 
   const validateForm = () => {
     const errs = {};
@@ -93,13 +93,10 @@ export default function StartupSignup() {
       };
 
       const res = await registerUser(payload);
-      const data = res?.data || res;
-
       setRegisteredEmail(formData.email.trim());
       setIsSuccess(true);
-      if (data?.dev_verification_token) {
-        setDevToken(data.dev_verification_token);
-      }
+      setResendStatus("");
+      setResendError("");
     } catch (err) {
       console.error("Startup registration failed:", err);
       setAuthError(err?.message || "Registration failed. Please try again.");
@@ -112,11 +109,12 @@ export default function StartupSignup() {
     if (!registeredEmail) return;
     setIsResending(true);
     setResendStatus("");
+    setResendError("");
     try {
       await resendEmailVerification(registeredEmail);
-      setResendStatus("A new verification link has been sent to your email.");
+      setResendStatus("Verification email sent. Please check your inbox.");
     } catch (err) {
-      setResendStatus(err?.message || "Failed to resend verification email.");
+      setResendError(err?.message || "Failed to resend verification email. Please try again later.");
     } finally {
       setIsResending(false);
     }
@@ -146,55 +144,31 @@ export default function StartupSignup() {
               </div>
             </Link>
 
-            {/* Content */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="max-w-xl"
-            >
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300">
-                <Rocket className="h-4 w-4" />
-                GeM-Style Seller & Startup Onboarding
+            {/* Middle Feature Highlights */}
+            <div className="space-y-6 my-auto max-w-lg">
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                <Rocket className="h-3.5 w-3.5" />
+                <span>GeM-Style Startup Onboarding Lifecycle</span>
               </div>
-
-              <h2 className="text-4xl font-bold leading-tight text-slate-900 dark:text-white xl:text-5xl">
-                Verified Onboarding for{" "}
-                <span className="text-emerald-600 dark:text-emerald-400">Government Procurement.</span>
+              <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+                Bridge innovation directly to public procurement.
               </h2>
-
-              <p className="mt-6 max-w-lg text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                Register your startup, verify your email, and complete your organization dossier with PAN, GST, DPIIT recognition, banking details, and private document validation to unlock state procurement tenders and sandbox contracts.
+              <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                Register once, verify your statutory credentials through our multi-step GeM-aligned dossier, and unlock direct challenge matching, pilot funding, and state-level government deployments.
               </p>
+            </div>
 
-              <div className="mt-8 space-y-3">
-                <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Step 1: Secure Account Creation & Email Verification</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Step 2: Organization, Business Identity & Banking Details</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Step 3: Document Verification & Government Sandbox Eligibility</span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Footer */}
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              Public Startup Self-Registration · DPIIT & GeM Standards Compliant
+            {/* Bottom Footer */}
+            <div className="text-xs text-slate-400">
+              Government of India &bull; Innovation Procurement OS
             </div>
           </div>
         </div>
 
         {/* Right Form Section */}
-        <div className="relative flex items-center justify-center px-6 py-12 sm:px-10 lg:px-12">
-          {/* Top Theme Switcher & Home link */}
-          <div className="absolute right-6 top-6 flex items-center gap-2">
+        <div className="flex min-h-screen items-center justify-center p-6 sm:p-12">
+          {/* Top Controls */}
+          <div className="absolute right-6 top-6 flex items-center gap-3">
             <Link
               to="/"
               className="text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
@@ -244,29 +218,32 @@ export default function StartupSignup() {
                   Verify Your Email Address
                 </h3>
 
-                <p className="mt-2 text-center text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  We have dispatched an email verification link to <strong>{registeredEmail}</strong>. Please check your inbox and click the verification link to activate your user account and begin the multi-step GeM-style organization onboarding wizard.
+                <p className="mt-3 text-center text-xs text-slate-600 dark:text-slate-400">
+                  We've sent a verification link to:
+                </p>
+                <p className="mt-1 text-center text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                  {registeredEmail}
                 </p>
 
-                {devToken && (
-                  <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-[11px] text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
-                    <p className="font-bold">Development Mode Direct Link:</p>
-                    <Link
-                      to={`/verify-email?token=${devToken}&email=${encodeURIComponent(registeredEmail)}`}
-                      className="mt-1 block font-mono text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline break-all"
-                    >
-                      /verify-email?token={devToken}
-                    </Link>
+                <p className="mt-3 text-center text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Please check your inbox and click the verification link to activate your account and continue your startup registration.
+                </p>
+
+                {resendStatus && (
+                  <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-medium text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                    <span>{resendStatus}</span>
                   </div>
                 )}
 
-                {resendStatus && (
-                  <p className="mt-3 text-center text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                    {resendStatus}
-                  </p>
+                {resendError && (
+                  <div className="mt-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-700 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-300">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+                    <span>{resendError}</span>
+                  </div>
                 )}
 
-                <div className="mt-6 flex flex-col gap-2">
+                <div className="mt-6 flex flex-col gap-2.5">
                   <button
                     type="button"
                     onClick={handleResendVerification}
@@ -283,6 +260,15 @@ export default function StartupSignup() {
                   >
                     Back to Sign In
                   </Link>
+                </div>
+
+                <div className="mt-6 border-t border-slate-100 pt-4 text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                  <p className="font-semibold text-slate-700 dark:text-slate-300 mb-1">Didn't receive the email?</p>
+                  <ul className="list-disc pl-4 space-y-0.5">
+                    <li>Check your Spam or Junk folder</li>
+                    <li>Verify that the email address is correct</li>
+                    <li>Try resending using the button above</li>
+                  </ul>
                 </div>
               </motion.div>
             ) : (

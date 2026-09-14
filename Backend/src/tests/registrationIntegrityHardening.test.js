@@ -2,14 +2,22 @@ import assert from 'assert';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import http from 'http';
+import createApp from '../app.js';
 import { prisma } from '../config/prisma.js';
 import { config } from '../config/env.js';
 
-const BASE_URL = 'http://localhost:5000/api/v1';
+let server;
+let BASE_URL = 'http://localhost:5000/api/v1';
 const generateToken = (payload) => jwt.sign({ userId: payload.id || payload.userId, role: payload.role, email: payload.email, ...payload }, config.JWT_SECRET, { expiresIn: '1h' });
 const getErrMsg = (data) => data?.error?.message || data?.message || JSON.stringify(data);
 
 async function runRegistrationIntegrityHardeningTests() {
+  const app = createApp();
+  server = http.createServer(app);
+  await new Promise((resolve) => server.listen(0, resolve));
+  const port = server.address().port;
+  BASE_URL = `http://127.0.0.1:${port}/api/v1`;
   console.log('===============================================================');
   console.log('🛡️ RUNNING REGISTRATION + INTEGRITY HARDENING TEST SUITE (SETUGOV-10)');
   console.log('===============================================================');
@@ -331,6 +339,21 @@ async function runRegistrationIntegrityHardeningTests() {
   assert.strictEqual(lockedEditRes.status, 400, 'Editing profile while UNDER_REVIEW must be blocked with 400');
   console.log('✅ Dossier modification locked while UNDER_REVIEW (HTTP 400)');
 
+  // Admin verifies all uploaded documents for startup 1
+  const docs1 = await prisma.startupDocument.findMany({ where: { startup_id: startup1.id } });
+  for (const doc of docs1) {
+    const docVerifyRes = await fetch(`${BASE_URL}/admin/documents/${doc.id}/verify`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({ verification_status: 'VERIFIED', notes: 'Verified in audit test' }),
+    });
+    assert.strictEqual(docVerifyRes.status, 200, 'Admin document verification must succeed');
+  }
+  console.log('✅ Admin verified all required startup documents');
+
   // Admin approves verification -> UNDER_REVIEW -> VERIFIED
   const adminApproveRes = await fetch(`${BASE_URL}/admin/startup-verifications/${startup1.id}`, {
     method: 'PATCH',
@@ -454,5 +477,8 @@ runRegistrationIntegrityHardeningTests()
     process.exit(1);
   })
   .finally(async () => {
+    if (server) {
+      server.close();
+    }
     await prisma.$disconnect();
   });

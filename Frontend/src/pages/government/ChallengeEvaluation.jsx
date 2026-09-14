@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
+import { saveEvaluationDraft } from "../../services/evaluationService";
 
 const initialCriteria = [
   {
@@ -122,7 +123,7 @@ function ChallengeEvaluation() {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      console.log("Evaluation saved:", {
+      await saveEvaluationDraft(id, {
         challengeId: id,
         criteria,
         weightedScore,

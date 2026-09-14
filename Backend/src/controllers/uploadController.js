@@ -42,6 +42,8 @@ export const verifyDocumentAuthorization = async (user, identifier) => {
   }
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+  const safeFilename = path.basename(identifier);
+  const isStoredFilename = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(pdf|png|jpg|jpeg)$/i.test(safeFilename);
 
   // 1. Check if document belongs to a StartupDocument
   let startupDoc = null;
@@ -51,9 +53,14 @@ export const verifyDocumentAuthorization = async (user, identifier) => {
       include: { startup: true }
     });
   }
-  if (!startupDoc) {
+  if (!startupDoc && isStoredFilename) {
     startupDoc = await prisma.startupDocument.findFirst({
-      where: { document_url: { contains: identifier } },
+      where: {
+        OR: [
+          { document_url: { endsWith: `/${safeFilename}` } },
+          { document_url: safeFilename }
+        ]
+      },
       include: { startup: true }
     });
   }
@@ -104,11 +111,22 @@ export const verifyDocumentAuthorization = async (user, identifier) => {
   }
 
   // 2. Check if document belongs to an AccessRequest
-  const accessRequest = await prisma.accessRequest.findFirst({
-    where: {
-      supporting_document_url: { contains: identifier }
-    }
-  });
+  let accessRequest = null;
+  if (isUuid) {
+    accessRequest = await prisma.accessRequest.findUnique({
+      where: { id: identifier }
+    });
+  }
+  if (!accessRequest && isStoredFilename) {
+    accessRequest = await prisma.accessRequest.findFirst({
+      where: {
+        OR: [
+          { supporting_document_url: { endsWith: `/${safeFilename}` } },
+          { supporting_document_url: safeFilename }
+        ]
+      }
+    });
+  }
 
   if (accessRequest) {
     if (user.email === accessRequest.email) return true;
@@ -118,19 +136,38 @@ export const verifyDocumentAuthorization = async (user, identifier) => {
   }
 
   // 3. Check if document belongs to Evidence
-  const evidence = await prisma.evidence.findFirst({
-    where: {
-      file_url: { contains: identifier }
-    },
-    include: {
-      pilot: {
-        include: {
-          challenge: true,
-          startup: true
+  let evidence = null;
+  if (isUuid) {
+    evidence = await prisma.evidence.findUnique({
+      where: { id: identifier },
+      include: {
+        pilot: {
+          include: {
+            challenge: true,
+            startup: true
+          }
         }
       }
-    }
-  });
+    });
+  }
+  if (!evidence && isStoredFilename) {
+    evidence = await prisma.evidence.findFirst({
+      where: {
+        OR: [
+          { file_url: { endsWith: `/${safeFilename}` } },
+          { file_url: safeFilename }
+        ]
+      },
+      include: {
+        pilot: {
+          include: {
+            challenge: true,
+            startup: true
+          }
+        }
+      }
+    });
+  }
 
   if (evidence) {
     if (evidence.uploaded_by === user.id) return true;
@@ -140,19 +177,38 @@ export const verifyDocumentAuthorization = async (user, identifier) => {
   }
 
   // 4. Check if document belongs to a Payment invoice
-  const payment = await prisma.payment.findFirst({
-    where: {
-      invoice_url: { contains: identifier }
-    },
-    include: {
-      pilot: {
-        include: {
-          challenge: true,
-          startup: true
+  let payment = null;
+  if (isUuid) {
+    payment = await prisma.payment.findUnique({
+      where: { id: identifier },
+      include: {
+        pilot: {
+          include: {
+            challenge: true,
+            startup: true
+          }
         }
       }
-    }
-  });
+    });
+  }
+  if (!payment && isStoredFilename) {
+    payment = await prisma.payment.findFirst({
+      where: {
+        OR: [
+          { invoice_url: { endsWith: `/${safeFilename}` } },
+          { invoice_url: safeFilename }
+        ]
+      },
+      include: {
+        pilot: {
+          include: {
+            challenge: true,
+            startup: true
+          }
+        }
+      }
+    });
+  }
 
   if (payment) {
     if (payment.pilot.startup.user_id === user.id) return true;
@@ -161,19 +217,34 @@ export const verifyDocumentAuthorization = async (user, identifier) => {
   }
 
   // 5. Check if document belongs to a Procurement record
-  const procurement = await prisma.procurementRecord.findFirst({
-    where: {
-      OR: [
-        { contract_document_url: { contains: identifier } },
-        { delivery_evidence_url: { contains: identifier } },
-        { gem_supporting_doc: { contains: identifier } }
-      ]
-    },
-    include: {
-      startup: true,
-      challenge: true
-    }
-  });
+  let procurement = null;
+  if (isUuid) {
+    procurement = await prisma.procurementRecord.findUnique({
+      where: { id: identifier },
+      include: {
+        startup: true,
+        challenge: true
+      }
+    });
+  }
+  if (!procurement && isStoredFilename) {
+    procurement = await prisma.procurementRecord.findFirst({
+      where: {
+        OR: [
+          { contract_document_url: { endsWith: `/${safeFilename}` } },
+          { contract_document_url: safeFilename },
+          { delivery_evidence_url: { endsWith: `/${safeFilename}` } },
+          { delivery_evidence_url: safeFilename },
+          { gem_supporting_doc: { endsWith: `/${safeFilename}` } },
+          { gem_supporting_doc: safeFilename }
+        ]
+      },
+      include: {
+        startup: true,
+        challenge: true
+      }
+    });
+  }
 
   if (procurement) {
     if (procurement.startup.user_id === user.id) return true;
@@ -202,6 +273,21 @@ export const getPrivateFile = async (req, res, next) => {
       const doc = await prisma.startupDocument.findUnique({ where: { id: rawIdentifier } });
       if (doc && doc.document_url) {
         resolvedFilename = path.basename(doc.document_url);
+      } else {
+        const evidence = await prisma.evidence.findUnique({ where: { id: rawIdentifier } });
+        if (evidence && evidence.file_url) {
+          resolvedFilename = path.basename(evidence.file_url);
+        } else {
+          const accessReq = await prisma.accessRequest.findUnique({ where: { id: rawIdentifier } });
+          if (accessReq && accessReq.supporting_document_url) {
+            resolvedFilename = path.basename(accessReq.supporting_document_url);
+          } else {
+            const payment = await prisma.payment.findUnique({ where: { id: rawIdentifier } });
+            if (payment && payment.invoice_url) {
+              resolvedFilename = path.basename(payment.invoice_url);
+            }
+          }
+        }
       }
     }
 

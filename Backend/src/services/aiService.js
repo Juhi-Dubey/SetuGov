@@ -1264,9 +1264,9 @@ export const getScaleRecommendation = async (pilotIdOrInput, user) => {
         source: e.source || null,
         verified: e.verification_status === 'VERIFIED'
       })),
-      validation_status: latestValidation ? (latestValidation.status === 'VALIDATED' || latestValidation.status === 'COMPLETED' ? 'completed' : 'partial') : 'completed',
-      technical_stability: latestValidation?.technical_stability_score ? Number(latestValidation.technical_stability_score) : 88.0,
-      user_feedback_score: 82.0
+      validation_status: latestValidation ? (latestValidation.status === 'VALIDATED' || latestValidation.status === 'COMPLETED' ? 'completed' : 'partial') : 'pending',
+      technical_stability: latestValidation?.technical_stability_score ? Number(latestValidation.technical_stability_score) : null,
+      user_feedback_score: latestValidation?.user_satisfaction_score ? Number(latestValidation.user_satisfaction_score) : null
     };
   }
 
@@ -1282,7 +1282,7 @@ export const getScaleRecommendation = async (pilotIdOrInput, user) => {
     logger.warn(`Scale recommendation live call failed: ${err.message}. Using deterministic fallback.`);
   }
 
-  // Deterministic mock fallback
+  // Deterministic fallback based on empirical pilot data
   const validAchievements = kpiResults
     .filter(k => k.baseline !== null && k.target !== null && k.actual !== null)
     .map(k => {
@@ -1293,7 +1293,7 @@ export const getScaleRecommendation = async (pilotIdOrInput, user) => {
 
   const avgKpi = validAchievements.length > 0
     ? validAchievements.reduce((a, b) => a + b, 0) / validAchievements.length
-    : 84.5;
+    : (latestValidation?.performance_score || 0);
 
   const highRisks = (pilot.risks || []).filter(r => (r.severity || '').toUpperCase() === 'HIGH').length;
 
@@ -1306,16 +1306,18 @@ export const getScaleRecommendation = async (pilotIdOrInput, user) => {
 
   return {
     recommendation,
-    confidence_pct: Math.min(96, Math.max(65, Math.round(avgKpi * 0.9))),
+    confidence_pct: Math.min(96, Math.max(50, Math.round(avgKpi * 0.9))),
     reasons: [
-      `${validAchievements.length > 0 ? `${validAchievements.filter(a => a >= 80).length} of ${validAchievements.length} target KPIs achieved or exceeded` : '4 of 5 target KPIs were achieved and empirical validation was successful.'}`,
+      `${validAchievements.length > 0 ? `${validAchievements.filter(a => a >= 80).length} of ${validAchievements.length} target KPIs achieved or exceeded` : 'Empirical pilot records evaluated.'}`,
       highRisks === 0 ? 'Zero critical operational risks recorded during sandbox trial.' : `${highRisks} elevated risk item(s) logged.`,
-      'Independent technical validation report completed with satisfactory benchmark metrics.'
+      'Independent technical validation report evaluated.'
     ],
     supporting_metrics: {
       kpi_achievement_pct: parseFloat(avgKpi.toFixed(1)),
-      milestone_completion_rate: 100.0,
-      validation_score: latestValidation?.performance_score || 88.0,
+      milestone_completion_rate: (pilot.milestones || []).length > 0
+        ? ((pilot.milestones || []).filter(m => m.status === 'COMPLETED').length / (pilot.milestones || []).length) * 100
+        : 0,
+      validation_score: latestValidation?.performance_score !== undefined ? Number(latestValidation.performance_score) : null,
       risk_score: highRisks * 25.0
     },
     risks: highRisks > 0 ? ['Active operational mitigation required before department-wide scale.'] : ['Standard vendor SLA monitoring recommended during statewide deployment.'],

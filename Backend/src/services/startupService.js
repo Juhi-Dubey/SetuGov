@@ -98,16 +98,16 @@ export const createStartup = async (data, user, ip_address = null) => {
       dpiit_number: data.dpiit_number ? data.dpiit_number.trim() : null,
       certificate_number: data.certificate_number ? data.certificate_number.trim() : null,
       incorporation_date: data.incorporation_date ? new Date(data.incorporation_date) : null,
-      description: data.description ? data.description.trim() : 'Draft organization profile pending onboarding completion.',
-      domain: data.domain ? data.domain.trim() : 'Technology',
+      description: data.description ? data.description.trim() : '',
+      domain: data.domain ? data.domain.trim() : '',
       technologies: data.technologies || [],
       products_services: data.products_services ? data.products_services.trim() : null,
       readiness_level: data.readiness_level || 1,
       years_experience: data.years_experience || 0,
       previous_deployments: data.previous_deployments || 0,
-      location: data.location ? data.location.trim() : 'India',
+      location: data.location ? data.location.trim() : '',
       verification_status: 'DRAFT',
-      verification_source: 'DOCUMENT_VERIFIED'
+      verification_source: 'SELF_DECLARED'
     },
     include: {
       user: {
@@ -184,13 +184,13 @@ export const getMyRegistration = async (userId) => {
     startup = await prisma.startup.create({
       data: {
         user_id: userId,
-        company_name: `${user.name}'s Organization`,
-        description: 'Draft organization profile pending GeM-style onboarding completion.',
-        domain: 'Technology',
+        company_name: '',
+        description: '',
+        domain: '',
         technologies: [],
-        location: 'India',
+        location: '',
         verification_status: 'DRAFT',
-        verification_source: 'DOCUMENT_VERIFIED'
+        verification_source: 'SELF_DECLARED'
       },
       include: {
         user: {
@@ -219,6 +219,7 @@ export const getMyRegistration = async (userId) => {
 
   if (startup && startup.bank_details) {
     startup.bank_details.masked_account_number = maskAccountNumber(startup.bank_details.account_number);
+    startup.bank_details.account_number = maskAccountNumber(startup.bank_details.account_number);
   }
 
   return startup;
@@ -236,7 +237,12 @@ export const getStartups = async (query = {}, user = null) => {
 
   const where = {};
   if (domain) where.domain = domain;
-  if (verification_status) where.verification_status = verification_status;
+  if (verification_status) {
+    where.verification_status = verification_status;
+  } else if (!user || user.role !== 'ADMIN') {
+    // Non-admin queries default strictly to VERIFIED startups so DRAFT records are never exposed publicly
+    where.verification_status = 'VERIFIED';
+  }
   if (org_type) where.org_type = org_type;
   if (search) {
     where.OR = [
@@ -369,8 +375,8 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
     throw new ForbiddenError('You can only update your own startup profile.');
   }
 
-  // If startup is UNDER_REVIEW or VERIFIED, profile editing is locked for non-admins
-  if (user.role !== 'ADMIN' && (startup.verification_status === 'UNDER_REVIEW' || startup.verification_status === 'VERIFIED')) {
+  // If startup is SUBMITTED, UNDER_REVIEW or VERIFIED, profile editing is locked for non-admins
+  if (user.role !== 'ADMIN' && ['SUBMITTED', 'UNDER_REVIEW', 'VERIFIED'].includes(startup.verification_status)) {
     throw new BadRequestError(`Your registration is currently ${startup.verification_status.replace('_', ' ').toLowerCase()}. Profile editing is locked until review completes.`);
   }
 
@@ -530,20 +536,28 @@ export const saveBankDetails = async (startupId, data, user, ip_address = null) 
     throw new ForbiddenError('You can only update bank details for your own startup.');
   }
 
-  // If startup is UNDER_REVIEW or VERIFIED, bank editing is locked for non-admins
-  if (user.role !== 'ADMIN' && (startup.verification_status === 'UNDER_REVIEW' || startup.verification_status === 'VERIFIED')) {
+  // If startup is SUBMITTED, UNDER_REVIEW or VERIFIED, bank editing is locked for non-admins
+  if (user.role !== 'ADMIN' && ['SUBMITTED', 'UNDER_REVIEW', 'VERIFIED'].includes(startup.verification_status)) {
     throw new BadRequestError(`Your registration is currently ${startup.verification_status.replace('_', ' ').toLowerCase()}. Bank details updates are locked.`);
   }
 
   // Format validations
   const ifsc = data.ifsc_code.trim().toUpperCase();
-  const accNo = data.account_number.trim();
+  let accNo = data.account_number ? data.account_number.trim() : '';
 
   if (!PATTERNS.IFSC.test(ifsc)) {
     throw new BadRequestError('Invalid IFSC code format (e.g. SBIN0001234).');
   }
 
-  if (!/^\d{9,18}$/.test(accNo)) {
+  const existingBank = await prisma.startupBankDetails.findUnique({ where: { startup_id: startupId } });
+
+  if (accNo.includes('•') || accNo.includes('*')) {
+    if (existingBank) {
+      accNo = existingBank.account_number;
+    } else {
+      throw new BadRequestError('Account number must be between 9 and 18 digits.');
+    }
+  } else if (!/^\d{9,18}$/.test(accNo)) {
     throw new BadRequestError('Account number must be between 9 and 18 digits.');
   }
 
@@ -584,9 +598,43 @@ export const saveBankDetails = async (startupId, data, user, ip_address = null) 
     ip_address
   });
 
+  const isAdminUser = user && user.role === 'ADMIN';
+
   return {
     ...bankDetails,
+    account_number: isAdminUser ? bankDetails.account_number : maskAccountNumber(bankDetails.account_number),
     masked_account_number: maskAccountNumber(bankDetails.account_number)
+  };
+};
+
+/**
+ * Retrieve sensitive bank details for an authorized requester (Owner or Admin only)
+ */
+export const getBankDetails = async (startupId, user) => {
+  const startup = await prisma.startup.findUnique({
+    where: { id: startupId },
+    include: { bank_details: true }
+  });
+
+  if (!startup) {
+    throw new NotFoundError(`Startup with ID ${startupId} not found.`);
+  }
+
+  const isOwner = user && startup.user_id === user.id;
+  const isAdmin = user && user.role === 'ADMIN';
+
+  if (!isOwner && !isAdmin) {
+    throw new ForbiddenError('You are not authorized to view bank details for this startup.');
+  }
+
+  if (!startup.bank_details) {
+    throw new NotFoundError('Bank details have not been registered for this startup.');
+  }
+
+  return {
+    ...startup.bank_details,
+    account_number: isAdmin ? startup.bank_details.account_number : maskAccountNumber(startup.bank_details.account_number),
+    masked_account_number: maskAccountNumber(startup.bank_details.account_number)
   };
 };
 
@@ -600,16 +648,36 @@ export const addStartupDocument = async (startupId, data, user, ip_address = nul
     throw new ForbiddenError('You can only upload documents for your own startup profile.');
   }
 
-  // If startup is UNDER_REVIEW or VERIFIED, document uploading is locked for non-admins unless correction requested
-  if (user.role !== 'ADMIN' && startup.verification_status === 'UNDER_REVIEW') {
-    throw new BadRequestError('Your registration is currently under administrative review. Document uploads are locked.');
+  // If startup is SUBMITTED, UNDER_REVIEW or VERIFIED, document uploading is locked for non-admins unless correction requested
+  if (user.role !== 'ADMIN' && ['SUBMITTED', 'UNDER_REVIEW', 'VERIFIED'].includes(startup.verification_status)) {
+    throw new BadRequestError(`Your registration is currently ${startup.verification_status.replace('_', ' ').toLowerCase()}. Document uploads are locked.`);
+  }
+
+  // Strict upload validation: Reject arbitrary external client URLs
+  let docUrl = data.document_url ? data.document_url.trim() : '';
+  if (docUrl.startsWith('http://') || docUrl.startsWith('https://')) {
+    try {
+      const parsed = new URL(docUrl);
+      if (parsed.pathname.startsWith('/api/v1/documents/') || parsed.pathname.startsWith('/uploads/') || parsed.pathname.startsWith('/api/v1/uploads/')) {
+        docUrl = parsed.pathname;
+      } else {
+        throw new BadRequestError('Invalid document URL. External URLs are not permitted.');
+      }
+    } catch (e) {
+      if (e instanceof BadRequestError) throw e;
+      throw new BadRequestError('Invalid document URL format.');
+    }
+  }
+
+  if (!docUrl || docUrl.startsWith('//') || docUrl.startsWith('data:') || (!docUrl.startsWith('/uploads/') && !docUrl.startsWith('/api/v1/uploads/') && !docUrl.startsWith('/api/v1/documents/'))) {
+    throw new BadRequestError('Invalid document URL. Files must be uploaded through the secure platform upload endpoint.');
   }
 
   const document = await prisma.startupDocument.create({
     data: {
       startup_id: startupId,
       document_type: data.document_type.trim(),
-      document_url: data.document_url.trim(),
+      document_url: docUrl,
       file_name: data.file_name ? data.file_name.trim() : null,
       file_size: data.file_size || null,
       mime_type: data.mime_type ? data.mime_type.trim() : null,
@@ -641,8 +709,8 @@ export const deleteStartupDocument = async (startupId, documentId, user, ip_addr
     throw new ForbiddenError('You can only delete documents for your own startup.');
   }
 
-  if (user.role !== 'ADMIN' && startup.verification_status === 'UNDER_REVIEW') {
-    throw new BadRequestError('Your registration is currently under administrative review. Document deletion is locked.');
+  if (user.role !== 'ADMIN' && ['SUBMITTED', 'UNDER_REVIEW', 'VERIFIED'].includes(startup.verification_status)) {
+    throw new BadRequestError(`Your registration is currently ${startup.verification_status.replace('_', ' ').toLowerCase()}. Document deletion is locked.`);
   }
 
   const document = await prisma.startupDocument.findUnique({ where: { id: documentId } });
@@ -665,13 +733,64 @@ export const deleteStartupDocument = async (startupId, documentId, user, ip_addr
 };
 
 export const getStartupDocuments = async (startupId, user = null) => {
+  if (!user) {
+    throw new ForbiddenError('Authentication required to access startup documents.');
+  }
+
   const startup = await prisma.startup.findUnique({ where: { id: startupId } });
   if (!startup) {
     throw new NotFoundError(`Startup with ID ${startupId} not found.`);
   }
 
-  if (user && user.role === 'STARTUP' && startup.user_id !== user.id) {
-    throw new ForbiddenError('You can only view documents for your own startup profile.');
+  // Resource-Level Authorization Policy
+  if (user.role === 'ADMIN') {
+    // Admin authorized
+  } else if (user.role === 'STARTUP') {
+    if (startup.user_id !== user.id) {
+      throw new ForbiddenError('You can only view documents for your own startup profile.');
+    }
+  } else if (user.role === 'GOVERNMENT') {
+    if (!user.department_id) {
+      throw new ForbiddenError('Government officer must have an assigned department.');
+    }
+    const hasRelationship = await prisma.$transaction(async (tx) => {
+      const app = await tx.application.findFirst({
+        where: {
+          startup_id: startupId,
+          challenge: { department_id: user.department_id }
+        }
+      });
+      if (app) return true;
+      const pilot = await tx.pilot.findFirst({
+        where: {
+          startup_id: startupId,
+          challenge: { department_id: user.department_id }
+        }
+      });
+      if (pilot) return true;
+      const proc = await tx.procurementRecord.findFirst({
+        where: {
+          startup_id: startupId,
+          department_id: user.department_id
+        }
+      });
+      return !!proc;
+    });
+    if (!hasRelationship) {
+      throw new ForbiddenError('You do not have authorization to view documents for this startup.');
+    }
+  } else if (user.role === 'EVALUATOR') {
+    const assigned = await prisma.evaluatorAssignment.findFirst({
+      where: {
+        evaluator_id: user.id,
+        application: { startup_id: startupId }
+      }
+    });
+    if (!assigned) {
+      throw new ForbiddenError('You do not have an active assignment to evaluate this startup.');
+    }
+  } else {
+    throw new ForbiddenError('Unauthorized to view startup documents.');
   }
 
   const documents = await prisma.startupDocument.findMany({
@@ -701,6 +820,11 @@ export const submitStartupRegistration = async (startupId, user, ip_address = nu
     throw new ForbiddenError('You can only submit registration for your own startup.');
   }
 
+  // Email verification guard
+  if (!startup.user.is_verified) {
+    throw new BadRequestError('Please verify your email address before submitting your registration dossier.');
+  }
+
   // 1. Completeness Validation
   const missing = [];
   if (!startup.company_name || startup.company_name.length < 2) missing.push('Organization Legal Name');
@@ -724,6 +848,12 @@ export const submitStartupRegistration = async (startupId, user, ip_address = nu
   const missingDocs = requiredDocs.filter(t => !uploadedDocTypes.has(t.toUpperCase()));
   if (missingDocs.length > 0) {
     missing.push(`Missing required verification documents for ${startup.org_type}: ${missingDocs.join(', ')}`);
+  }
+
+  // Check for rejected documents that need correction
+  const rejectedDocs = (startup.documents || []).filter(d => d.verification_status === 'REJECTED');
+  if (rejectedDocs.length > 0) {
+    missing.push(`One or more documents were previously rejected and need to be re-uploaded: ${rejectedDocs.map(d => d.document_type).join(', ')}`);
   }
 
   if (missing.length > 0) {
@@ -777,53 +907,30 @@ export const submitStartupRegistration = async (startupId, user, ip_address = nu
   return updatedStartup;
 };
 
+/**
+ * Legacy startup verification endpoint - delegates directly to authoritative admin review state machine
+ */
 export const verifyStartup = async (startupId, data, user, ip_address = null) => {
-  const startup = await prisma.startup.findUnique({ where: { id: startupId } });
-  if (!startup) {
-    throw new NotFoundError(`Startup with ID ${startupId} not found.`);
+  const { reviewStartupVerification } = await import('./adminService.js');
+  let action = data.action;
+  if (!action) {
+    if (data.verification_status === 'VERIFIED') action = 'APPROVE';
+    else if (data.verification_status === 'REJECTED') action = 'REJECT';
+    else if (data.verification_status === 'CORRECTION_REQUESTED') action = 'REQUEST_CORRECTION';
+    else if (data.verification_status === 'UNDER_REVIEW') action = 'START_REVIEW';
+    else action = 'START_REVIEW';
   }
-
-  // Update startup verification status
-  const updatedStartup = await prisma.startup.update({
-    where: { id: startupId },
-    data: {
-      verification_status: data.verification_status,
-      verification_notes: data.comments || null,
-      verified_by: user.id,
-      verified_at: new Date()
+  return reviewStartupVerification(
+    startupId,
+    {
+      action,
+      notes: data.comments || data.notes || data.verification_notes,
+      rejection_reason: data.rejection_reason,
+      correction_notes: data.correction_notes
     },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true
-        }
-      }
-    }
-  });
-
-  await createAuditLog({
-    user_id: user.id,
-    action: 'STARTUP_VERIFICATION_STATUS_UPDATED',
-    entity_type: 'STARTUP',
-    entity_id: startupId,
-    details: {
-      verification_status: data.verification_status,
-      comments: data.comments
-    },
+    user,
     ip_address
-  });
-
-  await sendNotification({
-    user_id: startup.user_id,
-    title: 'Startup Verification Update',
-    message: `Your startup verification status has been updated to ${data.verification_status}.`,
-    type: 'VERIFICATION',
-    link: `/startup/profile`
-  });
-
-  return updatedStartup;
+  );
 };
 
 export const getStartupApplications = async (startupId, user = null) => {
@@ -910,6 +1017,7 @@ export default {
   getStartupById,
   updateStartup,
   saveBankDetails,
+  getBankDetails,
   addStartupDocument,
   deleteStartupDocument,
   getStartupDocuments,
