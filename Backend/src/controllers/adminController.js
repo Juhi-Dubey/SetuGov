@@ -156,6 +156,47 @@ export const deleteTemplate = async (req, res, next) => {
   }
 };
 
+export const getStartupVerifications = async (req, res, next) => {
+  try {
+    const data = await adminService.getStartupVerifications(req.query);
+    return successResponse(res, data, 'Startup verifications retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getStartupVerificationById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const data = await adminService.getStartupVerificationById(id);
+    return successResponse(res, { startup: data }, 'Startup verification dossier retrieved', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reviewStartupVerification = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const data = await adminService.reviewStartupVerification(id, req.body, req.user, ip_address);
+    return successResponse(res, { startup: data }, 'Startup verification review updated successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyStartupDocument = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const data = await adminService.verifyStartupDocument(id, req.body, req.user, ip_address);
+    return successResponse(res, { document: data }, 'Document verification updated', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getDashboard,
   getAuditLogs,
@@ -171,5 +212,9 @@ export default {
   getTemplates,
   createTemplate,
   updateTemplate,
-  deleteTemplate
+  deleteTemplate,
+  getStartupVerifications,
+  getStartupVerificationById,
+  reviewStartupVerification,
+  verifyStartupDocument
 };

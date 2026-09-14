@@ -83,11 +83,39 @@ export const acceptInvitation = async (req, res, next) => {
   }
 };
 
+export const verifyEmail = async (req, res, next) => {
+  try {
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await authService.verifyEmail({
+      token: req.body.token,
+      ip_address
+    });
+    return successResponse(res, result, result.message, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resendVerificationEmail = async (req, res, next) => {
+  try {
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await authService.resendVerificationEmail({
+      email: req.body.email,
+      ip_address
+    });
+    return successResponse(res, result, result.message, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   register,
   login,
   getMe,
   logout,
   validateInvitation,
-  acceptInvitation
+  acceptInvitation,
+  verifyEmail,
+  resendVerificationEmail
 };

@@ -15,6 +15,10 @@ export const getStartupById = async (id) => {
   return apiRequest(`/startups/${id}`);
 };
 
+export const getMyRegistration = async () => {
+  return apiRequest("/startups/my-registration");
+};
+
 export const getStartupPerformance = async (id) => {
   return apiRequest(`/startups/${id}/performance`);
 };
@@ -33,6 +37,15 @@ export const updateStartup = async (id, startupData) => {
   });
 };
 
+export const updateRegistration = updateStartup;
+
+export const saveBankDetails = async (startupId, bankData) => {
+  return apiRequest(`/startups/registration/${startupId}/bank-details`, {
+    method: "POST",
+    body: JSON.stringify(bankData),
+  });
+};
+
 export const uploadStartupDocument = async (startupId, documentData) => {
   const isFormData = documentData instanceof FormData;
   return apiRequest(`/startups/${startupId}/documents`, {
@@ -42,6 +55,19 @@ export const uploadStartupDocument = async (startupId, documentData) => {
 };
 
 export const addStartupDocument = uploadStartupDocument;
+
+export const deleteStartupDocument = async (startupId, documentId) => {
+  return apiRequest(`/startups/registration/${startupId}/documents/${documentId}`, {
+    method: "DELETE",
+  });
+};
+
+export const submitStartupRegistration = async (startupId, declaration = true) => {
+  return apiRequest(`/startups/registration/${startupId}/submit`, {
+    method: "POST",
+    body: JSON.stringify({ declaration_accepted: declaration }),
+  });
+};
 
 export const getStartupDocuments = async (startupId) => {
   return apiRequest(`/startups/${startupId}/documents`);
@@ -69,10 +95,16 @@ export const getStartupPilots = async (startupId) => {
 export default {
   getStartups,
   getStartupById,
+  getMyRegistration,
   getStartupPerformance,
   createStartup,
   updateStartup,
+  updateRegistration,
+  saveBankDetails,
   uploadStartupDocument,
+  addStartupDocument,
+  deleteStartupDocument,
+  submitStartupRegistration,
   getStartupDocuments,
   verifyStartup,
   getStartupApplications,

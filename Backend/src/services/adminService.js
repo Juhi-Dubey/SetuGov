@@ -2,6 +2,7 @@ import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
+import { maskAccountNumber } from './startupService.js';
 
 export const getDashboardOverview = async () => {
   const [
@@ -776,6 +777,263 @@ export const deleteSystemTemplate = async (id, adminUser, ip_address = null) => 
   return { success: true, message: `Template "${existing.name}" deleted successfully.` };
 };
 
+export const getStartupVerifications = async (query = {}) => {
+  const { status, org_type, search, page = 1, limit = 20 } = query;
+
+  const where = {};
+  if (status && status !== 'All') {
+    where.verification_status = status;
+  }
+  if (org_type && org_type !== 'All') {
+    where.org_type = org_type;
+  }
+  if (search) {
+    where.OR = [
+      { company_name: { contains: search, mode: 'insensitive' } },
+      { pan_number: { contains: search, mode: 'insensitive' } },
+      { dpiit_number: { contains: search, mode: 'insensitive' } },
+      { user: { name: { contains: search, mode: 'insensitive' } } },
+      { user: { email: { contains: search, mode: 'insensitive' } } }
+    ];
+  }
+
+  const safePage = Math.max(1, parseInt(page, 10) || 1);
+  const safeLimit = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+  const skip = (safePage - 1) * safeLimit;
+
+  const [total, startups] = await Promise.all([
+    prisma.startup.count({ where }),
+    prisma.startup.findMany({
+      where,
+      skip,
+      take: safeLimit,
+      orderBy: { created_at: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            is_active: true,
+            is_verified: true
+          }
+        },
+        documents: true,
+        bank_details: true,
+        _count: {
+          select: {
+            applications: true,
+            pilots: true
+          }
+        }
+      }
+    })
+  ]);
+
+  return {
+    startups,
+    pagination: {
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit)
+    }
+  };
+};
+
+export const getStartupVerificationById = async (id) => {
+  const startup = await prisma.startup.findUnique({
+    where: { id },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          is_active: true,
+          is_verified: true,
+          created_at: true
+        }
+      },
+      documents: {
+        include: {
+          verifier: {
+            select: { id: true, name: true, email: true }
+          }
+        },
+        orderBy: { created_at: 'desc' }
+      },
+      bank_details: true,
+      verifier: {
+        select: { id: true, name: true, email: true }
+      },
+      _count: {
+        select: {
+          applications: true,
+          pilots: true
+        }
+      }
+    }
+  });
+
+  if (!startup) {
+    throw new NotFoundError(`Startup with ID ${id} not found.`);
+  }
+
+  if (startup.bank_details) {
+    startup.bank_details.masked_account_number = maskAccountNumber(startup.bank_details.account_number);
+  }
+
+  return startup;
+};
+
+export const reviewStartupVerification = async (id, { action, notes, rejection_reason, correction_notes }, adminUser, ip_address = null) => {
+  if (adminUser.role !== 'ADMIN') {
+    throw new ForbiddenError('Only Administrators can verify startup organizations.');
+  }
+
+  const startup = await prisma.startup.findUnique({
+    where: { id },
+    include: { user: true, documents: true }
+  });
+
+  if (!startup) {
+    throw new NotFoundError(`Startup with ID ${id} not found.`);
+  }
+
+  // State machine transition validation
+  if (action === 'START_REVIEW' && !['SUBMITTED', 'DRAFT'].includes(startup.verification_status)) {
+    throw new BadRequestError(`Cannot start review from status ${startup.verification_status}.`);
+  }
+  if (action === 'APPROVE' && !['UNDER_REVIEW', 'SUBMITTED'].includes(startup.verification_status)) {
+    throw new BadRequestError(`Cannot approve startup from status ${startup.verification_status}. Startup must be SUBMITTED or UNDER_REVIEW.`);
+  }
+  if (action === 'REJECT' && !['UNDER_REVIEW', 'SUBMITTED'].includes(startup.verification_status)) {
+    throw new BadRequestError(`Cannot reject startup from status ${startup.verification_status}.`);
+  }
+  if (action === 'REQUEST_CORRECTION' && !['UNDER_REVIEW', 'SUBMITTED'].includes(startup.verification_status)) {
+    throw new BadRequestError(`Cannot request corrections from status ${startup.verification_status}.`);
+  }
+
+  let newStatus = startup.verification_status;
+  const updateData = {};
+
+  if (action === 'START_REVIEW') {
+    newStatus = 'UNDER_REVIEW';
+    updateData.verification_status = 'UNDER_REVIEW';
+    updateData.verification_notes = notes || startup.verification_notes;
+  } else if (action === 'APPROVE') {
+    newStatus = 'VERIFIED';
+    updateData.verification_status = 'VERIFIED';
+    updateData.verified_by = adminUser.id;
+    updateData.verified_at = new Date();
+    updateData.verification_notes = notes || 'All organization credentials and documents administratively verified.';
+    updateData.rejection_reason = null;
+    updateData.correction_notes = null;
+  } else if (action === 'REJECT') {
+    newStatus = 'REJECTED';
+    updateData.verification_status = 'REJECTED';
+    updateData.verified_by = adminUser.id;
+    updateData.verified_at = new Date();
+    updateData.rejection_reason = rejection_reason || notes || 'Organization verification rejected.';
+    updateData.verification_notes = notes || null;
+  } else if (action === 'REQUEST_CORRECTION') {
+    newStatus = 'CORRECTION_REQUESTED';
+    updateData.verification_status = 'CORRECTION_REQUESTED';
+    updateData.correction_notes = correction_notes || notes || 'Please revise submitted organization details and re-upload required documents.';
+  }
+
+  const updatedStartup = await prisma.startup.update({
+    where: { id },
+    data: updateData,
+    include: {
+      user: {
+        select: { id: true, name: true, email: true }
+      },
+      documents: true,
+      bank_details: true
+    }
+  });
+
+  await createAuditLog({
+    user_id: adminUser.id,
+    action: `STARTUP_VERIFICATION_${action}`,
+    entity_type: 'STARTUP',
+    entity_id: id,
+    details: {
+      company_name: startup.company_name,
+      previous_status: startup.verification_status,
+      new_status: newStatus,
+      action,
+      notes
+    },
+    ip_address
+  });
+
+  // Dispath notification to startup user
+  await sendNotification({
+    user_id: startup.user_id,
+    title: `Startup Verification: ${newStatus.replace('_', ' ')}`,
+    message: action === 'APPROVE'
+      ? `Congratulations! ${startup.company_name} is now officially VERIFIED. You can now apply for government challenges.`
+      : action === 'REQUEST_CORRECTION'
+      ? `Correction requested for ${startup.company_name}: ${updateData.correction_notes}`
+      : `Your verification status has been updated to ${newStatus}.`,
+    type: 'VERIFICATION',
+    link: `/startup/profile`
+  });
+
+  return updatedStartup;
+};
+
+export const verifyStartupDocument = async (documentId, { verification_status, rejection_reason }, adminUser, ip_address = null) => {
+  if (adminUser.role !== 'ADMIN') {
+    throw new ForbiddenError('Only Administrators can verify startup documents.');
+  }
+
+  const document = await prisma.startupDocument.findUnique({
+    where: { id: documentId },
+    include: { startup: true }
+  });
+
+  if (!document) {
+    throw new NotFoundError(`Document with ID ${documentId} not found.`);
+  }
+
+  const updated = await prisma.startupDocument.update({
+    where: { id: documentId },
+    data: {
+      verification_status,
+      verified_by: adminUser.id,
+      verified_at: new Date(),
+      rejection_reason: verification_status === 'REJECTED' ? (rejection_reason || 'Document does not meet authenticity criteria.') : null
+    },
+    include: {
+      verifier: {
+        select: { id: true, name: true, email: true }
+      }
+    }
+  });
+
+  await createAuditLog({
+    user_id: adminUser.id,
+    action: `STARTUP_DOCUMENT_${verification_status}`,
+    entity_type: 'STARTUP_DOCUMENT',
+    entity_id: documentId,
+    details: {
+      startup_id: document.startup_id,
+      document_type: document.document_type,
+      status: verification_status,
+      rejection_reason
+    },
+    ip_address
+  });
+
+  return updated;
+};
+
 export default {
   getDashboardOverview,
   verifyDepartment,
@@ -790,7 +1048,11 @@ export default {
   getSystemTemplates,
   createSystemTemplate,
   updateSystemTemplate,
-  deleteSystemTemplate
+  deleteSystemTemplate,
+  getStartupVerifications,
+  getStartupVerificationById,
+  reviewStartupVerification,
+  verifyStartupDocument
 };
 
 

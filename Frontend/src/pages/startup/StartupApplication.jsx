@@ -272,9 +272,9 @@ function StartupApplication() {
           form.proposedSolution?.trim() ||
           form.technology?.trim() ||
           "State-of-the-art scalable microservices architecture with real-time telemetry.",
-        proposed_budget: Number(form.proposedBudget || 1500000),
-        proposed_timeline_days: Number(form.proposedTimeline || 60),
-        team_experience: form.teamExperience || "Experienced engineering team with prior government deployments.",
+        proposed_budget: Number(form.proposedBudget || 0),
+        proposed_timeline_days: Number(form.proposedTimeline || 30),
+        team_experience: form.teamExperience || "",
         evidence_attachments: documents.map((d) => d.name || "document.pdf"),
       };
 

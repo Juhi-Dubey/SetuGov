@@ -27,18 +27,18 @@ function ChallengeContract() {
   const [challenge, setChallenge] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [formData, setFormData] = useState({
-    contractTitle: "Pilot Agreement & Procurement Sandbox Contract",
-    startupName: "MediQueue AI",
+    contractTitle: "",
+    startupName: "",
     contractType: "PILOT_AGREEMENT_DRAFT",
-    startDate: "2026-10-01",
-    endDate: "2026-11-30",
-    contractValue: "1500000",
-    paymentTerms: "30% upon gateway deployment, 40% upon live integration, 30% upon validation report approval.",
-    scopeOfWork: "Deployment and empirical testing of AI queue routing across OPD departments.",
-    deliverables: "1. Hardware & API Integration\n2. Real-time Telemetry Dashboard\n3. 30-Day Empirical Validation Report",
-    ipOwnership: "The startup retains core IP; the State Department receives non-exclusive perpetual license for civic operations.",
-    dataProtection: "All citizen health records remain within state government data boundary with no third-party transmission.",
-    terminationTerms: "Either party may terminate upon 14-day notice in the event of severe security non-compliance.",
+    startDate: "",
+    endDate: "",
+    contractValue: "",
+    paymentTerms: "",
+    scopeOfWork: "",
+    deliverables: "",
+    ipOwnership: "",
+    dataProtection: "",
+    terminationTerms: "",
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -47,11 +47,14 @@ function ChallengeContract() {
   useEffect(() => {
     getChallengeById(id)
       .then((res) => {
-        if (res?.data) {
-          setChallenge(res.data);
+        const c = res?.data?.challenge || res?.data || res;
+        if (c) {
+          setChallenge(c);
           setFormData((prev) => ({
             ...prev,
-            contractTitle: `${res.data.title} — Pilot Agreement`,
+            contractTitle: c.title ? `${c.title} — Pilot Agreement` : "Pilot Agreement & Procurement Sandbox Contract",
+            contractValue: c.budget ? String(c.budget) : "",
+            scopeOfWork: c.description || "",
           }));
         }
       })

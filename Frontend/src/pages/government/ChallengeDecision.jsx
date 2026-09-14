@@ -64,9 +64,10 @@ function ChallengeDecision() {
     try {
       if (pilot?.id) {
         const decisionEnum = decision === "scale_up" ? "SCALE" : decision === "extend_pilot" ? "EXTEND" : "STOP";
+        const realScore = pilot?.kpi_score != null ? Math.round(pilot.kpi_score) : (pilot?.evaluation_score != null ? Math.round(pilot.evaluation_score) : undefined);
         await createScaleDecision(pilot.id, {
           decision: decisionEnum,
-          score: 85,
+          score: realScore,
           comments: remarks || "Interim scale review remarks saved.",
         });
       }
@@ -95,9 +96,10 @@ function ChallengeDecision() {
     try {
       if (pilot?.id) {
         const decisionEnum = decision === "scale_up" ? "SCALE" : decision === "extend_pilot" ? "EXTEND" : "STOP";
+        const realScore = pilot?.kpi_score != null ? Math.round(pilot.kpi_score) : (pilot?.evaluation_score != null ? Math.round(pilot.evaluation_score) : undefined);
         await createScaleDecision(pilot.id, {
           decision: decisionEnum,
-          score: 85,
+          score: realScore,
           comments: remarks,
         });
 
@@ -107,7 +109,7 @@ function ChallengeDecision() {
             await createProcurementReadiness({
               pilot_id: pilot.id,
               procurement_route: "GEM",
-              estimated_value: pilot.budget || 1500000,
+              estimated_value: Number(pilot.budget || pilot.challenge?.budget || 0),
               justification: remarks,
               technical_readiness: true,
               compliance_readiness: true,

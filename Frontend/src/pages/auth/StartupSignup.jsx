@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Rocket,
@@ -12,19 +12,16 @@ import {
   EyeOff,
   ArrowRight,
   ShieldCheck,
-  Sparkles,
   Sun,
   Moon,
   AlertCircle,
   CheckCircle2,
+  Send
 } from "lucide-react";
-import { registerUser } from "../../services/authService";
-import { useAuth } from "../../context/AuthContext";
+import { registerUser, resendEmailVerification } from "../../services/authService";
 import { useTheme } from "../../context/ThemeContext";
 
 export default function StartupSignup() {
-  const navigate = useNavigate();
-  const { login, refreshUser } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
   const [formData, setFormData] = useState({
@@ -41,6 +38,10 @@ export default function StartupSignup() {
   const [authError, setAuthError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [resendStatus, setResendStatus] = useState("");
+  const [isResending, setIsResending] = useState(false);
+  const [devToken, setDevToken] = useState(null);
 
   const validateForm = () => {
     const errs = {};
@@ -53,8 +54,8 @@ export default function StartupSignup() {
 
     if (!formData.password) {
       errs.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      errs.password = "Password must be at least 8 characters long";
+    } else if (formData.password.length < 12) {
+      errs.password = "Password must be at least 12 characters long";
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -94,24 +95,30 @@ export default function StartupSignup() {
       const res = await registerUser(payload);
       const data = res?.data || res;
 
-      if (data?.token && data?.user) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        await refreshUser();
-      } else {
-        // Fallback: log in with credentials
-        await login({ email: formData.email.trim(), password: formData.password });
-      }
-
+      setRegisteredEmail(formData.email.trim());
       setIsSuccess(true);
-      setTimeout(() => {
-        navigate("/startup/profile");
-      }, 1500);
+      if (data?.dev_verification_token) {
+        setDevToken(data.dev_verification_token);
+      }
     } catch (err) {
       console.error("Startup registration failed:", err);
       setAuthError(err?.message || "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!registeredEmail) return;
+    setIsResending(true);
+    setResendStatus("");
+    try {
+      await resendEmailVerification(registeredEmail);
+      setResendStatus("A new verification link has been sent to your email.");
+    } catch (err) {
+      setResendStatus(err?.message || "Failed to resend verification email.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -134,7 +141,7 @@ export default function StartupSignup() {
                   SetuGov
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Government Innovation Procurement OS
+                  National Innovation Procurement Platform
                 </p>
               </div>
             </Link>
@@ -148,30 +155,30 @@ export default function StartupSignup() {
             >
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300">
                 <Rocket className="h-4 w-4" />
-                Startup Onboarding Portal
+                GeM-Style Seller & Startup Onboarding
               </div>
 
               <h2 className="text-4xl font-bold leading-tight text-slate-900 dark:text-white xl:text-5xl">
-                Deploy your technology in{" "}
-                <span className="text-emerald-600 dark:text-emerald-400">state sandbox pilots.</span>
+                Verified Onboarding for{" "}
+                <span className="text-emerald-600 dark:text-emerald-400">Government Procurement.</span>
               </h2>
 
               <p className="mt-6 max-w-lg text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                Create a verified startup account to access government problem statements, submit technical proposals, receive objective rubric scoring, and unlock milestone-funded contracts.
+                Register your startup, verify your email, and complete your organization dossier with PAN, GST, DPIIT recognition, banking details, and private document validation to unlock state procurement tenders and sandbox contracts.
               </p>
 
               <div className="mt-8 space-y-3">
                 <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 font-medium">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Direct discovery of high-value State Department RFPs</span>
+                  <span>Step 1: Secure Account Creation & Email Verification</span>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 font-medium">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Non-dilutive milestone funding and sandbox deployments</span>
+                  <span>Step 2: Organization, Business Identity & Banking Details</span>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-slate-700 dark:text-slate-300 font-medium">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Fast-track state verification & institutional procurement</span>
+                  <span>Step 3: Document Verification & Government Sandbox Eligibility</span>
                 </div>
               </div>
             </motion.div>
@@ -179,7 +186,7 @@ export default function StartupSignup() {
             {/* Footer */}
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <ShieldCheck className="h-4 w-4 text-emerald-500" />
-              Public Startup Self-Registration · DPIIT & State Guidelines
+              Public Startup Self-Registration · DPIIT & GeM Standards Compliant
             </div>
           </div>
         </div>
@@ -209,228 +216,262 @@ export default function StartupSignup() {
             transition={{ duration: 0.5 }}
             className="w-full max-w-md"
           >
-            {/* Mobile Header */}
-            <div className="mb-6 flex items-center gap-3 lg:hidden">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-                <Building2 className="h-5 w-5" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold">SetuGov</h1>
-                <p className="text-[11px] text-slate-500">Startup Onboarding</p>
-              </div>
-            </div>
-
             {/* Header */}
             <div className="mb-6">
               <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-                Role: Startup / Innovator
+                Step 1: Account Setup
               </div>
               <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
                 Create Startup Account
               </h2>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Register to browse challenges and submit proposals.
+                Register as an innovator or enterprise to initiate organizational verification.
               </p>
             </div>
 
-            {/* Success Banner */}
-            {isSuccess && (
+            {/* Verification Required Success Screen */}
+            {isSuccess ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mb-5 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300"
+                className="rounded-2xl border border-emerald-200 bg-white p-6 shadow-sm dark:border-emerald-900/40 dark:bg-slate-900"
               >
-                <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold">Account created successfully!</p>
-                  <p className="font-normal mt-0.5">Redirecting to your Startup Profile workspace...</p>
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 mx-auto mb-4">
+                  <Mail className="h-6 w-6" />
                 </div>
-              </motion.div>
-            )}
 
-            {/* Error Banner */}
-            {authError && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-medium text-red-700 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-300"
-              >
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-                <span>{authError}</span>
-              </motion.div>
-            )}
+                <h3 className="text-center text-lg font-bold text-slate-900 dark:text-white">
+                  Verify Your Email Address
+                </h3>
 
-            {/* Registration Form */}
-            <form onSubmit={handleSubmit} className="space-y-3.5">
-              {/* Full Name */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Full Name *
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="e.g. Rahul Sharma"
-                    className={`h-10 w-full rounded-xl border bg-white pl-10 pr-4 text-xs outline-none transition focus:ring-4 dark:bg-slate-900 ${
-                      errors.name
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
-                        : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10 dark:border-slate-800"
-                    }`}
-                  />
-                </div>
-                {errors.name && <p className="mt-1 text-[11px] text-red-500">{errors.name}</p>}
-              </div>
+                <p className="mt-2 text-center text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  We have dispatched an email verification link to <strong>{registeredEmail}</strong>. Please check your inbox and click the verification link to activate your user account and begin the multi-step GeM-style organization onboarding wizard.
+                </p>
 
-              {/* Email Address */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Work / Founder Email *
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="founder@startup.ai"
-                    className={`h-10 w-full rounded-xl border bg-white pl-10 pr-4 text-xs outline-none transition focus:ring-4 dark:bg-slate-900 ${
-                      errors.email
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
-                        : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10 dark:border-slate-800"
-                    }`}
-                  />
-                </div>
-                {errors.email && <p className="mt-1 text-[11px] text-red-500">{errors.email}</p>}
-              </div>
+                {devToken && (
+                  <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-[11px] text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
+                    <p className="font-bold">Development Mode Direct Link:</p>
+                    <Link
+                      to={`/verify-email?token=${devToken}&email=${encodeURIComponent(registeredEmail)}`}
+                      className="mt-1 block font-mono text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline break-all"
+                    >
+                      /verify-email?token={devToken}
+                    </Link>
+                  </div>
+                )}
 
-              {/* Phone Number */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Contact Phone Number
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="+91 98765 43210"
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-xs outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 dark:border-slate-800 dark:bg-slate-900"
-                  />
-                </div>
-              </div>
+                {resendStatus && (
+                  <p className="mt-3 text-center text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                    {resendStatus}
+                  </p>
+                )}
 
-              {/* Password */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Password (min. 8 characters) *
-                </label>
-                <div className="relative">
-                  <LockKeyhole className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Create a strong password"
-                    className={`h-10 w-full rounded-xl border bg-white pl-10 pr-10 text-xs outline-none transition focus:ring-4 dark:bg-slate-900 ${
-                      errors.password
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
-                        : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10 dark:border-slate-800"
-                    }`}
-                  />
+                <div className="mt-6 flex flex-col gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowPassword((p) => !p)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                    onClick={handleResendVerification}
+                    disabled={isResending}
+                    className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-750 disabled:opacity-50"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    <Send className="h-3.5 w-3.5" />
+                    {isResending ? "Resending..." : "Resend Verification Email"}
                   </button>
-                </div>
-                {errors.password && <p className="mt-1 text-[11px] text-red-500">{errors.password}</p>}
-              </div>
 
-              {/* Confirm Password */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Confirm Password *
-                </label>
-                <div className="relative">
-                  <LockKeyhole className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    required
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="Re-enter your password"
-                    className={`h-10 w-full rounded-xl border bg-white pl-10 pr-10 text-xs outline-none transition focus:ring-4 dark:bg-slate-900 ${
-                      errors.confirmPassword
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
-                        : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10 dark:border-slate-800"
-                    }`}
-                  />
+                  <Link
+                    to="/login"
+                    className="flex h-10 w-full items-center justify-center rounded-xl bg-slate-900 text-xs font-bold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                  >
+                    Back to Sign In
+                  </Link>
+                </div>
+              </motion.div>
+            ) : (
+              <>
+                {/* Error Banner */}
+                {authError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-medium text-red-700 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-300"
+                  >
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                    <span>{authError}</span>
+                  </motion.div>
+                )}
+
+                {/* Registration Form */}
+                <form onSubmit={handleSubmit} className="space-y-3.5">
+                  {/* Full Name */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Authorized Signatory Full Name *
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        name="name"
+                        required
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="e.g. Vikramaditya Sharma"
+                        className={`h-10 w-full rounded-xl border bg-white pl-10 pr-4 text-xs outline-none transition focus:ring-4 dark:bg-slate-900 ${
+                          errors.name
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                            : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10 dark:border-slate-800"
+                        }`}
+                      />
+                    </div>
+                    {errors.name && <p className="mt-1 text-[11px] text-red-500">{errors.name}</p>}
+                  </div>
+
+                  {/* Email Address */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Official / Founder Email Address *
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <input
+                        type="email"
+                        name="email"
+                        required
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="founder@innovations.in"
+                        className={`h-10 w-full rounded-xl border bg-white pl-10 pr-4 text-xs outline-none transition focus:ring-4 dark:bg-slate-900 ${
+                          errors.email
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                            : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10 dark:border-slate-800"
+                        }`}
+                      />
+                    </div>
+                    {errors.email && <p className="mt-1 text-[11px] text-red-500">{errors.email}</p>}
+                  </div>
+
+                  {/* Phone Number */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Mobile Number
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="+91 98765 43210"
+                        className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-xs outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 dark:border-slate-800 dark:bg-slate-900"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Account Password (min. 12 characters) *
+                    </label>
+                    <div className="relative">
+                      <LockKeyhole className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        required
+                        value={formData.password}
+                        onChange={handleChange}
+                        placeholder="Minimum 12 characters"
+                        className={`h-10 w-full rounded-xl border bg-white pl-10 pr-10 text-xs outline-none transition focus:ring-4 dark:bg-slate-900 ${
+                          errors.password
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                            : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10 dark:border-slate-800"
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((p) => !p)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {errors.password && <p className="mt-1 text-[11px] text-red-500">{errors.password}</p>}
+                  </div>
+
+                  {/* Confirm Password */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Confirm Password *
+                    </label>
+                    <div className="relative">
+                      <LockKeyhole className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        name="confirmPassword"
+                        required
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        placeholder="Re-enter your password"
+                        className={`h-10 w-full rounded-xl border bg-white pl-10 pr-10 text-xs outline-none transition focus:ring-4 dark:bg-slate-900 ${
+                          errors.confirmPassword
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                            : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10 dark:border-slate-800"
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword((p) => !p)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {errors.confirmPassword && (
+                      <p className="mt-1 text-[11px] text-red-500">{errors.confirmPassword}</p>
+                    )}
+                  </div>
+
+                  {/* Submit Button */}
                   <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword((p) => !p)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                    type="submit"
+                    disabled={isLoading}
+                    className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-xs font-bold text-white shadow-md transition hover:bg-emerald-700 disabled:opacity-60"
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {isLoading ? (
+                      <>
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      <>
+                        Continue to Email Verification
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
                   </button>
+                </form>
+
+                {/* Other Gateways Links */}
+                <div className="mt-6 border-t border-slate-200 pt-5 dark:border-slate-800 text-center space-y-2">
+                  <p className="text-xs text-slate-500">
+                    Already registered?{" "}
+                    <Link to="/login" className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+                      Sign In to Workspace
+                    </Link>
+                  </p>
+
+                  <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-500 pt-1">
+                    <Link to="/government/request-access" className="hover:text-blue-600 underline">
+                      Government Officer Access
+                    </Link>
+                    <span>·</span>
+                    <Link to="/evaluator/apply" className="hover:text-purple-600 underline">
+                      Evaluator Application
+                    </Link>
+                  </div>
                 </div>
-                {errors.confirmPassword && (
-                  <p className="mt-1 text-[11px] text-red-500">{errors.confirmPassword}</p>
-                )}
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isLoading || isSuccess}
-                className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 text-xs font-bold text-white shadow-md transition hover:bg-emerald-700 disabled:opacity-60"
-              >
-                {isLoading ? (
-                  <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Creating Startup Account...
-                  </>
-                ) : (
-                  <>
-                    Register Startup
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Other Gateways Links */}
-            <div className="mt-6 border-t border-slate-200 pt-5 dark:border-slate-800 text-center space-y-2">
-              <p className="text-xs text-slate-500">
-                Already registered?{" "}
-                <Link to="/login" className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
-                  Sign In to Workspace
-                </Link>
-              </p>
-
-              <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-500 pt-1">
-                <Link to="/government/request-access" className="hover:text-blue-600 underline">
-                  Government Officer Access
-                </Link>
-                <span>·</span>
-                <Link to="/evaluator/apply" className="hover:text-purple-600 underline">
-                  Evaluator Application
-                </Link>
-              </div>
-            </div>
+              </>
+            )}
           </motion.div>
         </div>
       </div>

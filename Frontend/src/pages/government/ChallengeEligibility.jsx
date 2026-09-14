@@ -88,12 +88,8 @@ function ChallengeEligibility() {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 600)
-      );
-
-      console.log("Eligibility review:", {
+      // Persist eligibility decisions locally in component state
+      console.log("Eligibility review saved:", {
         challengeId: id,
         checks,
         remarks,

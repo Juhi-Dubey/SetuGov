@@ -122,11 +122,6 @@ function ChallengeEvaluation() {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 600)
-      );
-
       console.log("Evaluation saved:", {
         challengeId: id,
         criteria,

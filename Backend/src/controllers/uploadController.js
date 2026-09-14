@@ -36,15 +36,77 @@ export const handleFileUpload = async (req, res, next) => {
 /**
  * Validates whether the authenticated user has legitimate authorization to access a private document
  */
-export const verifyDocumentAuthorization = async (user, filename) => {
+export const verifyDocumentAuthorization = async (user, identifier) => {
   if (user.role === 'ADMIN') {
-    return true; // Administrators have verification and audit access to all documents
+    return true; // Administrators have global verification and audit access
   }
 
-  // Check if document belongs to an AccessRequest
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+
+  // 1. Check if document belongs to a StartupDocument
+  let startupDoc = null;
+  if (isUuid) {
+    startupDoc = await prisma.startupDocument.findUnique({
+      where: { id: identifier },
+      include: { startup: true }
+    });
+  }
+  if (!startupDoc) {
+    startupDoc = await prisma.startupDocument.findFirst({
+      where: { document_url: { contains: identifier } },
+      include: { startup: true }
+    });
+  }
+
+  if (startupDoc) {
+    // STARTUP owner
+    if (startupDoc.startup.user_id === user.id) return true;
+
+    // GOVERNMENT: only if the startup has an application/pilot/procurement with the officer's department
+    if (user.role === 'GOVERNMENT' && user.department_id) {
+      const deptApp = await prisma.application.findFirst({
+        where: {
+          startup_id: startupDoc.startup_id,
+          challenge: { department_id: user.department_id }
+        }
+      });
+      if (deptApp) return true;
+
+      const deptPilot = await prisma.pilot.findFirst({
+        where: {
+          startup_id: startupDoc.startup_id,
+          challenge: { department_id: user.department_id }
+        }
+      });
+      if (deptPilot) return true;
+
+      const deptProc = await prisma.procurementRecord.findFirst({
+        where: {
+          startup_id: startupDoc.startup_id,
+          department_id: user.department_id
+        }
+      });
+      if (deptProc) return true;
+    }
+
+    // EVALUATOR: only if assigned to an active evaluation for this startup's application
+    if (user.role === 'EVALUATOR') {
+      const assignment = await prisma.evaluatorAssignment.findFirst({
+        where: {
+          evaluator_id: user.id,
+          application: { startup_id: startupDoc.startup_id }
+        }
+      });
+      if (assignment) return true;
+    }
+
+    return false;
+  }
+
+  // 2. Check if document belongs to an AccessRequest
   const accessRequest = await prisma.accessRequest.findFirst({
     where: {
-      supporting_document_url: { contains: filename }
+      supporting_document_url: { contains: identifier }
     }
   });
 
@@ -52,27 +114,13 @@ export const verifyDocumentAuthorization = async (user, filename) => {
     if (user.email === accessRequest.email) return true;
     if (user.role === 'GOVERNMENT' && user.department_id && accessRequest.department_id === user.department_id) return true;
     if (user.role === 'GOVERNMENT' && accessRequest.nominated_by_user_id === user.id) return true;
+    return false;
   }
 
-  // Check if document belongs to a StartupDocument
-  const startupDoc = await prisma.startupDocument.findFirst({
-    where: {
-      document_url: { contains: filename }
-    },
-    include: {
-      startup: true
-    }
-  });
-
-  if (startupDoc) {
-    if (startupDoc.startup.user_id === user.id) return true;
-    if (user.role === 'GOVERNMENT' || user.role === 'EVALUATOR') return true;
-  }
-
-  // Check if document belongs to Evidence
+  // 3. Check if document belongs to Evidence
   const evidence = await prisma.evidence.findFirst({
     where: {
-      file_url: { contains: filename }
+      file_url: { contains: identifier }
     },
     include: {
       pilot: {
@@ -88,12 +136,13 @@ export const verifyDocumentAuthorization = async (user, filename) => {
     if (evidence.uploaded_by === user.id) return true;
     if (evidence.pilot.startup.user_id === user.id) return true;
     if (user.role === 'GOVERNMENT' && evidence.pilot.challenge.department_id === user.department_id) return true;
+    return false;
   }
 
-  // Check if document belongs to a Payment invoice
+  // 4. Check if document belongs to a Payment invoice
   const payment = await prisma.payment.findFirst({
     where: {
-      invoice_url: { contains: filename }
+      invoice_url: { contains: identifier }
     },
     include: {
       pilot: {
@@ -108,15 +157,16 @@ export const verifyDocumentAuthorization = async (user, filename) => {
   if (payment) {
     if (payment.pilot.startup.user_id === user.id) return true;
     if (user.role === 'GOVERNMENT' && payment.pilot.challenge.department_id === user.department_id) return true;
+    return false;
   }
 
-  // Check if document belongs to a Procurement record (contract, delivery evidence, etc.)
+  // 5. Check if document belongs to a Procurement record
   const procurement = await prisma.procurementRecord.findFirst({
     where: {
       OR: [
-        { contract_document_url: { contains: filename } },
-        { delivery_evidence_url: { contains: filename } },
-        { gem_supporting_doc: { contains: filename } }
+        { contract_document_url: { contains: identifier } },
+        { delivery_evidence_url: { contains: identifier } },
+        { gem_supporting_doc: { contains: identifier } }
       ]
     },
     include: {
@@ -129,24 +179,34 @@ export const verifyDocumentAuthorization = async (user, filename) => {
     if (procurement.startup.user_id === user.id) return true;
     if (procurement.initiated_by === user.id || procurement.approved_by === user.id) return true;
     if (user.role === 'GOVERNMENT' && procurement.department_id === user.department_id) return true;
+    return false;
   }
 
-  // If newly uploaded by the user in this session or generic non-sensitive document
   return false;
 };
 
 /**
- * Retrieve a private document with path traversal protection, security headers, and authorization
+ * Retrieve a private document with path traversal protection, security headers, and resource-level authorization
  */
 export const getPrivateFile = async (req, res, next) => {
   try {
-    const rawFilename = req.params.filename || req.params.id;
-    if (!rawFilename) {
+    const rawIdentifier = req.params.filename || req.params.id;
+    if (!rawIdentifier) {
       throw new BadRequestError('Filename or document identifier is required.');
     }
 
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawIdentifier);
+    let resolvedFilename = rawIdentifier;
+
+    if (isUuid) {
+      const doc = await prisma.startupDocument.findUnique({ where: { id: rawIdentifier } });
+      if (doc && doc.document_url) {
+        resolvedFilename = path.basename(doc.document_url);
+      }
+    }
+
     // Path traversal defense
-    const safeFilename = path.basename(rawFilename);
+    const safeFilename = path.basename(resolvedFilename);
     const uploadsDir = path.resolve(process.cwd(), 'uploads');
     const filePath = path.resolve(uploadsDir, safeFilename);
 
@@ -155,14 +215,14 @@ export const getPrivateFile = async (req, res, next) => {
       throw new BadRequestError('Invalid document path specified.');
     }
 
-    if (!fs.existsSync(filePath)) {
-      throw new NotFoundError('Requested document not found.');
-    }
-
-    // Perform authorization check
-    const isAuthorized = await verifyDocumentAuthorization(req.user, safeFilename);
+    // Perform resource-level authorization check FIRST before checking file existence
+    const isAuthorized = await verifyDocumentAuthorization(req.user, rawIdentifier);
     if (!isAuthorized) {
       throw new ForbiddenError('You are not authorized to view or download this private verification document.');
+    }
+
+    if (!fs.existsSync(filePath)) {
+      throw new NotFoundError('Requested document not found.');
     }
 
     // Set strict security headers

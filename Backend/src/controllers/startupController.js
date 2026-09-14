@@ -103,13 +103,60 @@ export const getStartupPerformance = async (req, res, next) => {
   }
 };
 
+export const getMyRegistration = async (req, res, next) => {
+  try {
+    const startup = await startupService.getMyRegistration(req.user.id);
+    return successResponse(res, { startup }, 'Startup registration dossier retrieved', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const saveBankDetails = async (req, res, next) => {
+  try {
+    const startupId = req.params.startup_id || req.params.id;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const bankDetails = await startupService.saveBankDetails(startupId, req.body, req.user, ip_address);
+    return successResponse(res, { bank_details: bankDetails }, 'Bank details saved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteStartupDocument = async (req, res, next) => {
+  try {
+    const startupId = req.params.startup_id || req.params.id;
+    const documentId = req.params.document_id || req.params.docId;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await startupService.deleteStartupDocument(startupId, documentId, req.user, ip_address);
+    return successResponse(res, result, result.message, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const submitStartupRegistration = async (req, res, next) => {
+  try {
+    const startupId = req.params.startup_id || req.params.id;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const startup = await startupService.submitStartupRegistration(startupId, req.user, ip_address);
+    return successResponse(res, { startup }, 'Startup registration submitted for administrative verification', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   createStartup,
+  getMyRegistration,
   getStartups,
   getStartupById,
   updateStartup,
+  saveBankDetails,
   addStartupDocument,
+  deleteStartupDocument,
   getStartupDocuments,
+  submitStartupRegistration,
   verifyStartup,
   getStartupApplications,
   getStartupPilots,

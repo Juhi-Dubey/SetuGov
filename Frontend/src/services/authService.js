@@ -35,9 +35,25 @@ export const acceptInvitationAndSetPassword = async ({ token, password }) => {
   });
 };
 
+export const verifyEmail = async (token) => {
+  return apiRequest("/auth/verify-email", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+};
+
+export const resendEmailVerification = async (email) => {
+  return apiRequest("/auth/resend-verification", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+};
+
 export default {
   loginUser,
   registerUser,
+  verifyEmail,
+  resendEmailVerification,
   getCurrentUser,
   logoutUser,
   validateInvitationToken,

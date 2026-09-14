@@ -208,10 +208,10 @@ function AIChallengeCopilot({ formData, onAutofill }) {
           new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split("T")[0],
-        budget: "1500000",
-        budgetMin: 500000,
-        budgetMax: 2000000,
-        pilotDurationDays: 60,
+        budget: String(data.pilot_recommendation?.estimated_budget || formData.budget || ""),
+        budgetMin: Number(formData.budgetMin || 0),
+        budgetMax: Number(formData.budgetMax || 0),
+        pilotDurationDays: Number(data.pilot_recommendation?.duration_days || formData.pilotDurationDays || 60),
         milestones:
           formData.milestones && formData.milestones.length > 0
             ? formData.milestones

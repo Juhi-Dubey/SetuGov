@@ -442,7 +442,7 @@ function ChallengeApplications() {
 
                       <div className="text-right">
                         <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                          {Math.round(match.overall_score || match.score || 88)}% Match
+                          {match.overall_score != null ? `${Math.round(match.overall_score)}% Match` : match.score != null ? `${Math.round(match.score)}% Match` : "Score Pending"}
                         </span>
                       </div>
                     </div>
@@ -451,19 +451,19 @@ function ChallengeApplications() {
                       <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800">
                         <p className="text-[10px] text-slate-400">Capability</p>
                         <p className="text-xs font-bold">
-                          {Math.round(match.capability_score || 85)}%
+                          {match.capability_score != null ? `${Math.round(match.capability_score)}%` : "—"}
                         </p>
                       </div>
                       <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800">
                         <p className="text-[10px] text-slate-400">Semantic Fit</p>
                         <p className="text-xs font-bold">
-                          {Math.round(match.semantic_similarity ? match.semantic_similarity * 100 : 90)}%
+                          {match.semantic_similarity != null ? `${Math.round(match.semantic_similarity * (match.semantic_similarity <= 1 ? 100 : 1))}%` : "—"}
                         </p>
                       </div>
                       <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800">
                         <p className="text-[10px] text-slate-400">Feasibility</p>
                         <p className="text-xs font-bold">
-                          {Math.round(match.feasibility_score || 82)}%
+                          {match.feasibility_score != null ? `${Math.round(match.feasibility_score)}%` : "—"}
                         </p>
                       </div>
                     </div>

@@ -112,7 +112,6 @@ export const sendEmail = async ({ to, subject, text, html }) => {
       throw new Error('Email Delivery Error: SMTP_HOST is required for SMTP email provider.');
     }
 
-    // Standard fallback or SMTP integration
     logger.info(`[EMAIL SERVICE - SMTP] Target: ${to} via ${config.SMTP_HOST}:${config.SMTP_PORT}`);
     return {
       delivered: true,
@@ -236,7 +235,100 @@ Government of India
   });
 };
 
+/**
+ * Send email verification link to a newly registered Startup user
+ * 
+ * @param {object} params
+ * @param {string} params.email - Recipient email address
+ * @param {string} params.name - User's full name
+ * @param {string} params.rawToken - Cryptographically generated email verification token
+ */
+export const sendEmailVerificationEmail = async ({ email, name, rawToken }) => {
+  const verifyUrl = `${config.FRONTEND_URL}/verify-email?token=${rawToken}&email=${encodeURIComponent(email)}`;
+  const subject = `SetuGov — Verify Your Startup Account Email Address`;
+
+  const text = `
+Dear ${name},
+
+Thank you for registering on the SetuGov National Innovation Procurement Platform.
+
+To verify your email address and continue with your GeM-style organization onboarding, please click the link below:
+
+${verifyUrl}
+
+SECURITY NOTICE:
+- This verification link is valid for 24 hours and can only be used once.
+- Once verified, you will be able to complete your organization profile and submit documents for verification.
+- If you did not create a SetuGov account, please ignore this email.
+
+SetuGov National Innovation Procurement Platform
+Government of India
+`.trim();
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1e293b; background-color: #f8fafc; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 30px auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+    .header { background: #0f172a; padding: 28px; text-align: center; color: #ffffff; }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .header p { margin: 4px 0 0 0; color: #94a3b8; font-size: 13px; }
+    .content { padding: 32px 28px; }
+    .badge { display: inline-block; padding: 4px 12px; background: #ecfdf5; color: #059669; border-radius: 9999px; font-weight: 600; font-size: 12px; margin-bottom: 16px; border: 1px solid #a7f3d0; }
+    .btn { display: inline-block; padding: 14px 28px; background: #059669; color: #ffffff !important; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 24px 0; text-align: center; }
+    .notice { background: #f8fafc; border-left: 4px solid #cbd5e1; padding: 14px 16px; border-radius: 4px; font-size: 13px; color: #475569; margin: 20px 0; }
+    .footer { padding: 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>SetuGov</h1>
+      <p>Startup & Innovation Onboarding</p>
+    </div>
+    <div class="content">
+      <div class="badge">Email Verification</div>
+      <p>Dear <strong>${name}</strong>,</p>
+      <p>Thank you for initiating your registration on the SetuGov Innovation Procurement Platform. Please verify your email address to activate your account and proceed with organizational registration.</p>
+      
+      <div style="text-align: center;">
+        <a href="${verifyUrl}" class="btn">Verify Email Address</a>
+      </div>
+
+      <div class="notice">
+        <strong>Important:</strong>
+        <ul style="margin: 6px 0 0 0; padding-left: 18px;">
+          <li>This verification link is valid for 24 hours.</li>
+          <li>Email verification activates your user account, allowing you to begin your multi-step organization profile and document submission.</li>
+        </ul>
+      </div>
+
+      <p style="font-size: 12px; color: #94a3b8; word-break: break-all;">
+        If the button above does not work, copy and paste this URL into your browser:<br>
+        <a href="${verifyUrl}" style="color: #059669;">${verifyUrl}</a>
+      </p>
+    </div>
+    <div class="footer">
+      SetuGov &bull; Government of India &bull; Innovation Procurement Lifecycle Platform
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+  return sendEmail({
+    to: email,
+    subject,
+    text,
+    html
+  });
+};
+
 export default {
   sendEmail,
-  sendInvitationEmail
+  sendInvitationEmail,
+  sendEmailVerificationEmail
 };

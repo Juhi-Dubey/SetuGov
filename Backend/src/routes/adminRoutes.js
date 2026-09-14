@@ -14,10 +14,19 @@ import {
   getTemplates,
   createTemplate,
   updateTemplate,
-  deleteTemplate
+  deleteTemplate,
+  getStartupVerifications,
+  getStartupVerificationById,
+  reviewStartupVerification,
+  verifyStartupDocument
 } from '../controllers/adminController.js';
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
+import { validate } from '../middleware/validate.js';
+import {
+  adminVerifyStartupSchema,
+  verifyStartupDocumentSchema
+} from '../schemas/startupSchemas.js';
 
 const router = Router();
 
@@ -26,6 +35,12 @@ router.get('/dashboard', authenticate, authorizeRoles('ADMIN'), getDashboard);
 
 // Admin Audit Logs
 router.get('/audit-logs', authenticate, authorizeRoles('ADMIN'), getAuditLogs);
+
+// Startup Verifications (Admin only)
+router.get('/startup-verifications', authenticate, authorizeRoles('ADMIN'), getStartupVerifications);
+router.get('/startup-verifications/:id', authenticate, authorizeRoles('ADMIN'), getStartupVerificationById);
+router.patch('/startup-verifications/:id', authenticate, authorizeRoles('ADMIN'), validate(adminVerifyStartupSchema), reviewStartupVerification);
+router.patch('/startup-documents/:id/verification', authenticate, authorizeRoles('ADMIN'), validate(verifyStartupDocumentSchema), verifyStartupDocument);
 
 // Verify Department (Admin only)
 router.patch('/departments/:id/verify', authenticate, authorizeRoles('ADMIN'), verifyDepartment);

@@ -5,6 +5,7 @@ import { prisma } from '../config/prisma.js';
 import { config } from '../config/env.js';
 import { ConflictError, UnauthorizedError, NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
+import { sendEmailVerificationEmail } from './emailService.js';
 
 export const register = async ({
   name,
@@ -25,6 +26,11 @@ export const register = async ({
     );
   }
 
+  // Password length enforcement (min 12 characters)
+  if (!password || password.length < 12) {
+    throw new BadRequestError('Password must be at least 12 characters long.');
+  }
+
   // Force STARTUP role for all public registrations
   const assignedRole = 'STARTUP';
 
@@ -40,7 +46,15 @@ export const register = async ({
   // Hash password with 12 bcrypt salt rounds
   const password_hash = await bcrypt.hash(password, 12);
 
-  // Create User
+  // Generate cryptographically secure raw verification token
+  const rawVerificationToken = crypto.randomBytes(32).toString('hex');
+  const email_verification_token_hash = crypto
+    .createHash('sha256')
+    .update(rawVerificationToken)
+    .digest('hex');
+  const email_verification_expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+  // Create User with is_active = false and is_verified = false until email is verified
   const user = await prisma.user.create({
     data: {
       name: name.trim(),
@@ -50,8 +64,10 @@ export const register = async ({
       department_id: null,
       designation: designation ? designation.trim() : null,
       phone: phone ? phone.trim() : null,
-      is_active: true,
-      is_verified: true
+      is_active: false,
+      is_verified: false,
+      email_verification_token_hash,
+      email_verification_expires_at
     },
     select: {
       id: true,
@@ -64,23 +80,37 @@ export const register = async ({
       is_active: true,
       is_verified: true,
       created_at: true,
-      updated_at: true,
-      department: {
-        select: {
-          id: true,
-          name: true,
-          state: true
-        }
-      }
+      updated_at: true
     }
   });
 
-  // Generate JWT token
-  const token = jwt.sign(
-    { userId: user.id, email: user.email, role: user.role },
-    config.JWT_SECRET,
-    { expiresIn: config.JWT_EXPIRES_IN }
-  );
+  // Create initial Startup record in DRAFT status
+  const startup = await prisma.startup.create({
+    data: {
+      user_id: user.id,
+      company_name: `${name.trim()}'s Startup`,
+      description: 'Draft organization profile pending GeM-style onboarding completion.',
+      domain: 'Technology',
+      technologies: [],
+      location: 'India',
+      verification_status: 'DRAFT',
+      verification_source: 'DOCUMENT_VERIFIED'
+    }
+  });
+
+  // Dispatch real email verification
+  try {
+    await sendEmailVerificationEmail({
+      email: user.email,
+      name: user.name,
+      rawToken: rawVerificationToken
+    });
+  } catch (emailErr) {
+    // If in production and email failed, log error
+    if (config.NODE_ENV === 'production') {
+      throw new Error(`Failed to deliver email verification: ${emailErr.message}`);
+    }
+  }
 
   // Create audit log
   await createAuditLog({
@@ -92,7 +122,157 @@ export const register = async ({
     ip_address
   });
 
-  return { user, token };
+  // DO NOT return the raw verification token in the production response
+  return {
+    success: true,
+    message: 'Registration successful. A verification email has been dispatched to your email address.',
+    user,
+    startup_id: startup.id,
+    email_verification_required: true,
+    ...(config.NODE_ENV !== 'production' ? { dev_verification_token: rawVerificationToken } : {})
+  };
+};
+
+/**
+ * Verify a startup user's email address using cryptographic token
+ */
+export const verifyEmail = async ({ token, ip_address = null }) => {
+  if (!token || typeof token !== 'string') {
+    throw new BadRequestError('Email verification token is required.');
+  }
+
+  const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+
+  const user = await prisma.user.findFirst({
+    where: {
+      email_verification_token_hash: tokenHash
+    },
+    include: {
+      startups: true
+    }
+  });
+
+  if (!user) {
+    throw new BadRequestError('Invalid or expired email verification token.');
+  }
+
+  if (user.email_verification_expires_at && new Date() > new Date(user.email_verification_expires_at)) {
+    throw new BadRequestError('Email verification link has expired. Please request a new verification link.');
+  }
+
+  // Activate user account (Email verified)
+  const updatedUser = await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      is_active: true,
+      is_verified: true,
+      email_verified_at: new Date(),
+      email_verification_token_hash: null,
+      email_verification_expires_at: null
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      department_id: true,
+      designation: true,
+      phone: true,
+      is_active: true,
+      is_verified: true,
+      created_at: true,
+      updated_at: true
+    }
+  });
+
+  // Generate JWT token so user is authenticated
+  const authToken = jwt.sign(
+    { userId: updatedUser.id, email: updatedUser.email, role: updatedUser.role },
+    config.JWT_SECRET,
+    { expiresIn: config.JWT_EXPIRES_IN }
+  );
+
+  await createAuditLog({
+    user_id: updatedUser.id,
+    action: 'USER_EMAIL_VERIFIED',
+    entity_type: 'USER',
+    entity_id: updatedUser.id,
+    details: { email: updatedUser.email },
+    ip_address
+  });
+
+  const startup = user.startups?.[0] || null;
+
+  return {
+    success: true,
+    message: 'Email address successfully verified. You may now complete your organization profile and submit verification documents.',
+    user: updatedUser,
+    token: authToken,
+    startup
+  };
+};
+
+/**
+ * Resend email verification link to user
+ */
+export const resendVerificationEmail = async ({ email, ip_address = null }) => {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail }
+  });
+
+  if (!user) {
+    // Return generic message to prevent email enumeration
+    return {
+      success: true,
+      message: 'If an account exists with this email address, a new verification link has been sent.'
+    };
+  }
+
+  if (user.is_verified && user.is_active) {
+    return {
+      success: true,
+      message: 'This account email is already verified. You may sign in directly.'
+    };
+  }
+
+  // Generate fresh token
+  const rawVerificationToken = crypto.randomBytes(32).toString('hex');
+  const email_verification_token_hash = crypto
+    .createHash('sha256')
+    .update(rawVerificationToken)
+    .digest('hex');
+  const email_verification_expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      email_verification_token_hash,
+      email_verification_expires_at
+    }
+  });
+
+  await sendEmailVerificationEmail({
+    email: user.email,
+    name: user.name,
+    rawToken: rawVerificationToken
+  });
+
+  await createAuditLog({
+    user_id: user.id,
+    action: 'EMAIL_VERIFICATION_RESENT',
+    entity_type: 'USER',
+    entity_id: user.id,
+    details: { email: user.email },
+    ip_address
+  });
+
+  return {
+    success: true,
+    message: 'A fresh verification link has been dispatched to your email address.',
+    ...(config.NODE_ENV !== 'production' ? { dev_verification_token: rawVerificationToken } : {})
+  };
 };
 
 /**
@@ -288,8 +468,13 @@ export const login = async ({ email, password, ip_address = null }) => {
     throw new UnauthorizedError('Your account invitation has not been accepted yet. Please complete credential setup using your invitation link.');
   }
 
+  // If startup user has unverified email
+  if (user.role === 'STARTUP' && !user.is_verified && user.email_verification_token_hash) {
+    throw new UnauthorizedError('Please verify your email address before signing in. Check your inbox for the verification link.');
+  }
+
   if (!user.is_active) {
-    throw new UnauthorizedError('User account is not active. Please contact an administrator.');
+    throw new UnauthorizedError('User account is not active. Please contact an administrator or verify your email.');
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);
@@ -377,5 +562,7 @@ export default {
   login,
   getCurrentUser,
   validateInvitation,
-  acceptInvitation
+  acceptInvitation,
+  verifyEmail,
+  resendVerificationEmail
 };

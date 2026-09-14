@@ -3,7 +3,8 @@ import { z } from 'zod';
 export const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(12, 'Password must be at least 12 characters long'),
+  phone: z.string().optional().nullable(),
   role: z.enum(['STARTUP'], {
     errorMap: () => ({ message: 'Public registration is permitted for STARTUP accounts only. Privileged accounts must be provisioned by an administrator.' })
   }).optional().default('STARTUP'),
@@ -13,6 +14,14 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required')
+});
+
+export const verifyEmailSchema = z.object({
+  token: z.string().min(10, 'Email verification token is required')
+});
+
+export const resendVerificationSchema = z.object({
+  email: z.string().email('Invalid email address')
 });
 
 export const acceptInvitationSchema = z.object({
@@ -27,6 +36,8 @@ export const validateInvitationSchema = z.object({
 export default {
   registerSchema,
   loginSchema,
+  verifyEmailSchema,
+  resendVerificationSchema,
   acceptInvitationSchema,
   validateInvitationSchema
 };

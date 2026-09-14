@@ -1,9 +1,39 @@
 import { prisma } from '../config/prisma.js';
-import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
+import { NotFoundError, ForbiddenError, BadRequestError, ConflictError } from '../utils/errors.js';
 import embeddingService from './embeddingService.js';
 import { logger } from '../utils/logger.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
+import { PATTERNS } from './verificationService.js';
+
+export const maskAccountNumber = (accountNumber) => {
+  if (!accountNumber) return null;
+  const str = String(accountNumber).trim();
+  if (str.length <= 4) return str;
+  return '****' + str.slice(-4);
+};
+
+export const getRequiredDocumentTypes = (orgType) => {
+  const normalized = (orgType || 'PRIVATE_LIMITED').toUpperCase();
+  switch (normalized) {
+    case 'PRIVATE_LIMITED':
+    case 'PUBLIC_LIMITED':
+    case 'LLP':
+    case 'PARTNERSHIP':
+    case 'TRUST':
+    case 'SOCIETY':
+    case 'OTHER':
+      return ['PAN', 'INCORPORATION_CERTIFICATE', 'BANK_PROOF', 'AUTHORIZED_PERSON_PROOF'];
+    case 'PROPRIETORSHIP':
+      return ['PAN', 'BANK_PROOF', 'AUTHORIZED_PERSON_PROOF'];
+    default:
+      return ['PAN', 'INCORPORATION_CERTIFICATE', 'BANK_PROOF', 'AUTHORIZED_PERSON_PROOF'];
+  }
+};
+
+/**
+ * GeM-Style Startup Service
+ */
 
 export const createStartup = async (data, user, ip_address = null) => {
   // Check if user already has a startup profile
@@ -12,35 +42,84 @@ export const createStartup = async (data, user, ip_address = null) => {
   });
 
   if (existing && user.role !== 'ADMIN') {
-    throw new BadRequestError('You already have an existing startup profile.');
+    throw new ConflictError('You already have an existing startup profile.');
+  }
+
+  // Duplicate checks for registered identifiers
+  if (data.pan_number) {
+    const dupPan = await prisma.startup.findFirst({
+      where: {
+        pan_number: data.pan_number.trim().toUpperCase(),
+        verification_status: { in: ['SUBMITTED', 'UNDER_REVIEW', 'VERIFIED'] }
+      }
+    });
+    if (dupPan) throw new ConflictError('A startup with this PAN is already registered or undergoing verification.');
+  }
+
+  if (data.cin_number) {
+    const dupCin = await prisma.startup.findFirst({
+      where: {
+        cin_number: data.cin_number.trim().toUpperCase(),
+        verification_status: { in: ['SUBMITTED', 'UNDER_REVIEW', 'VERIFIED'] }
+      }
+    });
+    if (dupCin) throw new ConflictError('A startup with this CIN is already registered or undergoing verification.');
+  }
+
+  if (data.gstin) {
+    const dupGst = await prisma.startup.findFirst({
+      where: {
+        gstin: data.gstin.trim().toUpperCase(),
+        verification_status: { in: ['SUBMITTED', 'UNDER_REVIEW', 'VERIFIED'] }
+      }
+    });
+    if (dupGst) throw new ConflictError('A startup with this GSTIN is already registered or undergoing verification.');
   }
 
   const startup = await prisma.startup.create({
     data: {
       user_id: user.id,
       company_name: data.company_name.trim(),
-      description: data.description.trim(),
-      domain: data.domain.trim(),
-      technologies: data.technologies,
-      readiness_level: data.readiness_level || 1,
-      years_experience: data.years_experience || 0,
-      previous_deployments: data.previous_deployments || 0,
-      verification_status: 'PENDING',
+      org_type: data.org_type || 'PRIVATE_LIMITED',
+      registered_address: data.registered_address ? data.registered_address.trim() : null,
+      city: data.city ? data.city.trim() : null,
+      state: data.state ? data.state.trim() : null,
+      pincode: data.pincode ? data.pincode.trim() : null,
+      official_email: data.official_email ? data.official_email.trim().toLowerCase() : null,
+      official_website: data.official_website ? data.official_website.trim() : null,
+      authorized_person_name: data.authorized_person_name ? data.authorized_person_name.trim() : null,
+      authorized_person_designation: data.authorized_person_designation ? data.authorized_person_designation.trim() : null,
+      authorized_person_email: data.authorized_person_email ? data.authorized_person_email.trim().toLowerCase() : null,
+      authorized_person_phone: data.authorized_person_phone ? data.authorized_person_phone.trim() : null,
+      authorization_type: data.authorization_type ? data.authorization_type.trim() : null,
+      pan_number: data.pan_number ? data.pan_number.trim().toUpperCase() : null,
+      cin_number: data.cin_number ? data.cin_number.trim().toUpperCase() : null,
+      gstin: data.gstin ? data.gstin.trim().toUpperCase() : null,
       dpiit_number: data.dpiit_number ? data.dpiit_number.trim() : null,
       certificate_number: data.certificate_number ? data.certificate_number.trim() : null,
       incorporation_date: data.incorporation_date ? new Date(data.incorporation_date) : null,
-      cin_number: data.cin_number ? data.cin_number.trim() : null,
-      gstin: data.gstin ? data.gstin.trim() : null,
-      location: data.location.trim()
+      description: data.description ? data.description.trim() : 'Draft organization profile pending onboarding completion.',
+      domain: data.domain ? data.domain.trim() : 'Technology',
+      technologies: data.technologies || [],
+      products_services: data.products_services ? data.products_services.trim() : null,
+      readiness_level: data.readiness_level || 1,
+      years_experience: data.years_experience || 0,
+      previous_deployments: data.previous_deployments || 0,
+      location: data.location ? data.location.trim() : 'India',
+      verification_status: 'DRAFT',
+      verification_source: 'DOCUMENT_VERIFIED'
     },
     include: {
       user: {
         select: {
           id: true,
           name: true,
-          email: true
+          email: true,
+          is_verified: true
         }
-      }
+      },
+      documents: true,
+      bank_details: true
     }
   });
 
@@ -65,10 +144,91 @@ export const createStartup = async (data, user, ip_address = null) => {
   return startup;
 };
 
+/**
+ * Get current logged in user's startup registration dossier
+ */
+export const getMyRegistration = async (userId) => {
+  let startup = await prisma.startup.findFirst({
+    where: { user_id: userId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          is_active: true,
+          is_verified: true,
+          email_verified_at: true,
+          created_at: true
+        }
+      },
+      documents: {
+        orderBy: { created_at: 'desc' }
+      },
+      bank_details: true,
+      _count: {
+        select: {
+          applications: true,
+          pilots: true
+        }
+      }
+    }
+  });
+
+  // If no startup record exists yet, create an initial DRAFT record
+  if (!startup) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundError('User not found.');
+
+    startup = await prisma.startup.create({
+      data: {
+        user_id: userId,
+        company_name: `${user.name}'s Organization`,
+        description: 'Draft organization profile pending GeM-style onboarding completion.',
+        domain: 'Technology',
+        technologies: [],
+        location: 'India',
+        verification_status: 'DRAFT',
+        verification_source: 'DOCUMENT_VERIFIED'
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            is_active: true,
+            is_verified: true,
+            email_verified_at: true,
+            created_at: true
+          }
+        },
+        documents: true,
+        bank_details: true,
+        _count: {
+          select: {
+            applications: true,
+            pilots: true
+          }
+        }
+      }
+    });
+  }
+
+  if (startup && startup.bank_details) {
+    startup.bank_details.masked_account_number = maskAccountNumber(startup.bank_details.account_number);
+  }
+
+  return startup;
+};
+
 export const getStartups = async (query = {}, user = null) => {
   const {
     domain,
     verification_status,
+    org_type,
     search,
     page = 1,
     limit = 20
@@ -77,11 +237,14 @@ export const getStartups = async (query = {}, user = null) => {
   const where = {};
   if (domain) where.domain = domain;
   if (verification_status) where.verification_status = verification_status;
+  if (org_type) where.org_type = org_type;
   if (search) {
     where.OR = [
       { company_name: { contains: search, mode: 'insensitive' } },
       { description: { contains: search, mode: 'insensitive' } },
-      { domain: { contains: search, mode: 'insensitive' } }
+      { domain: { contains: search, mode: 'insensitive' } },
+      { pan_number: { contains: search, mode: 'insensitive' } },
+      { dpiit_number: { contains: search, mode: 'insensitive' } }
     ];
   }
 
@@ -90,6 +253,7 @@ export const getStartups = async (query = {}, user = null) => {
   const skip = (safePage - 1) * safeLimit;
   const take = safeLimit;
 
+  // Sensitive bank_details are EXCLUDED from public listing
   const [total, startups] = await Promise.all([
     prisma.startup.count({ where }),
     prisma.startup.findMany({
@@ -97,8 +261,37 @@ export const getStartups = async (query = {}, user = null) => {
       skip,
       take,
       orderBy: { created_at: 'desc' },
-      include: {
-        documents: true,
+      select: {
+        id: true,
+        company_name: true,
+        org_type: true,
+        domain: true,
+        technologies: true,
+        readiness_level: true,
+        years_experience: true,
+        previous_deployments: true,
+        verification_status: true,
+        verification_source: true,
+        dpiit_number: true,
+        city: true,
+        state: true,
+        location: true,
+        created_at: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        documents: {
+          where: { verification_status: 'VERIFIED' },
+          select: {
+            id: true,
+            document_type: true,
+            verification_status: true
+          }
+        },
         _count: {
           select: {
             applications: true,
@@ -121,6 +314,9 @@ export const getStartups = async (query = {}, user = null) => {
 };
 
 export const getStartupById = async (id, user = null) => {
+  const isOwner = user && user.role === 'STARTUP';
+  const isAdmin = user && user.role === 'ADMIN';
+
   const startup = await prisma.startup.findUnique({
     where: { id },
     include: {
@@ -128,10 +324,13 @@ export const getStartupById = async (id, user = null) => {
         select: {
           id: true,
           name: true,
-          email: true
+          email: true,
+          phone: true,
+          is_verified: true
         }
       },
       documents: true,
+      bank_details: true,
       _count: {
         select: {
           applications: true,
@@ -145,14 +344,14 @@ export const getStartupById = async (id, user = null) => {
     throw new NotFoundError(`Startup with ID ${id} not found.`);
   }
 
-  // If another startup is querying this startup, filter out private user email and unverified documents
-  if (user && user.role === 'STARTUP' && startup.user_id !== user.id) {
+  const isSelf = user && startup.user_id === user.id;
+
+  // SENSITIVE BANK DATA PROTECTION:
+  // If requester is not the startup owner and not an Admin, strip sensitive bank details
+  if (!isAdmin && !isSelf) {
+    const { bank_details, ...sanitized } = startup;
     return {
-      ...startup,
-      user: {
-        id: startup.user.id,
-        name: startup.user.name
-      },
+      ...sanitized,
       documents: startup.documents.filter(d => d.verification_status === 'VERIFIED')
     };
   }
@@ -170,39 +369,129 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
     throw new ForbiddenError('You can only update your own startup profile.');
   }
 
-  // Whitelist allowable update fields (P1-6: Eliminate mass assignment)
+  // If startup is UNDER_REVIEW or VERIFIED, profile editing is locked for non-admins
+  if (user.role !== 'ADMIN' && (startup.verification_status === 'UNDER_REVIEW' || startup.verification_status === 'VERIFIED')) {
+    throw new BadRequestError(`Your registration is currently ${startup.verification_status.replace('_', ' ').toLowerCase()}. Profile editing is locked until review completes.`);
+  }
+
+  // Whitelist allowable update fields
   const allowedFields = [
     'company_name',
+    'org_type',
+    'registered_address',
+    'city',
+    'state',
+    'pincode',
+    'official_email',
+    'official_website',
+    'authorized_person_name',
+    'authorized_person_designation',
+    'authorized_person_email',
+    'authorized_person_phone',
+    'authorization_type',
+    'pan_number',
+    'cin_number',
+    'gstin',
+    'dpiit_number',
+    'certificate_number',
+    'registration_number',
+    'incorporation_date',
     'description',
     'domain',
     'technologies',
+    'products_services',
     'readiness_level',
     'years_experience',
     'previous_deployments',
-    'location',
-    'dpiit_number',
-    'certificate_number',
-    'incorporation_date',
-    'cin_number',
-    'gstin'
+    'location'
   ];
+
+  // Map address_line1 / address_line2 to registered_address if provided
+  if (!data.registered_address && (data.address_line1 || data.address_line2)) {
+    data.registered_address = [data.address_line1, data.address_line2].filter(Boolean).join(', ');
+  }
 
   const updateData = {};
   for (const field of allowedFields) {
     if (data[field] !== undefined) {
-      if (field === 'incorporation_date' && data[field]) {
-        updateData[field] = new Date(data[field]);
+      if (field === 'incorporation_date') {
+        updateData[field] = data[field] ? new Date(data[field]) : null;
+      } else if (field === 'pan_number') {
+        updateData[field] = data[field] ? data[field].trim().toUpperCase() : null;
+      } else if (field === 'cin_number' || field === 'gstin' || field === 'dpiit_number') {
+        updateData[field] = data[field] ? data[field].trim().toUpperCase() : null;
+      } else if (typeof data[field] === 'string') {
+        updateData[field] = data[field].trim();
       } else {
-        updateData[field] = typeof data[field] === 'string' ? data[field].trim() : data[field];
+        updateData[field] = data[field];
       }
     }
+  }
+
+  // Duplicate / Race condition checks for active registrations
+  if (updateData.pan_number) {
+    const conflict = await prisma.startup.findFirst({
+      where: {
+        pan_number: updateData.pan_number,
+        id: { not: id },
+        verification_status: { not: 'REJECTED' }
+      }
+    });
+    if (conflict) {
+      throw new ConflictError(`An active startup registration already exists with PAN ${updateData.pan_number}.`);
+    }
+  }
+
+  if (updateData.cin_number) {
+    const conflict = await prisma.startup.findFirst({
+      where: {
+        cin_number: updateData.cin_number,
+        id: { not: id },
+        verification_status: { not: 'REJECTED' }
+      }
+    });
+    if (conflict) {
+      throw new ConflictError(`An active startup registration already exists with CIN ${updateData.cin_number}.`);
+    }
+  }
+
+  if (updateData.gstin) {
+    const conflict = await prisma.startup.findFirst({
+      where: {
+        gstin: updateData.gstin,
+        id: { not: id },
+        verification_status: { not: 'REJECTED' }
+      }
+    });
+    if (conflict) {
+      throw new ConflictError(`An active startup registration already exists with GSTIN ${updateData.gstin}.`);
+    }
+  }
+
+  if (updateData.dpiit_number) {
+    const conflict = await prisma.startup.findFirst({
+      where: {
+        dpiit_number: updateData.dpiit_number,
+        id: { not: id },
+        verification_status: { not: 'REJECTED' }
+      }
+    });
+    if (conflict) {
+      throw new ConflictError(`An active startup registration already exists with DPIIT Number ${updateData.dpiit_number}.`);
+    }
+  }
+
+  // If startup was previously CORRECTION_REQUESTED, editing resets it to DRAFT until resubmitted
+  if (startup.verification_status === 'CORRECTION_REQUESTED') {
+    updateData.verification_status = 'DRAFT';
   }
 
   const updated = await prisma.startup.update({
     where: { id },
     data: updateData,
     include: {
-      documents: true
+      documents: true,
+      bank_details: true
     }
   });
 
@@ -221,11 +510,84 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
     action: 'STARTUP_PROFILE_UPDATED',
     entity_type: 'STARTUP',
     entity_id: id,
-    details: { changes: data },
+    details: { changes: updateData },
     ip_address
   });
 
   return updated;
+};
+
+/**
+ * Save or update sensitive bank details for a startup
+ */
+export const saveBankDetails = async (startupId, data, user, ip_address = null) => {
+  const startup = await prisma.startup.findUnique({ where: { id: startupId } });
+  if (!startup) {
+    throw new NotFoundError(`Startup with ID ${startupId} not found.`);
+  }
+
+  if (user.role !== 'ADMIN' && startup.user_id !== user.id) {
+    throw new ForbiddenError('You can only update bank details for your own startup.');
+  }
+
+  // If startup is UNDER_REVIEW or VERIFIED, bank editing is locked for non-admins
+  if (user.role !== 'ADMIN' && (startup.verification_status === 'UNDER_REVIEW' || startup.verification_status === 'VERIFIED')) {
+    throw new BadRequestError(`Your registration is currently ${startup.verification_status.replace('_', ' ').toLowerCase()}. Bank details updates are locked.`);
+  }
+
+  // Format validations
+  const ifsc = data.ifsc_code.trim().toUpperCase();
+  const accNo = data.account_number.trim();
+
+  if (!PATTERNS.IFSC.test(ifsc)) {
+    throw new BadRequestError('Invalid IFSC code format (e.g. SBIN0001234).');
+  }
+
+  if (!/^\d{9,18}$/.test(accNo)) {
+    throw new BadRequestError('Account number must be between 9 and 18 digits.');
+  }
+
+  const bankDetails = await prisma.startupBankDetails.upsert({
+    where: { startup_id: startupId },
+    create: {
+      startup_id: startupId,
+      account_holder_name: data.account_holder_name.trim(),
+      bank_name: data.bank_name.trim(),
+      account_number: accNo,
+      ifsc_code: ifsc,
+      branch_name: data.branch_name ? data.branch_name.trim() : null,
+      account_type: data.account_type || 'CURRENT'
+    },
+    update: {
+      account_holder_name: data.account_holder_name.trim(),
+      bank_name: data.bank_name.trim(),
+      account_number: accNo,
+      ifsc_code: ifsc,
+      branch_name: data.branch_name ? data.branch_name.trim() : null,
+      account_type: data.account_type || 'CURRENT'
+    }
+  });
+
+  // Mask account number in audit log to prevent sensitive data leakage
+  await createAuditLog({
+    user_id: user.id,
+    action: 'STARTUP_BANK_DETAILS_SAVED',
+    entity_type: 'STARTUP_BANK_DETAILS',
+    entity_id: bankDetails.id,
+    details: {
+      startup_id: startupId,
+      bank_name: bankDetails.bank_name,
+      account_type: bankDetails.account_type,
+      account_number_masked: maskAccountNumber(bankDetails.account_number),
+      ifsc_code: bankDetails.ifsc_code
+    },
+    ip_address
+  });
+
+  return {
+    ...bankDetails,
+    masked_account_number: maskAccountNumber(bankDetails.account_number)
+  };
 };
 
 export const addStartupDocument = async (startupId, data, user, ip_address = null) => {
@@ -235,7 +597,12 @@ export const addStartupDocument = async (startupId, data, user, ip_address = nul
   }
 
   if (user.role !== 'ADMIN' && startup.user_id !== user.id) {
-    throw new ForbiddenError('You can only upload documents for your own startup.');
+    throw new ForbiddenError('You can only upload documents for your own startup profile.');
+  }
+
+  // If startup is UNDER_REVIEW or VERIFIED, document uploading is locked for non-admins unless correction requested
+  if (user.role !== 'ADMIN' && startup.verification_status === 'UNDER_REVIEW') {
+    throw new BadRequestError('Your registration is currently under administrative review. Document uploads are locked.');
   }
 
   const document = await prisma.startupDocument.create({
@@ -243,6 +610,9 @@ export const addStartupDocument = async (startupId, data, user, ip_address = nul
       startup_id: startupId,
       document_type: data.document_type.trim(),
       document_url: data.document_url.trim(),
+      file_name: data.file_name ? data.file_name.trim() : null,
+      file_size: data.file_size || null,
+      mime_type: data.mime_type ? data.mime_type.trim() : null,
       verification_status: 'PENDING'
     }
   });
@@ -252,11 +622,46 @@ export const addStartupDocument = async (startupId, data, user, ip_address = nul
     action: 'STARTUP_DOCUMENT_UPLOADED',
     entity_type: 'STARTUP_DOCUMENT',
     entity_id: document.id,
-    details: { startup_id: startupId, document_type: document.document_type },
+    details: {
+      startup_id: startupId,
+      document_type: document.document_type,
+      file_name: document.file_name
+    },
     ip_address
   });
 
   return document;
+};
+
+export const deleteStartupDocument = async (startupId, documentId, user, ip_address = null) => {
+  const startup = await prisma.startup.findUnique({ where: { id: startupId } });
+  if (!startup) throw new NotFoundError(`Startup with ID ${startupId} not found.`);
+
+  if (user.role !== 'ADMIN' && startup.user_id !== user.id) {
+    throw new ForbiddenError('You can only delete documents for your own startup.');
+  }
+
+  if (user.role !== 'ADMIN' && startup.verification_status === 'UNDER_REVIEW') {
+    throw new BadRequestError('Your registration is currently under administrative review. Document deletion is locked.');
+  }
+
+  const document = await prisma.startupDocument.findUnique({ where: { id: documentId } });
+  if (!document || document.startup_id !== startupId) {
+    throw new NotFoundError('Document not found for this startup.');
+  }
+
+  await prisma.startupDocument.delete({ where: { id: documentId } });
+
+  await createAuditLog({
+    user_id: user.id,
+    action: 'STARTUP_DOCUMENT_DELETED',
+    entity_type: 'STARTUP_DOCUMENT',
+    entity_id: documentId,
+    details: { startup_id: startupId, document_type: document.document_type },
+    ip_address
+  });
+
+  return { success: true, message: 'Document removed successfully.' };
 };
 
 export const getStartupDocuments = async (startupId, user = null) => {
@@ -275,6 +680,101 @@ export const getStartupDocuments = async (startupId, user = null) => {
   });
 
   return documents;
+};
+
+/**
+ * Submit GeM-style startup registration for Administrative Verification
+ */
+export const submitStartupRegistration = async (startupId, user, ip_address = null) => {
+  const startup = await prisma.startup.findUnique({
+    where: { id: startupId },
+    include: {
+      documents: true,
+      bank_details: true,
+      user: true
+    }
+  });
+
+  if (!startup) throw new NotFoundError(`Startup with ID ${startupId} not found.`);
+
+  if (user.role !== 'ADMIN' && startup.user_id !== user.id) {
+    throw new ForbiddenError('You can only submit registration for your own startup.');
+  }
+
+  // 1. Completeness Validation
+  const missing = [];
+  if (!startup.company_name || startup.company_name.length < 2) missing.push('Organization Legal Name');
+  if (!startup.registered_address || !startup.city || !startup.state || !startup.pincode) {
+    missing.push('Registered Address & Location (Street, City, State, PIN)');
+  }
+  if (!startup.authorized_person_name || !startup.authorized_person_email || !startup.authorized_person_phone) {
+    missing.push('Authorized Person Details (Name, Email, Phone)');
+  }
+  if (!startup.pan_number) {
+    missing.push('Business PAN Number');
+  }
+  if (!startup.bank_details) {
+    missing.push('Bank Account Details for Procurement/Payments');
+  }
+
+  // Enforce entity-specific required documents
+  const requiredDocs = getRequiredDocumentTypes(startup.org_type);
+  const uploadedDocTypes = new Set((startup.documents || []).map(d => d.document_type.toUpperCase()));
+
+  const missingDocs = requiredDocs.filter(t => !uploadedDocTypes.has(t.toUpperCase()));
+  if (missingDocs.length > 0) {
+    missing.push(`Missing required verification documents for ${startup.org_type}: ${missingDocs.join(', ')}`);
+  }
+
+  if (missing.length > 0) {
+    throw new BadRequestError(`Registration submission incomplete. Please complete: ${missing.join('; ')}`);
+  }
+
+  // 2. Transition state to SUBMITTED
+  const updatedStartup = await prisma.startup.update({
+    where: { id: startupId },
+    data: {
+      verification_status: 'SUBMITTED',
+      submitted_at: new Date(),
+      rejection_reason: null,
+      correction_notes: null
+    },
+    include: {
+      documents: true,
+      bank_details: true
+    }
+  });
+
+  // Notify Admins efficiently in a single bulk query
+  const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true }, take: 10 });
+  if (admins.length > 0) {
+    await prisma.notification.createMany({
+      data: admins.map(a => ({
+        user_id: a.id,
+        title: 'New Startup Verification Submission',
+        message: `${startup.company_name} has submitted registration dossier for GeM-style verification.`,
+        type: 'VERIFICATION',
+        link: '/admin/startups',
+        is_read: false
+      }))
+    });
+  }
+
+  await createAuditLog({
+    user_id: user.id,
+    action: 'STARTUP_REGISTRATION_SUBMITTED',
+    entity_type: 'STARTUP',
+    entity_id: startupId,
+    details: {
+      company_name: startup.company_name,
+      org_type: startup.org_type,
+      pan_number: startup.pan_number,
+      document_count: startup.documents.length
+    },
+    ip_address
+  });
+
+  return updatedStartup;
 };
 
 export const verifyStartup = async (startupId, data, user, ip_address = null) => {
@@ -299,126 +799,86 @@ export const verifyStartup = async (startupId, data, user, ip_address = null) =>
           name: true,
           email: true
         }
-      },
-      documents: true
-    }
-  });
-
-  // Also update associated documents
-  await prisma.startupDocument.updateMany({
-    where: { startup_id: startupId },
-    data: {
-      verification_status: data.verification_status,
-      verified_by: user.id,
-      verified_at: new Date()
+      }
     }
   });
 
   await createAuditLog({
     user_id: user.id,
-    action: `STARTUP_${data.verification_status}`,
+    action: 'STARTUP_VERIFICATION_STATUS_UPDATED',
     entity_type: 'STARTUP',
     entity_id: startupId,
     details: {
-      previousStatus: startup.verification_status,
-      newStatus: data.verification_status,
-      comments: data.comments || null
+      verification_status: data.verification_status,
+      comments: data.comments
     },
     ip_address
   });
 
-  if (startup.user_id) {
-    await sendNotification({
-      user_id: startup.user_id,
-      title: `Startup Verification: ${data.verification_status}`,
-      message: `Your startup profile verification status has been updated to ${data.verification_status}.`,
-      type: 'STARTUP_VERIFIED',
-      link: '/startup/dashboard'
-    });
-  }
+  await sendNotification({
+    user_id: startup.user_id,
+    title: 'Startup Verification Update',
+    message: `Your startup verification status has been updated to ${data.verification_status}.`,
+    type: 'VERIFICATION',
+    link: `/startup/profile`
+  });
 
   return updatedStartup;
 };
 
-export const getStartupApplications = async (startupId, user) => {
+export const getStartupApplications = async (startupId, user = null) => {
   const startup = await prisma.startup.findUnique({ where: { id: startupId } });
   if (!startup) {
     throw new NotFoundError(`Startup with ID ${startupId} not found.`);
   }
 
-  // Role check: Startups can only view their own applications; Government & Admin can view
-  if (user.role === 'STARTUP' && startup.user_id !== user.id) {
-    throw new ForbiddenError('You can only view your own startup applications.');
+  if (user && user.role === 'STARTUP' && startup.user_id !== user.id) {
+    throw new ForbiddenError('You can only view your own applications.');
   }
 
-  const applications = await prisma.application.findMany({
+  return prisma.application.findMany({
     where: { startup_id: startupId },
     include: {
       challenge: {
-        select: {
-          id: true,
-          title: true,
-          status: true,
-          department: {
-            select: {
-              name: true
-            }
-          }
+        include: {
+          department: true
         }
       }
     },
     orderBy: { created_at: 'desc' }
   });
-
-  return applications;
 };
 
-export const getStartupPilots = async (startupId, user) => {
+export const getStartupPilots = async (startupId, user = null) => {
   const startup = await prisma.startup.findUnique({ where: { id: startupId } });
   if (!startup) {
     throw new NotFoundError(`Startup with ID ${startupId} not found.`);
   }
 
-  if (user.role === 'STARTUP' && startup.user_id !== user.id) {
-    throw new ForbiddenError('You can only view your own startup pilots.');
+  if (user && user.role === 'STARTUP' && startup.user_id !== user.id) {
+    throw new ForbiddenError('You can only view your own pilots.');
   }
 
-  const pilots = await prisma.pilot.findMany({
+  return prisma.pilot.findMany({
     where: { startup_id: startupId },
     include: {
-      challenge: {
-        select: {
-          id: true,
-          title: true,
-          department: {
-            select: {
-              name: true
-            }
-          }
-        }
-      },
-      kpis: true,
+      challenge: true,
+      department: true,
       milestones: true
     },
     orderBy: { created_at: 'desc' }
   });
-
-  return pilots;
 };
 
-/**
- * Calculates startup performance track record dynamically from database records
- */
 export const getStartupPerformance = async (startupId, user = null) => {
   const startup = await prisma.startup.findUnique({
     where: { id: startupId },
     include: {
-      applications: true,
       pilots: {
         include: {
-          kpis: true,
-          milestones: true,
-          scale_decisions: true
+          validations: true,
+          scale_decisions: true,
+          payments: true
         }
       }
     }
@@ -428,67 +888,34 @@ export const getStartupPerformance = async (startupId, user = null) => {
     throw new NotFoundError(`Startup with ID ${startupId} not found.`);
   }
 
-  const pilots = startup.pilots || [];
-  const totalPilots = pilots.length;
-  const scaledPilots = pilots.filter(p => p.status === 'SCALED').length;
-  const completedPilots = pilots.filter(p => p.status === 'COMPLETED').length;
-  const extendedPilots = pilots.filter(p => p.status === 'EXTENDED').length;
-  const stoppedPilots = pilots.filter(p => p.status === 'STOPPED').length;
-  const activePilots = pilots.filter(p => p.status === 'RUNNING' || p.status === 'PLANNED' || p.status === 'VALIDATION').length;
+  const completedPilots = startup.pilots.filter(p => p.status === 'COMPLETED' || p.status === 'SCALED');
+  const validations = startup.pilots.flatMap(p => p.validations);
 
-  // Calculate KPI success rate
-  let totalKpis = 0;
-  let achievedKpis = 0;
-  pilots.forEach(p => {
-    (p.kpis || []).forEach(k => {
-      totalKpis++;
-      if (k.actual_value !== null && k.target_value !== null) {
-        const isDecrease = k.target_value < k.baseline_value;
-        if (isDecrease ? (k.actual_value <= k.target_value) : (k.actual_value >= k.target_value)) {
-          achievedKpis++;
-        }
-      }
-    });
-  });
-
-  const kpiSuccessRate = totalKpis > 0 ? Math.round((achievedKpis / totalKpis) * 100) : 100;
-  const successfulPilots = scaledPilots + completedPilots;
-  const pilotSuccessRate = totalPilots > 0 ? Math.round((successfulPilots / totalPilots) * 100) : 100;
-
-  const totalApplications = startup.applications.length;
-  const shortlistedApplications = startup.applications.filter(a => a.status === 'SHORTLISTED' || a.status === 'SELECTED').length;
+  const avgScore = validations.length > 0
+    ? validations.reduce((sum, v) => sum + v.performance_score, 0) / validations.length
+    : 0;
 
   return {
-    startup_id: startup.id,
-    company_name: startup.company_name,
-    verification_status: startup.verification_status,
-    dpiit_number: startup.dpiit_number,
-    metrics: {
-      total_pilots: totalPilots,
-      scaled_pilots: scaledPilots,
-      completed_pilots: completedPilots,
-      extended_pilots: extendedPilots,
-      stopped_pilots: stoppedPilots,
-      active_pilots: activePilots,
-      pilot_success_rate: pilotSuccessRate,
-      kpi_success_rate: kpiSuccessRate,
-      total_kpis_tracked: totalKpis,
-      total_applications: totalApplications,
-      shortlisted_applications: shortlistedApplications
-    }
+    total_pilots: startup.pilots.length,
+    completed_pilots: completedPilots.length,
+    average_validation_score: Number(avgScore.toFixed(2)),
+    scale_ready_count: startup.pilots.filter(p => p.status === 'SCALED').length
   };
 };
 
 export default {
   createStartup,
+  getMyRegistration,
   getStartups,
   getStartupById,
   updateStartup,
+  saveBankDetails,
   addStartupDocument,
+  deleteStartupDocument,
   getStartupDocuments,
+  submitStartupRegistration,
   verifyStartup,
   getStartupApplications,
   getStartupPilots,
   getStartupPerformance
 };
-

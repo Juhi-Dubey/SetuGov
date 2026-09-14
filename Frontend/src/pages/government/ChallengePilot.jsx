@@ -1073,19 +1073,19 @@ function ChallengePilot() {
                           : "text-red-600 dark:text-red-400"
                       }
                     >
-                      {scaleRecommendation?.recommendation || aiAnalysis?.recommendation || "SCALE"}
+                      {scaleRecommendation?.recommendation || aiAnalysis?.recommendation || "PENDING"}
                     </span>
                   </h3>
 
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    Confidence Level: <strong className="text-slate-800 dark:text-slate-200">{scaleRecommendation?.confidence_score || aiAnalysis?.confidence_score || 94}%</strong> · Based on empirical telemetry & milestone verification
+                    Confidence Level: <strong className="text-slate-800 dark:text-slate-200">{scaleRecommendation?.confidence_score != null ? `${Math.round(scaleRecommendation.confidence_score)}%` : aiAnalysis?.confidence_score != null ? `${Math.round(aiAnalysis.confidence_score)}%` : "Pending"}</strong> · Based on empirical telemetry & milestone verification
                   </p>
                 </div>
 
                 <div className="flex flex-col sm:items-end gap-1 shrink-0">
                   <span className="text-[11px] font-medium text-slate-400">Estimated Scaling Budget</span>
                   <span className="text-lg font-bold text-slate-900 dark:text-white">
-                    {scaleRecommendation?.scaling_plan?.estimated_scaling_budget || "₹1,20,00,000"}
+                    {scaleRecommendation?.scaling_plan?.estimated_scaling_budget || (pilot.budget ? `₹${Number(pilot.budget).toLocaleString("en-IN")}` : "Not estimated")}
                   </span>
                 </div>
               </div>

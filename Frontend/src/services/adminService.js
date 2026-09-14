@@ -170,6 +170,35 @@ export const deleteAdminTemplate = async (id) => {
   });
 };
 
+export const getStartupVerifications = async (params = {}) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.append(key, value);
+    }
+  });
+  const queryString = query.toString();
+  return apiRequest(`/admin/startup-verifications${queryString ? `?${queryString}` : ""}`);
+};
+
+export const getStartupVerificationById = async (id) => {
+  return apiRequest(`/admin/startup-verifications/${id}`);
+};
+
+export const reviewStartupVerification = async (id, payload) => {
+  return apiRequest(`/admin/startup-verifications/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const verifyStartupDocument = async (docId, payload) => {
+  return apiRequest(`/admin/startup-documents/${docId}/verification`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+};
+
 export default {
   getAdminDashboard,
   getAdminAuditLogs,
@@ -195,4 +224,8 @@ export default {
   createAdminTemplate,
   updateAdminTemplate,
   deleteAdminTemplate,
+  getStartupVerifications,
+  getStartupVerificationById,
+  reviewStartupVerification,
+  verifyStartupDocument,
 };

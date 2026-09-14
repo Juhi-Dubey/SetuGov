@@ -6,6 +6,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "../pages/public/LandingPage";
 import Login from "../pages/auth/Login";
 import StartupSignup from "../pages/auth/StartupSignup";
+import VerifyEmail from "../pages/auth/VerifyEmail";
 import GovernmentAccessRequestPage from "../pages/public/GovernmentAccessRequestPage";
 import EvaluatorApplyPage from "../pages/public/EvaluatorApplyPage";
 import RoleSelection from "../pages/auth/RoleSelection";
@@ -79,6 +80,7 @@ function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<StartupSignup />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/government/request-access" element={<GovernmentAccessRequestPage />} />
       <Route path="/evaluator/apply" element={<EvaluatorApplyPage />} />
       <Route path="/invite/accept" element={<InviteAccept />} />
