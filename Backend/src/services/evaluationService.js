@@ -49,73 +49,71 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
     throw new BadRequestError(`Cannot evaluate application in '${application.status}' status. Must be SUBMITTED or SHORTLISTED.`);
   }
 
-  // 2. Evaluator Authorization & Verification Enforcement (Part 1)
-  if (user.role !== 'EVALUATOR' && user.role !== 'ADMIN') {
+  // 2. Evaluator Authorization & Verification Enforcement
+  if (user.role !== 'EVALUATOR') {
     throw new ForbiddenError('Only assigned evaluators can submit evaluations.');
   }
 
-  if (user.role === 'EVALUATOR') {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      include: { evaluator_profile: true }
-    });
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    include: { evaluator_profile: true }
+  });
 
-    if (!dbUser || !dbUser.is_active) {
-      throw new ForbiddenError('Evaluator account is inactive.');
-    }
+  if (!dbUser || !dbUser.is_active) {
+    throw new ForbiddenError('Evaluator account is inactive.');
+  }
 
-    if (!dbUser.evaluator_profile || dbUser.evaluator_profile.verification_status !== 'VERIFIED') {
-      throw new ForbiddenError('Evaluator credentials must be officially VERIFIED before evaluating applications.');
-    }
+  if (!dbUser.evaluator_profile || dbUser.evaluator_profile.verification_status !== 'VERIFIED') {
+    throw new ForbiddenError('Evaluator credentials must be officially VERIFIED before evaluating applications.');
+  }
 
-    const assignment = await prisma.evaluatorAssignment.findUnique({
-      where: {
-        application_id_evaluator_id: {
-          application_id: applicationId,
-          evaluator_id: user.id
-        }
+  const assignment = await prisma.evaluatorAssignment.findUnique({
+    where: {
+      application_id_evaluator_id: {
+        application_id: applicationId,
+        evaluator_id: user.id
       }
-    });
-
-    if (!assignment) {
-      throw new ForbiddenError('Evaluator is not assigned to this application.');
     }
+  });
 
-    // Check immutability first
-    const existingEvaluation = await prisma.evaluation.findUnique({
-      where: {
-        application_id_evaluator_id: {
-          application_id: applicationId,
-          evaluator_id: user.id
-        }
+  if (!assignment) {
+    throw new ForbiddenError('Evaluator is not assigned to this application.');
+  }
+
+  // Check immutability first
+  const existingEvaluation = await prisma.evaluation.findUnique({
+    where: {
+      application_id_evaluator_id: {
+        application_id: applicationId,
+        evaluator_id: user.id
       }
-    });
-
-    if (existingEvaluation && existingEvaluation.is_submitted) {
-      throw new BadRequestError('Submitted evaluation cannot be silently edited. Submitted evaluations are immutable.');
     }
+  });
 
-    // Check Conflict of Interest declaration next
-    const conflict = await prisma.conflictDeclaration.findUnique({
-      where: {
-        application_id_evaluator_id: {
-          application_id: applicationId,
-          evaluator_id: user.id
-        }
+  if (existingEvaluation && existingEvaluation.is_submitted) {
+    throw new BadRequestError('Submitted evaluation cannot be silently edited. Submitted evaluations are immutable.');
+  }
+
+  // Check Conflict of Interest declaration next
+  const conflict = await prisma.conflictDeclaration.findUnique({
+    where: {
+      application_id_evaluator_id: {
+        application_id: applicationId,
+        evaluator_id: user.id
       }
-    });
-
-    if (!conflict) {
-      throw new ForbiddenError('Mandatory Conflict of Interest declaration required before submitting evaluation.');
     }
+  });
 
-    if (conflict.has_conflict || conflict.is_recused) {
-      throw new ForbiddenError('Cannot submit evaluation: You have declared a conflict of interest or recused yourself from evaluating this application.');
-    }
+  if (!conflict) {
+    throw new ForbiddenError('Mandatory Conflict of Interest declaration required before submitting evaluation.');
+  }
 
-    if (assignment.status !== 'ACCEPTED') {
-      throw new ForbiddenError(`Cannot evaluate application with assignment status '${assignment.status}'. Must be ACCEPTED.`);
-    }
+  if (conflict.has_conflict || conflict.is_recused) {
+    throw new ForbiddenError('Cannot submit evaluation: You have declared a conflict of interest or recused yourself from evaluating this application.');
+  }
+
+  if (assignment.status !== 'ACCEPTED') {
+    throw new ForbiddenError(`Cannot evaluate application with assignment status '${assignment.status}'. Must be ACCEPTED.`);
   }
 
   // Calculate weighted total score
@@ -401,7 +399,7 @@ export const getChallengeEvaluationSummary = async (challengeId, user = null) =>
         cost_effectiveness: avgCost,
         overall_total: avgTotal
       },
-      evaluations: evals
+      evaluations: validEvals
     };
   });
 
@@ -446,20 +444,22 @@ export const declareConflictOfInterest = async (applicationId, data, user, ip_ad
     throw new NotFoundError(`Application with ID ${applicationId} not found.`);
   }
 
-  // Part 5: Verify evaluator has assignment for this application
-  if (user.role === 'EVALUATOR') {
-    const assignment = await prisma.evaluatorAssignment.findUnique({
-      where: {
-        application_id_evaluator_id: {
-          application_id: applicationId,
-          evaluator_id: user.id
-        }
-      }
-    });
+  // Evaluator assignment check
+  if (user.role !== 'EVALUATOR') {
+    throw new ForbiddenError('Only assigned evaluators can declare conflicts of interest.');
+  }
 
-    if (!assignment) {
-      throw new ForbiddenError('You can only declare conflicts of interest for applications you are assigned to.');
+  const assignment = await prisma.evaluatorAssignment.findUnique({
+    where: {
+      application_id_evaluator_id: {
+        application_id: applicationId,
+        evaluator_id: user.id
+      }
     }
+  });
+
+  if (!assignment) {
+    throw new ForbiddenError('You can only declare conflicts of interest for applications you are assigned to.');
   }
 
   const { has_conflict = false, conflict_details = null, is_recused = false } = data;

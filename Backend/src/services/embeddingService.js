@@ -379,7 +379,7 @@ export const getStartupEmbedding = async (startupId) => {
  */
 export const getVerifiedStartupEmbeddings = async () => {
   const rows = await prisma.$queryRawUnsafe(
-    'SELECT id, embedding::text FROM startups WHERE verification_status = $1',
+    'SELECT id, embedding::text FROM startups WHERE verification_status::text = $1',
     'VERIFIED'
   );
   const map = new Map();

@@ -215,6 +215,12 @@ export const getChallengePilot = async (challengeId) => {
   return apiRequest(`/challenges/${challengeId}/pilot`);
 };
 
+export const generateChallengeBrain1 = async (challengeId) => {
+  return apiRequest(`/challenges/${challengeId}/brain1/generate`, {
+    method: "POST"
+  });
+};
+
 export const getGovernmentAnalytics = async () => {
   return apiRequest("/departments/analytics");
 };
@@ -239,6 +245,7 @@ export default {
   getChallengeEvaluationSummary,
   getChallengeDecisions,
   getChallengePilot,
+  generateChallengeBrain1,
   getGovernmentAnalytics,
   getGovernmentDashboard,
 };

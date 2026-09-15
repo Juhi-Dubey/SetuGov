@@ -25,6 +25,10 @@ export const register = async ({
     throw new BadRequestError('Password must be at least 12 characters long.');
   }
 
+  if (role && role !== 'STARTUP') {
+    throw new ForbiddenError('Self-registration is only permitted for STARTUP accounts.');
+  }
+
   // Force STARTUP role for all public registrations unconditionally
   const assignedRole = 'STARTUP';
 
@@ -55,7 +59,7 @@ export const register = async ({
       email: normalizedEmail,
       password_hash,
       role: assignedRole,
-      department_id: null,
+      department_id: department_id || null,
       designation: designation ? designation.trim() : null,
       phone: phone ? phone.trim() : null,
       is_active: false,

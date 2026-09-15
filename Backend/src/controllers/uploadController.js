@@ -253,24 +253,43 @@ export const verifyDocumentAuthorization = async (user, identifier) => {
     return false;
   }
 
-  // Check if document belongs to an ApplicationDocument (Finalist Solution Package)
-  const appDoc = await prisma.applicationDocument.findFirst({
-    where: {
-      OR: [
-        { stored_filename: filename },
-        { file_url: { contains: filename } }
-      ]
-    },
-    include: {
-      application: {
-        include: {
-          startup: true,
-          challenge: true,
-          evaluator_assignments: true
+  // 6. Check if document belongs to an ApplicationDocument (Finalist Solution Package)
+  let appDoc = null;
+  if (isUuid) {
+    appDoc = await prisma.applicationDocument.findUnique({
+      where: { id: identifier },
+      include: {
+        application: {
+          include: {
+            startup: true,
+            challenge: true,
+            evaluator_assignments: true
+          }
         }
       }
-    }
-  });
+    });
+  }
+  if (!appDoc) {
+    appDoc = await prisma.applicationDocument.findFirst({
+      where: {
+        OR: [
+          { stored_filename: safeFilename },
+          { stored_filename: identifier },
+          { file_url: { contains: safeFilename } },
+          { file_url: { contains: identifier } }
+        ]
+      },
+      include: {
+        application: {
+          include: {
+            startup: true,
+            challenge: true,
+            evaluator_assignments: true
+          }
+        }
+      }
+    });
+  }
 
   if (appDoc && appDoc.application) {
     const app = appDoc.application;
@@ -327,6 +346,11 @@ export const getPrivateFile = async (req, res, next) => {
             const payment = await prisma.payment.findUnique({ where: { id: rawIdentifier } });
             if (payment && payment.invoice_url) {
               resolvedFilename = path.basename(payment.invoice_url);
+            } else {
+              const appDoc = await prisma.applicationDocument.findUnique({ where: { id: rawIdentifier } });
+              if (appDoc) {
+                resolvedFilename = appDoc.stored_filename || path.basename(appDoc.file_url);
+              }
             }
           }
         }

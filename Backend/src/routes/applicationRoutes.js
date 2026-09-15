@@ -1,3 +1,4 @@
+
 import { Router } from 'express';
 import {
   getApplicationById,
@@ -48,12 +49,12 @@ router.delete('/:application_id', authenticate, deleteApplication);
 // Update application lifecycle status (GOVERNMENT or ADMIN)
 router.patch('/:application_id/status', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(updateApplicationStatusSchema), updateApplicationStatus);
 
-// Conflict of Interest declaration (EVALUATOR or ADMIN)
+// Conflict of Interest declaration (EVALUATOR submits; EVALUATOR/ADMIN can view)
 router.get('/:application_id/conflict-declaration', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), getConflictDeclaration);
-router.post('/:application_id/conflict-declaration', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), declareConflictOfInterest);
+router.post('/:application_id/conflict-declaration', authenticate, authorizeRoles('EVALUATOR'), declareConflictOfInterest);
 
-// Submit Evaluation for Application (EVALUATOR or ADMIN)
-router.post('/:application_id/evaluations', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), validate(createEvaluationSchema), submitEvaluation);
+// Submit Evaluation for Application (EVALUATOR only)
+router.post('/:application_id/evaluations', authenticate, authorizeRoles('EVALUATOR'), validate(createEvaluationSchema), submitEvaluation);
 
 // Get Evaluations for Application
 router.get('/:application_id/evaluations', authenticate, getApplicationEvaluations);

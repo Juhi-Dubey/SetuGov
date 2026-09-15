@@ -7,6 +7,7 @@ import { logger } from '../utils/logger.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
 import { sendEmail } from './emailService.js';
+import aiService from './aiService.js';
 
 export const createChallenge = async (data, user, ip_address = null) => {
   let department_id;
@@ -258,9 +259,9 @@ export const updateChallenge = async (id, data, user, ip_address = null) => {
     throw new ForbiddenError('You are not authorized to update this challenge.');
   }
 
-  // Cannot modify closed or completed challenge
-  if (challenge.status === 'CLOSED' || challenge.status === 'COMPLETED') {
-    throw new BadRequestError(`Cannot update challenge in ${challenge.status} status.`);
+  // Only DRAFT challenges may be edited. Procurement integrity lock: PUBLISHED, EVALUATION, PILOT, CLOSED, and COMPLETED are immutable.
+  if (challenge.status !== 'DRAFT') {
+    throw new BadRequestError(`Cannot update challenge in '${challenge.status}' status. Only DRAFT challenges can be modified.`);
   }
 
   // Whitelist allowable update fields (P1-6: Eliminate mass assignment)
@@ -404,10 +405,12 @@ export const publishChallenge = async (id, user, ip_address = null) => {
     link: `/government/challenges/${id}/overview`
   });
 
-  // Step 3: Asynchronously trigger Brain 2 candidate discovery pool initialization
-  matchStartupsForChallenge(id, user, ip_address).catch((err) => {
-    logger.warn(`Initial Brain 2 matching on publish for challenge ${id} deferred: ${err.message}`);
-  });
+  // Step 3: Synchronously await initial candidate discovery pool matching upon challenge publish
+  try {
+    await matchStartupsForChallenge(id, user, ip_address);
+  } catch (err) {
+    logger.warn(`Initial matching on publish for challenge ${id} completed with warning: ${err.message}`);
+  }
 
   return updated;
 };
@@ -794,6 +797,93 @@ export const shortlistStartup = async (challengeId, startupId, user, ip_address 
   };
 };
 
+/**
+ * Generate Brain 1 advisory assistance for an existing DRAFT challenge.
+ * Decoupled from challenge creation so AI unavailability never prevents challenge persistence.
+ */
+export const generateChallengeBrain1 = async (id, user, ip_address = null) => {
+  const challenge = await prisma.challenge.findUnique({
+    where: { id },
+    include: { department: true }
+  });
+
+  if (!challenge) {
+    throw new NotFoundError(`Challenge with ID ${id} not found.`);
+  }
+
+  // Authorization: ADMIN or GOVERNMENT within the same department
+  if (user.role === 'ADMIN') {
+    // Admin has cross-department management authorization
+  } else if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only generate AI assistance for challenges belonging to your assigned department.');
+    }
+  } else {
+    throw new ForbiddenError('You are not authorized to generate AI assistance for this challenge.');
+  }
+
+  // Brain 1 enhancement only permitted on DRAFT challenges
+  if (challenge.status !== 'DRAFT') {
+    throw new BadRequestError(`Cannot run Brain 1 enhancement on challenge in '${challenge.status}' status. Only DRAFT challenges can be enhanced.`);
+  }
+
+  const input = {
+    problem: {
+      title: challenge.title,
+      description: challenge.problem_description,
+      baseline: challenge.current_baseline
+    },
+    outcome: {
+      desired_outcome: challenge.desired_outcome
+    },
+    pilot: {
+      duration: `${challenge.pilot_duration_days} days`,
+      sites: [challenge.location],
+      budget: `${challenge.budget_max} INR`
+    },
+    requirements: {
+      technologies: challenge.required_technologies || [],
+      domain: challenge.department?.name || 'General'
+    }
+  };
+
+  const brain1Result = await aiService.generateChallenge(input);
+
+  if (brain1Result.status === 'UNAVAILABLE') {
+    await createAuditLog({
+      user_id: user.id,
+      action: 'BRAIN1_GENERATION_FAILED',
+      entity_type: 'CHALLENGE',
+      entity_id: challenge.id,
+      details: { reason: brain1Result.message || 'AI service unavailable' },
+      ip_address
+    });
+
+    return {
+      challenge_id: challenge.id,
+      status: 'UNAVAILABLE',
+      success: false,
+      message: 'AI assistance is currently unavailable. You can continue manually.'
+    };
+  }
+
+  await createAuditLog({
+    user_id: user.id,
+    action: 'BRAIN1_GENERATION_SUCCEEDED',
+    entity_type: 'CHALLENGE',
+    entity_id: challenge.id,
+    details: { mode: brain1Result.ai_metadata?.mode || 'live' },
+    ip_address
+  });
+
+  return {
+    challenge_id: challenge.id,
+    status: 'AVAILABLE',
+    success: true,
+    data: brain1Result
+  };
+};
+
 export default {
   createChallenge,
   getChallenges,
@@ -806,5 +896,6 @@ export default {
   shortlistStartup,
   getChallengeApplications,
   getChallengeMatches,
-  getChallengePilot
+  getChallengePilot,
+  generateChallengeBrain1
 };

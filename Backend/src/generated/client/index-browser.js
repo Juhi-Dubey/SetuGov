@@ -131,6 +131,9 @@ exports.Prisma.UserScalarFieldEnum = {
   invitation_token_hash: 'invitation_token_hash',
   invitation_expires_at: 'invitation_expires_at',
   invitation_accepted_at: 'invitation_accepted_at',
+  email_verification_token_hash: 'email_verification_token_hash',
+  email_verification_expires_at: 'email_verification_expires_at',
+  email_verified_at: 'email_verified_at',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };
@@ -202,15 +205,47 @@ exports.Prisma.StartupScalarFieldEnum = {
   years_experience: 'years_experience',
   previous_deployments: 'previous_deployments',
   verification_status: 'verification_status',
-  dpiit_number: 'dpiit_number',
-  certificate_number: 'certificate_number',
-  incorporation_date: 'incorporation_date',
+  org_type: 'org_type',
+  registered_address: 'registered_address',
+  city: 'city',
+  state: 'state',
+  pincode: 'pincode',
+  official_email: 'official_email',
+  official_website: 'official_website',
+  authorized_person_name: 'authorized_person_name',
+  authorized_person_designation: 'authorized_person_designation',
+  authorized_person_email: 'authorized_person_email',
+  authorized_person_phone: 'authorized_person_phone',
+  authorization_type: 'authorization_type',
+  pan_number: 'pan_number',
   cin_number: 'cin_number',
   gstin: 'gstin',
+  dpiit_number: 'dpiit_number',
+  certificate_number: 'certificate_number',
+  registration_number: 'registration_number',
+  incorporation_date: 'incorporation_date',
+  verification_source: 'verification_source',
+  products_services: 'products_services',
+  location: 'location',
   verification_notes: 'verification_notes',
+  correction_notes: 'correction_notes',
+  rejection_reason: 'rejection_reason',
+  submitted_at: 'submitted_at',
   verified_at: 'verified_at',
   verified_by: 'verified_by',
-  location: 'location',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.StartupBankDetailsScalarFieldEnum = {
+  id: 'id',
+  startup_id: 'startup_id',
+  account_holder_name: 'account_holder_name',
+  bank_name: 'bank_name',
+  account_number: 'account_number',
+  ifsc_code: 'ifsc_code',
+  branch_name: 'branch_name',
+  account_type: 'account_type',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };
@@ -220,10 +255,15 @@ exports.Prisma.StartupDocumentScalarFieldEnum = {
   startup_id: 'startup_id',
   document_type: 'document_type',
   document_url: 'document_url',
+  file_name: 'file_name',
+  file_size: 'file_size',
+  mime_type: 'mime_type',
   verification_status: 'verification_status',
   verified_by: 'verified_by',
   verified_at: 'verified_at',
-  created_at: 'created_at'
+  rejection_reason: 'rejection_reason',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
 };
 
 exports.Prisma.ApplicationScalarFieldEnum = {
@@ -710,9 +750,13 @@ exports.UserRole = exports.$Enums.UserRole = {
 };
 
 exports.StartupVerificationStatus = exports.$Enums.StartupVerificationStatus = {
-  PENDING: 'PENDING',
+  DRAFT: 'DRAFT',
+  SUBMITTED: 'SUBMITTED',
+  UNDER_REVIEW: 'UNDER_REVIEW',
   VERIFIED: 'VERIFIED',
-  REJECTED: 'REJECTED'
+  REJECTED: 'REJECTED',
+  CORRECTION_REQUESTED: 'CORRECTION_REQUESTED',
+  PENDING: 'PENDING'
 };
 
 exports.ChallengeStatus = exports.$Enums.ChallengeStatus = {
@@ -722,6 +766,24 @@ exports.ChallengeStatus = exports.$Enums.ChallengeStatus = {
   EVALUATION: 'EVALUATION',
   PILOT: 'PILOT',
   COMPLETED: 'COMPLETED'
+};
+
+exports.StartupOrgType = exports.$Enums.StartupOrgType = {
+  PROPRIETORSHIP: 'PROPRIETORSHIP',
+  PARTNERSHIP: 'PARTNERSHIP',
+  LLP: 'LLP',
+  PRIVATE_LIMITED: 'PRIVATE_LIMITED',
+  PUBLIC_LIMITED: 'PUBLIC_LIMITED',
+  TRUST: 'TRUST',
+  SOCIETY: 'SOCIETY',
+  ASSOCIATION: 'ASSOCIATION',
+  OTHER: 'OTHER'
+};
+
+exports.VerificationSource = exports.$Enums.VerificationSource = {
+  SELF_DECLARED: 'SELF_DECLARED',
+  DOCUMENT_VERIFIED: 'DOCUMENT_VERIFIED',
+  EXTERNAL_API_VERIFIED: 'EXTERNAL_API_VERIFIED'
 };
 
 exports.ApplicationStatus = exports.$Enums.ApplicationStatus = {
@@ -833,6 +895,7 @@ exports.Prisma.ModelName = {
   Challenge: 'Challenge',
   MatchScore: 'MatchScore',
   Startup: 'Startup',
+  StartupBankDetails: 'StartupBankDetails',
   StartupDocument: 'StartupDocument',
   Application: 'Application',
   EvaluatorProfile: 'EvaluatorProfile',

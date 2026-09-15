@@ -1,6 +1,7 @@
 import http from 'http';
 import { createApp } from '../app.js';
 import { prisma } from '../config/prisma.js';
+import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
 const runBrain1Tests = async () => {
@@ -85,27 +86,23 @@ const runBrain1Tests = async () => {
     }, adminToken);
     const departmentId = depRes.body.data.department.id;
 
-    const govReg = await request('POST', '/api/v1/auth/register', {
-      name: `GovUser Brain1 ${timestamp}`,
-      email: `gov.brain1.${timestamp}@health.gov.in`,
-      password: 'GovBrain1Pass123!',
-      role: 'GOVERNMENT',
-      department_id: departmentId
+    const govLogin = await request('POST', '/api/v1/auth/login', {
+      email: 'ramesh.kumar@health.gov.in',
+      password: 'Password123!'
     });
-    const govToken = govReg.body.data.token;
+    const govToken = govLogin.body.data.token;
 
-    const startupReg = await request('POST', '/api/v1/auth/register', {
-      name: `Startup Brain1 ${timestamp}`,
-      email: `startup.brain1.${timestamp}@startup.in`,
-      password: 'StartupBrain1Pass123!',
-      role: 'STARTUP'
+    const startupLogin = await request('POST', '/api/v1/auth/login', {
+      email: 'vikas@mediqueue.ai',
+      password: 'Password123!'
     });
-    const startupToken = startupReg.body.data.token;
+    const startupToken = startupLogin.body.data.token;
 
     // ─────────────────────────────────────────────────────────────
-    // A. MOCK MODE — Valid Request
+    // A. MOCK MODE — Valid Request (AI Available / Mock Mode)
     // ─────────────────────────────────────────────────────────────
     logger.info('─── A. Mock Mode Tests ───');
+    config.AI_MOCK_MODE = true;
 
     const validBody = {
       problem: {
@@ -256,8 +253,7 @@ const runBrain1Tests = async () => {
     // ─────────────────────────────────────────────────────────────
     logger.info('─── E. Configuration Tests ───');
 
-    // Direct import to verify the parsed config value
-    const { config } = await import('../config/env.js');
+    // Verify the parsed config value
     assert(typeof config.AI_MOCK_MODE === 'boolean', 'E1: AI_MOCK_MODE is a boolean');
 
     // In test context with .env AI_MOCK_MODE=true, should be true
@@ -290,6 +286,69 @@ const runBrain1Tests = async () => {
     assert(kpis[0].baseline === 65, 'F4: First KPI baseline preserved');
     assert(kpis[0].target === 90, 'F5: First KPI target preserved');
     assert(kpis[1].name === 'Supply Pressure', 'F6: Second KPI name preserved');
+
+    // ─────────────────────────────────────────────────────────────
+    // G. BRAIN 1 UNAVAILABLE / OFFLINE WORKFLOW TESTS
+    // ─────────────────────────────────────────────────────────────
+    logger.info('─── G. Brain 1 Unavailable / Offline Workflow Tests ───');
+
+    // 1. Simulate AI offline / unavailable
+    config.AI_MOCK_MODE = false;
+
+    const unavailRes = await request('POST', '/api/v1/ai/challenges/generate', validBody, govToken);
+    assert(unavailRes.statusCode === 200, 'G1: Request when AI is unavailable returns 200');
+    assert(unavailRes.body.data.status === 'UNAVAILABLE', 'G2: Explicit status UNAVAILABLE returned');
+    assert(unavailRes.body.data.success === false, 'G3: Returns success=false when AI is offline');
+    assert(unavailRes.body.data.problem_summary === undefined, 'G4: Never fabricates AI output when offline');
+    assert(unavailRes.body.data.suggested_kpis === undefined, 'G5: Never fabricates KPIs when offline');
+
+    // 2. Challenge creation succeeds as DRAFT even when AI is unavailable
+    const govUser = await prisma.user.findUnique({ where: { email: 'ramesh.kumar@health.gov.in' } });
+    const targetDeptId = govUser?.department_id || departmentId;
+
+    const challengeBody = {
+      department_id: targetDeptId,
+      title: `Water Distribution Optimization ${timestamp}`,
+      problem_description: 'Municipal water distribution pipeline pressure drops causing water loss across 12 wards.',
+      current_baseline: 'Pressure monitoring is manual and unrecorded across 12 zones.',
+      desired_outcome: 'Achieve automated real-time valve control and pressure stabilization.',
+      location: 'Ward 4, Nagpur',
+      budget_min: 200000,
+      budget_max: 1000000,
+      pilot_duration_days: 60,
+      required_technologies: ['IoT', 'SCADA', 'Telemetry']
+    };
+
+    const draftChallengeRes = await request('POST', '/api/v1/challenges', challengeBody, govToken);
+    assert(draftChallengeRes.statusCode === 201, 'G6: Challenge creation succeeds as 201 when AI is offline');
+    const createdChallenge = draftChallengeRes.body.data.challenge;
+    assert(createdChallenge.status === 'DRAFT', 'G7: Created challenge persists as DRAFT');
+
+    // 3. Retry endpoint when AI is still unavailable returns explicit UNAVAILABLE
+    const retryOfflineRes = await request('POST', `/api/v1/challenges/${createdChallenge.id}/brain1/generate`, {}, govToken);
+    assert(retryOfflineRes.statusCode === 200, 'G8: Retry endpoint returns 200 when AI is offline');
+    assert(retryOfflineRes.body.data.status === 'UNAVAILABLE', 'G9: Retry endpoint reports status UNAVAILABLE');
+    assert(retryOfflineRes.body.data.success === false, 'G10: Retry endpoint reports success=false');
+
+    // 4. Unauthorized roles cannot trigger Brain 1 retry
+    const unauthRetry = await request('POST', `/api/v1/challenges/${createdChallenge.id}/brain1/generate`, {}, startupToken);
+    assert(unauthRetry.statusCode === 403, 'G11: Unauthorized STARTUP role blocked from Brain 1 retry (403)');
+
+    // 5. When AI becomes available again, retry succeeds
+    config.AI_MOCK_MODE = true;
+    const retryOnlineRes = await request('POST', `/api/v1/challenges/${createdChallenge.id}/brain1/generate`, {}, govToken);
+    assert(retryOnlineRes.statusCode === 200, 'G12: Retry endpoint returns 200 when AI is restored');
+    assert(retryOnlineRes.body.data.status === 'AVAILABLE', 'G13: Retry endpoint reports status AVAILABLE');
+    assert(retryOnlineRes.body.data.success === true, 'G14: Retry endpoint reports success=true');
+    assert(retryOnlineRes.body.data.data.readiness !== undefined, 'G15: Enhancements returned on retry');
+
+    // 6. Non-DRAFT challenge cannot run Brain 1 enhancement
+    await prisma.challenge.update({
+      where: { id: createdChallenge.id },
+      data: { status: 'PUBLISHED' }
+    });
+    const nonDraftRetry = await request('POST', `/api/v1/challenges/${createdChallenge.id}/brain1/generate`, {}, govToken);
+    assert(nonDraftRetry.statusCode === 400, 'G16: Non-DRAFT challenge rejects Brain 1 enhancement (400)');
 
     // ─────────────────────────────────────────────────────────────
     // SUMMARY

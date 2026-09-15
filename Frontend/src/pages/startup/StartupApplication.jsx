@@ -37,6 +37,7 @@ import {
 import { getChallengeById, getChallenges } from "../../services/challengeService";
 import { getStartupApplications } from "../../services/startupService";
 import { useAuth } from "../../context/AuthContext";
+import { API_BASE_URL } from "../../services/api";
 
 const defaultStartupApplications = [
   {
@@ -1324,7 +1325,7 @@ function ShortlistSolutionPackage({ app, onRefresh }) {
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-3">
                   <a
-                    href={`http://localhost:5000/api/v1/documents/${doc.stored_filename}`}
+                    href={`${API_BASE_URL}/documents/${doc.stored_filename}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"

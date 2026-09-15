@@ -21,6 +21,13 @@ export const createChallengeSchema = z.object({
 }).refine(data => data.budget_max >= data.budget_min, {
   message: 'Budget max must be greater than or equal to budget min',
   path: ['budget_max']
+}).refine(data => {
+  if (!data.application_deadline) return true; // Nullable/optional deadlines are allowed
+  const deadline = new Date(data.application_deadline);
+  return !isNaN(deadline.getTime()) && deadline > new Date();
+}, {
+  message: 'Application deadline must be a future date. Challenges with expired deadlines cannot be created.',
+  path: ['application_deadline']
 });
 
 export const updateChallengeSchema = z.object({

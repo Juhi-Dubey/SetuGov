@@ -74,23 +74,37 @@ const callExternalAiService = async (endpoint, payload) => {
  * Returns ChallengeCopilotResponse fields.
  */
 export const generateChallenge = async (input) => {
-  // Attempt real AI service call
-  const externalResult = await callExternalAiService('/ai/challenge', input);
+  // If Mock mode is explicitly configured, provide deterministic mock schema for testing
+  if (config.AI_MOCK_MODE) {
+    return _buildMockChallengeCopilotResponse(input);
+  }
 
-  if (externalResult) {
-    // AI service returns { success: true, data: { ...ChallengeCopilotResponse } }
-    if (externalResult.success && externalResult.data) {
+  // Attempt real AI service call
+  try {
+    const externalResult = await callExternalAiService('/ai/challenge', input);
+
+    if (externalResult && externalResult.success && externalResult.data) {
       return {
         ...externalResult.data,
+        status: 'AVAILABLE',
+        success: true,
         ai_metadata: { mode: 'live' }
       };
     }
 
-    // AI returned an unexpected envelope shape
     throw new AppError('AI service returned unexpected response structure', 502, 'AI_MALFORMED_RESPONSE');
+  } catch (error) {
+    logger.warn(`Brain 1 AI service call failed: ${error.message}`);
+    return {
+      status: 'UNAVAILABLE',
+      success: false,
+      message: 'AI assistance is currently unavailable. You can continue manually.',
+      ai_metadata: { mode: 'unavailable', error: error.message }
+    };
   }
+};
 
-  // Mock mode fallback — mirrors the real ChallengeCopilotResponse schema exactly
+const _buildMockChallengeCopilotResponse = (input) => {
   const title = input.problem?.title || 'Government Innovation Challenge';
   const description = input.problem?.description || '';
   const currentBaseline = input.problem?.baseline || 'Current operational baseline: manual registration workflows with unmeasured throughput delays';

@@ -39,6 +39,11 @@ export type MatchScore = $Result.DefaultSelection<Prisma.$MatchScorePayload>
  */
 export type Startup = $Result.DefaultSelection<Prisma.$StartupPayload>
 /**
+ * Model StartupBankDetails
+ * 
+ */
+export type StartupBankDetails = $Result.DefaultSelection<Prisma.$StartupBankDetailsPayload>
+/**
  * Model StartupDocument
  * 
  */
@@ -216,12 +221,40 @@ export type ChallengeStatus = (typeof ChallengeStatus)[keyof typeof ChallengeSta
 
 
 export const StartupVerificationStatus: {
-  PENDING: 'PENDING',
+  DRAFT: 'DRAFT',
+  SUBMITTED: 'SUBMITTED',
+  UNDER_REVIEW: 'UNDER_REVIEW',
   VERIFIED: 'VERIFIED',
-  REJECTED: 'REJECTED'
+  REJECTED: 'REJECTED',
+  CORRECTION_REQUESTED: 'CORRECTION_REQUESTED',
+  PENDING: 'PENDING'
 };
 
 export type StartupVerificationStatus = (typeof StartupVerificationStatus)[keyof typeof StartupVerificationStatus]
+
+
+export const StartupOrgType: {
+  PROPRIETORSHIP: 'PROPRIETORSHIP',
+  PARTNERSHIP: 'PARTNERSHIP',
+  LLP: 'LLP',
+  PRIVATE_LIMITED: 'PRIVATE_LIMITED',
+  PUBLIC_LIMITED: 'PUBLIC_LIMITED',
+  TRUST: 'TRUST',
+  SOCIETY: 'SOCIETY',
+  ASSOCIATION: 'ASSOCIATION',
+  OTHER: 'OTHER'
+};
+
+export type StartupOrgType = (typeof StartupOrgType)[keyof typeof StartupOrgType]
+
+
+export const VerificationSource: {
+  SELF_DECLARED: 'SELF_DECLARED',
+  DOCUMENT_VERIFIED: 'DOCUMENT_VERIFIED',
+  EXTERNAL_API_VERIFIED: 'EXTERNAL_API_VERIFIED'
+};
+
+export type VerificationSource = (typeof VerificationSource)[keyof typeof VerificationSource]
 
 
 export const ApplicationStatus: {
@@ -378,6 +411,14 @@ export const ChallengeStatus: typeof $Enums.ChallengeStatus
 export type StartupVerificationStatus = $Enums.StartupVerificationStatus
 
 export const StartupVerificationStatus: typeof $Enums.StartupVerificationStatus
+
+export type StartupOrgType = $Enums.StartupOrgType
+
+export const StartupOrgType: typeof $Enums.StartupOrgType
+
+export type VerificationSource = $Enums.VerificationSource
+
+export const VerificationSource: typeof $Enums.VerificationSource
 
 export type ApplicationStatus = $Enums.ApplicationStatus
 
@@ -605,6 +646,16 @@ export class PrismaClient<
     * ```
     */
   get startup(): Prisma.StartupDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.startupBankDetails`: Exposes CRUD operations for the **StartupBankDetails** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more StartupBankDetails
+    * const startupBankDetails = await prisma.startupBankDetails.findMany()
+    * ```
+    */
+  get startupBankDetails(): Prisma.StartupBankDetailsDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.startupDocument`: Exposes CRUD operations for the **StartupDocument** model.
@@ -1350,6 +1401,7 @@ export namespace Prisma {
     Challenge: 'Challenge',
     MatchScore: 'MatchScore',
     Startup: 'Startup',
+    StartupBankDetails: 'StartupBankDetails',
     StartupDocument: 'StartupDocument',
     Application: 'Application',
     EvaluatorProfile: 'EvaluatorProfile',
@@ -1395,7 +1447,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "department" | "challenge" | "matchScore" | "startup" | "startupDocument" | "application" | "evaluatorProfile" | "conflictDeclaration" | "evaluation" | "applicationDocument" | "applicationProposalAnalysis" | "evaluatorMatchScore" | "evaluatorApplication" | "challengeEvaluatorPool" | "pilot" | "pilotKpi" | "pilotMeasurement" | "milestone" | "evidence" | "risk" | "pilotIssue" | "validation" | "payment" | "scaleDecision" | "complianceItem" | "pilotFeedback" | "notification" | "auditLog" | "accessRequest" | "evaluatorAssignment" | "procurementRecord" | "systemSetting" | "evaluationCriterion" | "systemTemplate"
+      modelProps: "user" | "department" | "challenge" | "matchScore" | "startup" | "startupBankDetails" | "startupDocument" | "application" | "evaluatorProfile" | "conflictDeclaration" | "evaluation" | "applicationDocument" | "applicationProposalAnalysis" | "evaluatorMatchScore" | "evaluatorApplication" | "challengeEvaluatorPool" | "pilot" | "pilotKpi" | "pilotMeasurement" | "milestone" | "evidence" | "risk" | "pilotIssue" | "validation" | "payment" | "scaleDecision" | "complianceItem" | "pilotFeedback" | "notification" | "auditLog" | "accessRequest" | "evaluatorAssignment" | "procurementRecord" | "systemSetting" | "evaluationCriterion" | "systemTemplate"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1766,6 +1818,80 @@ export namespace Prisma {
           count: {
             args: Prisma.StartupCountArgs<ExtArgs>
             result: $Utils.Optional<StartupCountAggregateOutputType> | number
+          }
+        }
+      }
+      StartupBankDetails: {
+        payload: Prisma.$StartupBankDetailsPayload<ExtArgs>
+        fields: Prisma.StartupBankDetailsFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.StartupBankDetailsFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StartupBankDetailsPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.StartupBankDetailsFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StartupBankDetailsPayload>
+          }
+          findFirst: {
+            args: Prisma.StartupBankDetailsFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StartupBankDetailsPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.StartupBankDetailsFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StartupBankDetailsPayload>
+          }
+          findMany: {
+            args: Prisma.StartupBankDetailsFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StartupBankDetailsPayload>[]
+          }
+          create: {
+            args: Prisma.StartupBankDetailsCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StartupBankDetailsPayload>
+          }
+          createMany: {
+            args: Prisma.StartupBankDetailsCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.StartupBankDetailsCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StartupBankDetailsPayload>[]
+          }
+          delete: {
+            args: Prisma.StartupBankDetailsDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StartupBankDetailsPayload>
+          }
+          update: {
+            args: Prisma.StartupBankDetailsUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StartupBankDetailsPayload>
+          }
+          deleteMany: {
+            args: Prisma.StartupBankDetailsDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.StartupBankDetailsUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.StartupBankDetailsUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StartupBankDetailsPayload>[]
+          }
+          upsert: {
+            args: Prisma.StartupBankDetailsUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$StartupBankDetailsPayload>
+          }
+          aggregate: {
+            args: Prisma.StartupBankDetailsAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateStartupBankDetails>
+          }
+          groupBy: {
+            args: Prisma.StartupBankDetailsGroupByArgs<ExtArgs>
+            result: $Utils.Optional<StartupBankDetailsGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.StartupBankDetailsCountArgs<ExtArgs>
+            result: $Utils.Optional<StartupBankDetailsCountAggregateOutputType> | number
           }
         }
       }
@@ -4078,6 +4204,7 @@ export namespace Prisma {
     challenge?: ChallengeOmit
     matchScore?: MatchScoreOmit
     startup?: StartupOmit
+    startupBankDetails?: StartupBankDetailsOmit
     startupDocument?: StartupDocumentOmit
     application?: ApplicationOmit
     evaluatorProfile?: EvaluatorProfileOmit
@@ -4981,6 +5108,9 @@ export namespace Prisma {
     invitation_token_hash: string | null
     invitation_expires_at: Date | null
     invitation_accepted_at: Date | null
+    email_verification_token_hash: string | null
+    email_verification_expires_at: Date | null
+    email_verified_at: Date | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -4999,6 +5129,9 @@ export namespace Prisma {
     invitation_token_hash: string | null
     invitation_expires_at: Date | null
     invitation_accepted_at: Date | null
+    email_verification_token_hash: string | null
+    email_verification_expires_at: Date | null
+    email_verified_at: Date | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -5017,6 +5150,9 @@ export namespace Prisma {
     invitation_token_hash: number
     invitation_expires_at: number
     invitation_accepted_at: number
+    email_verification_token_hash: number
+    email_verification_expires_at: number
+    email_verified_at: number
     created_at: number
     updated_at: number
     _all: number
@@ -5037,6 +5173,9 @@ export namespace Prisma {
     invitation_token_hash?: true
     invitation_expires_at?: true
     invitation_accepted_at?: true
+    email_verification_token_hash?: true
+    email_verification_expires_at?: true
+    email_verified_at?: true
     created_at?: true
     updated_at?: true
   }
@@ -5055,6 +5194,9 @@ export namespace Prisma {
     invitation_token_hash?: true
     invitation_expires_at?: true
     invitation_accepted_at?: true
+    email_verification_token_hash?: true
+    email_verification_expires_at?: true
+    email_verified_at?: true
     created_at?: true
     updated_at?: true
   }
@@ -5073,6 +5215,9 @@ export namespace Prisma {
     invitation_token_hash?: true
     invitation_expires_at?: true
     invitation_accepted_at?: true
+    email_verification_token_hash?: true
+    email_verification_expires_at?: true
+    email_verified_at?: true
     created_at?: true
     updated_at?: true
     _all?: true
@@ -5164,6 +5309,9 @@ export namespace Prisma {
     invitation_token_hash: string | null
     invitation_expires_at: Date | null
     invitation_accepted_at: Date | null
+    email_verification_token_hash: string | null
+    email_verification_expires_at: Date | null
+    email_verified_at: Date | null
     created_at: Date
     updated_at: Date
     _count: UserCountAggregateOutputType | null
@@ -5199,6 +5347,9 @@ export namespace Prisma {
     invitation_token_hash?: boolean
     invitation_expires_at?: boolean
     invitation_accepted_at?: boolean
+    email_verification_token_hash?: boolean
+    email_verification_expires_at?: boolean
+    email_verified_at?: boolean
     created_at?: boolean
     updated_at?: boolean
     audit_logs?: boolean | User$audit_logsArgs<ExtArgs>
@@ -5246,6 +5397,9 @@ export namespace Prisma {
     invitation_token_hash?: boolean
     invitation_expires_at?: boolean
     invitation_accepted_at?: boolean
+    email_verification_token_hash?: boolean
+    email_verification_expires_at?: boolean
+    email_verified_at?: boolean
     created_at?: boolean
     updated_at?: boolean
     department?: boolean | User$departmentArgs<ExtArgs>
@@ -5265,6 +5419,9 @@ export namespace Prisma {
     invitation_token_hash?: boolean
     invitation_expires_at?: boolean
     invitation_accepted_at?: boolean
+    email_verification_token_hash?: boolean
+    email_verification_expires_at?: boolean
+    email_verified_at?: boolean
     created_at?: boolean
     updated_at?: boolean
     department?: boolean | User$departmentArgs<ExtArgs>
@@ -5284,11 +5441,14 @@ export namespace Prisma {
     invitation_token_hash?: boolean
     invitation_expires_at?: boolean
     invitation_accepted_at?: boolean
+    email_verification_token_hash?: boolean
+    email_verification_expires_at?: boolean
+    email_verified_at?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "password_hash" | "role" | "department_id" | "is_active" | "is_verified" | "designation" | "phone" | "invitation_token_hash" | "invitation_expires_at" | "invitation_accepted_at" | "created_at" | "updated_at", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "password_hash" | "role" | "department_id" | "is_active" | "is_verified" | "designation" | "phone" | "invitation_token_hash" | "invitation_expires_at" | "invitation_accepted_at" | "email_verification_token_hash" | "email_verification_expires_at" | "email_verified_at" | "created_at" | "updated_at", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     audit_logs?: boolean | User$audit_logsArgs<ExtArgs>
     created_challenges?: boolean | User$created_challengesArgs<ExtArgs>
@@ -5373,6 +5533,9 @@ export namespace Prisma {
       invitation_token_hash: string | null
       invitation_expires_at: Date | null
       invitation_accepted_at: Date | null
+      email_verification_token_hash: string | null
+      email_verification_expires_at: Date | null
+      email_verified_at: Date | null
       created_at: Date
       updated_at: Date
     }, ExtArgs["result"]["user"]>
@@ -5839,6 +6002,9 @@ export namespace Prisma {
     readonly invitation_token_hash: FieldRef<"User", 'String'>
     readonly invitation_expires_at: FieldRef<"User", 'DateTime'>
     readonly invitation_accepted_at: FieldRef<"User", 'DateTime'>
+    readonly email_verification_token_hash: FieldRef<"User", 'String'>
+    readonly email_verification_expires_at: FieldRef<"User", 'DateTime'>
+    readonly email_verified_at: FieldRef<"User", 'DateTime'>
     readonly created_at: FieldRef<"User", 'DateTime'>
     readonly updated_at: FieldRef<"User", 'DateTime'>
   }
@@ -10943,15 +11109,34 @@ export namespace Prisma {
     years_experience: number | null
     previous_deployments: number | null
     verification_status: $Enums.StartupVerificationStatus | null
-    dpiit_number: string | null
-    certificate_number: string | null
-    incorporation_date: Date | null
+    org_type: $Enums.StartupOrgType | null
+    registered_address: string | null
+    city: string | null
+    state: string | null
+    pincode: string | null
+    official_email: string | null
+    official_website: string | null
+    authorized_person_name: string | null
+    authorized_person_designation: string | null
+    authorized_person_email: string | null
+    authorized_person_phone: string | null
+    authorization_type: string | null
+    pan_number: string | null
     cin_number: string | null
     gstin: string | null
+    dpiit_number: string | null
+    certificate_number: string | null
+    registration_number: string | null
+    incorporation_date: Date | null
+    verification_source: $Enums.VerificationSource | null
+    products_services: string | null
+    location: string | null
     verification_notes: string | null
+    correction_notes: string | null
+    rejection_reason: string | null
+    submitted_at: Date | null
     verified_at: Date | null
     verified_by: string | null
-    location: string | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -10966,15 +11151,34 @@ export namespace Prisma {
     years_experience: number | null
     previous_deployments: number | null
     verification_status: $Enums.StartupVerificationStatus | null
-    dpiit_number: string | null
-    certificate_number: string | null
-    incorporation_date: Date | null
+    org_type: $Enums.StartupOrgType | null
+    registered_address: string | null
+    city: string | null
+    state: string | null
+    pincode: string | null
+    official_email: string | null
+    official_website: string | null
+    authorized_person_name: string | null
+    authorized_person_designation: string | null
+    authorized_person_email: string | null
+    authorized_person_phone: string | null
+    authorization_type: string | null
+    pan_number: string | null
     cin_number: string | null
     gstin: string | null
+    dpiit_number: string | null
+    certificate_number: string | null
+    registration_number: string | null
+    incorporation_date: Date | null
+    verification_source: $Enums.VerificationSource | null
+    products_services: string | null
+    location: string | null
     verification_notes: string | null
+    correction_notes: string | null
+    rejection_reason: string | null
+    submitted_at: Date | null
     verified_at: Date | null
     verified_by: string | null
-    location: string | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -10990,15 +11194,34 @@ export namespace Prisma {
     years_experience: number
     previous_deployments: number
     verification_status: number
-    dpiit_number: number
-    certificate_number: number
-    incorporation_date: number
+    org_type: number
+    registered_address: number
+    city: number
+    state: number
+    pincode: number
+    official_email: number
+    official_website: number
+    authorized_person_name: number
+    authorized_person_designation: number
+    authorized_person_email: number
+    authorized_person_phone: number
+    authorization_type: number
+    pan_number: number
     cin_number: number
     gstin: number
+    dpiit_number: number
+    certificate_number: number
+    registration_number: number
+    incorporation_date: number
+    verification_source: number
+    products_services: number
+    location: number
     verification_notes: number
+    correction_notes: number
+    rejection_reason: number
+    submitted_at: number
     verified_at: number
     verified_by: number
-    location: number
     created_at: number
     updated_at: number
     _all: number
@@ -11027,15 +11250,34 @@ export namespace Prisma {
     years_experience?: true
     previous_deployments?: true
     verification_status?: true
-    dpiit_number?: true
-    certificate_number?: true
-    incorporation_date?: true
+    org_type?: true
+    registered_address?: true
+    city?: true
+    state?: true
+    pincode?: true
+    official_email?: true
+    official_website?: true
+    authorized_person_name?: true
+    authorized_person_designation?: true
+    authorized_person_email?: true
+    authorized_person_phone?: true
+    authorization_type?: true
+    pan_number?: true
     cin_number?: true
     gstin?: true
+    dpiit_number?: true
+    certificate_number?: true
+    registration_number?: true
+    incorporation_date?: true
+    verification_source?: true
+    products_services?: true
+    location?: true
     verification_notes?: true
+    correction_notes?: true
+    rejection_reason?: true
+    submitted_at?: true
     verified_at?: true
     verified_by?: true
-    location?: true
     created_at?: true
     updated_at?: true
   }
@@ -11050,15 +11292,34 @@ export namespace Prisma {
     years_experience?: true
     previous_deployments?: true
     verification_status?: true
-    dpiit_number?: true
-    certificate_number?: true
-    incorporation_date?: true
+    org_type?: true
+    registered_address?: true
+    city?: true
+    state?: true
+    pincode?: true
+    official_email?: true
+    official_website?: true
+    authorized_person_name?: true
+    authorized_person_designation?: true
+    authorized_person_email?: true
+    authorized_person_phone?: true
+    authorization_type?: true
+    pan_number?: true
     cin_number?: true
     gstin?: true
+    dpiit_number?: true
+    certificate_number?: true
+    registration_number?: true
+    incorporation_date?: true
+    verification_source?: true
+    products_services?: true
+    location?: true
     verification_notes?: true
+    correction_notes?: true
+    rejection_reason?: true
+    submitted_at?: true
     verified_at?: true
     verified_by?: true
-    location?: true
     created_at?: true
     updated_at?: true
   }
@@ -11074,15 +11335,34 @@ export namespace Prisma {
     years_experience?: true
     previous_deployments?: true
     verification_status?: true
-    dpiit_number?: true
-    certificate_number?: true
-    incorporation_date?: true
+    org_type?: true
+    registered_address?: true
+    city?: true
+    state?: true
+    pincode?: true
+    official_email?: true
+    official_website?: true
+    authorized_person_name?: true
+    authorized_person_designation?: true
+    authorized_person_email?: true
+    authorized_person_phone?: true
+    authorization_type?: true
+    pan_number?: true
     cin_number?: true
     gstin?: true
+    dpiit_number?: true
+    certificate_number?: true
+    registration_number?: true
+    incorporation_date?: true
+    verification_source?: true
+    products_services?: true
+    location?: true
     verification_notes?: true
+    correction_notes?: true
+    rejection_reason?: true
+    submitted_at?: true
     verified_at?: true
     verified_by?: true
-    location?: true
     created_at?: true
     updated_at?: true
     _all?: true
@@ -11185,15 +11465,34 @@ export namespace Prisma {
     years_experience: number
     previous_deployments: number
     verification_status: $Enums.StartupVerificationStatus
-    dpiit_number: string | null
-    certificate_number: string | null
-    incorporation_date: Date | null
+    org_type: $Enums.StartupOrgType
+    registered_address: string | null
+    city: string | null
+    state: string | null
+    pincode: string | null
+    official_email: string | null
+    official_website: string | null
+    authorized_person_name: string | null
+    authorized_person_designation: string | null
+    authorized_person_email: string | null
+    authorized_person_phone: string | null
+    authorization_type: string | null
+    pan_number: string | null
     cin_number: string | null
     gstin: string | null
+    dpiit_number: string | null
+    certificate_number: string | null
+    registration_number: string | null
+    incorporation_date: Date | null
+    verification_source: $Enums.VerificationSource
+    products_services: string | null
+    location: string
     verification_notes: string | null
+    correction_notes: string | null
+    rejection_reason: string | null
+    submitted_at: Date | null
     verified_at: Date | null
     verified_by: string | null
-    location: string
     created_at: Date
     updated_at: Date
     _count: StartupCountAggregateOutputType | null
@@ -11228,21 +11527,41 @@ export namespace Prisma {
     years_experience?: boolean
     previous_deployments?: boolean
     verification_status?: boolean
-    dpiit_number?: boolean
-    certificate_number?: boolean
-    incorporation_date?: boolean
+    org_type?: boolean
+    registered_address?: boolean
+    city?: boolean
+    state?: boolean
+    pincode?: boolean
+    official_email?: boolean
+    official_website?: boolean
+    authorized_person_name?: boolean
+    authorized_person_designation?: boolean
+    authorized_person_email?: boolean
+    authorized_person_phone?: boolean
+    authorization_type?: boolean
+    pan_number?: boolean
     cin_number?: boolean
     gstin?: boolean
+    dpiit_number?: boolean
+    certificate_number?: boolean
+    registration_number?: boolean
+    incorporation_date?: boolean
+    verification_source?: boolean
+    products_services?: boolean
+    location?: boolean
     verification_notes?: boolean
+    correction_notes?: boolean
+    rejection_reason?: boolean
+    submitted_at?: boolean
     verified_at?: boolean
     verified_by?: boolean
-    location?: boolean
     created_at?: boolean
     updated_at?: boolean
     applications?: boolean | Startup$applicationsArgs<ExtArgs>
     match_scores?: boolean | Startup$match_scoresArgs<ExtArgs>
     pilots?: boolean | Startup$pilotsArgs<ExtArgs>
     documents?: boolean | Startup$documentsArgs<ExtArgs>
+    bank_details?: boolean | Startup$bank_detailsArgs<ExtArgs>
     procurements?: boolean | Startup$procurementsArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
     verifier?: boolean | Startup$verifierArgs<ExtArgs>
@@ -11260,15 +11579,34 @@ export namespace Prisma {
     years_experience?: boolean
     previous_deployments?: boolean
     verification_status?: boolean
-    dpiit_number?: boolean
-    certificate_number?: boolean
-    incorporation_date?: boolean
+    org_type?: boolean
+    registered_address?: boolean
+    city?: boolean
+    state?: boolean
+    pincode?: boolean
+    official_email?: boolean
+    official_website?: boolean
+    authorized_person_name?: boolean
+    authorized_person_designation?: boolean
+    authorized_person_email?: boolean
+    authorized_person_phone?: boolean
+    authorization_type?: boolean
+    pan_number?: boolean
     cin_number?: boolean
     gstin?: boolean
+    dpiit_number?: boolean
+    certificate_number?: boolean
+    registration_number?: boolean
+    incorporation_date?: boolean
+    verification_source?: boolean
+    products_services?: boolean
+    location?: boolean
     verification_notes?: boolean
+    correction_notes?: boolean
+    rejection_reason?: boolean
+    submitted_at?: boolean
     verified_at?: boolean
     verified_by?: boolean
-    location?: boolean
     created_at?: boolean
     updated_at?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -11286,15 +11624,34 @@ export namespace Prisma {
     years_experience?: boolean
     previous_deployments?: boolean
     verification_status?: boolean
-    dpiit_number?: boolean
-    certificate_number?: boolean
-    incorporation_date?: boolean
+    org_type?: boolean
+    registered_address?: boolean
+    city?: boolean
+    state?: boolean
+    pincode?: boolean
+    official_email?: boolean
+    official_website?: boolean
+    authorized_person_name?: boolean
+    authorized_person_designation?: boolean
+    authorized_person_email?: boolean
+    authorized_person_phone?: boolean
+    authorization_type?: boolean
+    pan_number?: boolean
     cin_number?: boolean
     gstin?: boolean
+    dpiit_number?: boolean
+    certificate_number?: boolean
+    registration_number?: boolean
+    incorporation_date?: boolean
+    verification_source?: boolean
+    products_services?: boolean
+    location?: boolean
     verification_notes?: boolean
+    correction_notes?: boolean
+    rejection_reason?: boolean
+    submitted_at?: boolean
     verified_at?: boolean
     verified_by?: boolean
-    location?: boolean
     created_at?: boolean
     updated_at?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -11312,25 +11669,45 @@ export namespace Prisma {
     years_experience?: boolean
     previous_deployments?: boolean
     verification_status?: boolean
-    dpiit_number?: boolean
-    certificate_number?: boolean
-    incorporation_date?: boolean
+    org_type?: boolean
+    registered_address?: boolean
+    city?: boolean
+    state?: boolean
+    pincode?: boolean
+    official_email?: boolean
+    official_website?: boolean
+    authorized_person_name?: boolean
+    authorized_person_designation?: boolean
+    authorized_person_email?: boolean
+    authorized_person_phone?: boolean
+    authorization_type?: boolean
+    pan_number?: boolean
     cin_number?: boolean
     gstin?: boolean
+    dpiit_number?: boolean
+    certificate_number?: boolean
+    registration_number?: boolean
+    incorporation_date?: boolean
+    verification_source?: boolean
+    products_services?: boolean
+    location?: boolean
     verification_notes?: boolean
+    correction_notes?: boolean
+    rejection_reason?: boolean
+    submitted_at?: boolean
     verified_at?: boolean
     verified_by?: boolean
-    location?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
 
-  export type StartupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "user_id" | "company_name" | "description" | "domain" | "technologies" | "readiness_level" | "years_experience" | "previous_deployments" | "verification_status" | "dpiit_number" | "certificate_number" | "incorporation_date" | "cin_number" | "gstin" | "verification_notes" | "verified_at" | "verified_by" | "location" | "created_at" | "updated_at", ExtArgs["result"]["startup"]>
+  export type StartupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "user_id" | "company_name" | "description" | "domain" | "technologies" | "readiness_level" | "years_experience" | "previous_deployments" | "verification_status" | "org_type" | "registered_address" | "city" | "state" | "pincode" | "official_email" | "official_website" | "authorized_person_name" | "authorized_person_designation" | "authorized_person_email" | "authorized_person_phone" | "authorization_type" | "pan_number" | "cin_number" | "gstin" | "dpiit_number" | "certificate_number" | "registration_number" | "incorporation_date" | "verification_source" | "products_services" | "location" | "verification_notes" | "correction_notes" | "rejection_reason" | "submitted_at" | "verified_at" | "verified_by" | "created_at" | "updated_at", ExtArgs["result"]["startup"]>
   export type StartupInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     applications?: boolean | Startup$applicationsArgs<ExtArgs>
     match_scores?: boolean | Startup$match_scoresArgs<ExtArgs>
     pilots?: boolean | Startup$pilotsArgs<ExtArgs>
     documents?: boolean | Startup$documentsArgs<ExtArgs>
+    bank_details?: boolean | Startup$bank_detailsArgs<ExtArgs>
     procurements?: boolean | Startup$procurementsArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
     verifier?: boolean | Startup$verifierArgs<ExtArgs>
@@ -11352,6 +11729,7 @@ export namespace Prisma {
       match_scores: Prisma.$MatchScorePayload<ExtArgs>[]
       pilots: Prisma.$PilotPayload<ExtArgs>[]
       documents: Prisma.$StartupDocumentPayload<ExtArgs>[]
+      bank_details: Prisma.$StartupBankDetailsPayload<ExtArgs> | null
       procurements: Prisma.$ProcurementRecordPayload<ExtArgs>[]
       user: Prisma.$UserPayload<ExtArgs>
       verifier: Prisma.$UserPayload<ExtArgs> | null
@@ -11367,15 +11745,34 @@ export namespace Prisma {
       years_experience: number
       previous_deployments: number
       verification_status: $Enums.StartupVerificationStatus
-      dpiit_number: string | null
-      certificate_number: string | null
-      incorporation_date: Date | null
+      org_type: $Enums.StartupOrgType
+      registered_address: string | null
+      city: string | null
+      state: string | null
+      pincode: string | null
+      official_email: string | null
+      official_website: string | null
+      authorized_person_name: string | null
+      authorized_person_designation: string | null
+      authorized_person_email: string | null
+      authorized_person_phone: string | null
+      authorization_type: string | null
+      pan_number: string | null
       cin_number: string | null
       gstin: string | null
+      dpiit_number: string | null
+      certificate_number: string | null
+      registration_number: string | null
+      incorporation_date: Date | null
+      verification_source: $Enums.VerificationSource
+      products_services: string | null
+      location: string
       verification_notes: string | null
+      correction_notes: string | null
+      rejection_reason: string | null
+      submitted_at: Date | null
       verified_at: Date | null
       verified_by: string | null
-      location: string
       created_at: Date
       updated_at: Date
     }, ExtArgs["result"]["startup"]>
@@ -11776,6 +12173,7 @@ export namespace Prisma {
     match_scores<T extends Startup$match_scoresArgs<ExtArgs> = {}>(args?: Subset<T, Startup$match_scoresArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MatchScorePayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     pilots<T extends Startup$pilotsArgs<ExtArgs> = {}>(args?: Subset<T, Startup$pilotsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PilotPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     documents<T extends Startup$documentsArgs<ExtArgs> = {}>(args?: Subset<T, Startup$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StartupDocumentPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
+    bank_details<T extends Startup$bank_detailsArgs<ExtArgs> = {}>(args?: Subset<T, Startup$bank_detailsArgs<ExtArgs>>): Prisma__StartupBankDetailsClient<$Result.GetResult<Prisma.$StartupBankDetailsPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | null, null, ExtArgs, ClientOptions>
     procurements<T extends Startup$procurementsArgs<ExtArgs> = {}>(args?: Subset<T, Startup$procurementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProcurementRecordPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | Null, Null, ExtArgs, ClientOptions>
     verifier<T extends Startup$verifierArgs<ExtArgs> = {}>(args?: Subset<T, Startup$verifierArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | null, null, ExtArgs, ClientOptions>
@@ -11818,15 +12216,34 @@ export namespace Prisma {
     readonly years_experience: FieldRef<"Startup", 'Int'>
     readonly previous_deployments: FieldRef<"Startup", 'Int'>
     readonly verification_status: FieldRef<"Startup", 'StartupVerificationStatus'>
-    readonly dpiit_number: FieldRef<"Startup", 'String'>
-    readonly certificate_number: FieldRef<"Startup", 'String'>
-    readonly incorporation_date: FieldRef<"Startup", 'DateTime'>
+    readonly org_type: FieldRef<"Startup", 'StartupOrgType'>
+    readonly registered_address: FieldRef<"Startup", 'String'>
+    readonly city: FieldRef<"Startup", 'String'>
+    readonly state: FieldRef<"Startup", 'String'>
+    readonly pincode: FieldRef<"Startup", 'String'>
+    readonly official_email: FieldRef<"Startup", 'String'>
+    readonly official_website: FieldRef<"Startup", 'String'>
+    readonly authorized_person_name: FieldRef<"Startup", 'String'>
+    readonly authorized_person_designation: FieldRef<"Startup", 'String'>
+    readonly authorized_person_email: FieldRef<"Startup", 'String'>
+    readonly authorized_person_phone: FieldRef<"Startup", 'String'>
+    readonly authorization_type: FieldRef<"Startup", 'String'>
+    readonly pan_number: FieldRef<"Startup", 'String'>
     readonly cin_number: FieldRef<"Startup", 'String'>
     readonly gstin: FieldRef<"Startup", 'String'>
+    readonly dpiit_number: FieldRef<"Startup", 'String'>
+    readonly certificate_number: FieldRef<"Startup", 'String'>
+    readonly registration_number: FieldRef<"Startup", 'String'>
+    readonly incorporation_date: FieldRef<"Startup", 'DateTime'>
+    readonly verification_source: FieldRef<"Startup", 'VerificationSource'>
+    readonly products_services: FieldRef<"Startup", 'String'>
+    readonly location: FieldRef<"Startup", 'String'>
     readonly verification_notes: FieldRef<"Startup", 'String'>
+    readonly correction_notes: FieldRef<"Startup", 'String'>
+    readonly rejection_reason: FieldRef<"Startup", 'String'>
+    readonly submitted_at: FieldRef<"Startup", 'DateTime'>
     readonly verified_at: FieldRef<"Startup", 'DateTime'>
     readonly verified_by: FieldRef<"Startup", 'String'>
-    readonly location: FieldRef<"Startup", 'String'>
     readonly created_at: FieldRef<"Startup", 'DateTime'>
     readonly updated_at: FieldRef<"Startup", 'DateTime'>
   }
@@ -12321,6 +12738,25 @@ export namespace Prisma {
   }
 
   /**
+   * Startup.bank_details
+   */
+  export type Startup$bank_detailsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StartupBankDetails
+     */
+    select?: StartupBankDetailsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StartupBankDetails
+     */
+    omit?: StartupBankDetailsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupBankDetailsInclude<ExtArgs> | null
+    where?: StartupBankDetailsWhereInput
+  }
+
+  /**
    * Startup.procurements
    */
   export type Startup$procurementsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -12383,13 +12819,1146 @@ export namespace Prisma {
 
 
   /**
+   * Model StartupBankDetails
+   */
+
+  export type AggregateStartupBankDetails = {
+    _count: StartupBankDetailsCountAggregateOutputType | null
+    _min: StartupBankDetailsMinAggregateOutputType | null
+    _max: StartupBankDetailsMaxAggregateOutputType | null
+  }
+
+  export type StartupBankDetailsMinAggregateOutputType = {
+    id: string | null
+    startup_id: string | null
+    account_holder_name: string | null
+    bank_name: string | null
+    account_number: string | null
+    ifsc_code: string | null
+    branch_name: string | null
+    account_type: string | null
+    created_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type StartupBankDetailsMaxAggregateOutputType = {
+    id: string | null
+    startup_id: string | null
+    account_holder_name: string | null
+    bank_name: string | null
+    account_number: string | null
+    ifsc_code: string | null
+    branch_name: string | null
+    account_type: string | null
+    created_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type StartupBankDetailsCountAggregateOutputType = {
+    id: number
+    startup_id: number
+    account_holder_name: number
+    bank_name: number
+    account_number: number
+    ifsc_code: number
+    branch_name: number
+    account_type: number
+    created_at: number
+    updated_at: number
+    _all: number
+  }
+
+
+  export type StartupBankDetailsMinAggregateInputType = {
+    id?: true
+    startup_id?: true
+    account_holder_name?: true
+    bank_name?: true
+    account_number?: true
+    ifsc_code?: true
+    branch_name?: true
+    account_type?: true
+    created_at?: true
+    updated_at?: true
+  }
+
+  export type StartupBankDetailsMaxAggregateInputType = {
+    id?: true
+    startup_id?: true
+    account_holder_name?: true
+    bank_name?: true
+    account_number?: true
+    ifsc_code?: true
+    branch_name?: true
+    account_type?: true
+    created_at?: true
+    updated_at?: true
+  }
+
+  export type StartupBankDetailsCountAggregateInputType = {
+    id?: true
+    startup_id?: true
+    account_holder_name?: true
+    bank_name?: true
+    account_number?: true
+    ifsc_code?: true
+    branch_name?: true
+    account_type?: true
+    created_at?: true
+    updated_at?: true
+    _all?: true
+  }
+
+  export type StartupBankDetailsAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which StartupBankDetails to aggregate.
+     */
+    where?: StartupBankDetailsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StartupBankDetails to fetch.
+     */
+    orderBy?: StartupBankDetailsOrderByWithRelationInput | StartupBankDetailsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: StartupBankDetailsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StartupBankDetails from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StartupBankDetails.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned StartupBankDetails
+    **/
+    _count?: true | StartupBankDetailsCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: StartupBankDetailsMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: StartupBankDetailsMaxAggregateInputType
+  }
+
+  export type GetStartupBankDetailsAggregateType<T extends StartupBankDetailsAggregateArgs> = {
+        [P in keyof T & keyof AggregateStartupBankDetails]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateStartupBankDetails[P]>
+      : GetScalarType<T[P], AggregateStartupBankDetails[P]>
+  }
+
+
+
+
+  export type StartupBankDetailsGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StartupBankDetailsWhereInput
+    orderBy?: StartupBankDetailsOrderByWithAggregationInput | StartupBankDetailsOrderByWithAggregationInput[]
+    by: StartupBankDetailsScalarFieldEnum[] | StartupBankDetailsScalarFieldEnum
+    having?: StartupBankDetailsScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: StartupBankDetailsCountAggregateInputType | true
+    _min?: StartupBankDetailsMinAggregateInputType
+    _max?: StartupBankDetailsMaxAggregateInputType
+  }
+
+  export type StartupBankDetailsGroupByOutputType = {
+    id: string
+    startup_id: string
+    account_holder_name: string
+    bank_name: string
+    account_number: string
+    ifsc_code: string
+    branch_name: string | null
+    account_type: string | null
+    created_at: Date
+    updated_at: Date
+    _count: StartupBankDetailsCountAggregateOutputType | null
+    _min: StartupBankDetailsMinAggregateOutputType | null
+    _max: StartupBankDetailsMaxAggregateOutputType | null
+  }
+
+  type GetStartupBankDetailsGroupByPayload<T extends StartupBankDetailsGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<StartupBankDetailsGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof StartupBankDetailsGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], StartupBankDetailsGroupByOutputType[P]>
+            : GetScalarType<T[P], StartupBankDetailsGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type StartupBankDetailsSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    startup_id?: boolean
+    account_holder_name?: boolean
+    bank_name?: boolean
+    account_number?: boolean
+    ifsc_code?: boolean
+    branch_name?: boolean
+    account_type?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+    startup?: boolean | StartupDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["startupBankDetails"]>
+
+  export type StartupBankDetailsSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    startup_id?: boolean
+    account_holder_name?: boolean
+    bank_name?: boolean
+    account_number?: boolean
+    ifsc_code?: boolean
+    branch_name?: boolean
+    account_type?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+    startup?: boolean | StartupDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["startupBankDetails"]>
+
+  export type StartupBankDetailsSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    startup_id?: boolean
+    account_holder_name?: boolean
+    bank_name?: boolean
+    account_number?: boolean
+    ifsc_code?: boolean
+    branch_name?: boolean
+    account_type?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+    startup?: boolean | StartupDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["startupBankDetails"]>
+
+  export type StartupBankDetailsSelectScalar = {
+    id?: boolean
+    startup_id?: boolean
+    account_holder_name?: boolean
+    bank_name?: boolean
+    account_number?: boolean
+    ifsc_code?: boolean
+    branch_name?: boolean
+    account_type?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+  }
+
+  export type StartupBankDetailsOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "startup_id" | "account_holder_name" | "bank_name" | "account_number" | "ifsc_code" | "branch_name" | "account_type" | "created_at" | "updated_at", ExtArgs["result"]["startupBankDetails"]>
+  export type StartupBankDetailsInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    startup?: boolean | StartupDefaultArgs<ExtArgs>
+  }
+  export type StartupBankDetailsIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    startup?: boolean | StartupDefaultArgs<ExtArgs>
+  }
+  export type StartupBankDetailsIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    startup?: boolean | StartupDefaultArgs<ExtArgs>
+  }
+
+  export type $StartupBankDetailsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "StartupBankDetails"
+    objects: {
+      startup: Prisma.$StartupPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      startup_id: string
+      account_holder_name: string
+      bank_name: string
+      account_number: string
+      ifsc_code: string
+      branch_name: string | null
+      account_type: string | null
+      created_at: Date
+      updated_at: Date
+    }, ExtArgs["result"]["startupBankDetails"]>
+    composites: {}
+  }
+
+  type StartupBankDetailsGetPayload<S extends boolean | null | undefined | StartupBankDetailsDefaultArgs> = $Result.GetResult<Prisma.$StartupBankDetailsPayload, S>
+
+  type StartupBankDetailsCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<StartupBankDetailsFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: StartupBankDetailsCountAggregateInputType | true
+    }
+
+  export interface StartupBankDetailsDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['StartupBankDetails'], meta: { name: 'StartupBankDetails' } }
+    /**
+     * Find zero or one StartupBankDetails that matches the filter.
+     * @param {StartupBankDetailsFindUniqueArgs} args - Arguments to find a StartupBankDetails
+     * @example
+     * // Get one StartupBankDetails
+     * const startupBankDetails = await prisma.startupBankDetails.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends StartupBankDetailsFindUniqueArgs>(args: SelectSubset<T, StartupBankDetailsFindUniqueArgs<ExtArgs>>): Prisma__StartupBankDetailsClient<$Result.GetResult<Prisma.$StartupBankDetailsPayload<ExtArgs>, T, "findUnique", ClientOptions> | null, null, ExtArgs, ClientOptions>
+
+    /**
+     * Find one StartupBankDetails that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {StartupBankDetailsFindUniqueOrThrowArgs} args - Arguments to find a StartupBankDetails
+     * @example
+     * // Get one StartupBankDetails
+     * const startupBankDetails = await prisma.startupBankDetails.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends StartupBankDetailsFindUniqueOrThrowArgs>(args: SelectSubset<T, StartupBankDetailsFindUniqueOrThrowArgs<ExtArgs>>): Prisma__StartupBankDetailsClient<$Result.GetResult<Prisma.$StartupBankDetailsPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Find the first StartupBankDetails that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StartupBankDetailsFindFirstArgs} args - Arguments to find a StartupBankDetails
+     * @example
+     * // Get one StartupBankDetails
+     * const startupBankDetails = await prisma.startupBankDetails.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends StartupBankDetailsFindFirstArgs>(args?: SelectSubset<T, StartupBankDetailsFindFirstArgs<ExtArgs>>): Prisma__StartupBankDetailsClient<$Result.GetResult<Prisma.$StartupBankDetailsPayload<ExtArgs>, T, "findFirst", ClientOptions> | null, null, ExtArgs, ClientOptions>
+
+    /**
+     * Find the first StartupBankDetails that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StartupBankDetailsFindFirstOrThrowArgs} args - Arguments to find a StartupBankDetails
+     * @example
+     * // Get one StartupBankDetails
+     * const startupBankDetails = await prisma.startupBankDetails.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends StartupBankDetailsFindFirstOrThrowArgs>(args?: SelectSubset<T, StartupBankDetailsFindFirstOrThrowArgs<ExtArgs>>): Prisma__StartupBankDetailsClient<$Result.GetResult<Prisma.$StartupBankDetailsPayload<ExtArgs>, T, "findFirstOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Find zero or more StartupBankDetails that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StartupBankDetailsFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all StartupBankDetails
+     * const startupBankDetails = await prisma.startupBankDetails.findMany()
+     * 
+     * // Get first 10 StartupBankDetails
+     * const startupBankDetails = await prisma.startupBankDetails.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const startupBankDetailsWithIdOnly = await prisma.startupBankDetails.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends StartupBankDetailsFindManyArgs>(args?: SelectSubset<T, StartupBankDetailsFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StartupBankDetailsPayload<ExtArgs>, T, "findMany", ClientOptions>>
+
+    /**
+     * Create a StartupBankDetails.
+     * @param {StartupBankDetailsCreateArgs} args - Arguments to create a StartupBankDetails.
+     * @example
+     * // Create one StartupBankDetails
+     * const StartupBankDetails = await prisma.startupBankDetails.create({
+     *   data: {
+     *     // ... data to create a StartupBankDetails
+     *   }
+     * })
+     * 
+     */
+    create<T extends StartupBankDetailsCreateArgs>(args: SelectSubset<T, StartupBankDetailsCreateArgs<ExtArgs>>): Prisma__StartupBankDetailsClient<$Result.GetResult<Prisma.$StartupBankDetailsPayload<ExtArgs>, T, "create", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Create many StartupBankDetails.
+     * @param {StartupBankDetailsCreateManyArgs} args - Arguments to create many StartupBankDetails.
+     * @example
+     * // Create many StartupBankDetails
+     * const startupBankDetails = await prisma.startupBankDetails.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends StartupBankDetailsCreateManyArgs>(args?: SelectSubset<T, StartupBankDetailsCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many StartupBankDetails and returns the data saved in the database.
+     * @param {StartupBankDetailsCreateManyAndReturnArgs} args - Arguments to create many StartupBankDetails.
+     * @example
+     * // Create many StartupBankDetails
+     * const startupBankDetails = await prisma.startupBankDetails.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many StartupBankDetails and only return the `id`
+     * const startupBankDetailsWithIdOnly = await prisma.startupBankDetails.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends StartupBankDetailsCreateManyAndReturnArgs>(args?: SelectSubset<T, StartupBankDetailsCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StartupBankDetailsPayload<ExtArgs>, T, "createManyAndReturn", ClientOptions>>
+
+    /**
+     * Delete a StartupBankDetails.
+     * @param {StartupBankDetailsDeleteArgs} args - Arguments to delete one StartupBankDetails.
+     * @example
+     * // Delete one StartupBankDetails
+     * const StartupBankDetails = await prisma.startupBankDetails.delete({
+     *   where: {
+     *     // ... filter to delete one StartupBankDetails
+     *   }
+     * })
+     * 
+     */
+    delete<T extends StartupBankDetailsDeleteArgs>(args: SelectSubset<T, StartupBankDetailsDeleteArgs<ExtArgs>>): Prisma__StartupBankDetailsClient<$Result.GetResult<Prisma.$StartupBankDetailsPayload<ExtArgs>, T, "delete", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Update one StartupBankDetails.
+     * @param {StartupBankDetailsUpdateArgs} args - Arguments to update one StartupBankDetails.
+     * @example
+     * // Update one StartupBankDetails
+     * const startupBankDetails = await prisma.startupBankDetails.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends StartupBankDetailsUpdateArgs>(args: SelectSubset<T, StartupBankDetailsUpdateArgs<ExtArgs>>): Prisma__StartupBankDetailsClient<$Result.GetResult<Prisma.$StartupBankDetailsPayload<ExtArgs>, T, "update", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Delete zero or more StartupBankDetails.
+     * @param {StartupBankDetailsDeleteManyArgs} args - Arguments to filter StartupBankDetails to delete.
+     * @example
+     * // Delete a few StartupBankDetails
+     * const { count } = await prisma.startupBankDetails.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends StartupBankDetailsDeleteManyArgs>(args?: SelectSubset<T, StartupBankDetailsDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more StartupBankDetails.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StartupBankDetailsUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many StartupBankDetails
+     * const startupBankDetails = await prisma.startupBankDetails.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends StartupBankDetailsUpdateManyArgs>(args: SelectSubset<T, StartupBankDetailsUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more StartupBankDetails and returns the data updated in the database.
+     * @param {StartupBankDetailsUpdateManyAndReturnArgs} args - Arguments to update many StartupBankDetails.
+     * @example
+     * // Update many StartupBankDetails
+     * const startupBankDetails = await prisma.startupBankDetails.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more StartupBankDetails and only return the `id`
+     * const startupBankDetailsWithIdOnly = await prisma.startupBankDetails.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends StartupBankDetailsUpdateManyAndReturnArgs>(args: SelectSubset<T, StartupBankDetailsUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StartupBankDetailsPayload<ExtArgs>, T, "updateManyAndReturn", ClientOptions>>
+
+    /**
+     * Create or update one StartupBankDetails.
+     * @param {StartupBankDetailsUpsertArgs} args - Arguments to update or create a StartupBankDetails.
+     * @example
+     * // Update or create a StartupBankDetails
+     * const startupBankDetails = await prisma.startupBankDetails.upsert({
+     *   create: {
+     *     // ... data to create a StartupBankDetails
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the StartupBankDetails we want to update
+     *   }
+     * })
+     */
+    upsert<T extends StartupBankDetailsUpsertArgs>(args: SelectSubset<T, StartupBankDetailsUpsertArgs<ExtArgs>>): Prisma__StartupBankDetailsClient<$Result.GetResult<Prisma.$StartupBankDetailsPayload<ExtArgs>, T, "upsert", ClientOptions>, never, ExtArgs, ClientOptions>
+
+
+    /**
+     * Count the number of StartupBankDetails.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StartupBankDetailsCountArgs} args - Arguments to filter StartupBankDetails to count.
+     * @example
+     * // Count the number of StartupBankDetails
+     * const count = await prisma.startupBankDetails.count({
+     *   where: {
+     *     // ... the filter for the StartupBankDetails we want to count
+     *   }
+     * })
+    **/
+    count<T extends StartupBankDetailsCountArgs>(
+      args?: Subset<T, StartupBankDetailsCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], StartupBankDetailsCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a StartupBankDetails.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StartupBankDetailsAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends StartupBankDetailsAggregateArgs>(args: Subset<T, StartupBankDetailsAggregateArgs>): Prisma.PrismaPromise<GetStartupBankDetailsAggregateType<T>>
+
+    /**
+     * Group by StartupBankDetails.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {StartupBankDetailsGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends StartupBankDetailsGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: StartupBankDetailsGroupByArgs['orderBy'] }
+        : { orderBy?: StartupBankDetailsGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, StartupBankDetailsGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetStartupBankDetailsGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the StartupBankDetails model
+   */
+  readonly fields: StartupBankDetailsFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for StartupBankDetails.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__StartupBankDetailsClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    startup<T extends StartupDefaultArgs<ExtArgs> = {}>(args?: Subset<T, StartupDefaultArgs<ExtArgs>>): Prisma__StartupClient<$Result.GetResult<Prisma.$StartupPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | Null, Null, ExtArgs, ClientOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the StartupBankDetails model
+   */ 
+  interface StartupBankDetailsFieldRefs {
+    readonly id: FieldRef<"StartupBankDetails", 'String'>
+    readonly startup_id: FieldRef<"StartupBankDetails", 'String'>
+    readonly account_holder_name: FieldRef<"StartupBankDetails", 'String'>
+    readonly bank_name: FieldRef<"StartupBankDetails", 'String'>
+    readonly account_number: FieldRef<"StartupBankDetails", 'String'>
+    readonly ifsc_code: FieldRef<"StartupBankDetails", 'String'>
+    readonly branch_name: FieldRef<"StartupBankDetails", 'String'>
+    readonly account_type: FieldRef<"StartupBankDetails", 'String'>
+    readonly created_at: FieldRef<"StartupBankDetails", 'DateTime'>
+    readonly updated_at: FieldRef<"StartupBankDetails", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * StartupBankDetails findUnique
+   */
+  export type StartupBankDetailsFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StartupBankDetails
+     */
+    select?: StartupBankDetailsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StartupBankDetails
+     */
+    omit?: StartupBankDetailsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupBankDetailsInclude<ExtArgs> | null
+    /**
+     * Filter, which StartupBankDetails to fetch.
+     */
+    where: StartupBankDetailsWhereUniqueInput
+  }
+
+  /**
+   * StartupBankDetails findUniqueOrThrow
+   */
+  export type StartupBankDetailsFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StartupBankDetails
+     */
+    select?: StartupBankDetailsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StartupBankDetails
+     */
+    omit?: StartupBankDetailsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupBankDetailsInclude<ExtArgs> | null
+    /**
+     * Filter, which StartupBankDetails to fetch.
+     */
+    where: StartupBankDetailsWhereUniqueInput
+  }
+
+  /**
+   * StartupBankDetails findFirst
+   */
+  export type StartupBankDetailsFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StartupBankDetails
+     */
+    select?: StartupBankDetailsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StartupBankDetails
+     */
+    omit?: StartupBankDetailsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupBankDetailsInclude<ExtArgs> | null
+    /**
+     * Filter, which StartupBankDetails to fetch.
+     */
+    where?: StartupBankDetailsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StartupBankDetails to fetch.
+     */
+    orderBy?: StartupBankDetailsOrderByWithRelationInput | StartupBankDetailsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StartupBankDetails.
+     */
+    cursor?: StartupBankDetailsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StartupBankDetails from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StartupBankDetails.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StartupBankDetails.
+     */
+    distinct?: StartupBankDetailsScalarFieldEnum | StartupBankDetailsScalarFieldEnum[]
+  }
+
+  /**
+   * StartupBankDetails findFirstOrThrow
+   */
+  export type StartupBankDetailsFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StartupBankDetails
+     */
+    select?: StartupBankDetailsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StartupBankDetails
+     */
+    omit?: StartupBankDetailsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupBankDetailsInclude<ExtArgs> | null
+    /**
+     * Filter, which StartupBankDetails to fetch.
+     */
+    where?: StartupBankDetailsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StartupBankDetails to fetch.
+     */
+    orderBy?: StartupBankDetailsOrderByWithRelationInput | StartupBankDetailsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for StartupBankDetails.
+     */
+    cursor?: StartupBankDetailsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StartupBankDetails from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StartupBankDetails.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of StartupBankDetails.
+     */
+    distinct?: StartupBankDetailsScalarFieldEnum | StartupBankDetailsScalarFieldEnum[]
+  }
+
+  /**
+   * StartupBankDetails findMany
+   */
+  export type StartupBankDetailsFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StartupBankDetails
+     */
+    select?: StartupBankDetailsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StartupBankDetails
+     */
+    omit?: StartupBankDetailsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupBankDetailsInclude<ExtArgs> | null
+    /**
+     * Filter, which StartupBankDetails to fetch.
+     */
+    where?: StartupBankDetailsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of StartupBankDetails to fetch.
+     */
+    orderBy?: StartupBankDetailsOrderByWithRelationInput | StartupBankDetailsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing StartupBankDetails.
+     */
+    cursor?: StartupBankDetailsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` StartupBankDetails from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` StartupBankDetails.
+     */
+    skip?: number
+    distinct?: StartupBankDetailsScalarFieldEnum | StartupBankDetailsScalarFieldEnum[]
+  }
+
+  /**
+   * StartupBankDetails create
+   */
+  export type StartupBankDetailsCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StartupBankDetails
+     */
+    select?: StartupBankDetailsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StartupBankDetails
+     */
+    omit?: StartupBankDetailsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupBankDetailsInclude<ExtArgs> | null
+    /**
+     * The data needed to create a StartupBankDetails.
+     */
+    data: XOR<StartupBankDetailsCreateInput, StartupBankDetailsUncheckedCreateInput>
+  }
+
+  /**
+   * StartupBankDetails createMany
+   */
+  export type StartupBankDetailsCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many StartupBankDetails.
+     */
+    data: StartupBankDetailsCreateManyInput | StartupBankDetailsCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * StartupBankDetails createManyAndReturn
+   */
+  export type StartupBankDetailsCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StartupBankDetails
+     */
+    select?: StartupBankDetailsSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the StartupBankDetails
+     */
+    omit?: StartupBankDetailsOmit<ExtArgs> | null
+    /**
+     * The data used to create many StartupBankDetails.
+     */
+    data: StartupBankDetailsCreateManyInput | StartupBankDetailsCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupBankDetailsIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * StartupBankDetails update
+   */
+  export type StartupBankDetailsUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StartupBankDetails
+     */
+    select?: StartupBankDetailsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StartupBankDetails
+     */
+    omit?: StartupBankDetailsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupBankDetailsInclude<ExtArgs> | null
+    /**
+     * The data needed to update a StartupBankDetails.
+     */
+    data: XOR<StartupBankDetailsUpdateInput, StartupBankDetailsUncheckedUpdateInput>
+    /**
+     * Choose, which StartupBankDetails to update.
+     */
+    where: StartupBankDetailsWhereUniqueInput
+  }
+
+  /**
+   * StartupBankDetails updateMany
+   */
+  export type StartupBankDetailsUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update StartupBankDetails.
+     */
+    data: XOR<StartupBankDetailsUpdateManyMutationInput, StartupBankDetailsUncheckedUpdateManyInput>
+    /**
+     * Filter which StartupBankDetails to update
+     */
+    where?: StartupBankDetailsWhereInput
+    /**
+     * Limit how many StartupBankDetails to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * StartupBankDetails updateManyAndReturn
+   */
+  export type StartupBankDetailsUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StartupBankDetails
+     */
+    select?: StartupBankDetailsSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the StartupBankDetails
+     */
+    omit?: StartupBankDetailsOmit<ExtArgs> | null
+    /**
+     * The data used to update StartupBankDetails.
+     */
+    data: XOR<StartupBankDetailsUpdateManyMutationInput, StartupBankDetailsUncheckedUpdateManyInput>
+    /**
+     * Filter which StartupBankDetails to update
+     */
+    where?: StartupBankDetailsWhereInput
+    /**
+     * Limit how many StartupBankDetails to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupBankDetailsIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * StartupBankDetails upsert
+   */
+  export type StartupBankDetailsUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StartupBankDetails
+     */
+    select?: StartupBankDetailsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StartupBankDetails
+     */
+    omit?: StartupBankDetailsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupBankDetailsInclude<ExtArgs> | null
+    /**
+     * The filter to search for the StartupBankDetails to update in case it exists.
+     */
+    where: StartupBankDetailsWhereUniqueInput
+    /**
+     * In case the StartupBankDetails found by the `where` argument doesn't exist, create a new StartupBankDetails with this data.
+     */
+    create: XOR<StartupBankDetailsCreateInput, StartupBankDetailsUncheckedCreateInput>
+    /**
+     * In case the StartupBankDetails was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<StartupBankDetailsUpdateInput, StartupBankDetailsUncheckedUpdateInput>
+  }
+
+  /**
+   * StartupBankDetails delete
+   */
+  export type StartupBankDetailsDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StartupBankDetails
+     */
+    select?: StartupBankDetailsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StartupBankDetails
+     */
+    omit?: StartupBankDetailsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupBankDetailsInclude<ExtArgs> | null
+    /**
+     * Filter which StartupBankDetails to delete.
+     */
+    where: StartupBankDetailsWhereUniqueInput
+  }
+
+  /**
+   * StartupBankDetails deleteMany
+   */
+  export type StartupBankDetailsDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which StartupBankDetails to delete
+     */
+    where?: StartupBankDetailsWhereInput
+    /**
+     * Limit how many StartupBankDetails to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * StartupBankDetails without action
+   */
+  export type StartupBankDetailsDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StartupBankDetails
+     */
+    select?: StartupBankDetailsSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StartupBankDetails
+     */
+    omit?: StartupBankDetailsOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupBankDetailsInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model StartupDocument
    */
 
   export type AggregateStartupDocument = {
     _count: StartupDocumentCountAggregateOutputType | null
+    _avg: StartupDocumentAvgAggregateOutputType | null
+    _sum: StartupDocumentSumAggregateOutputType | null
     _min: StartupDocumentMinAggregateOutputType | null
     _max: StartupDocumentMaxAggregateOutputType | null
+  }
+
+  export type StartupDocumentAvgAggregateOutputType = {
+    file_size: number | null
+  }
+
+  export type StartupDocumentSumAggregateOutputType = {
+    file_size: number | null
   }
 
   export type StartupDocumentMinAggregateOutputType = {
@@ -12397,10 +13966,15 @@ export namespace Prisma {
     startup_id: string | null
     document_type: string | null
     document_url: string | null
+    file_name: string | null
+    file_size: number | null
+    mime_type: string | null
     verification_status: $Enums.StartupVerificationStatus | null
     verified_by: string | null
     verified_at: Date | null
+    rejection_reason: string | null
     created_at: Date | null
+    updated_at: Date | null
   }
 
   export type StartupDocumentMaxAggregateOutputType = {
@@ -12408,10 +13982,15 @@ export namespace Prisma {
     startup_id: string | null
     document_type: string | null
     document_url: string | null
+    file_name: string | null
+    file_size: number | null
+    mime_type: string | null
     verification_status: $Enums.StartupVerificationStatus | null
     verified_by: string | null
     verified_at: Date | null
+    rejection_reason: string | null
     created_at: Date | null
+    updated_at: Date | null
   }
 
   export type StartupDocumentCountAggregateOutputType = {
@@ -12419,23 +13998,41 @@ export namespace Prisma {
     startup_id: number
     document_type: number
     document_url: number
+    file_name: number
+    file_size: number
+    mime_type: number
     verification_status: number
     verified_by: number
     verified_at: number
+    rejection_reason: number
     created_at: number
+    updated_at: number
     _all: number
   }
 
+
+  export type StartupDocumentAvgAggregateInputType = {
+    file_size?: true
+  }
+
+  export type StartupDocumentSumAggregateInputType = {
+    file_size?: true
+  }
 
   export type StartupDocumentMinAggregateInputType = {
     id?: true
     startup_id?: true
     document_type?: true
     document_url?: true
+    file_name?: true
+    file_size?: true
+    mime_type?: true
     verification_status?: true
     verified_by?: true
     verified_at?: true
+    rejection_reason?: true
     created_at?: true
+    updated_at?: true
   }
 
   export type StartupDocumentMaxAggregateInputType = {
@@ -12443,10 +14040,15 @@ export namespace Prisma {
     startup_id?: true
     document_type?: true
     document_url?: true
+    file_name?: true
+    file_size?: true
+    mime_type?: true
     verification_status?: true
     verified_by?: true
     verified_at?: true
+    rejection_reason?: true
     created_at?: true
+    updated_at?: true
   }
 
   export type StartupDocumentCountAggregateInputType = {
@@ -12454,10 +14056,15 @@ export namespace Prisma {
     startup_id?: true
     document_type?: true
     document_url?: true
+    file_name?: true
+    file_size?: true
+    mime_type?: true
     verification_status?: true
     verified_by?: true
     verified_at?: true
+    rejection_reason?: true
     created_at?: true
+    updated_at?: true
     _all?: true
   }
 
@@ -12499,6 +14106,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: StartupDocumentAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: StartupDocumentSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: StartupDocumentMinAggregateInputType
@@ -12529,6 +14148,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: StartupDocumentCountAggregateInputType | true
+    _avg?: StartupDocumentAvgAggregateInputType
+    _sum?: StartupDocumentSumAggregateInputType
     _min?: StartupDocumentMinAggregateInputType
     _max?: StartupDocumentMaxAggregateInputType
   }
@@ -12538,11 +14159,18 @@ export namespace Prisma {
     startup_id: string
     document_type: string
     document_url: string
+    file_name: string | null
+    file_size: number | null
+    mime_type: string | null
     verification_status: $Enums.StartupVerificationStatus
     verified_by: string | null
     verified_at: Date | null
+    rejection_reason: string | null
     created_at: Date
+    updated_at: Date
     _count: StartupDocumentCountAggregateOutputType | null
+    _avg: StartupDocumentAvgAggregateOutputType | null
+    _sum: StartupDocumentSumAggregateOutputType | null
     _min: StartupDocumentMinAggregateOutputType | null
     _max: StartupDocumentMaxAggregateOutputType | null
   }
@@ -12566,10 +14194,15 @@ export namespace Prisma {
     startup_id?: boolean
     document_type?: boolean
     document_url?: boolean
+    file_name?: boolean
+    file_size?: boolean
+    mime_type?: boolean
     verification_status?: boolean
     verified_by?: boolean
     verified_at?: boolean
+    rejection_reason?: boolean
     created_at?: boolean
+    updated_at?: boolean
     startup?: boolean | StartupDefaultArgs<ExtArgs>
     verifier?: boolean | StartupDocument$verifierArgs<ExtArgs>
   }, ExtArgs["result"]["startupDocument"]>
@@ -12579,10 +14212,15 @@ export namespace Prisma {
     startup_id?: boolean
     document_type?: boolean
     document_url?: boolean
+    file_name?: boolean
+    file_size?: boolean
+    mime_type?: boolean
     verification_status?: boolean
     verified_by?: boolean
     verified_at?: boolean
+    rejection_reason?: boolean
     created_at?: boolean
+    updated_at?: boolean
     startup?: boolean | StartupDefaultArgs<ExtArgs>
     verifier?: boolean | StartupDocument$verifierArgs<ExtArgs>
   }, ExtArgs["result"]["startupDocument"]>
@@ -12592,10 +14230,15 @@ export namespace Prisma {
     startup_id?: boolean
     document_type?: boolean
     document_url?: boolean
+    file_name?: boolean
+    file_size?: boolean
+    mime_type?: boolean
     verification_status?: boolean
     verified_by?: boolean
     verified_at?: boolean
+    rejection_reason?: boolean
     created_at?: boolean
+    updated_at?: boolean
     startup?: boolean | StartupDefaultArgs<ExtArgs>
     verifier?: boolean | StartupDocument$verifierArgs<ExtArgs>
   }, ExtArgs["result"]["startupDocument"]>
@@ -12605,13 +14248,18 @@ export namespace Prisma {
     startup_id?: boolean
     document_type?: boolean
     document_url?: boolean
+    file_name?: boolean
+    file_size?: boolean
+    mime_type?: boolean
     verification_status?: boolean
     verified_by?: boolean
     verified_at?: boolean
+    rejection_reason?: boolean
     created_at?: boolean
+    updated_at?: boolean
   }
 
-  export type StartupDocumentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "startup_id" | "document_type" | "document_url" | "verification_status" | "verified_by" | "verified_at" | "created_at", ExtArgs["result"]["startupDocument"]>
+  export type StartupDocumentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "startup_id" | "document_type" | "document_url" | "file_name" | "file_size" | "mime_type" | "verification_status" | "verified_by" | "verified_at" | "rejection_reason" | "created_at" | "updated_at", ExtArgs["result"]["startupDocument"]>
   export type StartupDocumentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     startup?: boolean | StartupDefaultArgs<ExtArgs>
     verifier?: boolean | StartupDocument$verifierArgs<ExtArgs>
@@ -12636,10 +14284,15 @@ export namespace Prisma {
       startup_id: string
       document_type: string
       document_url: string
+      file_name: string | null
+      file_size: number | null
+      mime_type: string | null
       verification_status: $Enums.StartupVerificationStatus
       verified_by: string | null
       verified_at: Date | null
+      rejection_reason: string | null
       created_at: Date
+      updated_at: Date
     }, ExtArgs["result"]["startupDocument"]>
     composites: {}
   }
@@ -13069,10 +14722,15 @@ export namespace Prisma {
     readonly startup_id: FieldRef<"StartupDocument", 'String'>
     readonly document_type: FieldRef<"StartupDocument", 'String'>
     readonly document_url: FieldRef<"StartupDocument", 'String'>
+    readonly file_name: FieldRef<"StartupDocument", 'String'>
+    readonly file_size: FieldRef<"StartupDocument", 'Int'>
+    readonly mime_type: FieldRef<"StartupDocument", 'String'>
     readonly verification_status: FieldRef<"StartupDocument", 'StartupVerificationStatus'>
     readonly verified_by: FieldRef<"StartupDocument", 'String'>
     readonly verified_at: FieldRef<"StartupDocument", 'DateTime'>
+    readonly rejection_reason: FieldRef<"StartupDocument", 'String'>
     readonly created_at: FieldRef<"StartupDocument", 'DateTime'>
+    readonly updated_at: FieldRef<"StartupDocument", 'DateTime'>
   }
     
 
@@ -48485,6 +50143,9 @@ export namespace Prisma {
     invitation_token_hash: 'invitation_token_hash',
     invitation_expires_at: 'invitation_expires_at',
     invitation_accepted_at: 'invitation_accepted_at',
+    email_verification_token_hash: 'email_verification_token_hash',
+    email_verification_expires_at: 'email_verification_expires_at',
+    email_verified_at: 'email_verified_at',
     created_at: 'created_at',
     updated_at: 'updated_at'
   };
@@ -48568,15 +50229,34 @@ export namespace Prisma {
     years_experience: 'years_experience',
     previous_deployments: 'previous_deployments',
     verification_status: 'verification_status',
-    dpiit_number: 'dpiit_number',
-    certificate_number: 'certificate_number',
-    incorporation_date: 'incorporation_date',
+    org_type: 'org_type',
+    registered_address: 'registered_address',
+    city: 'city',
+    state: 'state',
+    pincode: 'pincode',
+    official_email: 'official_email',
+    official_website: 'official_website',
+    authorized_person_name: 'authorized_person_name',
+    authorized_person_designation: 'authorized_person_designation',
+    authorized_person_email: 'authorized_person_email',
+    authorized_person_phone: 'authorized_person_phone',
+    authorization_type: 'authorization_type',
+    pan_number: 'pan_number',
     cin_number: 'cin_number',
     gstin: 'gstin',
+    dpiit_number: 'dpiit_number',
+    certificate_number: 'certificate_number',
+    registration_number: 'registration_number',
+    incorporation_date: 'incorporation_date',
+    verification_source: 'verification_source',
+    products_services: 'products_services',
+    location: 'location',
     verification_notes: 'verification_notes',
+    correction_notes: 'correction_notes',
+    rejection_reason: 'rejection_reason',
+    submitted_at: 'submitted_at',
     verified_at: 'verified_at',
     verified_by: 'verified_by',
-    location: 'location',
     created_at: 'created_at',
     updated_at: 'updated_at'
   };
@@ -48584,15 +50264,36 @@ export namespace Prisma {
   export type StartupScalarFieldEnum = (typeof StartupScalarFieldEnum)[keyof typeof StartupScalarFieldEnum]
 
 
+  export const StartupBankDetailsScalarFieldEnum: {
+    id: 'id',
+    startup_id: 'startup_id',
+    account_holder_name: 'account_holder_name',
+    bank_name: 'bank_name',
+    account_number: 'account_number',
+    ifsc_code: 'ifsc_code',
+    branch_name: 'branch_name',
+    account_type: 'account_type',
+    created_at: 'created_at',
+    updated_at: 'updated_at'
+  };
+
+  export type StartupBankDetailsScalarFieldEnum = (typeof StartupBankDetailsScalarFieldEnum)[keyof typeof StartupBankDetailsScalarFieldEnum]
+
+
   export const StartupDocumentScalarFieldEnum: {
     id: 'id',
     startup_id: 'startup_id',
     document_type: 'document_type',
     document_url: 'document_url',
+    file_name: 'file_name',
+    file_size: 'file_size',
+    mime_type: 'mime_type',
     verification_status: 'verification_status',
     verified_by: 'verified_by',
     verified_at: 'verified_at',
-    created_at: 'created_at'
+    rejection_reason: 'rejection_reason',
+    created_at: 'created_at',
+    updated_at: 'updated_at'
   };
 
   export type StartupDocumentScalarFieldEnum = (typeof StartupDocumentScalarFieldEnum)[keyof typeof StartupDocumentScalarFieldEnum]
@@ -49305,6 +51006,34 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'StartupOrgType'
+   */
+  export type EnumStartupOrgTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StartupOrgType'>
+    
+
+
+  /**
+   * Reference to a field of type 'StartupOrgType[]'
+   */
+  export type ListEnumStartupOrgTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StartupOrgType[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'VerificationSource'
+   */
+  export type EnumVerificationSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VerificationSource'>
+    
+
+
+  /**
+   * Reference to a field of type 'VerificationSource[]'
+   */
+  export type ListEnumVerificationSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VerificationSource[]'>
+    
+
+
+  /**
    * Reference to a field of type 'ApplicationStatus'
    */
   export type EnumApplicationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ApplicationStatus'>
@@ -49520,6 +51249,9 @@ export namespace Prisma {
     invitation_token_hash?: StringNullableFilter<"User"> | string | null
     invitation_expires_at?: DateTimeNullableFilter<"User"> | Date | string | null
     invitation_accepted_at?: DateTimeNullableFilter<"User"> | Date | string | null
+    email_verification_token_hash?: StringNullableFilter<"User"> | string | null
+    email_verification_expires_at?: DateTimeNullableFilter<"User"> | Date | string | null
+    email_verified_at?: DateTimeNullableFilter<"User"> | Date | string | null
     created_at?: DateTimeFilter<"User"> | Date | string
     updated_at?: DateTimeFilter<"User"> | Date | string
     audit_logs?: AuditLogListRelationFilter
@@ -49566,6 +51298,9 @@ export namespace Prisma {
     invitation_token_hash?: SortOrderInput | SortOrder
     invitation_expires_at?: SortOrderInput | SortOrder
     invitation_accepted_at?: SortOrderInput | SortOrder
+    email_verification_token_hash?: SortOrderInput | SortOrder
+    email_verification_expires_at?: SortOrderInput | SortOrder
+    email_verified_at?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     audit_logs?: AuditLogOrderByRelationAggregateInput
@@ -49615,6 +51350,9 @@ export namespace Prisma {
     invitation_token_hash?: StringNullableFilter<"User"> | string | null
     invitation_expires_at?: DateTimeNullableFilter<"User"> | Date | string | null
     invitation_accepted_at?: DateTimeNullableFilter<"User"> | Date | string | null
+    email_verification_token_hash?: StringNullableFilter<"User"> | string | null
+    email_verification_expires_at?: DateTimeNullableFilter<"User"> | Date | string | null
+    email_verified_at?: DateTimeNullableFilter<"User"> | Date | string | null
     created_at?: DateTimeFilter<"User"> | Date | string
     updated_at?: DateTimeFilter<"User"> | Date | string
     audit_logs?: AuditLogListRelationFilter
@@ -49661,6 +51399,9 @@ export namespace Prisma {
     invitation_token_hash?: SortOrderInput | SortOrder
     invitation_expires_at?: SortOrderInput | SortOrder
     invitation_accepted_at?: SortOrderInput | SortOrder
+    email_verification_token_hash?: SortOrderInput | SortOrder
+    email_verification_expires_at?: SortOrderInput | SortOrder
+    email_verified_at?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -49685,6 +51426,9 @@ export namespace Prisma {
     invitation_token_hash?: StringNullableWithAggregatesFilter<"User"> | string | null
     invitation_expires_at?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     invitation_accepted_at?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    email_verification_token_hash?: StringNullableWithAggregatesFilter<"User"> | string | null
+    email_verification_expires_at?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    email_verified_at?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     created_at?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -50069,21 +51813,41 @@ export namespace Prisma {
     years_experience?: IntFilter<"Startup"> | number
     previous_deployments?: IntFilter<"Startup"> | number
     verification_status?: EnumStartupVerificationStatusFilter<"Startup"> | $Enums.StartupVerificationStatus
-    dpiit_number?: StringNullableFilter<"Startup"> | string | null
-    certificate_number?: StringNullableFilter<"Startup"> | string | null
-    incorporation_date?: DateTimeNullableFilter<"Startup"> | Date | string | null
+    org_type?: EnumStartupOrgTypeFilter<"Startup"> | $Enums.StartupOrgType
+    registered_address?: StringNullableFilter<"Startup"> | string | null
+    city?: StringNullableFilter<"Startup"> | string | null
+    state?: StringNullableFilter<"Startup"> | string | null
+    pincode?: StringNullableFilter<"Startup"> | string | null
+    official_email?: StringNullableFilter<"Startup"> | string | null
+    official_website?: StringNullableFilter<"Startup"> | string | null
+    authorized_person_name?: StringNullableFilter<"Startup"> | string | null
+    authorized_person_designation?: StringNullableFilter<"Startup"> | string | null
+    authorized_person_email?: StringNullableFilter<"Startup"> | string | null
+    authorized_person_phone?: StringNullableFilter<"Startup"> | string | null
+    authorization_type?: StringNullableFilter<"Startup"> | string | null
+    pan_number?: StringNullableFilter<"Startup"> | string | null
     cin_number?: StringNullableFilter<"Startup"> | string | null
     gstin?: StringNullableFilter<"Startup"> | string | null
+    dpiit_number?: StringNullableFilter<"Startup"> | string | null
+    certificate_number?: StringNullableFilter<"Startup"> | string | null
+    registration_number?: StringNullableFilter<"Startup"> | string | null
+    incorporation_date?: DateTimeNullableFilter<"Startup"> | Date | string | null
+    verification_source?: EnumVerificationSourceFilter<"Startup"> | $Enums.VerificationSource
+    products_services?: StringNullableFilter<"Startup"> | string | null
+    location?: StringFilter<"Startup"> | string
     verification_notes?: StringNullableFilter<"Startup"> | string | null
+    correction_notes?: StringNullableFilter<"Startup"> | string | null
+    rejection_reason?: StringNullableFilter<"Startup"> | string | null
+    submitted_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
     verified_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
     verified_by?: StringNullableFilter<"Startup"> | string | null
-    location?: StringFilter<"Startup"> | string
     created_at?: DateTimeFilter<"Startup"> | Date | string
     updated_at?: DateTimeFilter<"Startup"> | Date | string
     applications?: ApplicationListRelationFilter
     match_scores?: MatchScoreListRelationFilter
     pilots?: PilotListRelationFilter
     documents?: StartupDocumentListRelationFilter
+    bank_details?: XOR<StartupBankDetailsNullableScalarRelationFilter, StartupBankDetailsWhereInput> | null
     procurements?: ProcurementRecordListRelationFilter
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     verifier?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
@@ -50100,21 +51864,41 @@ export namespace Prisma {
     years_experience?: SortOrder
     previous_deployments?: SortOrder
     verification_status?: SortOrder
-    dpiit_number?: SortOrderInput | SortOrder
-    certificate_number?: SortOrderInput | SortOrder
-    incorporation_date?: SortOrderInput | SortOrder
+    org_type?: SortOrder
+    registered_address?: SortOrderInput | SortOrder
+    city?: SortOrderInput | SortOrder
+    state?: SortOrderInput | SortOrder
+    pincode?: SortOrderInput | SortOrder
+    official_email?: SortOrderInput | SortOrder
+    official_website?: SortOrderInput | SortOrder
+    authorized_person_name?: SortOrderInput | SortOrder
+    authorized_person_designation?: SortOrderInput | SortOrder
+    authorized_person_email?: SortOrderInput | SortOrder
+    authorized_person_phone?: SortOrderInput | SortOrder
+    authorization_type?: SortOrderInput | SortOrder
+    pan_number?: SortOrderInput | SortOrder
     cin_number?: SortOrderInput | SortOrder
     gstin?: SortOrderInput | SortOrder
+    dpiit_number?: SortOrderInput | SortOrder
+    certificate_number?: SortOrderInput | SortOrder
+    registration_number?: SortOrderInput | SortOrder
+    incorporation_date?: SortOrderInput | SortOrder
+    verification_source?: SortOrder
+    products_services?: SortOrderInput | SortOrder
+    location?: SortOrder
     verification_notes?: SortOrderInput | SortOrder
+    correction_notes?: SortOrderInput | SortOrder
+    rejection_reason?: SortOrderInput | SortOrder
+    submitted_at?: SortOrderInput | SortOrder
     verified_at?: SortOrderInput | SortOrder
     verified_by?: SortOrderInput | SortOrder
-    location?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     applications?: ApplicationOrderByRelationAggregateInput
     match_scores?: MatchScoreOrderByRelationAggregateInput
     pilots?: PilotOrderByRelationAggregateInput
     documents?: StartupDocumentOrderByRelationAggregateInput
+    bank_details?: StartupBankDetailsOrderByWithRelationInput
     procurements?: ProcurementRecordOrderByRelationAggregateInput
     user?: UserOrderByWithRelationInput
     verifier?: UserOrderByWithRelationInput
@@ -50134,21 +51918,41 @@ export namespace Prisma {
     years_experience?: IntFilter<"Startup"> | number
     previous_deployments?: IntFilter<"Startup"> | number
     verification_status?: EnumStartupVerificationStatusFilter<"Startup"> | $Enums.StartupVerificationStatus
-    dpiit_number?: StringNullableFilter<"Startup"> | string | null
-    certificate_number?: StringNullableFilter<"Startup"> | string | null
-    incorporation_date?: DateTimeNullableFilter<"Startup"> | Date | string | null
+    org_type?: EnumStartupOrgTypeFilter<"Startup"> | $Enums.StartupOrgType
+    registered_address?: StringNullableFilter<"Startup"> | string | null
+    city?: StringNullableFilter<"Startup"> | string | null
+    state?: StringNullableFilter<"Startup"> | string | null
+    pincode?: StringNullableFilter<"Startup"> | string | null
+    official_email?: StringNullableFilter<"Startup"> | string | null
+    official_website?: StringNullableFilter<"Startup"> | string | null
+    authorized_person_name?: StringNullableFilter<"Startup"> | string | null
+    authorized_person_designation?: StringNullableFilter<"Startup"> | string | null
+    authorized_person_email?: StringNullableFilter<"Startup"> | string | null
+    authorized_person_phone?: StringNullableFilter<"Startup"> | string | null
+    authorization_type?: StringNullableFilter<"Startup"> | string | null
+    pan_number?: StringNullableFilter<"Startup"> | string | null
     cin_number?: StringNullableFilter<"Startup"> | string | null
     gstin?: StringNullableFilter<"Startup"> | string | null
+    dpiit_number?: StringNullableFilter<"Startup"> | string | null
+    certificate_number?: StringNullableFilter<"Startup"> | string | null
+    registration_number?: StringNullableFilter<"Startup"> | string | null
+    incorporation_date?: DateTimeNullableFilter<"Startup"> | Date | string | null
+    verification_source?: EnumVerificationSourceFilter<"Startup"> | $Enums.VerificationSource
+    products_services?: StringNullableFilter<"Startup"> | string | null
+    location?: StringFilter<"Startup"> | string
     verification_notes?: StringNullableFilter<"Startup"> | string | null
+    correction_notes?: StringNullableFilter<"Startup"> | string | null
+    rejection_reason?: StringNullableFilter<"Startup"> | string | null
+    submitted_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
     verified_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
     verified_by?: StringNullableFilter<"Startup"> | string | null
-    location?: StringFilter<"Startup"> | string
     created_at?: DateTimeFilter<"Startup"> | Date | string
     updated_at?: DateTimeFilter<"Startup"> | Date | string
     applications?: ApplicationListRelationFilter
     match_scores?: MatchScoreListRelationFilter
     pilots?: PilotListRelationFilter
     documents?: StartupDocumentListRelationFilter
+    bank_details?: XOR<StartupBankDetailsNullableScalarRelationFilter, StartupBankDetailsWhereInput> | null
     procurements?: ProcurementRecordListRelationFilter
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     verifier?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
@@ -50165,15 +51969,34 @@ export namespace Prisma {
     years_experience?: SortOrder
     previous_deployments?: SortOrder
     verification_status?: SortOrder
-    dpiit_number?: SortOrderInput | SortOrder
-    certificate_number?: SortOrderInput | SortOrder
-    incorporation_date?: SortOrderInput | SortOrder
+    org_type?: SortOrder
+    registered_address?: SortOrderInput | SortOrder
+    city?: SortOrderInput | SortOrder
+    state?: SortOrderInput | SortOrder
+    pincode?: SortOrderInput | SortOrder
+    official_email?: SortOrderInput | SortOrder
+    official_website?: SortOrderInput | SortOrder
+    authorized_person_name?: SortOrderInput | SortOrder
+    authorized_person_designation?: SortOrderInput | SortOrder
+    authorized_person_email?: SortOrderInput | SortOrder
+    authorized_person_phone?: SortOrderInput | SortOrder
+    authorization_type?: SortOrderInput | SortOrder
+    pan_number?: SortOrderInput | SortOrder
     cin_number?: SortOrderInput | SortOrder
     gstin?: SortOrderInput | SortOrder
+    dpiit_number?: SortOrderInput | SortOrder
+    certificate_number?: SortOrderInput | SortOrder
+    registration_number?: SortOrderInput | SortOrder
+    incorporation_date?: SortOrderInput | SortOrder
+    verification_source?: SortOrder
+    products_services?: SortOrderInput | SortOrder
+    location?: SortOrder
     verification_notes?: SortOrderInput | SortOrder
+    correction_notes?: SortOrderInput | SortOrder
+    rejection_reason?: SortOrderInput | SortOrder
+    submitted_at?: SortOrderInput | SortOrder
     verified_at?: SortOrderInput | SortOrder
     verified_by?: SortOrderInput | SortOrder
-    location?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     _count?: StartupCountOrderByAggregateInput
@@ -50197,17 +52020,116 @@ export namespace Prisma {
     years_experience?: IntWithAggregatesFilter<"Startup"> | number
     previous_deployments?: IntWithAggregatesFilter<"Startup"> | number
     verification_status?: EnumStartupVerificationStatusWithAggregatesFilter<"Startup"> | $Enums.StartupVerificationStatus
-    dpiit_number?: StringNullableWithAggregatesFilter<"Startup"> | string | null
-    certificate_number?: StringNullableWithAggregatesFilter<"Startup"> | string | null
-    incorporation_date?: DateTimeNullableWithAggregatesFilter<"Startup"> | Date | string | null
+    org_type?: EnumStartupOrgTypeWithAggregatesFilter<"Startup"> | $Enums.StartupOrgType
+    registered_address?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    city?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    state?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    pincode?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    official_email?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    official_website?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    authorized_person_name?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    authorized_person_designation?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    authorized_person_email?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    authorized_person_phone?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    authorization_type?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    pan_number?: StringNullableWithAggregatesFilter<"Startup"> | string | null
     cin_number?: StringNullableWithAggregatesFilter<"Startup"> | string | null
     gstin?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    dpiit_number?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    certificate_number?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    registration_number?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    incorporation_date?: DateTimeNullableWithAggregatesFilter<"Startup"> | Date | string | null
+    verification_source?: EnumVerificationSourceWithAggregatesFilter<"Startup"> | $Enums.VerificationSource
+    products_services?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    location?: StringWithAggregatesFilter<"Startup"> | string
     verification_notes?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    correction_notes?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    rejection_reason?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    submitted_at?: DateTimeNullableWithAggregatesFilter<"Startup"> | Date | string | null
     verified_at?: DateTimeNullableWithAggregatesFilter<"Startup"> | Date | string | null
     verified_by?: StringNullableWithAggregatesFilter<"Startup"> | string | null
-    location?: StringWithAggregatesFilter<"Startup"> | string
     created_at?: DateTimeWithAggregatesFilter<"Startup"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"Startup"> | Date | string
+  }
+
+  export type StartupBankDetailsWhereInput = {
+    AND?: StartupBankDetailsWhereInput | StartupBankDetailsWhereInput[]
+    OR?: StartupBankDetailsWhereInput[]
+    NOT?: StartupBankDetailsWhereInput | StartupBankDetailsWhereInput[]
+    id?: StringFilter<"StartupBankDetails"> | string
+    startup_id?: StringFilter<"StartupBankDetails"> | string
+    account_holder_name?: StringFilter<"StartupBankDetails"> | string
+    bank_name?: StringFilter<"StartupBankDetails"> | string
+    account_number?: StringFilter<"StartupBankDetails"> | string
+    ifsc_code?: StringFilter<"StartupBankDetails"> | string
+    branch_name?: StringNullableFilter<"StartupBankDetails"> | string | null
+    account_type?: StringNullableFilter<"StartupBankDetails"> | string | null
+    created_at?: DateTimeFilter<"StartupBankDetails"> | Date | string
+    updated_at?: DateTimeFilter<"StartupBankDetails"> | Date | string
+    startup?: XOR<StartupScalarRelationFilter, StartupWhereInput>
+  }
+
+  export type StartupBankDetailsOrderByWithRelationInput = {
+    id?: SortOrder
+    startup_id?: SortOrder
+    account_holder_name?: SortOrder
+    bank_name?: SortOrder
+    account_number?: SortOrder
+    ifsc_code?: SortOrder
+    branch_name?: SortOrderInput | SortOrder
+    account_type?: SortOrderInput | SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+    startup?: StartupOrderByWithRelationInput
+  }
+
+  export type StartupBankDetailsWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    startup_id?: string
+    AND?: StartupBankDetailsWhereInput | StartupBankDetailsWhereInput[]
+    OR?: StartupBankDetailsWhereInput[]
+    NOT?: StartupBankDetailsWhereInput | StartupBankDetailsWhereInput[]
+    account_holder_name?: StringFilter<"StartupBankDetails"> | string
+    bank_name?: StringFilter<"StartupBankDetails"> | string
+    account_number?: StringFilter<"StartupBankDetails"> | string
+    ifsc_code?: StringFilter<"StartupBankDetails"> | string
+    branch_name?: StringNullableFilter<"StartupBankDetails"> | string | null
+    account_type?: StringNullableFilter<"StartupBankDetails"> | string | null
+    created_at?: DateTimeFilter<"StartupBankDetails"> | Date | string
+    updated_at?: DateTimeFilter<"StartupBankDetails"> | Date | string
+    startup?: XOR<StartupScalarRelationFilter, StartupWhereInput>
+  }, "id" | "startup_id">
+
+  export type StartupBankDetailsOrderByWithAggregationInput = {
+    id?: SortOrder
+    startup_id?: SortOrder
+    account_holder_name?: SortOrder
+    bank_name?: SortOrder
+    account_number?: SortOrder
+    ifsc_code?: SortOrder
+    branch_name?: SortOrderInput | SortOrder
+    account_type?: SortOrderInput | SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+    _count?: StartupBankDetailsCountOrderByAggregateInput
+    _max?: StartupBankDetailsMaxOrderByAggregateInput
+    _min?: StartupBankDetailsMinOrderByAggregateInput
+  }
+
+  export type StartupBankDetailsScalarWhereWithAggregatesInput = {
+    AND?: StartupBankDetailsScalarWhereWithAggregatesInput | StartupBankDetailsScalarWhereWithAggregatesInput[]
+    OR?: StartupBankDetailsScalarWhereWithAggregatesInput[]
+    NOT?: StartupBankDetailsScalarWhereWithAggregatesInput | StartupBankDetailsScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"StartupBankDetails"> | string
+    startup_id?: StringWithAggregatesFilter<"StartupBankDetails"> | string
+    account_holder_name?: StringWithAggregatesFilter<"StartupBankDetails"> | string
+    bank_name?: StringWithAggregatesFilter<"StartupBankDetails"> | string
+    account_number?: StringWithAggregatesFilter<"StartupBankDetails"> | string
+    ifsc_code?: StringWithAggregatesFilter<"StartupBankDetails"> | string
+    branch_name?: StringNullableWithAggregatesFilter<"StartupBankDetails"> | string | null
+    account_type?: StringNullableWithAggregatesFilter<"StartupBankDetails"> | string | null
+    created_at?: DateTimeWithAggregatesFilter<"StartupBankDetails"> | Date | string
+    updated_at?: DateTimeWithAggregatesFilter<"StartupBankDetails"> | Date | string
   }
 
   export type StartupDocumentWhereInput = {
@@ -50218,10 +52140,15 @@ export namespace Prisma {
     startup_id?: StringFilter<"StartupDocument"> | string
     document_type?: StringFilter<"StartupDocument"> | string
     document_url?: StringFilter<"StartupDocument"> | string
+    file_name?: StringNullableFilter<"StartupDocument"> | string | null
+    file_size?: IntNullableFilter<"StartupDocument"> | number | null
+    mime_type?: StringNullableFilter<"StartupDocument"> | string | null
     verification_status?: EnumStartupVerificationStatusFilter<"StartupDocument"> | $Enums.StartupVerificationStatus
     verified_by?: StringNullableFilter<"StartupDocument"> | string | null
     verified_at?: DateTimeNullableFilter<"StartupDocument"> | Date | string | null
+    rejection_reason?: StringNullableFilter<"StartupDocument"> | string | null
     created_at?: DateTimeFilter<"StartupDocument"> | Date | string
+    updated_at?: DateTimeFilter<"StartupDocument"> | Date | string
     startup?: XOR<StartupScalarRelationFilter, StartupWhereInput>
     verifier?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }
@@ -50231,10 +52158,15 @@ export namespace Prisma {
     startup_id?: SortOrder
     document_type?: SortOrder
     document_url?: SortOrder
+    file_name?: SortOrderInput | SortOrder
+    file_size?: SortOrderInput | SortOrder
+    mime_type?: SortOrderInput | SortOrder
     verification_status?: SortOrder
     verified_by?: SortOrderInput | SortOrder
     verified_at?: SortOrderInput | SortOrder
+    rejection_reason?: SortOrderInput | SortOrder
     created_at?: SortOrder
+    updated_at?: SortOrder
     startup?: StartupOrderByWithRelationInput
     verifier?: UserOrderByWithRelationInput
   }
@@ -50247,10 +52179,15 @@ export namespace Prisma {
     startup_id?: StringFilter<"StartupDocument"> | string
     document_type?: StringFilter<"StartupDocument"> | string
     document_url?: StringFilter<"StartupDocument"> | string
+    file_name?: StringNullableFilter<"StartupDocument"> | string | null
+    file_size?: IntNullableFilter<"StartupDocument"> | number | null
+    mime_type?: StringNullableFilter<"StartupDocument"> | string | null
     verification_status?: EnumStartupVerificationStatusFilter<"StartupDocument"> | $Enums.StartupVerificationStatus
     verified_by?: StringNullableFilter<"StartupDocument"> | string | null
     verified_at?: DateTimeNullableFilter<"StartupDocument"> | Date | string | null
+    rejection_reason?: StringNullableFilter<"StartupDocument"> | string | null
     created_at?: DateTimeFilter<"StartupDocument"> | Date | string
+    updated_at?: DateTimeFilter<"StartupDocument"> | Date | string
     startup?: XOR<StartupScalarRelationFilter, StartupWhereInput>
     verifier?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }, "id">
@@ -50260,13 +52197,20 @@ export namespace Prisma {
     startup_id?: SortOrder
     document_type?: SortOrder
     document_url?: SortOrder
+    file_name?: SortOrderInput | SortOrder
+    file_size?: SortOrderInput | SortOrder
+    mime_type?: SortOrderInput | SortOrder
     verification_status?: SortOrder
     verified_by?: SortOrderInput | SortOrder
     verified_at?: SortOrderInput | SortOrder
+    rejection_reason?: SortOrderInput | SortOrder
     created_at?: SortOrder
+    updated_at?: SortOrder
     _count?: StartupDocumentCountOrderByAggregateInput
+    _avg?: StartupDocumentAvgOrderByAggregateInput
     _max?: StartupDocumentMaxOrderByAggregateInput
     _min?: StartupDocumentMinOrderByAggregateInput
+    _sum?: StartupDocumentSumOrderByAggregateInput
   }
 
   export type StartupDocumentScalarWhereWithAggregatesInput = {
@@ -50277,10 +52221,15 @@ export namespace Prisma {
     startup_id?: StringWithAggregatesFilter<"StartupDocument"> | string
     document_type?: StringWithAggregatesFilter<"StartupDocument"> | string
     document_url?: StringWithAggregatesFilter<"StartupDocument"> | string
+    file_name?: StringNullableWithAggregatesFilter<"StartupDocument"> | string | null
+    file_size?: IntNullableWithAggregatesFilter<"StartupDocument"> | number | null
+    mime_type?: StringNullableWithAggregatesFilter<"StartupDocument"> | string | null
     verification_status?: EnumStartupVerificationStatusWithAggregatesFilter<"StartupDocument"> | $Enums.StartupVerificationStatus
     verified_by?: StringNullableWithAggregatesFilter<"StartupDocument"> | string | null
     verified_at?: DateTimeNullableWithAggregatesFilter<"StartupDocument"> | Date | string | null
+    rejection_reason?: StringNullableWithAggregatesFilter<"StartupDocument"> | string | null
     created_at?: DateTimeWithAggregatesFilter<"StartupDocument"> | Date | string
+    updated_at?: DateTimeWithAggregatesFilter<"StartupDocument"> | Date | string
   }
 
   export type ApplicationWhereInput = {
@@ -53148,6 +55097,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -53194,6 +55146,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -53238,6 +55193,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -53284,6 +55242,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -53329,6 +55290,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -53346,6 +55310,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -53364,6 +55331,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -53810,20 +55780,40 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
-    verification_notes?: string | null
-    verified_at?: Date | string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
     location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
     match_scores?: MatchScoreCreateNestedManyWithoutStartupInput
     pilots?: PilotCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
@@ -53840,21 +55830,41 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
     verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
-    location: string
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
     match_scores?: MatchScoreUncheckedCreateNestedManyWithoutStartupInput
     pilots?: PilotUncheckedCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentUncheckedCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsUncheckedCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutStartupInput
   }
 
@@ -53868,20 +55878,40 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
-    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
     location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
     match_scores?: MatchScoreUpdateManyWithoutStartupNestedInput
     pilots?: PilotUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
@@ -53898,21 +55928,41 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
     verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
-    location?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
     match_scores?: MatchScoreUncheckedUpdateManyWithoutStartupNestedInput
     pilots?: PilotUncheckedUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUncheckedUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUncheckedUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutStartupNestedInput
   }
 
@@ -53927,15 +55977,34 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
     verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
-    location: string
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -53950,14 +56019,33 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
-    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
     location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -53973,15 +56061,124 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
     verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
-    location?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StartupBankDetailsCreateInput = {
+    id?: string
+    account_holder_name: string
+    bank_name: string
+    account_number: string
+    ifsc_code: string
+    branch_name?: string | null
+    account_type?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    startup: StartupCreateNestedOneWithoutBank_detailsInput
+  }
+
+  export type StartupBankDetailsUncheckedCreateInput = {
+    id?: string
+    startup_id: string
+    account_holder_name: string
+    bank_name: string
+    account_number: string
+    ifsc_code: string
+    branch_name?: string | null
+    account_type?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type StartupBankDetailsUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    account_holder_name?: StringFieldUpdateOperationsInput | string
+    bank_name?: StringFieldUpdateOperationsInput | string
+    account_number?: StringFieldUpdateOperationsInput | string
+    ifsc_code?: StringFieldUpdateOperationsInput | string
+    branch_name?: NullableStringFieldUpdateOperationsInput | string | null
+    account_type?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    startup?: StartupUpdateOneRequiredWithoutBank_detailsNestedInput
+  }
+
+  export type StartupBankDetailsUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startup_id?: StringFieldUpdateOperationsInput | string
+    account_holder_name?: StringFieldUpdateOperationsInput | string
+    bank_name?: StringFieldUpdateOperationsInput | string
+    account_number?: StringFieldUpdateOperationsInput | string
+    ifsc_code?: StringFieldUpdateOperationsInput | string
+    branch_name?: NullableStringFieldUpdateOperationsInput | string | null
+    account_type?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StartupBankDetailsCreateManyInput = {
+    id?: string
+    startup_id: string
+    account_holder_name: string
+    bank_name: string
+    account_number: string
+    ifsc_code: string
+    branch_name?: string | null
+    account_type?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type StartupBankDetailsUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    account_holder_name?: StringFieldUpdateOperationsInput | string
+    bank_name?: StringFieldUpdateOperationsInput | string
+    account_number?: StringFieldUpdateOperationsInput | string
+    ifsc_code?: StringFieldUpdateOperationsInput | string
+    branch_name?: NullableStringFieldUpdateOperationsInput | string | null
+    account_type?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StartupBankDetailsUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startup_id?: StringFieldUpdateOperationsInput | string
+    account_holder_name?: StringFieldUpdateOperationsInput | string
+    bank_name?: StringFieldUpdateOperationsInput | string
+    account_number?: StringFieldUpdateOperationsInput | string
+    ifsc_code?: StringFieldUpdateOperationsInput | string
+    branch_name?: NullableStringFieldUpdateOperationsInput | string | null
+    account_type?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -53990,9 +56187,14 @@ export namespace Prisma {
     id?: string
     document_type: string
     document_url: string
+    file_name?: string | null
+    file_size?: number | null
+    mime_type?: string | null
     verification_status?: $Enums.StartupVerificationStatus
     verified_at?: Date | string | null
+    rejection_reason?: string | null
     created_at?: Date | string
+    updated_at?: Date | string
     startup: StartupCreateNestedOneWithoutDocumentsInput
     verifier?: UserCreateNestedOneWithoutVerified_documentsInput
   }
@@ -54002,19 +56204,29 @@ export namespace Prisma {
     startup_id: string
     document_type: string
     document_url: string
+    file_name?: string | null
+    file_size?: number | null
+    mime_type?: string | null
     verification_status?: $Enums.StartupVerificationStatus
     verified_by?: string | null
     verified_at?: Date | string | null
+    rejection_reason?: string | null
     created_at?: Date | string
+    updated_at?: Date | string
   }
 
   export type StartupDocumentUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     document_type?: StringFieldUpdateOperationsInput | string
     document_url?: StringFieldUpdateOperationsInput | string
+    file_name?: NullableStringFieldUpdateOperationsInput | string | null
+    file_size?: NullableIntFieldUpdateOperationsInput | number | null
+    mime_type?: NullableStringFieldUpdateOperationsInput | string | null
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     startup?: StartupUpdateOneRequiredWithoutDocumentsNestedInput
     verifier?: UserUpdateOneWithoutVerified_documentsNestedInput
   }
@@ -54024,10 +56236,15 @@ export namespace Prisma {
     startup_id?: StringFieldUpdateOperationsInput | string
     document_type?: StringFieldUpdateOperationsInput | string
     document_url?: StringFieldUpdateOperationsInput | string
+    file_name?: NullableStringFieldUpdateOperationsInput | string | null
+    file_size?: NullableIntFieldUpdateOperationsInput | number | null
+    mime_type?: NullableStringFieldUpdateOperationsInput | string | null
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StartupDocumentCreateManyInput = {
@@ -54035,19 +56252,29 @@ export namespace Prisma {
     startup_id: string
     document_type: string
     document_url: string
+    file_name?: string | null
+    file_size?: number | null
+    mime_type?: string | null
     verification_status?: $Enums.StartupVerificationStatus
     verified_by?: string | null
     verified_at?: Date | string | null
+    rejection_reason?: string | null
     created_at?: Date | string
+    updated_at?: Date | string
   }
 
   export type StartupDocumentUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     document_type?: StringFieldUpdateOperationsInput | string
     document_url?: StringFieldUpdateOperationsInput | string
+    file_name?: NullableStringFieldUpdateOperationsInput | string | null
+    file_size?: NullableIntFieldUpdateOperationsInput | number | null
+    mime_type?: NullableStringFieldUpdateOperationsInput | string | null
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StartupDocumentUncheckedUpdateManyInput = {
@@ -54055,10 +56282,15 @@ export namespace Prisma {
     startup_id?: StringFieldUpdateOperationsInput | string
     document_type?: StringFieldUpdateOperationsInput | string
     document_url?: StringFieldUpdateOperationsInput | string
+    file_name?: NullableStringFieldUpdateOperationsInput | string | null
+    file_size?: NullableIntFieldUpdateOperationsInput | number | null
+    mime_type?: NullableStringFieldUpdateOperationsInput | string | null
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ApplicationCreateInput = {
@@ -57502,6 +59734,9 @@ export namespace Prisma {
     invitation_token_hash?: SortOrder
     invitation_expires_at?: SortOrder
     invitation_accepted_at?: SortOrder
+    email_verification_token_hash?: SortOrder
+    email_verification_expires_at?: SortOrder
+    email_verified_at?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -57520,6 +59755,9 @@ export namespace Prisma {
     invitation_token_hash?: SortOrder
     invitation_expires_at?: SortOrder
     invitation_accepted_at?: SortOrder
+    email_verification_token_hash?: SortOrder
+    email_verification_expires_at?: SortOrder
+    email_verified_at?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -57538,6 +59776,9 @@ export namespace Prisma {
     invitation_token_hash?: SortOrder
     invitation_expires_at?: SortOrder
     invitation_accepted_at?: SortOrder
+    email_verification_token_hash?: SortOrder
+    email_verification_expires_at?: SortOrder
+    email_verified_at?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -58008,6 +60249,25 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
+  export type EnumStartupOrgTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.StartupOrgType | EnumStartupOrgTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.StartupOrgType[] | ListEnumStartupOrgTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.StartupOrgType[] | ListEnumStartupOrgTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumStartupOrgTypeFilter<$PrismaModel> | $Enums.StartupOrgType
+  }
+
+  export type EnumVerificationSourceFilter<$PrismaModel = never> = {
+    equals?: $Enums.VerificationSource | EnumVerificationSourceFieldRefInput<$PrismaModel>
+    in?: $Enums.VerificationSource[] | ListEnumVerificationSourceFieldRefInput<$PrismaModel>
+    notIn?: $Enums.VerificationSource[] | ListEnumVerificationSourceFieldRefInput<$PrismaModel>
+    not?: NestedEnumVerificationSourceFilter<$PrismaModel> | $Enums.VerificationSource
+  }
+
+  export type StartupBankDetailsNullableScalarRelationFilter = {
+    is?: StartupBankDetailsWhereInput | null
+    isNot?: StartupBankDetailsWhereInput | null
+  }
+
   export type UserNullableScalarRelationFilter = {
     is?: UserWhereInput | null
     isNot?: UserWhereInput | null
@@ -58024,15 +60284,34 @@ export namespace Prisma {
     years_experience?: SortOrder
     previous_deployments?: SortOrder
     verification_status?: SortOrder
-    dpiit_number?: SortOrder
-    certificate_number?: SortOrder
-    incorporation_date?: SortOrder
+    org_type?: SortOrder
+    registered_address?: SortOrder
+    city?: SortOrder
+    state?: SortOrder
+    pincode?: SortOrder
+    official_email?: SortOrder
+    official_website?: SortOrder
+    authorized_person_name?: SortOrder
+    authorized_person_designation?: SortOrder
+    authorized_person_email?: SortOrder
+    authorized_person_phone?: SortOrder
+    authorization_type?: SortOrder
+    pan_number?: SortOrder
     cin_number?: SortOrder
     gstin?: SortOrder
+    dpiit_number?: SortOrder
+    certificate_number?: SortOrder
+    registration_number?: SortOrder
+    incorporation_date?: SortOrder
+    verification_source?: SortOrder
+    products_services?: SortOrder
+    location?: SortOrder
     verification_notes?: SortOrder
+    correction_notes?: SortOrder
+    rejection_reason?: SortOrder
+    submitted_at?: SortOrder
     verified_at?: SortOrder
     verified_by?: SortOrder
-    location?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -58053,15 +60332,34 @@ export namespace Prisma {
     years_experience?: SortOrder
     previous_deployments?: SortOrder
     verification_status?: SortOrder
-    dpiit_number?: SortOrder
-    certificate_number?: SortOrder
-    incorporation_date?: SortOrder
+    org_type?: SortOrder
+    registered_address?: SortOrder
+    city?: SortOrder
+    state?: SortOrder
+    pincode?: SortOrder
+    official_email?: SortOrder
+    official_website?: SortOrder
+    authorized_person_name?: SortOrder
+    authorized_person_designation?: SortOrder
+    authorized_person_email?: SortOrder
+    authorized_person_phone?: SortOrder
+    authorization_type?: SortOrder
+    pan_number?: SortOrder
     cin_number?: SortOrder
     gstin?: SortOrder
+    dpiit_number?: SortOrder
+    certificate_number?: SortOrder
+    registration_number?: SortOrder
+    incorporation_date?: SortOrder
+    verification_source?: SortOrder
+    products_services?: SortOrder
+    location?: SortOrder
     verification_notes?: SortOrder
+    correction_notes?: SortOrder
+    rejection_reason?: SortOrder
+    submitted_at?: SortOrder
     verified_at?: SortOrder
     verified_by?: SortOrder
-    location?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -58076,15 +60374,34 @@ export namespace Prisma {
     years_experience?: SortOrder
     previous_deployments?: SortOrder
     verification_status?: SortOrder
-    dpiit_number?: SortOrder
-    certificate_number?: SortOrder
-    incorporation_date?: SortOrder
+    org_type?: SortOrder
+    registered_address?: SortOrder
+    city?: SortOrder
+    state?: SortOrder
+    pincode?: SortOrder
+    official_email?: SortOrder
+    official_website?: SortOrder
+    authorized_person_name?: SortOrder
+    authorized_person_designation?: SortOrder
+    authorized_person_email?: SortOrder
+    authorized_person_phone?: SortOrder
+    authorization_type?: SortOrder
+    pan_number?: SortOrder
     cin_number?: SortOrder
     gstin?: SortOrder
+    dpiit_number?: SortOrder
+    certificate_number?: SortOrder
+    registration_number?: SortOrder
+    incorporation_date?: SortOrder
+    verification_source?: SortOrder
+    products_services?: SortOrder
+    location?: SortOrder
     verification_notes?: SortOrder
+    correction_notes?: SortOrder
+    rejection_reason?: SortOrder
+    submitted_at?: SortOrder
     verified_at?: SortOrder
     verified_by?: SortOrder
-    location?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -58095,15 +60412,94 @@ export namespace Prisma {
     previous_deployments?: SortOrder
   }
 
+  export type EnumStartupOrgTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.StartupOrgType | EnumStartupOrgTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.StartupOrgType[] | ListEnumStartupOrgTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.StartupOrgType[] | ListEnumStartupOrgTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumStartupOrgTypeWithAggregatesFilter<$PrismaModel> | $Enums.StartupOrgType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumStartupOrgTypeFilter<$PrismaModel>
+    _max?: NestedEnumStartupOrgTypeFilter<$PrismaModel>
+  }
+
+  export type EnumVerificationSourceWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.VerificationSource | EnumVerificationSourceFieldRefInput<$PrismaModel>
+    in?: $Enums.VerificationSource[] | ListEnumVerificationSourceFieldRefInput<$PrismaModel>
+    notIn?: $Enums.VerificationSource[] | ListEnumVerificationSourceFieldRefInput<$PrismaModel>
+    not?: NestedEnumVerificationSourceWithAggregatesFilter<$PrismaModel> | $Enums.VerificationSource
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumVerificationSourceFilter<$PrismaModel>
+    _max?: NestedEnumVerificationSourceFilter<$PrismaModel>
+  }
+
+  export type StartupBankDetailsCountOrderByAggregateInput = {
+    id?: SortOrder
+    startup_id?: SortOrder
+    account_holder_name?: SortOrder
+    bank_name?: SortOrder
+    account_number?: SortOrder
+    ifsc_code?: SortOrder
+    branch_name?: SortOrder
+    account_type?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type StartupBankDetailsMaxOrderByAggregateInput = {
+    id?: SortOrder
+    startup_id?: SortOrder
+    account_holder_name?: SortOrder
+    bank_name?: SortOrder
+    account_number?: SortOrder
+    ifsc_code?: SortOrder
+    branch_name?: SortOrder
+    account_type?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type StartupBankDetailsMinOrderByAggregateInput = {
+    id?: SortOrder
+    startup_id?: SortOrder
+    account_holder_name?: SortOrder
+    bank_name?: SortOrder
+    account_number?: SortOrder
+    ifsc_code?: SortOrder
+    branch_name?: SortOrder
+    account_type?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type StartupDocumentCountOrderByAggregateInput = {
     id?: SortOrder
     startup_id?: SortOrder
     document_type?: SortOrder
     document_url?: SortOrder
+    file_name?: SortOrder
+    file_size?: SortOrder
+    mime_type?: SortOrder
     verification_status?: SortOrder
     verified_by?: SortOrder
     verified_at?: SortOrder
+    rejection_reason?: SortOrder
     created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type StartupDocumentAvgOrderByAggregateInput = {
+    file_size?: SortOrder
   }
 
   export type StartupDocumentMaxOrderByAggregateInput = {
@@ -58111,10 +60507,15 @@ export namespace Prisma {
     startup_id?: SortOrder
     document_type?: SortOrder
     document_url?: SortOrder
+    file_name?: SortOrder
+    file_size?: SortOrder
+    mime_type?: SortOrder
     verification_status?: SortOrder
     verified_by?: SortOrder
     verified_at?: SortOrder
+    rejection_reason?: SortOrder
     created_at?: SortOrder
+    updated_at?: SortOrder
   }
 
   export type StartupDocumentMinOrderByAggregateInput = {
@@ -58122,10 +60523,35 @@ export namespace Prisma {
     startup_id?: SortOrder
     document_type?: SortOrder
     document_url?: SortOrder
+    file_name?: SortOrder
+    file_size?: SortOrder
+    mime_type?: SortOrder
     verification_status?: SortOrder
     verified_by?: SortOrder
     verified_at?: SortOrder
+    rejection_reason?: SortOrder
     created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type StartupDocumentSumOrderByAggregateInput = {
+    file_size?: SortOrder
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type EnumApplicationStatusFilter<$PrismaModel = never> = {
@@ -59773,17 +62199,6 @@ export namespace Prisma {
     not?: NestedEnumGeMHandoffStatusFilter<$PrismaModel> | $Enums.GeMHandoffStatus
   }
 
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
   export type EnumAcceptanceStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.AcceptanceStatus | EnumAcceptanceStatusFieldRefInput<$PrismaModel>
     in?: $Enums.AcceptanceStatus[] | ListEnumAcceptanceStatusFieldRefInput<$PrismaModel>
@@ -59979,22 +62394,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumGeMHandoffStatusFilter<$PrismaModel>
     _max?: NestedEnumGeMHandoffStatusFilter<$PrismaModel>
-  }
-
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type EnumAcceptanceStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -61916,6 +64315,12 @@ export namespace Prisma {
     connect?: StartupDocumentWhereUniqueInput | StartupDocumentWhereUniqueInput[]
   }
 
+  export type StartupBankDetailsCreateNestedOneWithoutStartupInput = {
+    create?: XOR<StartupBankDetailsCreateWithoutStartupInput, StartupBankDetailsUncheckedCreateWithoutStartupInput>
+    connectOrCreate?: StartupBankDetailsCreateOrConnectWithoutStartupInput
+    connect?: StartupBankDetailsWhereUniqueInput
+  }
+
   export type ProcurementRecordCreateNestedManyWithoutStartupInput = {
     create?: XOR<ProcurementRecordCreateWithoutStartupInput, ProcurementRecordUncheckedCreateWithoutStartupInput> | ProcurementRecordCreateWithoutStartupInput[] | ProcurementRecordUncheckedCreateWithoutStartupInput[]
     connectOrCreate?: ProcurementRecordCreateOrConnectWithoutStartupInput | ProcurementRecordCreateOrConnectWithoutStartupInput[]
@@ -61963,6 +64368,12 @@ export namespace Prisma {
     connect?: StartupDocumentWhereUniqueInput | StartupDocumentWhereUniqueInput[]
   }
 
+  export type StartupBankDetailsUncheckedCreateNestedOneWithoutStartupInput = {
+    create?: XOR<StartupBankDetailsCreateWithoutStartupInput, StartupBankDetailsUncheckedCreateWithoutStartupInput>
+    connectOrCreate?: StartupBankDetailsCreateOrConnectWithoutStartupInput
+    connect?: StartupBankDetailsWhereUniqueInput
+  }
+
   export type ProcurementRecordUncheckedCreateNestedManyWithoutStartupInput = {
     create?: XOR<ProcurementRecordCreateWithoutStartupInput, ProcurementRecordUncheckedCreateWithoutStartupInput> | ProcurementRecordCreateWithoutStartupInput[] | ProcurementRecordUncheckedCreateWithoutStartupInput[]
     connectOrCreate?: ProcurementRecordCreateOrConnectWithoutStartupInput | ProcurementRecordCreateOrConnectWithoutStartupInput[]
@@ -61973,6 +64384,14 @@ export namespace Prisma {
   export type StartupUpdatetechnologiesInput = {
     set?: string[]
     push?: string | string[]
+  }
+
+  export type EnumStartupOrgTypeFieldUpdateOperationsInput = {
+    set?: $Enums.StartupOrgType
+  }
+
+  export type EnumVerificationSourceFieldUpdateOperationsInput = {
+    set?: $Enums.VerificationSource
   }
 
   export type ApplicationUpdateManyWithoutStartupNestedInput = {
@@ -62029,6 +64448,16 @@ export namespace Prisma {
     update?: StartupDocumentUpdateWithWhereUniqueWithoutStartupInput | StartupDocumentUpdateWithWhereUniqueWithoutStartupInput[]
     updateMany?: StartupDocumentUpdateManyWithWhereWithoutStartupInput | StartupDocumentUpdateManyWithWhereWithoutStartupInput[]
     deleteMany?: StartupDocumentScalarWhereInput | StartupDocumentScalarWhereInput[]
+  }
+
+  export type StartupBankDetailsUpdateOneWithoutStartupNestedInput = {
+    create?: XOR<StartupBankDetailsCreateWithoutStartupInput, StartupBankDetailsUncheckedCreateWithoutStartupInput>
+    connectOrCreate?: StartupBankDetailsCreateOrConnectWithoutStartupInput
+    upsert?: StartupBankDetailsUpsertWithoutStartupInput
+    disconnect?: StartupBankDetailsWhereInput | boolean
+    delete?: StartupBankDetailsWhereInput | boolean
+    connect?: StartupBankDetailsWhereUniqueInput
+    update?: XOR<XOR<StartupBankDetailsUpdateToOneWithWhereWithoutStartupInput, StartupBankDetailsUpdateWithoutStartupInput>, StartupBankDetailsUncheckedUpdateWithoutStartupInput>
   }
 
   export type ProcurementRecordUpdateManyWithoutStartupNestedInput = {
@@ -62119,6 +64548,16 @@ export namespace Prisma {
     deleteMany?: StartupDocumentScalarWhereInput | StartupDocumentScalarWhereInput[]
   }
 
+  export type StartupBankDetailsUncheckedUpdateOneWithoutStartupNestedInput = {
+    create?: XOR<StartupBankDetailsCreateWithoutStartupInput, StartupBankDetailsUncheckedCreateWithoutStartupInput>
+    connectOrCreate?: StartupBankDetailsCreateOrConnectWithoutStartupInput
+    upsert?: StartupBankDetailsUpsertWithoutStartupInput
+    disconnect?: StartupBankDetailsWhereInput | boolean
+    delete?: StartupBankDetailsWhereInput | boolean
+    connect?: StartupBankDetailsWhereUniqueInput
+    update?: XOR<XOR<StartupBankDetailsUpdateToOneWithWhereWithoutStartupInput, StartupBankDetailsUpdateWithoutStartupInput>, StartupBankDetailsUncheckedUpdateWithoutStartupInput>
+  }
+
   export type ProcurementRecordUncheckedUpdateManyWithoutStartupNestedInput = {
     create?: XOR<ProcurementRecordCreateWithoutStartupInput, ProcurementRecordUncheckedCreateWithoutStartupInput> | ProcurementRecordCreateWithoutStartupInput[] | ProcurementRecordUncheckedCreateWithoutStartupInput[]
     connectOrCreate?: ProcurementRecordCreateOrConnectWithoutStartupInput | ProcurementRecordCreateOrConnectWithoutStartupInput[]
@@ -62133,6 +64572,20 @@ export namespace Prisma {
     deleteMany?: ProcurementRecordScalarWhereInput | ProcurementRecordScalarWhereInput[]
   }
 
+  export type StartupCreateNestedOneWithoutBank_detailsInput = {
+    create?: XOR<StartupCreateWithoutBank_detailsInput, StartupUncheckedCreateWithoutBank_detailsInput>
+    connectOrCreate?: StartupCreateOrConnectWithoutBank_detailsInput
+    connect?: StartupWhereUniqueInput
+  }
+
+  export type StartupUpdateOneRequiredWithoutBank_detailsNestedInput = {
+    create?: XOR<StartupCreateWithoutBank_detailsInput, StartupUncheckedCreateWithoutBank_detailsInput>
+    connectOrCreate?: StartupCreateOrConnectWithoutBank_detailsInput
+    upsert?: StartupUpsertWithoutBank_detailsInput
+    connect?: StartupWhereUniqueInput
+    update?: XOR<XOR<StartupUpdateToOneWithWhereWithoutBank_detailsInput, StartupUpdateWithoutBank_detailsInput>, StartupUncheckedUpdateWithoutBank_detailsInput>
+  }
+
   export type StartupCreateNestedOneWithoutDocumentsInput = {
     create?: XOR<StartupCreateWithoutDocumentsInput, StartupUncheckedCreateWithoutDocumentsInput>
     connectOrCreate?: StartupCreateOrConnectWithoutDocumentsInput
@@ -62143,6 +64596,14 @@ export namespace Prisma {
     create?: XOR<UserCreateWithoutVerified_documentsInput, UserUncheckedCreateWithoutVerified_documentsInput>
     connectOrCreate?: UserCreateOrConnectWithoutVerified_documentsInput
     connect?: UserWhereUniqueInput
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
   }
 
   export type StartupUpdateOneRequiredWithoutDocumentsNestedInput = {
@@ -63877,14 +66338,6 @@ export namespace Prisma {
     set?: $Enums.GeMHandoffStatus
   }
 
-  export type NullableIntFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
-  }
-
   export type EnumAcceptanceStatusFieldUpdateOperationsInput = {
     set?: $Enums.AcceptanceStatus
   }
@@ -64245,6 +66698,67 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
+  export type NestedEnumStartupOrgTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.StartupOrgType | EnumStartupOrgTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.StartupOrgType[] | ListEnumStartupOrgTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.StartupOrgType[] | ListEnumStartupOrgTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumStartupOrgTypeFilter<$PrismaModel> | $Enums.StartupOrgType
+  }
+
+  export type NestedEnumVerificationSourceFilter<$PrismaModel = never> = {
+    equals?: $Enums.VerificationSource | EnumVerificationSourceFieldRefInput<$PrismaModel>
+    in?: $Enums.VerificationSource[] | ListEnumVerificationSourceFieldRefInput<$PrismaModel>
+    notIn?: $Enums.VerificationSource[] | ListEnumVerificationSourceFieldRefInput<$PrismaModel>
+    not?: NestedEnumVerificationSourceFilter<$PrismaModel> | $Enums.VerificationSource
+  }
+
+  export type NestedEnumStartupOrgTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.StartupOrgType | EnumStartupOrgTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.StartupOrgType[] | ListEnumStartupOrgTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.StartupOrgType[] | ListEnumStartupOrgTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumStartupOrgTypeWithAggregatesFilter<$PrismaModel> | $Enums.StartupOrgType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumStartupOrgTypeFilter<$PrismaModel>
+    _max?: NestedEnumStartupOrgTypeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumVerificationSourceWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.VerificationSource | EnumVerificationSourceFieldRefInput<$PrismaModel>
+    in?: $Enums.VerificationSource[] | ListEnumVerificationSourceFieldRefInput<$PrismaModel>
+    notIn?: $Enums.VerificationSource[] | ListEnumVerificationSourceFieldRefInput<$PrismaModel>
+    not?: NestedEnumVerificationSourceWithAggregatesFilter<$PrismaModel> | $Enums.VerificationSource
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumVerificationSourceFilter<$PrismaModel>
+    _max?: NestedEnumVerificationSourceFilter<$PrismaModel>
+  }
+
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
   export type NestedEnumApplicationStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.ApplicationStatus | EnumApplicationStatusFieldRefInput<$PrismaModel>
     in?: $Enums.ApplicationStatus[] | ListEnumApplicationStatusFieldRefInput<$PrismaModel>
@@ -64290,17 +66804,6 @@ export namespace Prisma {
     in?: $Enums.PilotStatus[] | ListEnumPilotStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.PilotStatus[] | ListEnumPilotStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumPilotStatusFilter<$PrismaModel> | $Enums.PilotStatus
-  }
-
-  export type NestedFloatNullableFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedEnumPilotStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -64531,22 +67034,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumGeMHandoffStatusFilter<$PrismaModel>
     _max?: NestedEnumGeMHandoffStatusFilter<$PrismaModel>
-  }
-
-  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumAcceptanceStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -64830,9 +67317,14 @@ export namespace Prisma {
     id?: string
     document_type: string
     document_url: string
+    file_name?: string | null
+    file_size?: number | null
+    mime_type?: string | null
     verification_status?: $Enums.StartupVerificationStatus
     verified_at?: Date | string | null
+    rejection_reason?: string | null
     created_at?: Date | string
+    updated_at?: Date | string
     startup: StartupCreateNestedOneWithoutDocumentsInput
   }
 
@@ -64841,9 +67333,14 @@ export namespace Prisma {
     startup_id: string
     document_type: string
     document_url: string
+    file_name?: string | null
+    file_size?: number | null
+    mime_type?: string | null
     verification_status?: $Enums.StartupVerificationStatus
     verified_at?: Date | string | null
+    rejection_reason?: string | null
     created_at?: Date | string
+    updated_at?: Date | string
   }
 
   export type StartupDocumentCreateOrConnectWithoutVerifierInput = {
@@ -64866,20 +67363,40 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
-    verification_notes?: string | null
-    verified_at?: Date | string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
     location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
     match_scores?: MatchScoreCreateNestedManyWithoutStartupInput
     pilots?: PilotCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
   }
@@ -64894,21 +67411,41 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
     verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
-    location: string
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
     match_scores?: MatchScoreUncheckedCreateNestedManyWithoutStartupInput
     pilots?: PilotUncheckedCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentUncheckedCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsUncheckedCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutStartupInput
   }
 
@@ -65076,20 +67613,40 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
-    verification_notes?: string | null
-    verified_at?: Date | string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
     location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
     match_scores?: MatchScoreCreateNestedManyWithoutStartupInput
     pilots?: PilotCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
   }
@@ -65105,20 +67662,40 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
-    verification_notes?: string | null
-    verified_at?: Date | string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
     location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
     match_scores?: MatchScoreUncheckedCreateNestedManyWithoutStartupInput
     pilots?: PilotUncheckedCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentUncheckedCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsUncheckedCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutStartupInput
   }
 
@@ -66145,10 +68722,15 @@ export namespace Prisma {
     startup_id?: StringFilter<"StartupDocument"> | string
     document_type?: StringFilter<"StartupDocument"> | string
     document_url?: StringFilter<"StartupDocument"> | string
+    file_name?: StringNullableFilter<"StartupDocument"> | string | null
+    file_size?: IntNullableFilter<"StartupDocument"> | number | null
+    mime_type?: StringNullableFilter<"StartupDocument"> | string | null
     verification_status?: EnumStartupVerificationStatusFilter<"StartupDocument"> | $Enums.StartupVerificationStatus
     verified_by?: StringNullableFilter<"StartupDocument"> | string | null
     verified_at?: DateTimeNullableFilter<"StartupDocument"> | Date | string | null
+    rejection_reason?: StringNullableFilter<"StartupDocument"> | string | null
     created_at?: DateTimeFilter<"StartupDocument"> | Date | string
+    updated_at?: DateTimeFilter<"StartupDocument"> | Date | string
   }
 
   export type StartupUpsertWithWhereUniqueWithoutUserInput = {
@@ -66181,15 +68763,34 @@ export namespace Prisma {
     years_experience?: IntFilter<"Startup"> | number
     previous_deployments?: IntFilter<"Startup"> | number
     verification_status?: EnumStartupVerificationStatusFilter<"Startup"> | $Enums.StartupVerificationStatus
-    dpiit_number?: StringNullableFilter<"Startup"> | string | null
-    certificate_number?: StringNullableFilter<"Startup"> | string | null
-    incorporation_date?: DateTimeNullableFilter<"Startup"> | Date | string | null
+    org_type?: EnumStartupOrgTypeFilter<"Startup"> | $Enums.StartupOrgType
+    registered_address?: StringNullableFilter<"Startup"> | string | null
+    city?: StringNullableFilter<"Startup"> | string | null
+    state?: StringNullableFilter<"Startup"> | string | null
+    pincode?: StringNullableFilter<"Startup"> | string | null
+    official_email?: StringNullableFilter<"Startup"> | string | null
+    official_website?: StringNullableFilter<"Startup"> | string | null
+    authorized_person_name?: StringNullableFilter<"Startup"> | string | null
+    authorized_person_designation?: StringNullableFilter<"Startup"> | string | null
+    authorized_person_email?: StringNullableFilter<"Startup"> | string | null
+    authorized_person_phone?: StringNullableFilter<"Startup"> | string | null
+    authorization_type?: StringNullableFilter<"Startup"> | string | null
+    pan_number?: StringNullableFilter<"Startup"> | string | null
     cin_number?: StringNullableFilter<"Startup"> | string | null
     gstin?: StringNullableFilter<"Startup"> | string | null
+    dpiit_number?: StringNullableFilter<"Startup"> | string | null
+    certificate_number?: StringNullableFilter<"Startup"> | string | null
+    registration_number?: StringNullableFilter<"Startup"> | string | null
+    incorporation_date?: DateTimeNullableFilter<"Startup"> | Date | string | null
+    verification_source?: EnumVerificationSourceFilter<"Startup"> | $Enums.VerificationSource
+    products_services?: StringNullableFilter<"Startup"> | string | null
+    location?: StringFilter<"Startup"> | string
     verification_notes?: StringNullableFilter<"Startup"> | string | null
+    correction_notes?: StringNullableFilter<"Startup"> | string | null
+    rejection_reason?: StringNullableFilter<"Startup"> | string | null
+    submitted_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
     verified_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
     verified_by?: StringNullableFilter<"Startup"> | string | null
-    location?: StringFilter<"Startup"> | string
     created_at?: DateTimeFilter<"Startup"> | Date | string
     updated_at?: DateTimeFilter<"Startup"> | Date | string
   }
@@ -66891,6 +69492,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -66935,6 +69539,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -67191,6 +69798,9 @@ export namespace Prisma {
     invitation_token_hash?: StringNullableFilter<"User"> | string | null
     invitation_expires_at?: DateTimeNullableFilter<"User"> | Date | string | null
     invitation_accepted_at?: DateTimeNullableFilter<"User"> | Date | string | null
+    email_verification_token_hash?: StringNullableFilter<"User"> | string | null
+    email_verification_expires_at?: DateTimeNullableFilter<"User"> | Date | string | null
+    email_verified_at?: DateTimeNullableFilter<"User"> | Date | string | null
     created_at?: DateTimeFilter<"User"> | Date | string
     updated_at?: DateTimeFilter<"User"> | Date | string
   }
@@ -67288,6 +69898,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -67333,6 +69946,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -67779,6 +70395,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -67824,6 +70443,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -68119,19 +70741,39 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
-    verification_notes?: string | null
-    verified_at?: Date | string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
     location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
     pilots?: PilotCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
@@ -68148,20 +70790,40 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
     verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
-    location: string
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
     pilots?: PilotUncheckedCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentUncheckedCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsUncheckedCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutStartupInput
   }
 
@@ -68268,19 +70930,39 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
-    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
     location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
     pilots?: PilotUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
@@ -68297,20 +70979,40 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
     verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
-    location?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
     pilots?: PilotUncheckedUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUncheckedUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUncheckedUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutStartupNestedInput
   }
 
@@ -68476,9 +71178,14 @@ export namespace Prisma {
     id?: string
     document_type: string
     document_url: string
+    file_name?: string | null
+    file_size?: number | null
+    mime_type?: string | null
     verification_status?: $Enums.StartupVerificationStatus
     verified_at?: Date | string | null
+    rejection_reason?: string | null
     created_at?: Date | string
+    updated_at?: Date | string
     verifier?: UserCreateNestedOneWithoutVerified_documentsInput
   }
 
@@ -68486,10 +71193,15 @@ export namespace Prisma {
     id?: string
     document_type: string
     document_url: string
+    file_name?: string | null
+    file_size?: number | null
+    mime_type?: string | null
     verification_status?: $Enums.StartupVerificationStatus
     verified_by?: string | null
     verified_at?: Date | string | null
+    rejection_reason?: string | null
     created_at?: Date | string
+    updated_at?: Date | string
   }
 
   export type StartupDocumentCreateOrConnectWithoutStartupInput = {
@@ -68500,6 +71212,35 @@ export namespace Prisma {
   export type StartupDocumentCreateManyStartupInputEnvelope = {
     data: StartupDocumentCreateManyStartupInput | StartupDocumentCreateManyStartupInput[]
     skipDuplicates?: boolean
+  }
+
+  export type StartupBankDetailsCreateWithoutStartupInput = {
+    id?: string
+    account_holder_name: string
+    bank_name: string
+    account_number: string
+    ifsc_code: string
+    branch_name?: string | null
+    account_type?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type StartupBankDetailsUncheckedCreateWithoutStartupInput = {
+    id?: string
+    account_holder_name: string
+    bank_name: string
+    account_number: string
+    ifsc_code: string
+    branch_name?: string | null
+    account_type?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type StartupBankDetailsCreateOrConnectWithoutStartupInput = {
+    where: StartupBankDetailsWhereUniqueInput
+    create: XOR<StartupBankDetailsCreateWithoutStartupInput, StartupBankDetailsUncheckedCreateWithoutStartupInput>
   }
 
   export type ProcurementRecordCreateWithoutStartupInput = {
@@ -68613,6 +71354,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -68658,6 +71402,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -68706,6 +71453,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -68751,6 +71501,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -68850,6 +71603,41 @@ export namespace Prisma {
     data: XOR<StartupDocumentUpdateManyMutationInput, StartupDocumentUncheckedUpdateManyWithoutStartupInput>
   }
 
+  export type StartupBankDetailsUpsertWithoutStartupInput = {
+    update: XOR<StartupBankDetailsUpdateWithoutStartupInput, StartupBankDetailsUncheckedUpdateWithoutStartupInput>
+    create: XOR<StartupBankDetailsCreateWithoutStartupInput, StartupBankDetailsUncheckedCreateWithoutStartupInput>
+    where?: StartupBankDetailsWhereInput
+  }
+
+  export type StartupBankDetailsUpdateToOneWithWhereWithoutStartupInput = {
+    where?: StartupBankDetailsWhereInput
+    data: XOR<StartupBankDetailsUpdateWithoutStartupInput, StartupBankDetailsUncheckedUpdateWithoutStartupInput>
+  }
+
+  export type StartupBankDetailsUpdateWithoutStartupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    account_holder_name?: StringFieldUpdateOperationsInput | string
+    bank_name?: StringFieldUpdateOperationsInput | string
+    account_number?: StringFieldUpdateOperationsInput | string
+    ifsc_code?: StringFieldUpdateOperationsInput | string
+    branch_name?: NullableStringFieldUpdateOperationsInput | string | null
+    account_type?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StartupBankDetailsUncheckedUpdateWithoutStartupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    account_holder_name?: StringFieldUpdateOperationsInput | string
+    bank_name?: StringFieldUpdateOperationsInput | string
+    account_number?: StringFieldUpdateOperationsInput | string
+    ifsc_code?: StringFieldUpdateOperationsInput | string
+    branch_name?: NullableStringFieldUpdateOperationsInput | string | null
+    account_type?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ProcurementRecordUpsertWithWhereUniqueWithoutStartupInput = {
     where: ProcurementRecordWhereUniqueInput
     update: XOR<ProcurementRecordUpdateWithoutStartupInput, ProcurementRecordUncheckedUpdateWithoutStartupInput>
@@ -68890,6 +71678,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -68935,6 +71726,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -68989,6 +71783,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -69034,6 +71831,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -69064,6 +71864,214 @@ export namespace Prisma {
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
   }
 
+  export type StartupCreateWithoutBank_detailsInput = {
+    id?: string
+    company_name: string
+    description: string
+    domain: string
+    technologies?: StartupCreatetechnologiesInput | string[]
+    readiness_level?: number
+    years_experience?: number
+    previous_deployments?: number
+    verification_status?: $Enums.StartupVerificationStatus
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
+    cin_number?: string | null
+    gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    applications?: ApplicationCreateNestedManyWithoutStartupInput
+    match_scores?: MatchScoreCreateNestedManyWithoutStartupInput
+    pilots?: PilotCreateNestedManyWithoutStartupInput
+    documents?: StartupDocumentCreateNestedManyWithoutStartupInput
+    procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
+    user: UserCreateNestedOneWithoutStartupsInput
+    verifier?: UserCreateNestedOneWithoutVerified_startupsInput
+  }
+
+  export type StartupUncheckedCreateWithoutBank_detailsInput = {
+    id?: string
+    user_id: string
+    company_name: string
+    description: string
+    domain: string
+    technologies?: StartupCreatetechnologiesInput | string[]
+    readiness_level?: number
+    years_experience?: number
+    previous_deployments?: number
+    verification_status?: $Enums.StartupVerificationStatus
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
+    cin_number?: string | null
+    gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
+    verified_by?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
+    match_scores?: MatchScoreUncheckedCreateNestedManyWithoutStartupInput
+    pilots?: PilotUncheckedCreateNestedManyWithoutStartupInput
+    documents?: StartupDocumentUncheckedCreateNestedManyWithoutStartupInput
+    procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutStartupInput
+  }
+
+  export type StartupCreateOrConnectWithoutBank_detailsInput = {
+    where: StartupWhereUniqueInput
+    create: XOR<StartupCreateWithoutBank_detailsInput, StartupUncheckedCreateWithoutBank_detailsInput>
+  }
+
+  export type StartupUpsertWithoutBank_detailsInput = {
+    update: XOR<StartupUpdateWithoutBank_detailsInput, StartupUncheckedUpdateWithoutBank_detailsInput>
+    create: XOR<StartupCreateWithoutBank_detailsInput, StartupUncheckedCreateWithoutBank_detailsInput>
+    where?: StartupWhereInput
+  }
+
+  export type StartupUpdateToOneWithWhereWithoutBank_detailsInput = {
+    where?: StartupWhereInput
+    data: XOR<StartupUpdateWithoutBank_detailsInput, StartupUncheckedUpdateWithoutBank_detailsInput>
+  }
+
+  export type StartupUpdateWithoutBank_detailsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    company_name?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    domain?: StringFieldUpdateOperationsInput | string
+    technologies?: StartupUpdatetechnologiesInput | string[]
+    readiness_level?: IntFieldUpdateOperationsInput | number
+    years_experience?: IntFieldUpdateOperationsInput | number
+    previous_deployments?: IntFieldUpdateOperationsInput | number
+    verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
+    cin_number?: NullableStringFieldUpdateOperationsInput | string | null
+    gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    applications?: ApplicationUpdateManyWithoutStartupNestedInput
+    match_scores?: MatchScoreUpdateManyWithoutStartupNestedInput
+    pilots?: PilotUpdateManyWithoutStartupNestedInput
+    documents?: StartupDocumentUpdateManyWithoutStartupNestedInput
+    procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
+    user?: UserUpdateOneRequiredWithoutStartupsNestedInput
+    verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
+  }
+
+  export type StartupUncheckedUpdateWithoutBank_detailsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: StringFieldUpdateOperationsInput | string
+    company_name?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    domain?: StringFieldUpdateOperationsInput | string
+    technologies?: StartupUpdatetechnologiesInput | string[]
+    readiness_level?: IntFieldUpdateOperationsInput | number
+    years_experience?: IntFieldUpdateOperationsInput | number
+    previous_deployments?: IntFieldUpdateOperationsInput | number
+    verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
+    cin_number?: NullableStringFieldUpdateOperationsInput | string | null
+    gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_by?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
+    match_scores?: MatchScoreUncheckedUpdateManyWithoutStartupNestedInput
+    pilots?: PilotUncheckedUpdateManyWithoutStartupNestedInput
+    documents?: StartupDocumentUncheckedUpdateManyWithoutStartupNestedInput
+    procurements?: ProcurementRecordUncheckedUpdateManyWithoutStartupNestedInput
+  }
+
   export type StartupCreateWithoutDocumentsInput = {
     id?: string
     company_name: string
@@ -69074,19 +72082,39 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
-    verification_notes?: string | null
-    verified_at?: Date | string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
     location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
     match_scores?: MatchScoreCreateNestedManyWithoutStartupInput
     pilots?: PilotCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
@@ -69103,20 +72131,40 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
     verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
-    location: string
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
     match_scores?: MatchScoreUncheckedCreateNestedManyWithoutStartupInput
     pilots?: PilotUncheckedCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsUncheckedCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutStartupInput
   }
 
@@ -69138,6 +72186,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -69183,6 +72234,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -69239,19 +72293,39 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
-    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
     location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
     match_scores?: MatchScoreUpdateManyWithoutStartupNestedInput
     pilots?: PilotUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
@@ -69268,20 +72342,40 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
     verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
-    location?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
     match_scores?: MatchScoreUncheckedUpdateManyWithoutStartupNestedInput
     pilots?: PilotUncheckedUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUncheckedUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutStartupNestedInput
   }
 
@@ -69309,6 +72403,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -69354,6 +72451,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -69465,19 +72565,39 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
-    verification_notes?: string | null
-    verified_at?: Date | string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
     location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     match_scores?: MatchScoreCreateNestedManyWithoutStartupInput
     pilots?: PilotCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
@@ -69494,20 +72614,40 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
     verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
-    location: string
     created_at?: Date | string
     updated_at?: Date | string
     match_scores?: MatchScoreUncheckedCreateNestedManyWithoutStartupInput
     pilots?: PilotUncheckedCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentUncheckedCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsUncheckedCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutStartupInput
   }
 
@@ -69801,19 +72941,39 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
-    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
     location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     match_scores?: MatchScoreUpdateManyWithoutStartupNestedInput
     pilots?: PilotUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
@@ -69830,20 +72990,40 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
     verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
-    location?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     match_scores?: MatchScoreUncheckedUpdateManyWithoutStartupNestedInput
     pilots?: PilotUncheckedUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUncheckedUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUncheckedUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutStartupNestedInput
   }
 
@@ -69973,6 +73153,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -70018,6 +73201,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -70066,6 +73252,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -70111,6 +73300,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -70170,6 +73362,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -70215,6 +73410,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -70269,6 +73467,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -70314,6 +73515,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -70400,6 +73604,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -70445,6 +73652,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -70553,6 +73763,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -70598,6 +73811,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -70684,6 +73900,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -70729,6 +73948,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -70837,6 +74059,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -70882,6 +74107,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -70968,6 +74196,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -71013,6 +74244,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -71121,6 +74355,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -71166,6 +74403,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -71372,6 +74612,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -71417,6 +74660,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -71553,6 +74799,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -71598,6 +74847,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -71712,6 +74964,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -71757,6 +75012,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -71805,6 +75063,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -71850,6 +75111,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -71986,6 +75250,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -72031,6 +75298,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -72085,6 +75355,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -72130,6 +75403,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -72244,6 +75520,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -72289,6 +75568,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -72337,6 +75619,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -72382,6 +75667,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -72518,6 +75806,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -72563,6 +75854,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -72617,6 +75911,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -72662,6 +75959,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -73025,19 +76325,39 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
-    verification_notes?: string | null
-    verified_at?: Date | string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
     location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
     match_scores?: MatchScoreCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
@@ -73054,20 +76374,40 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
     verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
-    location: string
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
     match_scores?: MatchScoreUncheckedCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentUncheckedCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsUncheckedCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutStartupInput
   }
 
@@ -73612,19 +76952,39 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
-    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
     location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
     match_scores?: MatchScoreUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
@@ -73641,20 +77001,40 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
     verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
-    location?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
     match_scores?: MatchScoreUncheckedUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUncheckedUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUncheckedUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutStartupNestedInput
   }
 
@@ -74559,6 +77939,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -74604,6 +77987,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -74781,6 +78167,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -74826,6 +78215,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -75226,6 +78618,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -75271,6 +78666,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -75405,6 +78803,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -75450,6 +78851,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -75901,6 +79305,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -75946,6 +79353,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -76074,6 +79484,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -76119,6 +79532,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -76306,6 +79722,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -76351,6 +79770,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -76485,6 +79907,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -76530,6 +79955,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -76717,6 +80145,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -76762,6 +80193,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -76821,6 +80255,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -76866,6 +80303,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -76909,6 +80349,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
@@ -76954,6 +80397,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
@@ -77013,6 +80459,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
@@ -77058,6 +80507,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
@@ -77142,6 +80594,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -77187,6 +80642,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -77235,6 +80693,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -77280,6 +80741,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -77386,6 +80850,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -77431,6 +80898,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -77485,6 +80955,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -77530,6 +81003,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -77616,6 +81092,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -77661,6 +81140,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -77709,6 +81191,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -77754,6 +81239,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -77862,6 +81350,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -77907,6 +81398,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -77961,6 +81455,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -78006,6 +81503,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -78186,20 +81686,40 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
-    verification_notes?: string | null
-    verified_at?: Date | string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
     location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
     match_scores?: MatchScoreCreateNestedManyWithoutStartupInput
     pilots?: PilotCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsCreateNestedOneWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
   }
@@ -78215,21 +81735,41 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
     verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
-    location: string
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
     match_scores?: MatchScoreUncheckedCreateNestedManyWithoutStartupInput
     pilots?: PilotUncheckedCreateNestedManyWithoutStartupInput
     documents?: StartupDocumentUncheckedCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsUncheckedCreateNestedOneWithoutStartupInput
   }
 
   export type StartupCreateOrConnectWithoutProcurementsInput = {
@@ -78291,6 +81831,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -78336,6 +81879,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -78384,6 +81930,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -78429,6 +81978,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -78477,6 +82029,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
@@ -78522,6 +82077,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
@@ -78770,20 +82328,40 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
-    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
     location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
     match_scores?: MatchScoreUpdateManyWithoutStartupNestedInput
     pilots?: PilotUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUpdateOneWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
   }
@@ -78799,21 +82377,41 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
     verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
-    location?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
     match_scores?: MatchScoreUncheckedUpdateManyWithoutStartupNestedInput
     pilots?: PilotUncheckedUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUncheckedUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUncheckedUpdateOneWithoutStartupNestedInput
   }
 
   export type DepartmentUpsertWithoutProcurementsInput = {
@@ -78887,6 +82485,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -78932,6 +82533,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -78986,6 +82590,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -79031,6 +82638,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -79085,6 +82695,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -79130,6 +82743,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -79266,9 +82882,14 @@ export namespace Prisma {
     startup_id: string
     document_type: string
     document_url: string
+    file_name?: string | null
+    file_size?: number | null
+    mime_type?: string | null
     verification_status?: $Enums.StartupVerificationStatus
     verified_at?: Date | string | null
+    rejection_reason?: string | null
     created_at?: Date | string
+    updated_at?: Date | string
   }
 
   export type StartupCreateManyUserInput = {
@@ -79281,15 +82902,34 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
     verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
-    location: string
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -79329,14 +82969,33 @@ export namespace Prisma {
     years_experience?: number
     previous_deployments?: number
     verification_status?: $Enums.StartupVerificationStatus
-    dpiit_number?: string | null
-    certificate_number?: string | null
-    incorporation_date?: Date | string | null
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
     cin_number?: string | null
     gstin?: string | null
-    verification_notes?: string | null
-    verified_at?: Date | string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
     location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -79928,9 +83587,14 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     document_type?: StringFieldUpdateOperationsInput | string
     document_url?: StringFieldUpdateOperationsInput | string
+    file_name?: NullableStringFieldUpdateOperationsInput | string | null
+    file_size?: NullableIntFieldUpdateOperationsInput | number | null
+    mime_type?: NullableStringFieldUpdateOperationsInput | string | null
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     startup?: StartupUpdateOneRequiredWithoutDocumentsNestedInput
   }
 
@@ -79939,9 +83603,14 @@ export namespace Prisma {
     startup_id?: StringFieldUpdateOperationsInput | string
     document_type?: StringFieldUpdateOperationsInput | string
     document_url?: StringFieldUpdateOperationsInput | string
+    file_name?: NullableStringFieldUpdateOperationsInput | string | null
+    file_size?: NullableIntFieldUpdateOperationsInput | number | null
+    mime_type?: NullableStringFieldUpdateOperationsInput | string | null
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StartupDocumentUncheckedUpdateManyWithoutVerifierInput = {
@@ -79949,9 +83618,14 @@ export namespace Prisma {
     startup_id?: StringFieldUpdateOperationsInput | string
     document_type?: StringFieldUpdateOperationsInput | string
     document_url?: StringFieldUpdateOperationsInput | string
+    file_name?: NullableStringFieldUpdateOperationsInput | string | null
+    file_size?: NullableIntFieldUpdateOperationsInput | number | null
+    mime_type?: NullableStringFieldUpdateOperationsInput | string | null
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StartupUpdateWithoutUserInput = {
@@ -79964,20 +83638,40 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
-    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
     location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
     match_scores?: MatchScoreUpdateManyWithoutStartupNestedInput
     pilots?: PilotUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
   }
@@ -79992,21 +83686,41 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
     verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
-    location?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
     match_scores?: MatchScoreUncheckedUpdateManyWithoutStartupNestedInput
     pilots?: PilotUncheckedUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUncheckedUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUncheckedUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutStartupNestedInput
   }
 
@@ -80020,15 +83734,34 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
     verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
-    location?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -80115,20 +83848,40 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
-    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
     location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
     match_scores?: MatchScoreUpdateManyWithoutStartupNestedInput
     pilots?: PilotUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
   }
@@ -80144,20 +83897,40 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
-    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
     location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
     match_scores?: MatchScoreUncheckedUpdateManyWithoutStartupNestedInput
     pilots?: PilotUncheckedUpdateManyWithoutStartupNestedInput
     documents?: StartupDocumentUncheckedUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUncheckedUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutStartupNestedInput
   }
 
@@ -80172,14 +83945,33 @@ export namespace Prisma {
     years_experience?: IntFieldUpdateOperationsInput | number
     previous_deployments?: IntFieldUpdateOperationsInput | number
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
-    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
-    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
-    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
     cin_number?: NullableStringFieldUpdateOperationsInput | string | null
     gstin?: NullableStringFieldUpdateOperationsInput | string | null
-    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
-    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
     location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -81171,6 +84963,9 @@ export namespace Prisma {
     invitation_token_hash?: string | null
     invitation_expires_at?: Date | string | null
     invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -81352,6 +85147,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
@@ -81396,6 +85194,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
@@ -81440,6 +85241,9 @@ export namespace Prisma {
     invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
     invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -82257,10 +86061,15 @@ export namespace Prisma {
     id?: string
     document_type: string
     document_url: string
+    file_name?: string | null
+    file_size?: number | null
+    mime_type?: string | null
     verification_status?: $Enums.StartupVerificationStatus
     verified_by?: string | null
     verified_at?: Date | string | null
+    rejection_reason?: string | null
     created_at?: Date | string
+    updated_at?: Date | string
   }
 
   export type ProcurementRecordCreateManyStartupInput = {
@@ -82485,9 +86294,14 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     document_type?: StringFieldUpdateOperationsInput | string
     document_url?: StringFieldUpdateOperationsInput | string
+    file_name?: NullableStringFieldUpdateOperationsInput | string | null
+    file_size?: NullableIntFieldUpdateOperationsInput | number | null
+    mime_type?: NullableStringFieldUpdateOperationsInput | string | null
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     verifier?: UserUpdateOneWithoutVerified_documentsNestedInput
   }
 
@@ -82495,20 +86309,30 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     document_type?: StringFieldUpdateOperationsInput | string
     document_url?: StringFieldUpdateOperationsInput | string
+    file_name?: NullableStringFieldUpdateOperationsInput | string | null
+    file_size?: NullableIntFieldUpdateOperationsInput | number | null
+    mime_type?: NullableStringFieldUpdateOperationsInput | string | null
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StartupDocumentUncheckedUpdateManyWithoutStartupInput = {
     id?: StringFieldUpdateOperationsInput | string
     document_type?: StringFieldUpdateOperationsInput | string
     document_url?: StringFieldUpdateOperationsInput | string
+    file_name?: NullableStringFieldUpdateOperationsInput | string | null
+    file_size?: NullableIntFieldUpdateOperationsInput | number | null
+    mime_type?: NullableStringFieldUpdateOperationsInput | string | null
     verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ProcurementRecordUpdateWithoutStartupInput = {

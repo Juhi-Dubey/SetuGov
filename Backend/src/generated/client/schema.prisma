@@ -24,6 +24,9 @@ model User {
   invitation_token_hash         String?
   invitation_expires_at         DateTime?
   invitation_accepted_at        DateTime?
+  email_verification_token_hash String?
+  email_verification_expires_at DateTime?
+  email_verified_at             DateTime?
   created_at                    DateTime                 @default(now())
   updated_at                    DateTime                 @updatedAt
   audit_logs                    AuditLog[]
@@ -58,6 +61,7 @@ model User {
   @@index([role])
   @@index([department_id])
   @@index([invitation_token_hash])
+  @@index([email_verification_token_hash])
   @@map("users")
 }
 
@@ -144,39 +148,80 @@ model MatchScore {
 }
 
 model Startup {
-  id                   String                      @id @default(uuid())
-  user_id              String
-  company_name         String
-  description          String
-  domain               String
-  technologies         String[]
-  readiness_level      Int                         @default(1)
-  years_experience     Int                         @default(0)
-  previous_deployments Int                         @default(0)
-  verification_status  StartupVerificationStatus   @default(PENDING)
-  dpiit_number         String?
-  certificate_number   String?
-  incorporation_date   DateTime?
-  cin_number           String?
-  gstin                String?
-  verification_notes   String?
-  verified_at          DateTime?
-  verified_by          String?
-  location             String
-  embedding            Unsupported("vector(768)")?
-  created_at           DateTime                    @default(now())
-  updated_at           DateTime                    @updatedAt
-  applications         Application[]
-  match_scores         MatchScore[]
-  pilots               Pilot[]
-  documents            StartupDocument[]
-  procurements         ProcurementRecord[]
-  user                 User                        @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  verifier             User?                       @relation("StartupVerifier", fields: [verified_by], references: [id])
+  id                            String                      @id @default(uuid())
+  user_id                       String
+  company_name                  String
+  description                   String
+  domain                        String
+  technologies                  String[]
+  readiness_level               Int                         @default(1)
+  years_experience              Int                         @default(0)
+  previous_deployments          Int                         @default(0)
+  verification_status           StartupVerificationStatus   @default(DRAFT)
+  org_type                      StartupOrgType              @default(PRIVATE_LIMITED)
+  registered_address            String?
+  city                          String?
+  state                         String?
+  pincode                       String?
+  official_email                String?
+  official_website              String?
+  authorized_person_name        String?
+  authorized_person_designation String?
+  authorized_person_email       String?
+  authorized_person_phone       String?
+  authorization_type            String?
+  pan_number                    String?
+  cin_number                    String?
+  gstin                         String?
+  dpiit_number                  String?
+  certificate_number            String?
+  registration_number           String?
+  incorporation_date            DateTime?
+  verification_source           VerificationSource          @default(DOCUMENT_VERIFIED)
+  products_services             String?
+  location                      String
+  verification_notes            String?
+  correction_notes              String?
+  rejection_reason              String?
+  submitted_at                  DateTime?
+  verified_at                   DateTime?
+  verified_by                   String?
+  embedding                     Unsupported("vector(768)")?
+  created_at                    DateTime                    @default(now())
+  updated_at                    DateTime                    @updatedAt
+  applications                  Application[]
+  match_scores                  MatchScore[]
+  pilots                        Pilot[]
+  documents                     StartupDocument[]
+  bank_details                  StartupBankDetails?
+  procurements                  ProcurementRecord[]
+  user                          User                        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  verifier                      User?                       @relation("StartupVerifier", fields: [verified_by], references: [id])
 
   @@index([verification_status])
   @@index([domain])
+  @@index([company_name])
+  @@index([pan_number])
+  @@index([cin_number])
+  @@index([gstin])
+  @@index([dpiit_number])
   @@map("startups")
+}
+
+model StartupBankDetails {
+  id                  String   @id @default(uuid())
+  startup_id          String   @unique
+  account_holder_name String
+  bank_name           String
+  account_number      String
+  ifsc_code           String
+  branch_name         String?
+  account_type        String?  @default("CURRENT")
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+  startup             Startup  @relation(fields: [startup_id], references: [id], onDelete: Cascade)
+
+  @@map("startup_bank_details")
 }
 
 model StartupDocument {
@@ -184,10 +229,15 @@ model StartupDocument {
   startup_id          String
   document_type       String
   document_url        String
+  file_name           String?
+  file_size           Int?
+  mime_type           String?
   verification_status StartupVerificationStatus @default(PENDING)
   verified_by         String?
   verified_at         DateTime?
+  rejection_reason    String?
   created_at          DateTime                  @default(now())
+  updated_at          DateTime                  @default(now()) @updatedAt
   startup             Startup                   @relation(fields: [startup_id], references: [id], onDelete: Cascade)
   verifier            User?                     @relation("DocumentVerifier", fields: [verified_by], references: [id])
 
@@ -665,9 +715,31 @@ enum ChallengeStatus {
 }
 
 enum StartupVerificationStatus {
-  PENDING
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
   VERIFIED
   REJECTED
+  CORRECTION_REQUESTED
+  PENDING
+}
+
+enum StartupOrgType {
+  PROPRIETORSHIP
+  PARTNERSHIP
+  LLP
+  PRIVATE_LIMITED
+  PUBLIC_LIMITED
+  TRUST
+  SOCIETY
+  ASSOCIATION
+  OTHER
+}
+
+enum VerificationSource {
+  SELF_DECLARED
+  DOCUMENT_VERIFIED
+  EXTERNAL_API_VERIFIED
 }
 
 enum ApplicationStatus {

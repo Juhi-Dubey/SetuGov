@@ -118,6 +118,22 @@ export const shortlistStartup = async (req, res, next) => {
   }
 };
 
+export const generateChallengeBrain1 = async (req, res, next) => {
+  try {
+    const challengeId = req.params.challenge_id || req.params.id;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+
+    const result = await challengeService.generateChallengeBrain1(challengeId, req.user, ip_address);
+    const message = result.status === 'UNAVAILABLE'
+      ? (result.message || 'AI assistance is currently unavailable. You can continue manually.')
+      : 'Brain 1 challenge enhancement completed';
+
+    return successResponse(res, result, message, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   createChallenge,
   getChallenges,
@@ -129,5 +145,6 @@ export default {
   shortlistStartup,
   getChallengeApplications,
   getChallengeMatches,
-  getChallengePilot
+  getChallengePilot,
+  generateChallengeBrain1
 };

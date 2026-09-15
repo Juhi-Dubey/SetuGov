@@ -59,6 +59,14 @@ const getStatusPriority = (status) => {
  *    - Tie-breaker: Startup ID ASC
  * 6. Brain 2 Qualitative Explanation for Top-N eligible/review candidates (Advisory only — never overrides scores)
  */
+
+/**
+ * In-process serialization map for concurrent matching operations.
+ * Key: challengeId (string) -> Promise<Object>
+ * Prevents concurrent MatchScore upsert collisions on (challenge_id, startup_id).
+ */
+const activeMatchingLocks = new Map();
+
 export const matchStartupsForChallenge = async (challengeId, user = null, ip_address = null) => {
   const challenge = await prisma.challenge.findUnique({
     where: { id: challengeId },
@@ -87,6 +95,25 @@ export const matchStartupsForChallenge = async (challengeId, user = null, ip_add
     }
   }
 
+  // If a matching run for this challenge is already active, serialize and join the in-flight operation
+  if (activeMatchingLocks.has(challengeId)) {
+    logger.info(`Matching in-flight for challenge ${challengeId}. Serializing: joining active matching operation.`);
+    return await activeMatchingLocks.get(challengeId);
+  }
+
+  const matchingPromise = (async () => {
+    try {
+      return await _executeMatchingForChallenge(challenge, challengeId, user, ip_address);
+    } finally {
+      activeMatchingLocks.delete(challengeId);
+    }
+  })();
+
+  activeMatchingLocks.set(challengeId, matchingPromise);
+  return await matchingPromise;
+};
+
+const _executeMatchingForChallenge = async (challenge, challengeId, user = null, ip_address = null) => {
   // Retrieve all VERIFIED startups
   const verifiedStartups = await prisma.startup.findMany({
     where: {

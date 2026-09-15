@@ -905,49 +905,31 @@ function AIScreening({ evaluation }) {
       const res = await analyzeApplicationWithAI(evaluation.id);
       setAnalysisResult(res?.data || res);
     } catch (err) {
-      console.warn("Brain 3 analysis fallback:", err);
+      console.warn("Brain 3 analysis unavailable:", err);
       setAnalysisResult({
-        problem_understanding_assessment: "Proposal demonstrates clear alignment with operational objectives.",
-        technical_feasibility_assessment: "Architecture is technically viable for pilot sandbox testing.",
-        innovation_assessment: "Introduces real-time automated workflow optimization.",
-        scalability_assessment: "Modular containerized services support state-wide rollout.",
-        strengths: [
-          "Strong domain experience in relevant technology stack.",
-          "Scalable edge-compatible architecture design.",
-          "High alignment with government operational baseline.",
-        ],
-        weaknesses: [
-          "Third-party empirical benchmark data not yet attached.",
-        ],
-        concerns: [
-          "Requires strict on-premise PII data protection guarantees.",
-          "Field testing timeline requires active departmental focal point.",
-        ],
-        questions_for_evaluator: [
-          "How does the solution handle peak concurrent citizen load without service disruption?",
-          "What is the rollback and data backup protocol during live deployment?",
-        ],
+        _ai_unavailable: true,
+        _error_message: "AI Proposal Analysis is currently unavailable. Please evaluate using the candidate's submitted documentation.",
+        strengths: [],
+        weaknesses: [],
+        concerns: [],
+        questions_for_evaluator: [],
       });
     } finally {
       setAnalyzing(false);
     }
   };
 
+  const aiUnavailable = analysisResult?._ai_unavailable === true;
+
   const strengths =
     analysisResult?.strengths ||
-    evaluation?.aiScreening?.strengths || [
-      "Demonstrates high alignment with challenge technical requirements.",
-      "Clear milestone-driven implementation timeline.",
-      "Competitive cost structure relative to state budget.",
-    ];
+    evaluation?.aiScreening?.strengths || [];
 
   const weaknesses = analysisResult?.weaknesses || [];
 
   const concerns =
     analysisResult?.concerns ||
-    evaluation?.aiScreening?.concerns || [
-      "Review data residency compliance during pilot phase.",
-    ];
+    evaluation?.aiScreening?.concerns || [];
 
   const questions = analysisResult?.questions_for_evaluator || analysisResult?.recommended_questions_for_evaluator || [];
 
@@ -985,6 +967,20 @@ function AIScreening({ evaluation }) {
           {analyzing ? "Analyzing..." : "Run AI Analysis"}
         </button>
       </div>
+
+      {aiUnavailable && (
+        <div className="mx-5 mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-950/30">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <div>
+            <p className="text-xs font-bold text-amber-800 dark:text-amber-300">
+              AI Proposal Analysis Unavailable
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-amber-700 dark:text-amber-400">
+              {analysisResult?._error_message || "AI Proposal Analysis is currently unavailable. Please evaluate using the candidate's submitted documentation."}
+            </p>
+          </div>
+        </div>
+      )}
 
       {analysisResult?.problem_understanding_assessment && (
         <div className="border-b border-indigo-50 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/30">

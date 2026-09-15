@@ -9,7 +9,8 @@ import {
   closeChallenge,
   shortlistStartup,
   getChallengeApplications,
-  getChallengePilot
+  getChallengePilot,
+  generateChallengeBrain1
 } from '../controllers/challengeController.js';
 import {
   createApplication
@@ -56,6 +57,9 @@ router.patch('/:challenge_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN
 
 // Delete DRAFT Challenge
 router.delete('/:challenge_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), deleteChallenge);
+
+// Brain 1 AI assistance retry / enhancement for DRAFT challenge
+router.post('/:challenge_id/brain1/generate', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), generateChallengeBrain1);
 
 // Publish Challenge (DRAFT -> PUBLISHED)
 router.post('/:challenge_id/publish', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), publishChallenge);

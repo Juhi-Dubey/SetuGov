@@ -23,7 +23,6 @@ import {
   ChevronDown,
   ChevronUp,
   ClipboardCheck,
-  Info,
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
@@ -34,12 +33,12 @@ import {
   runChallengeMatching,
   shortlistStartup,
   closeChallenge,
+  getChallengeDecisions,
 } from "../../services/challengeService";
 import { updateApplicationStatus } from "../../services/applicationService";
 import {
   getEvaluators,
   assignEvaluatorToApplication,
-  getApplicationAssignments,
   getChallengeEvaluatorPool,
   addToEvaluatorPool,
   removeFromEvaluatorPool,
@@ -98,6 +97,14 @@ function ChallengeApplications() {
   const [assignmentNotes, setAssignmentNotes] = useState("");
   const [assignLoading, setAssignLoading] = useState(false);
 
+  // Governed Selection Decision Modal State (Component 6)
+  const [decisions, setDecisions] = useState({});
+  const [selectionModalOpen, setSelectionModalOpen] = useState(false);
+  const [selectedAppForDecision, setSelectedAppForDecision] = useState(null);
+  const [overrideJustification, setOverrideJustification] = useState("");
+  const [selectionLoading, setSelectionLoading] = useState(false);
+  const [selectionError, setSelectionError] = useState("");
+
   useEffect(() => {
     loadData();
     loadVerifiedEvaluators();
@@ -121,10 +128,11 @@ function ChallengeApplications() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [chRes, appsRes, matchesRes] = await Promise.all([
+      const [chRes, appsRes, matchesRes, decisionsRes] = await Promise.all([
         getChallengeById(id).catch(() => null),
         getChallengeApplications(id).catch(() => ({ data: [] })),
         getChallengeMatches(id).catch(() => ({ data: {} })),
+        getChallengeDecisions(id).catch(() => ({ data: {} })),
       ]);
 
       const challenge = chRes?.data?.challenge || chRes?.challenge || null;
@@ -132,6 +140,17 @@ function ChallengeApplications() {
 
       const appsList = appsRes?.data?.applications || appsRes?.data || [];
       setApplications(appsList);
+
+      const recs = decisionsRes?.data?.recommendations || decisionsRes?.recommendations || [];
+      const decMap = {};
+      if (Array.isArray(recs)) {
+        recs.forEach((r) => {
+          if (r.application_id) {
+            decMap[r.application_id] = r;
+          }
+        });
+      }
+      setDecisions(decMap);
 
       const matchesData = matchesRes?.data || {};
       const allMatches = Array.isArray(matchesData.matches)
@@ -316,7 +335,7 @@ function ChallengeApplications() {
     try {
       setMatchingLoading(true);
       setActionMessage("");
-      const res = await runChallengeMatching(id);
+      await runChallengeMatching(id);
       setActionMessage("Brain 2 candidate pool updated with 5-factor scoring & pgvector semantic matching!");
       await loadData();
       setActiveTab("ai-matches");
@@ -380,24 +399,72 @@ function ChallengeApplications() {
     }
   };
 
+  const handleOpenSelectionModal = (app) => {
+    if (challengeDetails?.status === "CLOSED") {
+      alert("Problem Statement is closed. Lifecycle status cannot be modified.");
+      return;
+    }
+    setSelectedAppForDecision(app);
+    setOverrideJustification("");
+    setSelectionError("");
+    setSelectionModalOpen(true);
+  };
+
+  const handleConfirmSelection = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!selectedAppForDecision) return;
+
+    const dec = decisions[selectedAppForDecision.id];
+    const rec = dec?.recommendation;
+
+    // Gating: EVALUATION_PENDING_QUORUM cannot be selected
+    if (rec === "EVALUATION_PENDING_QUORUM") {
+      setSelectionError("Selection blocked: Quorum has not been met. Minimum 2 independent evaluations are required.");
+      return;
+    }
+
+    // Gating: RESERVE_CANDIDATE or NOT_RECOMMENDED requires justification
+    if ((rec === "RESERVE_CANDIDATE" || rec === "NOT_RECOMMENDED") && !overrideJustification.trim()) {
+      setSelectionError("Written override justification is mandatory when selecting a Reserve or Not Recommended candidate.");
+      return;
+    }
+
+    try {
+      setSelectionLoading(true);
+      setSelectionError("");
+      await updateApplicationStatus(
+        selectedAppForDecision.id,
+        "SELECTED",
+        "Government review decision",
+        overrideJustification.trim()
+      );
+      setActionMessage("Application successfully selected for Pilot Award.");
+      setSelectionModalOpen(false);
+      setSelectedAppForDecision(null);
+      await loadData();
+    } catch (err) {
+      setSelectionError(err.message || "Failed to update application status to SELECTED.");
+    } finally {
+      setSelectionLoading(false);
+    }
+  };
+
   const handleStatusChange = async (appId, newStatus) => {
     if (challengeDetails?.status === "CLOSED") {
       alert("Problem Statement is closed. Lifecycle status cannot be modified.");
       return;
     }
-    try {
-      let override_justification = "";
-      if (newStatus === "SELECTED") {
-        const just = window.prompt(
-          "Enter Selection Reason / Written Override Justification (mandatory if Decision Engine recommendation is Reserve or Not Recommended):",
-          "Candidate demonstrates sound technical architecture and satisfies government pilot evaluation criteria."
-        );
-        if (just === null) return; // Government officer cancelled
-        override_justification = just;
+    if (newStatus === "SELECTED") {
+      const targetApp = applications.find((a) => a.id === appId);
+      if (targetApp) {
+        handleOpenSelectionModal(targetApp);
       }
-      await updateApplicationStatus(appId, newStatus, "Government review decision", override_justification);
+      return;
+    }
+    try {
+      await updateApplicationStatus(appId, newStatus, "Government review decision", "");
       setActionMessage(`Application status updated to ${newStatus}`);
-      loadData();
+      await loadData();
     } catch (err) {
       alert(`Error updating status: ${err.message}`);
     }
@@ -967,6 +1034,7 @@ function ChallengeApplications() {
                         <th className="px-5 py-3.5 font-semibold">Startup Name</th>
                         <th className="px-5 py-3.5 font-semibold">Proposal Summary</th>
                         <th className="px-5 py-3.5 font-semibold">Assigned Evaluators</th>
+                        <th className="px-5 py-3.5 font-semibold">Decision Engine</th>
                         <th className="px-5 py-3.5 font-semibold">Status</th>
                         <th className="px-5 py-3.5 text-right font-semibold">Actions</th>
                       </tr>
@@ -975,6 +1043,9 @@ function ChallengeApplications() {
                       {filteredApplications.map((app) => {
                         const assignments = app.evaluator_assignments || [];
                         const hasRecused = assignments.some((a) => a.status === "RECUSED");
+                        const dec = decisions[app.id];
+                        const rec = dec?.recommendation;
+                        const evalAssess = dec?.evaluation_assessment;
 
                         return (
                           <tr key={app.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
@@ -1020,6 +1091,35 @@ function ChallengeApplications() {
                               </div>
                             </td>
                             <td className="px-5 py-4">
+                              {!dec ? (
+                                <span className="text-[11px] text-slate-400">Pending Evaluation</span>
+                              ) : (
+                                <div className="space-y-1">
+                                  <span
+                                    className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                                      rec === "RECOMMENDED_FOR_PILOT"
+                                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                                        : rec === "RESERVE_CANDIDATE"
+                                        ? "bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300"
+                                        : rec === "EVALUATION_PENDING_QUORUM"
+                                        ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                                        : "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
+                                    }`}
+                                  >
+                                    {rec === "RECOMMENDED_FOR_PILOT" && <CheckCircle2 className="h-3 w-3 text-emerald-600" />}
+                                    {rec === "EVALUATION_PENDING_QUORUM" && <Clock3 className="h-3 w-3 text-amber-600" />}
+                                    {rec === "NOT_RECOMMENDED" && <XCircle className="h-3 w-3 text-rose-600" />}
+                                    {rec === "RESERVE_CANDIDATE" && <ShieldCheck className="h-3 w-3 text-blue-600" />}
+                                    {rec ? rec.replace(/_/g, " ") : "EVALUATING"}
+                                  </span>
+                                  <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                                    {evalAssess?.evaluation_count ?? 0}/{evalAssess?.required_quorum ?? 2} evals
+                                    {evalAssess?.average_total_score ? ` • Avg ${evalAssess.average_total_score}%` : ""}
+                                  </div>
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-5 py-4">
                               <span
                                 className={`rounded-full px-2.5 py-1 text-xs font-bold ${
                                   app.status === "SHORTLISTED"
@@ -1051,7 +1151,7 @@ function ChallengeApplications() {
                               <button
                                 type="button"
                                 disabled={isClosed || app.status === "SELECTED"}
-                                onClick={() => handleStatusChange(app.id, "SELECTED")}
+                                onClick={() => handleOpenSelectionModal(app)}
                                 className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-emerald-950/50 dark:text-emerald-300"
                               >
                                 Select for Pilot
@@ -1237,12 +1337,6 @@ function ChallengeApplications() {
                               <span>Capability: <strong>{Math.round(m.capability_score || 0)}%</strong></span>
                             </div>
 
-                      <div className="text-right">
-                        <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                          {match.overall_score != null ? `${Math.round(match.overall_score)}% Match` : match.score != null ? `${Math.round(match.score)}% Match` : "Score Pending"}
-                        </span>
-                      </div>
-                    </div>
                             {m.eligibility_reasons?.length > 0 && (
                               <p className="mt-1.5 text-[11px] text-amber-700 dark:text-amber-400 italic">
                                 Note: {m.eligibility_reasons.join("; ")}
@@ -1280,32 +1374,12 @@ function ChallengeApplications() {
               )}
             </div>
 
-                    <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                      <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800">
-                        <p className="text-[10px] text-slate-400">Capability</p>
-                        <p className="text-xs font-bold">
-                          {match.capability_score != null ? `${Math.round(match.capability_score)}%` : "—"}
-                        </p>
-                      </div>
-                      <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800">
-                        <p className="text-[10px] text-slate-400">Semantic Fit</p>
-                        <p className="text-xs font-bold">
-                          {match.semantic_similarity != null ? `${Math.round(match.semantic_similarity * (match.semantic_similarity <= 1 ? 100 : 1))}%` : "—"}
-                        </p>
-                      </div>
-                      <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800">
-                        <p className="text-[10px] text-slate-400">Feasibility</p>
-                        <p className="text-xs font-bold">
-                          {match.feasibility_score != null ? `${Math.round(match.feasibility_score)}%` : "—"}
-                        </p>
-                      </div>
-                    </div>
             {/* Section 3: Evaluator Self-Applicants */}
             <div className="space-y-3">
               <div className="flex items-center justify-between border-b border-slate-200 pb-2 dark:border-slate-800">
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-blue-500" />
+                    <Users className="h-4 w-4 text-blue-500" />
                     Evaluator Self-Applicants ({evaluatorApplicants.length})
                   </h3>
                   <p className="text-[11px] text-slate-400">
@@ -1609,6 +1683,199 @@ function ChallengeApplications() {
             </motion.div>
           </div>
         )}
+
+        {/* =====================================================
+            GOVERNED SELECTION DECISION MODAL (COMPONENT 6)
+        ===================================================== */}
+        {selectionModalOpen && selectedAppForDecision && (() => {
+          const dec = decisions[selectedAppForDecision.id];
+          const rec = dec?.recommendation;
+          const evalAssess = dec?.evaluation_assessment;
+          const factors = dec?.decision_factors || [];
+          const isQuorumPending = rec === "EVALUATION_PENDING_QUORUM";
+          const isOverrideRequired = rec === "RESERVE_CANDIDATE" || rec === "NOT_RECOMMENDED";
+          const canSubmit = !isQuorumPending && (!isOverrideRequired || overrideJustification.trim().length >= 10);
+
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm overflow-y-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 my-8"
+              >
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-xs uppercase tracking-wider">
+                    <ShieldCheck className="h-4 w-4" />
+                    Government Pilot Award Selection
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mt-1">
+                    Select Proposal for Pilot Award
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Proposal from{" "}
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                      "{selectedAppForDecision.startup?.company_name || selectedAppForDecision.startup?.name || "Candidate"}"
+                    </span>
+                  </p>
+                </div>
+
+                {/* AI / Decision Engine Advisory Notice */}
+                <div className="mb-4 rounded-xl border border-indigo-100 bg-indigo-50/70 p-3 text-xs text-indigo-900 dark:border-indigo-900/40 dark:bg-indigo-950/40 dark:text-indigo-300">
+                  <div className="flex items-center gap-2 font-bold mb-1">
+                    <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                    Advisory Decision Engine Synthesis
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-indigo-800/90 dark:text-indigo-300/90">
+                    Decision Engine recommendations and AI summaries are advisory. The Government authority makes the final selection decision in compliance with SetuGov procurement rules.
+                  </p>
+                </div>
+
+                {/* Decision Assessment Card */}
+                <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3 dark:border-slate-800 dark:bg-slate-800/40">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Recommendation:
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
+                        rec === "RECOMMENDED_FOR_PILOT"
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300"
+                          : rec === "RESERVE_CANDIDATE"
+                          ? "bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300"
+                          : rec === "EVALUATION_PENDING_QUORUM"
+                          ? "bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300"
+                          : "bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300"
+                      }`}
+                    >
+                      {rec === "RECOMMENDED_FOR_PILOT" && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />}
+                      {rec === "EVALUATION_PENDING_QUORUM" && <Clock3 className="h-3.5 w-3.5 text-amber-600" />}
+                      {rec === "NOT_RECOMMENDED" && <XCircle className="h-3.5 w-3.5 text-rose-600" />}
+                      {rec === "RESERVE_CANDIDATE" && <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />}
+                      {rec ? rec.replace(/_/g, " ") : "NO DATA"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="rounded-lg border border-slate-200/80 bg-white p-2.5 dark:border-slate-700/60 dark:bg-slate-900">
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Independent Evaluations</div>
+                      <div className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
+                        {evalAssess?.evaluation_count ?? 0} / {evalAssess?.required_quorum ?? 2}
+                        <span className="text-[11px] font-normal text-slate-500 ml-1">
+                          ({evalAssess?.quorum_met ? "Quorum Met" : "Quorum Pending"})
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200/80 bg-white p-2.5 dark:border-slate-700/60 dark:bg-slate-900">
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Consensus Score</div>
+                      <div className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
+                        {evalAssess?.average_total_score ? `${evalAssess.average_total_score}%` : "—"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {factors.length > 0 && (
+                    <div className="space-y-1 pt-1">
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        Deterministic Decision Factors:
+                      </span>
+                      <ul className="list-disc pl-4 space-y-0.5 text-[11px] text-slate-600 dark:text-slate-400">
+                        {factors.map((f, i) => (
+                          <li key={i}>{f}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Quorum Pending Alert */}
+                {isQuorumPending && (
+                  <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300">
+                    <div className="flex items-center gap-2 font-bold mb-1">
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                      Selection Blocked: Quorum Requirement
+                    </div>
+                    <p className="text-[11px] text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                      This application has received {evalAssess?.evaluation_count ?? 0} evaluation(s). A minimum of {evalAssess?.required_quorum ?? 2} independent, conflict-free evaluator reviews is required by SetuGov governance before final award selection can be made.
+                    </p>
+                  </div>
+                )}
+
+                {/* Override Justification for RESERVE_CANDIDATE or NOT_RECOMMENDED */}
+                {isOverrideRequired && (
+                  <div className="mb-4 space-y-2">
+                    <div className="rounded-xl border border-purple-200 bg-purple-50/70 p-3 text-xs text-purple-900 dark:border-purple-900/40 dark:bg-purple-950/40 dark:text-purple-300">
+                      <div className="flex items-center gap-1.5 font-bold mb-1">
+                        <AlertCircle className="h-4 w-4 text-purple-600" />
+                        Mandatory Governance Override Justification
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-purple-800/90 dark:text-purple-300/90">
+                        Selecting a <strong>{rec.replace(/_/g, " ")}</strong> candidate requires an official written justification. This statement will be permanently recorded in the audit log.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        Override Justification * (min 10 characters)
+                      </label>
+                      <textarea
+                        rows={3}
+                        required
+                        value={overrideJustification}
+                        onChange={(e) => setOverrideJustification(e.target.value)}
+                        placeholder="State official rationale for selecting this candidate over standard recommendation..."
+                        className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs outline-none focus:border-purple-500 dark:border-slate-700 dark:bg-slate-900 text-slate-900 dark:text-white"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Error Banner */}
+                {selectionError && (
+                  <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-300 flex items-start gap-2">
+                    <XCircle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
+                    <span>{selectionError}</span>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectionModalOpen(false);
+                      setSelectedAppForDecision(null);
+                      setSelectionError("");
+                    }}
+                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={selectionLoading || !canSubmit}
+                    onClick={handleConfirmSelection}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5 text-xs"
+                  >
+                    {selectionLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Saving Decision...
+                      </>
+                    ) : isQuorumPending ? (
+                      "Quorum Required"
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-4 w-4" />
+                        Confirm Pilot Award Selection
+                      </>
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          );
+        })()}
       </div>
     </AppLayout>
   );
