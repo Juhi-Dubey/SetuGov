@@ -12,6 +12,8 @@
     "prisma:push": "prisma db push",
     "prisma:seed": "node prisma/seed.js",
     "prisma:studio": "prisma studio",
+    "db:init-additive": "node src/scripts/applyAdditiveSchema.js",
+    "db:setup": "prisma generate && node src/scripts/applyAdditiveSchema.js",
     "test": "node src/tests/e2e.test.js",
     "test:health": "node src/tests/health.test.js",
     "test:phase2": "node src/tests/phase2.test.js",

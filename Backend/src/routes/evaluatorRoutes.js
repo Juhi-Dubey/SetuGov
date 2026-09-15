@@ -10,6 +10,10 @@ import {
   assignEvaluatorToApplication,
   getApplicationAssignments
 } from '../controllers/evaluatorController.js';
+import {
+  getOpenChallengesForEvaluator,
+  getMyEvaluatorApplications
+} from '../controllers/evaluatorPoolController.js';
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
 
@@ -17,6 +21,10 @@ const router = Router();
 
 // List evaluators (Admin, Government)
 router.get('/', authenticate, authorizeRoles('ADMIN', 'GOVERNMENT'), getEvaluators);
+
+// Evaluator self-application discovery & tracking
+router.get('/open-challenges', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), getOpenChallengesForEvaluator);
+router.get('/my-applications', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), getMyEvaluatorApplications);
 
 // Evaluator assignments (for currently logged in evaluator)
 router.get('/my-assignments', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), getMyAssignments);

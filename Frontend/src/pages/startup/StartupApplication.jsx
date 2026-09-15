@@ -21,12 +21,23 @@ import {
   Search,
   RefreshCw,
   ExternalLink,
+  Trash2,
+  Lock,
+  Download,
+  Check,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { submitApplication } from "../../services/applicationService";
+import {
+  submitApplication,
+  uploadSolutionDocument,
+  getApplicationDocuments,
+  deleteSolutionDocument,
+  finalizeSolutionSubmission,
+} from "../../services/applicationService";
 import { getChallengeById, getChallenges } from "../../services/challengeService";
 import { getStartupApplications } from "../../services/startupService";
 import { useAuth } from "../../context/AuthContext";
+import { API_BASE_URL } from "../../services/api";
 
 
 
@@ -870,8 +881,8 @@ function StartupApplication() {
                 {saveState === "saved"
                   ? "Draft Saved"
                   : saveState === "saving"
-                  ? "Saving..."
-                  : "Save Draft"}
+                    ? "Saving..."
+                    : "Save Draft"}
               </button>
 
               <button
@@ -1036,11 +1047,10 @@ function InfoPill({ text }) {
 /* ===================================================== */
 
 function inputClass(error = false) {
-  return `h-11 w-full rounded-xl border bg-slate-50 px-3.5 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:ring-4 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950 ${
-    error
+  return `h-11 w-full rounded-xl border bg-slate-50 px-3.5 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:ring-4 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950 ${error
       ? "border-red-300 focus:border-red-500 focus:ring-red-500/10 dark:border-red-500/40"
       : "border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-slate-800"
-  }`;
+    }`;
 }
 
 /* ===================================================== */
@@ -1048,11 +1058,10 @@ function inputClass(error = false) {
 /* ===================================================== */
 
 function textareaClass(error = false) {
-  return `w-full resize-y rounded-xl border bg-slate-50 px-3.5 py-3 text-xs leading-5 text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:ring-4 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950 ${
-    error
+  return `w-full resize-y rounded-xl border bg-slate-50 px-3.5 py-3 text-xs leading-5 text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:ring-4 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950 ${error
       ? "border-red-300 focus:border-red-500 focus:ring-red-500/10 dark:border-red-500/40"
       : "border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-slate-800"
-  }`;
+    }`;
 }
 
 /* ===================================================== */
@@ -1071,7 +1080,7 @@ function formatFileSize(bytes) {
 
   const index = Math.floor(
     Math.log(bytes) /
-      Math.log(1024)
+    Math.log(1024)
   );
 
   return `${(
@@ -1080,49 +1089,353 @@ function formatFileSize(bytes) {
   ).toFixed(1)} ${units[index]}`;
 }
 
+function ShortlistSolutionPackage({ app, onRefresh }) {
+  const [documents, setDocuments] = useState([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [docType, setDocType] = useState("PROPOSAL_DOC");
+  const [docDesc, setDocDesc] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const isFinalized = Boolean(app.submitted_at || documents.some((d) => d.is_final));
+
+  const loadDocuments = async () => {
+    try {
+      setLoadingDocs(true);
+      setErrorMsg("");
+      const res = await getApplicationDocuments(app.id);
+      const list = res?.data?.documents || res?.data || res || [];
+      setDocuments(Array.isArray(list) ? list : []);
+    } catch (err) {
+      console.warn("Error loading application documents:", err);
+    } finally {
+      setLoadingDocs(false);
+    }
+  };
+
+  useEffect(() => {
+    if (app?.id) {
+      loadDocuments();
+    }
+  }, [app?.id]);
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      setErrorMsg("Please select a file to upload.");
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setErrorMsg("");
+      setSuccessMsg("");
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("document_type", docType);
+      if (docDesc) formData.append("description", docDesc);
+
+      await uploadSolutionDocument(app.id, formData);
+      setSuccessMsg(`Document "${selectedFile.name}" uploaded successfully.`);
+      setSelectedFile(null);
+      setDocDesc("");
+      const fileInput = document.getElementById(`file-upload-${app.id}`);
+      if (fileInput) fileInput.value = "";
+      await loadDocuments();
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to upload document.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDelete = async (docId, fileName) => {
+    if (!window.confirm(`Are you sure you want to delete "${fileName}"?`)) return;
+
+    try {
+      setErrorMsg("");
+      setSuccessMsg("");
+      await deleteSolutionDocument(app.id, docId);
+      setSuccessMsg(`Document "${fileName}" deleted.`);
+      await loadDocuments();
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to delete document.");
+    }
+  };
+
+  const handleFinalize = async () => {
+    if (documents.length === 0) {
+      setErrorMsg("You must upload at least one solution document before finalization.");
+      return;
+    }
+
+    const confirmMsg =
+      "Are you sure you want to finalize your submission? Once finalized, your solution package is locked and cannot be edited or deleted.";
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      setFinalizing(true);
+      setErrorMsg("");
+      setSuccessMsg("");
+      await finalizeSolutionSubmission(app.id);
+      setSuccessMsg("Solution package finalized successfully! Your submission is now locked for evaluation.");
+      await loadDocuments();
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to finalize submission.");
+    } finally {
+      setFinalizing(false);
+    }
+  };
+
+  const deadline = app.challenge?.finalist_submission_deadline;
+  const isDeadlinePassed = deadline ? new Date() > new Date(deadline) : false;
+
+  return (
+    <div className="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5 dark:border-indigo-900/40 dark:bg-indigo-950/20">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-indigo-100 pb-3 dark:border-indigo-900/40">
+        <div>
+          <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+            Finalist Solution Package
+          </h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Detailed architecture, pitch deck, and compliance artifacts for independent evaluator scoring.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {isFinalized ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+              <Lock className="h-3 w-3" /> Finalized & Locked
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+              <Clock3 className="h-3 w-3" /> Draft Submission
+            </span>
+          )}
+          {deadline && (
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                isDeadlinePassed
+                  ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
+                  : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+              }`}
+            >
+              Deadline:{" "}
+              {new Date(deadline).toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {errorMsg && (
+        <div className="mt-3 rounded-xl bg-red-50 p-3 text-xs text-red-700 dark:bg-red-950/50 dark:text-red-300 flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-red-500" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {successMsg && (
+        <div className="mt-3 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+          <span>{successMsg}</span>
+        </div>
+      )}
+
+      {/* Document List */}
+      <div className="mt-4 space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          Uploaded Package Files ({documents.length})
+        </p>
+        {loadingDocs ? (
+          <div className="flex items-center gap-2 text-xs text-slate-400 py-3">
+            <Loader2 className="h-4 w-4 animate-spin text-indigo-600" /> Loading documents...
+          </div>
+        ) : documents.length === 0 ? (
+          <p className="text-xs text-slate-500 dark:text-slate-400 italic py-2">
+            No documents uploaded yet. Upload your proposal package below.
+          </p>
+        ) : (
+          <div className="divide-y divide-slate-200/60 dark:divide-slate-800/60 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+            {documents.map((doc) => (
+              <div key={doc.id} className="flex items-center justify-between p-3 text-xs">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <FileText className="h-4 w-4 text-indigo-500 shrink-0" />
+                  <div className="truncate">
+                    <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                      {doc.original_filename}
+                    </p>
+                    <p className="text-[11px] text-slate-400">
+                      {doc.document_type.replace("_", " ")} • {(doc.file_size / 1024).toFixed(1)} KB
+                      {doc.description ? ` — ${doc.description}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-3">
+                  <a
+                    href={`${API_BASE_URL}/documents/${doc.stored_filename}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  >
+                    <Download className="h-3 w-3" /> View
+                  </a>
+                  {!isFinalized && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(doc.id, doc.original_filename)}
+                      className="rounded-lg p-1 text-slate-400 hover:text-red-600 transition"
+                      title="Delete document"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Upload Control (only when not finalized) */}
+      {!isFinalized && (
+        <form
+          onSubmit={handleUpload}
+          className="mt-4 border-t border-indigo-100 dark:border-indigo-900/40 pt-4 space-y-3"
+        >
+          <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            Upload Solution Document
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div>
+              <label className="block text-[11px] text-slate-500 mb-1">Document Type</label>
+              <select
+                value={docType}
+                onChange={(e) => setDocType(e.target.value)}
+                className="w-full text-xs rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-2 text-slate-800 dark:text-slate-200"
+              >
+                <option value="PROPOSAL_DOC">Proposal Document</option>
+                <option value="PITCH_DECK">Pitch Deck / Presentation</option>
+                <option value="TECH_ARCHITECTURE">Technical Architecture</option>
+                <option value="DEMO_VIDEO">Demo Video / Recording</option>
+                <option value="BUDGET_BREAKDOWN">Budget Breakdown</option>
+                <option value="OTHER">Other Artifact</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] text-slate-500 mb-1">Description (optional)</label>
+              <input
+                type="text"
+                value={docDesc}
+                onChange={(e) => setDocDesc(e.target.value)}
+                placeholder="e.g. System architecture diagrams"
+                className="w-full text-xs rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-2 text-slate-800 dark:text-slate-200"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] text-slate-500 mb-1">Select File (PDF, PPTX, DOCX, ZIP)</label>
+              <input
+                id={`file-upload-${app.id}`}
+                type="file"
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                className="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <button
+              type="submit"
+              disabled={uploading || !selectedFile || isDeadlinePassed}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {uploading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Upload className="h-3.5 w-3.5" />
+              )}
+              Upload File
+            </button>
+
+            <button
+              type="button"
+              onClick={handleFinalize}
+              disabled={finalizing || documents.length === 0 || isDeadlinePassed}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {finalizing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Check className="h-3.5 w-3.5" />
+              )}
+              Finalize Submission
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
 function MyApplicationsListView({ user, navigate }) {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
-  useEffect(() => {
-    let isMounted = true;
-    async function load() {
-      setLoading(true);
-      try {
-        const res = await getStartupApplications();
-        const data = res?.data || res || [];
-        if (isMounted) {
-          if (Array.isArray(data) && data.length > 0) {
-            const mapped = data.map((app) => ({
-              id: app.id,
-              challenge_id: app.challenge_id || app.challenge?.id || "ch-1",
-              challenge_title: app.challenge?.title || app.challenge_title || "Procurement Challenge",
-              department: app.challenge?.department?.name || app.department || "Government Department",
-              state: app.challenge?.department?.state || app.state || "National",
-              proposal: app.proposal_summary || app.proposal || "Detailed technical proposal submitted.",
-              technical_approach: app.technical_approach || "Modern cloud-native architecture.",
-              expected_impact: app.expected_impact || "Significant public sector process improvement.",
-              estimated_cost: app.proposed_budget ? `₹${Number(app.proposed_budget).toLocaleString("en-IN")}` : (app.estimated_cost || "₹3,50,000"),
-              status: app.status || "SUBMITTED",
-              submitted_at: app.created_at || app.submitted_at || new Date().toISOString(),
-              stage: app.stage || (app.status === "SELECTED" ? "Pilot Phase Active" : app.status === "SHORTLISTED" ? "Technical Evaluation" : "Under Department Review")
-            }));
-            setApplications(mapped);
-          } else {
-            setApplications(defaultStartupApplications);
-          }
-        }
-      } catch (err) {
-        console.warn("Could not fetch applications from API, using demo data:", err);
-        if (isMounted) setApplications(defaultStartupApplications);
-      } finally {
-        if (isMounted) setLoading(false);
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await getStartupApplications();
+      const data = res?.data || res || [];
+      if (Array.isArray(data) && data.length > 0) {
+        const mapped = data.map((app) => ({
+          id: app.id,
+          challenge_id: app.challenge_id || app.challenge?.id || "ch-1",
+          challenge_title: app.challenge?.title || app.challenge_title || "Procurement Challenge",
+          challenge: app.challenge,
+          department: app.challenge?.department?.name || app.department || "Government Department",
+          state: app.challenge?.department?.state || app.state || "National",
+          proposal: app.proposal_summary || app.proposal || "Detailed technical proposal submitted.",
+          technical_approach: app.technical_approach || "Modern cloud-native architecture.",
+          expected_impact: app.expected_impact || "Significant public sector process improvement.",
+          estimated_cost: app.proposed_budget
+            ? `₹${Number(app.proposed_budget).toLocaleString("en-IN")}`
+            : app.estimated_cost || "₹3,50,000",
+          status: app.status || "SUBMITTED",
+          created_at: app.created_at || new Date().toISOString(),
+          submitted_at: app.submitted_at || null,
+          stage:
+            app.stage ||
+            (app.status === "SELECTED"
+              ? "Pilot Phase Active"
+              : app.status === "SHORTLISTED"
+              ? "Finalist Solution Package"
+              : "Under Department Review"),
+        }));
+        setApplications(mapped);
+      } else {
+        setApplications(defaultStartupApplications);
       }
+    } catch (err) {
+      console.warn("Could not fetch applications from API, using demo data:", err);
+      setApplications(defaultStartupApplications);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     load();
-    return () => { isMounted = false; };
   }, []);
 
   const filtered = useMemo(() => {
@@ -1249,11 +1562,10 @@ function MyApplicationsListView({ user, navigate }) {
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
-                statusFilter === st
+              className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition ${statusFilter === st
                   ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-              }`}
+                }`}
             >
               {st === "ALL" ? "All Applications" : st.replace("_", " ")}
             </button>
@@ -1332,6 +1644,11 @@ function MyApplicationsListView({ user, navigate }) {
                       <span className="font-semibold text-indigo-600 dark:text-indigo-400">{app.stage}</span>
                     </div>
                   </div>
+
+                  {/* Finalist Solution Package Upload & Finalization UI */}
+                  {app.status === "SHORTLISTED" && (
+                    <ShortlistSolutionPackage app={app} onRefresh={load} />
+                  )}
                 </div>
 
                 <div className="flex shrink-0 flex-row gap-2 lg:flex-col lg:items-end">

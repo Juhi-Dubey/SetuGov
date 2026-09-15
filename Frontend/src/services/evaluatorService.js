@@ -53,6 +53,53 @@ export const getApplicationAssignments = async (applicationId) => {
   return apiRequest(`/applications/${applicationId}/assignments`);
 };
 
+export const getOpenChallengesForEvaluator = async () => {
+  return apiRequest('/evaluators/open-challenges');
+};
+
+export const applyToEvaluateChallenge = async (challengeId, data = {}) => {
+  return apiRequest(`/challenges/${challengeId}/evaluator-applications`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const getMyEvaluatorApplications = async () => {
+  return apiRequest('/evaluators/my-applications');
+};
+
+export const getChallengeEvaluatorApplications = async (challengeId) => {
+  return apiRequest(`/challenges/${challengeId}/evaluator-applications`);
+};
+
+export const reviewEvaluatorApplication = async (challengeId, applicationId, status, review_reason = '') => {
+  return apiRequest(`/challenges/${challengeId}/evaluator-applications/${applicationId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, review_reason })
+  });
+};
+
+export const getChallengeEvaluatorMatches = async (challengeId) => {
+  return apiRequest(`/challenges/${challengeId}/evaluator-matches`);
+};
+
+export const getChallengeEvaluatorPool = async (challengeId) => {
+  return apiRequest(`/challenges/${challengeId}/evaluator-pool`);
+};
+
+export const addToEvaluatorPool = async (challengeId, evaluator_id, notes = '', source = 'INVITED') => {
+  return apiRequest(`/challenges/${challengeId}/evaluator-pool`, {
+    method: 'POST',
+    body: JSON.stringify({ evaluator_id, notes, source })
+  });
+};
+
+export const removeFromEvaluatorPool = async (challengeId, evaluator_id) => {
+  return apiRequest(`/challenges/${challengeId}/evaluator-pool/${evaluator_id}`, {
+    method: 'DELETE'
+  });
+};
+
 export default {
   getEvaluators,
   getEvaluatorProfile,
@@ -62,5 +109,14 @@ export default {
   getMyAssignments,
   updateAssignmentStatus,
   assignEvaluatorToApplication,
-  getApplicationAssignments
+  getApplicationAssignments,
+  getOpenChallengesForEvaluator,
+  applyToEvaluateChallenge,
+  getMyEvaluatorApplications,
+  getChallengeEvaluatorApplications,
+  reviewEvaluatorApplication,
+  getChallengeEvaluatorMatches,
+  getChallengeEvaluatorPool,
+  addToEvaluatorPool,
+  removeFromEvaluatorPool
 };

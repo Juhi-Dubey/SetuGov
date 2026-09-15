@@ -2,10 +2,12 @@ import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { validateTransition } from '../utils/lifecycle.js';
 import embeddingService from './embeddingService.js';
-import { getChallengeMatches as getAuthoritativeChallengeMatches } from './matchingService.js';
+import { matchStartupsForChallenge, getChallengeMatches as getAuthoritativeChallengeMatches } from './matchingService.js';
 import { logger } from '../utils/logger.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
+import { sendEmail } from './emailService.js';
+import aiService from './aiService.js';
 
 export const createChallenge = async (data, user, ip_address = null) => {
   let department_id;
@@ -257,9 +259,9 @@ export const updateChallenge = async (id, data, user, ip_address = null) => {
     throw new ForbiddenError('You are not authorized to update this challenge.');
   }
 
-  // Cannot modify closed or completed challenge
-  if (challenge.status === 'CLOSED' || challenge.status === 'COMPLETED') {
-    throw new BadRequestError(`Cannot update challenge in ${challenge.status} status.`);
+  // Only DRAFT challenges may be edited. Procurement integrity lock: PUBLISHED, EVALUATION, PILOT, CLOSED, and COMPLETED are immutable.
+  if (challenge.status !== 'DRAFT') {
+    throw new BadRequestError(`Cannot update challenge in '${challenge.status}' status. Only DRAFT challenges can be modified.`);
   }
 
   // Whitelist allowable update fields (P1-6: Eliminate mass assignment)
@@ -403,6 +405,13 @@ export const publishChallenge = async (id, user, ip_address = null) => {
     link: `/government/challenges/${id}/overview`
   });
 
+  // Step 3: Synchronously await initial candidate discovery pool matching upon challenge publish
+  try {
+    await matchStartupsForChallenge(id, user, ip_address);
+  } catch (err) {
+    logger.warn(`Initial matching on publish for challenge ${id} completed with warning: ${err.message}`);
+  }
+
   return updated;
 };
 
@@ -441,6 +450,14 @@ export const closeChallenge = async (id, user, ip_address = null) => {
     entity_id: id,
     details: { previousStatus: challenge.status, newStatus: 'CLOSED' },
     ip_address
+  });
+
+  await sendNotification({
+    user_id: user.id,
+    title: 'Problem Statement Closed',
+    message: `Problem Statement "${challenge.title}" is now CLOSED. Candidate pool and new participation are frozen.`,
+    type: 'CHALLENGE_CLOSED',
+    link: `/government/challenges/${id}/applications`
   });
 
   return updated;
@@ -590,6 +607,283 @@ export const getChallengePilot = async (challengeId, user = null) => {
   return pilot;
 };
 
+/**
+ * Shortlist a startup for a Problem Statement / Challenge
+ * 
+ * Rules:
+ * - Must be authorized GOVERNMENT (assigned department) or ADMIN
+ * - Challenge must exist and be open (cannot shortlist if CLOSED or DRAFT)
+ * - Startup must exist and have an evaluated MatchScore record
+ * - Startup must NOT be INELIGIBLE
+ * - Startup must NOT already be shortlisted (prevents duplicate state/notifications)
+ * - Updates persistent state in MatchScore.ai_reasoning
+ * - Synchronizes Application status to SHORTLISTED if an application exists
+ * - Logs audit trail (STARTUP_SHORTLISTED)
+ * - Sends in-app notification and email to shortlisted startup
+ */
+export const shortlistStartup = async (challengeId, startupId, user, ip_address = null, notes = null) => {
+  const challenge = await prisma.challenge.findUnique({
+    where: { id: challengeId },
+    include: { department: true }
+  });
+
+  if (!challenge) {
+    throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
+  }
+
+  // Authorization: ADMIN or GOVERNMENT within the same department
+  if (user.role === 'ADMIN') {
+    // Admin has cross-department management authorization
+  } else if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only shortlist startups for challenges belonging to your assigned department.');
+    }
+  } else {
+    throw new ForbiddenError('You are not authorized to shortlist startups.');
+  }
+
+  // State validation: Challenge must be open
+  if (challenge.status === 'CLOSED') {
+    throw new BadRequestError('Cannot shortlist startups for a closed problem statement. Candidate pool is frozen.');
+  }
+  if (challenge.status === 'DRAFT') {
+    throw new BadRequestError('Cannot shortlist startups for a draft problem statement. Problem statement must be published first.');
+  }
+
+  // Startup validation
+  const startup = await prisma.startup.findUnique({
+    where: { id: startupId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          name: true
+        }
+      }
+    }
+  });
+
+  if (!startup) {
+    throw new NotFoundError(`Startup with ID ${startupId} not found.`);
+  }
+
+  // Match record validation
+  const matchScore = await prisma.matchScore.findUnique({
+    where: {
+      challenge_id_startup_id: {
+        challenge_id: challengeId,
+        startup_id: startupId
+      }
+    }
+  });
+
+  if (!matchScore) {
+    throw new NotFoundError(`Startup "${startup.company_name}" does not have a match score record for challenge ${challengeId}.`);
+  }
+
+  // Parse existing AI reasoning / metadata
+  let parsedReasoning = {};
+  if (matchScore.ai_reasoning) {
+    try {
+      parsedReasoning = typeof matchScore.ai_reasoning === 'string'
+        ? JSON.parse(matchScore.ai_reasoning)
+        : matchScore.ai_reasoning;
+    } catch {}
+  }
+
+  // Eligibility validation: Cannot shortlist an INELIGIBLE startup
+  const eligibilityStatus = parsedReasoning.eligibility_status || (parsedReasoning.is_eligible === false ? 'INELIGIBLE' : 'ELIGIBLE');
+  if (eligibilityStatus === 'INELIGIBLE') {
+    const reasons = parsedReasoning.ineligibility_reasons?.join('; ') || 'Startup does not satisfy mandatory challenge eligibility requirements.';
+    throw new BadRequestError(`Cannot shortlist an ineligible startup. Reason: ${reasons}`);
+  }
+
+  // Duplicate prevention
+  if (parsedReasoning.is_shortlisted) {
+    throw new BadRequestError(`Startup "${startup.company_name}" is already shortlisted for this problem statement.`);
+  }
+
+  const shortlistedAt = new Date().toISOString();
+  const updatedReasoning = {
+    ...parsedReasoning,
+    is_shortlisted: true,
+    shortlisted_at: shortlistedAt,
+    shortlisted_by: user.id,
+    shortlist_notes: notes || null
+  };
+
+  // Persist shortlist state inside MatchScore
+  await prisma.matchScore.update({
+    where: {
+      challenge_id_startup_id: {
+        challenge_id: challengeId,
+        startup_id: startupId
+      }
+    },
+    data: {
+      ai_reasoning: JSON.stringify(updatedReasoning)
+    }
+  });
+
+  // Synchronize Application status if formal application exists
+  const application = await prisma.application.findUnique({
+    where: {
+      challenge_id_startup_id: {
+        challenge_id: challengeId,
+        startup_id: startupId
+      }
+    }
+  });
+
+  if (application) {
+    await prisma.application.update({
+      where: { id: application.id },
+      data: { status: 'SHORTLISTED' }
+    });
+  }
+
+  // Audit logging
+  await createAuditLog({
+    user_id: user.id,
+    action: 'STARTUP_SHORTLISTED',
+    entity_type: 'CHALLENGE',
+    entity_id: challengeId,
+    details: {
+      startup_id: startupId,
+      startup_name: startup.company_name,
+      overall_score: matchScore.overall_score,
+      eligibility_status: eligibilityStatus,
+      has_application: Boolean(application),
+      notes
+    },
+    ip_address
+  });
+
+  // Step 8: In-app Notification for shortlisted startup
+  if (startup.user_id) {
+    await sendNotification({
+      user_id: startup.user_id,
+      title: 'Startup Shortlisted',
+      message: `Congratulations! Your startup has been shortlisted for the Problem Statement '${challenge.title}'. Please check your SetuGov dashboard for the next steps.`,
+      type: 'SHORTLISTED',
+      link: `/startup/challenges/${challengeId}`
+    });
+  }
+
+  // Step 8: Email Notification for shortlisted startup
+  if (startup.user?.email) {
+    try {
+      await sendEmail({
+        to: startup.user.email,
+        subject: `Shortlisted: Problem Statement '${challenge.title}' - SetuGov`,
+        text: `Dear ${startup.company_name},\n\nCongratulations! Your startup has been shortlisted for the Problem Statement '${challenge.title}'. Please check your SetuGov dashboard for the next steps.\n\nNote: Shortlisting represents advancement to the candidate evaluation stage and does not constitute a final pilot or procurement award.\n\nSetuGov Team`,
+        html: `<p>Dear <strong>${startup.company_name}</strong>,</p><p>Congratulations! Your startup has been shortlisted for the Problem Statement '<strong>${challenge.title}</strong>'.</p><p>Please check your SetuGov dashboard for the next steps.</p><p style="color: #64748b; font-size: 12px;"><em>Note: Shortlisting represents advancement to the candidate evaluation stage and does not constitute a final pilot or procurement award.</em></p><p>Regards,<br/>SetuGov Team</p>`
+      });
+    } catch (emailErr) {
+      logger.warn(`Shortlist email notification failed for ${startup.user.email}: ${emailErr.message}`);
+    }
+  }
+
+  return {
+    challenge_id: challengeId,
+    startup_id: startupId,
+    startup_name: startup.company_name,
+    is_shortlisted: true,
+    shortlisted_at: shortlistedAt,
+    shortlisted_by: user.id,
+    notes: notes || null,
+    message: `Startup "${startup.company_name}" has been successfully shortlisted.`
+  };
+};
+
+/**
+ * Generate Brain 1 advisory assistance for an existing DRAFT challenge.
+ * Decoupled from challenge creation so AI unavailability never prevents challenge persistence.
+ */
+export const generateChallengeBrain1 = async (id, user, ip_address = null) => {
+  const challenge = await prisma.challenge.findUnique({
+    where: { id },
+    include: { department: true }
+  });
+
+  if (!challenge) {
+    throw new NotFoundError(`Challenge with ID ${id} not found.`);
+  }
+
+  // Authorization: ADMIN or GOVERNMENT within the same department
+  if (user.role === 'ADMIN') {
+    // Admin has cross-department management authorization
+  } else if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only generate AI assistance for challenges belonging to your assigned department.');
+    }
+  } else {
+    throw new ForbiddenError('You are not authorized to generate AI assistance for this challenge.');
+  }
+
+  // Brain 1 enhancement only permitted on DRAFT challenges
+  if (challenge.status !== 'DRAFT') {
+    throw new BadRequestError(`Cannot run Brain 1 enhancement on challenge in '${challenge.status}' status. Only DRAFT challenges can be enhanced.`);
+  }
+
+  const input = {
+    problem: {
+      title: challenge.title,
+      description: challenge.problem_description,
+      baseline: challenge.current_baseline
+    },
+    outcome: {
+      desired_outcome: challenge.desired_outcome
+    },
+    pilot: {
+      duration: `${challenge.pilot_duration_days} days`,
+      sites: [challenge.location],
+      budget: `${challenge.budget_max} INR`
+    },
+    requirements: {
+      technologies: challenge.required_technologies || [],
+      domain: challenge.department?.name || 'General'
+    }
+  };
+
+  const brain1Result = await aiService.generateChallenge(input);
+
+  if (brain1Result.status === 'UNAVAILABLE') {
+    await createAuditLog({
+      user_id: user.id,
+      action: 'BRAIN1_GENERATION_FAILED',
+      entity_type: 'CHALLENGE',
+      entity_id: challenge.id,
+      details: { reason: brain1Result.message || 'AI service unavailable' },
+      ip_address
+    });
+
+    return {
+      challenge_id: challenge.id,
+      status: 'UNAVAILABLE',
+      success: false,
+      message: 'AI assistance is currently unavailable. You can continue manually.'
+    };
+  }
+
+  await createAuditLog({
+    user_id: user.id,
+    action: 'BRAIN1_GENERATION_SUCCEEDED',
+    entity_type: 'CHALLENGE',
+    entity_id: challenge.id,
+    details: { mode: brain1Result.ai_metadata?.mode || 'live' },
+    ip_address
+  });
+
+  return {
+    challenge_id: challenge.id,
+    status: 'AVAILABLE',
+    success: true,
+    data: brain1Result
+  };
+};
+
 export default {
   createChallenge,
   getChallenges,
@@ -599,7 +893,9 @@ export default {
   publishChallenge,
   closeChallenge,
   transitionChallengeStatus,
+  shortlistStartup,
   getChallengeApplications,
   getChallengeMatches,
-  getChallengePilot
+  getChallengePilot,
+  generateChallengeBrain1
 };

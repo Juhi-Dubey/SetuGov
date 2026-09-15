@@ -104,6 +104,36 @@ export const getChallengePilot = async (req, res, next) => {
   }
 };
 
+export const shortlistStartup = async (req, res, next) => {
+  try {
+    const challengeId = req.params.challenge_id || req.params.id;
+    const startupId = req.params.startup_id || req.body.startup_id;
+    const notes = req.body.notes || req.body.shortlist_notes || null;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+
+    const result = await challengeService.shortlistStartup(challengeId, startupId, req.user, ip_address, notes);
+    return successResponse(res, result, 'Startup shortlisted successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const generateChallengeBrain1 = async (req, res, next) => {
+  try {
+    const challengeId = req.params.challenge_id || req.params.id;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+
+    const result = await challengeService.generateChallengeBrain1(challengeId, req.user, ip_address);
+    const message = result.status === 'UNAVAILABLE'
+      ? (result.message || 'AI assistance is currently unavailable. You can continue manually.')
+      : 'Brain 1 challenge enhancement completed';
+
+    return successResponse(res, result, message, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   createChallenge,
   getChallenges,
@@ -112,7 +142,9 @@ export default {
   deleteChallenge,
   publishChallenge,
   closeChallenge,
+  shortlistStartup,
   getChallengeApplications,
   getChallengeMatches,
-  getChallengePilot
+  getChallengePilot,
+  generateChallengeBrain1
 };

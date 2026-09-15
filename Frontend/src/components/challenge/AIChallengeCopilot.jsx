@@ -108,6 +108,12 @@ function AIChallengeCopilot({ formData, onAutofill }) {
         throw new Error("No data returned from AI Copilot service.");
       }
 
+      if (data.status === "UNAVAILABLE" || data.success === false) {
+        setAiResult(null);
+        setGenerationError(data.message || "AI assistance is currently unavailable. You can continue manually.");
+        return;
+      }
+
       setAiResult(data);
 
       // Construct mapped form values from Backend Brain 1 response
@@ -419,14 +425,28 @@ function AIChallengeCopilot({ formData, onAutofill }) {
         </div>
       </div>
 
-      {/* ERROR DISPLAY */}
+      {/* ERROR / NOTICE DISPLAY */}
       {generationError && (
-        <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/80 p-3.5 text-xs text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-400">
-          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="font-semibold">AI Generation Notice</p>
-            <p className="mt-0.5">{generationError}</p>
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-xs text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+          <div className="flex items-start gap-2.5">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+            <div>
+              <p className="font-semibold">AI Assistance Notice</p>
+              <p className="mt-0.5">{generationError}</p>
+              <p className="mt-1 text-slate-600 dark:text-slate-400 font-medium">
+                You can continue entering challenge details manually without AI assistance.
+              </p>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => handleGenerate(true)}
+            disabled={isGenerating}
+            className="self-start sm:self-center inline-flex items-center gap-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 px-3 py-1.5 font-semibold text-white transition-colors shrink-0 shadow-sm disabled:opacity-50"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Retry AI
+          </button>
         </div>
       )}
 

@@ -9,15 +9,29 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-const ALLOWED_EXTENSIONS = new Set(['.pdf', '.png', '.jpg', '.jpeg']);
+const ALLOWED_EXTENSIONS = new Set([
+  '.pdf', '.png', '.jpg', '.jpeg',
+  '.doc', '.docx', '.ppt', '.pptx',
+  '.mp4', '.webm', '.zip'
+]);
+
 const ALLOWED_MIME_TYPES = new Set([
   'application/pdf',
   'image/png',
   'image/jpeg',
-  'image/pjpeg'
+  'image/pjpeg',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'video/mp4',
+  'video/webm',
+  'application/zip',
+  'application/x-zip-compressed',
+  'application/octet-stream'
 ]);
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
@@ -34,10 +48,10 @@ const fileFilter = (_req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
   const mime = file.mimetype.toLowerCase();
 
-  if (!ALLOWED_EXTENSIONS.has(ext) || !ALLOWED_MIME_TYPES.has(mime)) {
+  if (!ALLOWED_EXTENSIONS.has(ext)) {
     return cb(
       new BadRequestError(
-        `Invalid file type "${ext || mime}". Supported file formats are PDF, PNG, and JPG/JPEG.`
+        `Invalid file type "${ext || mime}". Supported file formats are PDF, DOC/DOCX, PPT/PPTX, PNG, JPG, and MP4/WEBM.`
       )
     );
   }
@@ -60,19 +74,27 @@ export const upload = multer({
  */
 export const validateFileSignature = (filePath) => {
   try {
-    const buffer = Buffer.alloc(8);
+    const buffer = Buffer.alloc(12);
     const fd = fs.openSync(filePath, 'r');
-    fs.readSync(fd, buffer, 0, 8, 0);
+    fs.readSync(fd, buffer, 0, 12, 0);
     fs.closeSync(fd);
 
-    // PDF signature: %PDF (0x25 0x50 0x44 0x46)
+    // PDF: %PDF (0x25 0x50 0x44 0x46)
     const isPdf = buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46;
-    // PNG signature: 89 50 4E 47 0D 0A 1A 0A
+    // PNG: 89 50 4E 47
     const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
-    // JPEG signature: FF D8 FF
+    // JPEG: FF D8 FF
     const isJpg = buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
+    // ZIP / OOXML (DOCX, PPTX): PK (0x50 0x4B 0x03 0x04) or empty zip (0x50 0x4B 0x05 0x06)
+    const isZip = buffer[0] === 0x50 && buffer[1] === 0x4B && (buffer[2] === 0x03 || buffer[2] === 0x05);
+    // Legacy MS Office (DOC, PPT): D0 CF 11 E0
+    const isOle = buffer[0] === 0xD0 && buffer[1] === 0xCF && buffer[2] === 0x11 && buffer[3] === 0xE0;
+    // MP4: bytes 4-7 are 'ftyp'
+    const isMp4 = buffer[4] === 0x66 && buffer[5] === 0x74 && buffer[6] === 0x79 && buffer[7] === 0x70;
+    // WEBM: 1A 45 DF A3
+    const isWebm = buffer[0] === 0x1A && buffer[1] === 0x45 && buffer[2] === 0xDF && buffer[3] === 0xA3;
 
-    return isPdf || isPng || isJpg;
+    return isPdf || isPng || isJpg || isZip || isOle || isMp4 || isWebm;
   } catch (err) {
     return false;
   }
@@ -88,7 +110,7 @@ export const uploadSingle = (fieldName = 'file') => {
     multerSingle(req, res, (err) => {
       if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
-          return next(new BadRequestError(`File exceeds maximum allowable size of 10 MB.`));
+          return next(new BadRequestError(`File exceeds maximum allowable size of 50 MB.`));
         }
         return next(new BadRequestError(`File upload error: ${err.message}`));
       } else if (err) {
@@ -103,7 +125,7 @@ export const uploadSingle = (fieldName = 'file') => {
           } catch (unlinkErr) {
             // ignore unlink error
           }
-          return next(new BadRequestError('Uploaded file content does not match allowable format signatures (PDF, PNG, JPG). Executables and disguised files are rejected.'));
+          return next(new BadRequestError('Uploaded file content does not match allowable format signatures (PDF, DOC/DOCX, PPT/PPTX, PNG, JPG, MP4/WEBM). Executables and disguised files are rejected.'));
         }
       }
 

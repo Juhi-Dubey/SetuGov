@@ -188,8 +188,15 @@ export const runChallengeMatching = async (challengeId) => {
   });
 };
 
-export const getChallengeMatches = async (challengeId) => {
-  return apiRequest(`/challenges/${challengeId}/matches`);
+export const getChallengeMatches = async (challengeId, refresh = false) => {
+  return apiRequest(`/challenges/${challengeId}/matches${refresh ? '?refresh=true' : ''}`);
+};
+
+export const shortlistStartup = async (challengeId, startupId, notes = '') => {
+  return apiRequest(`/challenges/${challengeId}/shortlist/${startupId}`, {
+    method: 'POST',
+    body: JSON.stringify({ notes })
+  });
 };
 
 export const getSpecificMatch = async (challengeId, startupId) => {
@@ -208,6 +215,12 @@ export const getChallengePilot = async (challengeId) => {
   return apiRequest(`/challenges/${challengeId}/pilot`);
 };
 
+export const generateChallengeBrain1 = async (challengeId) => {
+  return apiRequest(`/challenges/${challengeId}/brain1/generate`, {
+    method: "POST"
+  });
+};
+
 export const getGovernmentAnalytics = async () => {
   return apiRequest("/departments/analytics");
 };
@@ -224,6 +237,7 @@ export default {
   deleteChallenge,
   publishChallenge,
   closeChallenge,
+  shortlistStartup,
   getChallengeApplications,
   runChallengeMatching,
   getChallengeMatches,
@@ -231,6 +245,7 @@ export default {
   getChallengeEvaluationSummary,
   getChallengeDecisions,
   getChallengePilot,
+  generateChallengeBrain1,
   getGovernmentAnalytics,
   getGovernmentDashboard,
 };

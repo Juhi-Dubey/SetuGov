@@ -4,6 +4,7 @@ import embeddingService from './embeddingService.js';
 import { logger } from '../utils/logger.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
+import { refreshMatchingForPublishedChallenges } from './matchingService.js';
 import { PATTERNS } from './verificationService.js';
 import {
   isValidState,
@@ -649,6 +650,13 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
     }
   }
 
+  // Step 4: Dynamically update candidate pools for published challenges if verified startup updated capabilities
+  if (updated.verification_status === 'VERIFIED' && (updateData.technologies || updateData.readiness_level || updateData.years_experience || updateData.previous_deployments || updateData.domain)) {
+    refreshMatchingForPublishedChallenges(updated.id).catch((err) => {
+      logger.warn(`Candidate pool refresh on profile update for startup ${updated.id} deferred: ${err.message}`);
+    });
+  }
+
   await createAuditLog({
     user_id: user.id,
     action: 'STARTUP_PROFILE_UPDATED',
@@ -1070,6 +1078,23 @@ export const submitStartupRegistration = async (startupId, dataOrUser, userOrIp 
     },
     ip_address
   });
+
+  if (startup.user_id) {
+    await sendNotification({
+      user_id: startup.user_id,
+      title: `Startup Verification: ${data.verification_status}`,
+      message: `Your startup profile verification status has been updated to ${data.verification_status}.`,
+      type: 'STARTUP_VERIFIED',
+      link: '/startup/dashboard'
+    });
+  }
+
+  // Step 4: Dynamically update candidate pools for published challenges when startup is verified
+  if (data.verification_status === 'VERIFIED') {
+    refreshMatchingForPublishedChallenges(startupId).catch((err) => {
+      logger.warn(`Candidate pool refresh on verification for startup ${startupId} deferred: ${err.message}`);
+    });
+  }
 
   return updatedStartup;
 };

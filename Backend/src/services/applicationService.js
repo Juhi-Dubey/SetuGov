@@ -8,6 +8,7 @@ import {
   notifyStartupShortlisted,
   notifyStartupFinalized
 } from './notificationService.js';
+import { evaluateApplicationDecision } from './decisionEngineService.js';
 
 export const createApplication = async (challengeIdParam, data, user, ip_address = null) => {
   const challengeId = challengeIdParam || data?.challenge_id || data?.challengeId;
@@ -236,11 +237,23 @@ export const getApplicationById = async (id, user) => {
 export const updateApplication = async (id, data, user, ip_address = null) => {
   const application = await prisma.application.findUnique({
     where: { id },
-    include: { startup: true }
+    include: {
+      startup: true,
+      challenge: true,
+      evaluations: { select: { id: true } }
+    }
   });
 
   if (!application) {
     throw new NotFoundError(`Application with ID ${id} not found.`);
+  }
+
+  if (application.challenge.status === 'CLOSED') {
+    throw new BadRequestError('Cannot update application: This problem statement is CLOSED.');
+  }
+
+  if (application.evaluations.length > 0) {
+    throw new BadRequestError('Cannot modify application: Independent evaluation has already commenced on this application.');
   }
 
   if (user.role !== 'ADMIN' && application.startup.user_id !== user.id) {
@@ -257,8 +270,7 @@ export const updateApplication = async (id, data, user, ip_address = null) => {
     'technical_approach',
     'expected_impact',
     'estimated_cost',
-    'timeline',
-    'status'
+    'timeline'
   ];
 
   const updateData = {};
@@ -324,7 +336,7 @@ export const deleteApplication = async (id, user, ip_address = null) => {
   return { message: 'Application deleted successfully.' };
 };
 
-export const updateApplicationStatus = async (id, nextStatus, user, ip_address = null, reason = null) => {
+export const updateApplicationStatus = async (id, nextStatus, user, ip_address = null, reason = null, override_justification = null) => {
   const application = await prisma.application.findUnique({
     where: { id },
     include: {
@@ -335,6 +347,11 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
 
   if (!application) {
     throw new NotFoundError(`Application with ID ${id} not found.`);
+  }
+
+  // Phase 14: CLOSED challenge freezes downstream operations
+  if (application.challenge.status === 'CLOSED') {
+    throw new BadRequestError('Cannot update application status: Problem Statement is CLOSED.');
   }
 
   // Only GOVERNMENT or ADMIN can transition application status
@@ -355,6 +372,46 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
 
   // Validate state machine transition
   validateTransition('APPLICATION', application.status, nextStatus);
+
+  // Phase 11, 12, 13: Governance Gates for SELECTED transition
+  if (nextStatus === 'SELECTED') {
+    const decision = await evaluateApplicationDecision(id, user);
+
+    // 1. Quorum Verification: minimum 2 independent evaluations
+    if (!decision.evaluation_assessment.quorum_met || decision.evaluation_assessment.evaluation_count < 2) {
+      throw new BadRequestError(
+        `Cannot select startup: Evaluation quorum (minimum 2 independent evaluations) has not been met. Current valid evaluations: ${decision.evaluation_assessment.evaluation_count}.`
+      );
+    }
+
+    if (decision.recommendation === 'EVALUATION_PENDING_QUORUM') {
+      throw new BadRequestError('Cannot select startup: Evaluation quorum has not been met.');
+    }
+
+    // 2. Decision Engine Consensus: non-recommended requires mandatory written justification
+    if (decision.recommendation === 'NOT_RECOMMENDED' || decision.recommendation === 'RESERVE_CANDIDATE') {
+      if (!override_justification || !override_justification.trim()) {
+        throw new BadRequestError(
+          `Cannot select startup: Decision Engine recommendation is "${decision.recommendation}". A mandatory written override justification is required.`
+        );
+      }
+
+      await createAuditLog({
+        user_id: user.id,
+        action: 'GOVERNMENT_SELECTION_OVERRIDE',
+        entity_type: 'APPLICATION',
+        entity_id: id,
+        details: {
+          recommendation: decision.recommendation,
+          override_justification: override_justification.trim(),
+          evaluation_score: decision.evaluation_assessment.average_total_score,
+          challenge_id: application.challenge_id,
+          startup_id: application.startup_id
+        },
+        ip_address
+      });
+    }
+  }
 
   const updated = await prisma.application.update({
     where: { id },
@@ -379,6 +436,7 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
       previousStatus: application.status,
       newStatus: nextStatus,
       reason,
+      override_justification: override_justification || null,
       challenge_id: application.challenge_id,
       startup_id: application.startup_id
     },

@@ -1,3 +1,4 @@
+
 import { Router } from 'express';
 import {
   createApplication,
@@ -53,18 +54,27 @@ router.delete('/:application_id', authenticate, deleteApplication);
 // Update application lifecycle status (GOVERNMENT or ADMIN)
 router.patch('/:application_id/status', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(updateApplicationStatusSchema), updateApplicationStatus);
 
-// Conflict of Interest declaration (EVALUATOR or ADMIN)
+// Conflict of Interest declaration (EVALUATOR submits; EVALUATOR/ADMIN can view)
 router.get('/:application_id/conflict-declaration', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), getConflictDeclaration);
-router.post('/:application_id/conflict-declaration', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), declareConflictOfInterest);
+router.post('/:application_id/conflict-declaration', authenticate, authorizeRoles('EVALUATOR'), declareConflictOfInterest);
 
-// Submit Evaluation for Application (EVALUATOR or ADMIN)
-router.post('/:application_id/evaluations', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), validate(createEvaluationSchema), submitEvaluation);
+// Submit Evaluation for Application (EVALUATOR only)
+router.post('/:application_id/evaluations', authenticate, authorizeRoles('EVALUATOR'), validate(createEvaluationSchema), submitEvaluation);
 
 // Get Evaluations for Application
 router.get('/:application_id/evaluations', authenticate, getApplicationEvaluations);
 
 // Get Pre-Award Decision Recommendation for Application (GOVERNMENT, ADMIN, EVALUATOR, STARTUP)
 router.get('/:application_id/decision-recommendation', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN', 'EVALUATOR', 'STARTUP'), getApplicationDecision);
+
+// Finalist Solution Package Documents
+import { uploadDocument, getDocuments, deleteDocument, finalizeSubmission } from '../controllers/applicationDocumentController.js';
+import { uploadSingle } from '../middleware/upload.js';
+
+router.post('/:application_id/documents', authenticate, authorizeRoles('STARTUP', 'ADMIN'), uploadSingle('file'), uploadDocument);
+router.get('/:application_id/documents', authenticate, getDocuments);
+router.delete('/:application_id/documents/:document_id', authenticate, authorizeRoles('STARTUP', 'ADMIN'), deleteDocument);
+router.post('/:application_id/finalize-submission', authenticate, authorizeRoles('STARTUP', 'ADMIN'), finalizeSubmission);
 
 export default router;
 

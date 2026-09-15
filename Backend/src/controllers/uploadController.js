@@ -253,6 +253,67 @@ export const verifyDocumentAuthorization = async (user, identifier) => {
     return false;
   }
 
+  // 6. Check if document belongs to an ApplicationDocument (Finalist Solution Package)
+  let appDoc = null;
+  if (isUuid) {
+    appDoc = await prisma.applicationDocument.findUnique({
+      where: { id: identifier },
+      include: {
+        application: {
+          include: {
+            startup: true,
+            challenge: true,
+            evaluator_assignments: true
+          }
+        }
+      }
+    });
+  }
+  if (!appDoc) {
+    appDoc = await prisma.applicationDocument.findFirst({
+      where: {
+        OR: [
+          { stored_filename: safeFilename },
+          { stored_filename: identifier },
+          { file_url: { contains: safeFilename } },
+          { file_url: { contains: identifier } }
+        ]
+      },
+      include: {
+        application: {
+          include: {
+            startup: true,
+            challenge: true,
+            evaluator_assignments: true
+          }
+        }
+      }
+    });
+  }
+
+  if (appDoc && appDoc.application) {
+    const app = appDoc.application;
+    // 1. Startup owner of the application
+    if (app.startup && app.startup.user_id === user.id) {
+      return true;
+    }
+    // 2. Government creator of the challenge or matching department
+    if (user.role === 'GOVERNMENT' && (app.challenge.created_by === user.id || (user.department_id && app.challenge.department_id === user.department_id))) {
+      return true;
+    }
+    // 3. Assigned evaluator for this specific application (and not recused/declined)
+    if (user.role === 'EVALUATOR' && app.evaluator_assignments) {
+      const isAssigned = app.evaluator_assignments.some(
+        a => a.evaluator_id === user.id && a.status !== 'RECUSED' && a.status !== 'DECLINED'
+      );
+      if (isAssigned) {
+        return true;
+      }
+    }
+    // Strictly deny access to unauthorized users for this application document
+    return false;
+  }
+
   return false;
 };
 
@@ -285,6 +346,11 @@ export const getPrivateFile = async (req, res, next) => {
             const payment = await prisma.payment.findUnique({ where: { id: rawIdentifier } });
             if (payment && payment.invoice_url) {
               resolvedFilename = path.basename(payment.invoice_url);
+            } else {
+              const appDoc = await prisma.applicationDocument.findUnique({ where: { id: rawIdentifier } });
+              if (appDoc) {
+                resolvedFilename = appDoc.stored_filename || path.basename(appDoc.file_url);
+              }
             }
           }
         }

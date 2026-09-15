@@ -1,5 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
+  output          = "../src/generated/client"
   previewFeatures = ["postgresqlExtensions"]
 }
 
@@ -50,10 +51,16 @@ model User {
   initiated_procurements   ProcurementRecord[]   @relation("ProcurementInitiator")
   approved_procurements    ProcurementRecord[]   @relation("ProcurementApprover")
   accepted_deliveries      ProcurementRecord[]   @relation("DeliveryAcceptor")
-  failed_login_attempts    Int                   @default(0)
-  locked_until             DateTime?
-  last_failed_login_at     DateTime?
-  reviewed_startups        Startup[]             @relation("StartupReviewer")
+  failed_login_attempts        Int                      @default(0)
+  locked_until                 DateTime?
+  last_failed_login_at         DateTime?
+  reviewed_startups            Startup[]                @relation("StartupReviewer")
+  application_documents        ApplicationDocument[]    @relation("ApplicationDocumentUploader")
+  evaluator_applications       EvaluatorApplication[]   @relation("EvaluatorApplicant")
+  reviewed_evaluator_apps      EvaluatorApplication[]   @relation("EvaluatorApplicationReviewer")
+  evaluator_pool_memberships   ChallengeEvaluatorPool[] @relation("EvaluatorPoolMember")
+  added_evaluator_pools        ChallengeEvaluatorPool[] @relation("EvaluatorPoolAdder")
+  evaluator_match_scores       EvaluatorMatchScore[]    @relation("EvaluatorMatched")
 
   @@index([role])
   @@index([department_id])
@@ -96,6 +103,8 @@ model Challenge {
   pilot_duration_days        Int
   required_technologies      String[]
   application_deadline       DateTime?
+  finalist_submission_start    DateTime?
+  finalist_submission_deadline DateTime?
   status                     ChallengeStatus @default(DRAFT)
   created_by                 String
   embedding                  Unsupported("vector(768)")?
@@ -113,6 +122,9 @@ model Challenge {
   match_scores               MatchScore[]
   pilots                     Pilot[]
   procurements               ProcurementRecord[]
+  evaluator_applications       EvaluatorApplication[]
+  evaluator_pools              ChallengeEvaluatorPool[]
+  evaluator_match_scores       EvaluatorMatchScore[]
 
   @@index([status])
   @@index([department_id])
@@ -257,6 +269,8 @@ model Application {
   evaluations           Evaluation[]
   conflict_declarations ConflictDeclaration[]
   evaluator_assignments EvaluatorAssignment[]
+  documents             ApplicationDocument[]
+  proposal_analysis     ApplicationProposalAnalysis?
 
   @@unique([challenge_id, startup_id])
   @@index([status])
@@ -310,6 +324,7 @@ model Evaluation {
   cost_score        Float
   total_score       Float
   comments          String?
+  is_submitted      Boolean     @default(true)
   created_at        DateTime    @default(now())
   updated_at        DateTime    @updatedAt
   application       Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
@@ -317,6 +332,111 @@ model Evaluation {
 
   @@unique([application_id, evaluator_id])
   @@map("evaluations")
+}
+
+model ApplicationDocument {
+  id                String      @id @default(uuid())
+  application_id    String
+  uploaded_by       String
+  original_filename String
+  stored_filename   String
+  file_url          String
+  file_size         Int
+  mime_type         String
+  document_type     String      @default("PROPOSAL_DOC") // PROPOSAL_DOC, PITCH_DECK, TECH_ARCHITECTURE, DEMO_VIDEO, BUDGET_BREAKDOWN, OTHER
+  description       String?
+  created_at        DateTime    @default(now())
+  updated_at        DateTime    @updatedAt
+  application       Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  uploader          User        @relation("ApplicationDocumentUploader", fields: [uploaded_by], references: [id])
+
+  @@index([application_id])
+  @@map("application_documents")
+}
+
+model ApplicationProposalAnalysis {
+  id                    String      @id @default(uuid())
+  application_id        String      @unique
+  model_name            String?
+  executive_summary     String
+  technical_feasibility String
+  innovation            String
+  expected_impact       String
+  scalability           String
+  cost_effectiveness    String
+  strengths             String[]
+  weaknesses            String[]
+  risks                 String[]
+  missing_information   String[]
+  evaluator_questions   String[]
+  raw_analysis          Json?
+  created_at            DateTime    @default(now())
+  updated_at            DateTime    @updatedAt
+  application           Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
+
+  @@map("application_proposal_analyses")
+}
+
+model EvaluatorMatchScore {
+  id                  String    @id @default(uuid())
+  challenge_id        String
+  evaluator_id        String
+  overall_score       Float
+  domain_score        Float
+  experience_score    Float
+  tech_score          Float
+  capability_score    Float
+  eligibility_state   String    @default("ELIGIBLE") // ELIGIBLE, NEEDS_REVIEW, INELIGIBLE
+  eligibility_reasons String[]
+  breakdown           Json?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+  challenge           Challenge @relation(fields: [challenge_id], references: [id], onDelete: Cascade)
+  evaluator           User      @relation("EvaluatorMatched", fields: [evaluator_id], references: [id], onDelete: Cascade)
+
+  @@unique([challenge_id, evaluator_id])
+  @@index([challenge_id])
+  @@index([overall_score])
+  @@map("evaluator_match_scores")
+}
+
+model EvaluatorApplication {
+  id            String    @id @default(uuid())
+  challenge_id  String
+  evaluator_id  String
+  statement     String?
+  status        String    @default("SUBMITTED") // SUBMITTED, SHORTLISTED, REJECTED, WITHDRAWN
+  reviewed_by   String?
+  reviewed_at   DateTime?
+  review_reason String?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  challenge     Challenge @relation(fields: [challenge_id], references: [id], onDelete: Cascade)
+  evaluator     User      @relation("EvaluatorApplicant", fields: [evaluator_id], references: [id], onDelete: Cascade)
+  reviewer      User?     @relation("EvaluatorApplicationReviewer", fields: [reviewed_by], references: [id])
+
+  @@unique([challenge_id, evaluator_id])
+  @@index([challenge_id])
+  @@index([evaluator_id])
+  @@map("evaluator_applications")
+}
+
+model ChallengeEvaluatorPool {
+  id           String    @id @default(uuid())
+  challenge_id String
+  evaluator_id String
+  source       String    @default("MATCHED") // MATCHED, APPLICANT, DIRECT_NOMINATION
+  added_by     String
+  notes        String?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  challenge    Challenge @relation(fields: [challenge_id], references: [id], onDelete: Cascade)
+  evaluator    User      @relation("EvaluatorPoolMember", fields: [evaluator_id], references: [id], onDelete: Cascade)
+  adder        User      @relation("EvaluatorPoolAdder", fields: [added_by], references: [id])
+
+  @@unique([challenge_id, evaluator_id])
+  @@index([challenge_id])
+  @@map("challenge_evaluator_pools")
 }
 
 model Pilot {

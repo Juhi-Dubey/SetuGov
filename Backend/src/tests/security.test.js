@@ -205,9 +205,11 @@ const runSecurityTests = async () => {
     assertTest('Startup 1 submitted application', healthAppRes.statusCode === 201);
     const healthApp = healthAppRes.body.data.application;
 
-    // Health Gov selects and creates pilot
-    await request('PATCH', `/api/v1/applications/${healthApp.id}/status`, { status: 'SHORTLISTED' }, healthGovToken);
-    await request('PATCH', `/api/v1/applications/${healthApp.id}/status`, { status: 'SELECTED' }, healthGovToken);
+    // Set application to SELECTED for pilot security test fixture
+    await prisma.application.update({
+      where: { id: healthApp.id },
+      data: { status: 'SELECTED' }
+    });
 
     const pilotRes = await request('POST', '/api/v1/pilots', {
       challenge_id: healthChallenge.id,
@@ -459,20 +461,32 @@ const runSecurityTests = async () => {
       password: 'StartupPass123!',
       role: 'STARTUP'
     });
-    const eligStartupToken = eligStartupUser.body.data.token;
+    const eligStartupUserId = eligStartupUser.body.data.user.id;
+    await prisma.user.update({
+      where: { id: eligStartupUserId },
+      data: { is_active: true, is_verified: true }
+    });
+    const eligLogin = await request('POST', '/api/v1/auth/login', {
+      email: `elig.${timestampElig}@startup.in`,
+      password: 'StartupPass123!'
+    });
+    const eligStartupToken = eligLogin.body.data.token;
 
-    // Create startup profile (starts in PENDING status)
-    const eligProfileRes = await request('POST', '/api/v1/startups', {
-      company_name: `Eligible Tech Pvt Ltd ${timestampElig}`,
-      description: 'Startup eligibility verification testing profile.',
-      domain: 'Healthcare',
-      technologies: ['AI', 'Cloud'],
-      readiness_level: 7,
-      years_experience: 3,
-      previous_deployments: 1,
-      location: 'Bangalore'
-    }, eligStartupToken);
-    const eligStartup = eligProfileRes.body.data.startup;
+    // Update the auto-created startup profile (starts in PENDING status)
+    const eligStartup = await prisma.startup.update({
+      where: { id: eligStartupUser.body.data.startup_id },
+      data: {
+        company_name: `Eligible Tech Pvt Ltd ${timestampElig}`,
+        description: 'Startup eligibility verification testing profile.',
+        domain: 'Healthcare',
+        technologies: ['AI', 'Cloud'],
+        readiness_level: 7,
+        years_experience: 3,
+        previous_deployments: 1,
+        location: 'Bangalore',
+        verification_status: 'PENDING'
+      }
+    });
 
     // State 1: PENDING startup -> 403 Forbidden
     const pendingAppRes = await request('POST', `/api/v1/challenges/${eligChallenge.id}/applications`, {
@@ -556,10 +570,10 @@ const runSecurityTests = async () => {
       reason: 'Shortlisted for lifecycle testing'
     }, healthGovToken);
 
-    await request('PATCH', `/api/v1/applications/${lifeApp.id}/status`, {
-      status: 'SELECTED',
-      reason: 'Selected for lifecycle testing'
-    }, healthGovToken);
+    await prisma.application.update({
+      where: { id: lifeApp.id },
+      data: { status: 'SELECTED' }
+    });
 
     // Create new pilot project in PLANNED status
     const plannedPilotRes = await request('POST', '/api/v1/pilots', {

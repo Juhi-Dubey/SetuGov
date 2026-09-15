@@ -56,9 +56,19 @@ export const analyzeApplicationProposal = async (req, res, next) => {
   try {
     const applicationId = req.params.application_id || req.params.id || req.body?.application_id;
     const result = applicationId
-      ? await aiService.analyzeApplicationProposal(applicationId, req.user)
+      ? await aiService.analyzeApplicationProposal(applicationId, req.user, req.ip)
       : await aiService.analyzeProposal(req.body);
     return successResponse(res, result, 'AI proposal analysis completed', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getApplicationProposalAnalysis = async (req, res, next) => {
+  try {
+    const applicationId = req.params.application_id;
+    const result = await aiService.getApplicationProposalAnalysis(applicationId, req.user, req.ip);
+    return successResponse(res, result, 'Persisted AI proposal analysis retrieved successfully', 200);
   } catch (error) {
     next(error);
   }

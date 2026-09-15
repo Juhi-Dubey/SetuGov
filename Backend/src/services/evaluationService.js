@@ -40,48 +40,61 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
     throw new NotFoundError(`Application with ID ${applicationId} not found.`);
   }
 
+  // Enforce CLOSED challenge freeze
+  if (application.challenge.status === 'CLOSED') {
+    throw new BadRequestError('Cannot evaluate application: Problem Statement is CLOSED.');
+  }
+
   if (application.status !== 'SUBMITTED' && application.status !== 'SHORTLISTED') {
     throw new BadRequestError(`Cannot evaluate application in '${application.status}' status. Must be SUBMITTED or SHORTLISTED.`);
   }
 
-  // 2. Evaluator Authorization & Verification Enforcement (Part 1)
-  if (user.role !== 'EVALUATOR' && user.role !== 'ADMIN') {
+  // 2. Evaluator Authorization & Verification Enforcement
+  if (user.role !== 'EVALUATOR') {
     throw new ForbiddenError('Only assigned evaluators can submit evaluations.');
   }
 
-  if (user.role === 'EVALUATOR') {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
-      include: { evaluator_profile: true }
-    });
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    include: { evaluator_profile: true }
+  });
 
-    if (!dbUser || !dbUser.is_active) {
-      throw new ForbiddenError('Evaluator account is inactive.');
-    }
-
-    if (!dbUser.evaluator_profile || dbUser.evaluator_profile.verification_status !== 'VERIFIED') {
-      throw new ForbiddenError('Evaluator credentials must be officially VERIFIED before evaluating applications.');
-    }
-
-    const assignment = await prisma.evaluatorAssignment.findUnique({
-      where: {
-        application_id_evaluator_id: {
-          application_id: applicationId,
-          evaluator_id: user.id
-        }
-      }
-    });
-
-    if (!assignment) {
-      throw new ForbiddenError('Evaluator is not assigned to this application.');
-    }
-
-    if (assignment.status !== 'ACCEPTED') {
-      throw new ForbiddenError(`Cannot evaluate application with assignment status '${assignment.status}'. Must be ACCEPTED.`);
-    }
+  if (!dbUser || !dbUser.is_active) {
+    throw new ForbiddenError('Evaluator account is inactive.');
   }
 
-  // 3. Check for Conflict of Interest declaration
+  if (!dbUser.evaluator_profile || dbUser.evaluator_profile.verification_status !== 'VERIFIED') {
+    throw new ForbiddenError('Evaluator credentials must be officially VERIFIED before evaluating applications.');
+  }
+
+  const assignment = await prisma.evaluatorAssignment.findUnique({
+    where: {
+      application_id_evaluator_id: {
+        application_id: applicationId,
+        evaluator_id: user.id
+      }
+    }
+  });
+
+  if (!assignment) {
+    throw new ForbiddenError('Evaluator is not assigned to this application.');
+  }
+
+  // Check immutability first
+  const existingEvaluation = await prisma.evaluation.findUnique({
+    where: {
+      application_id_evaluator_id: {
+        application_id: applicationId,
+        evaluator_id: user.id
+      }
+    }
+  });
+
+  if (existingEvaluation && existingEvaluation.is_submitted) {
+    throw new BadRequestError('Submitted evaluation cannot be silently edited. Submitted evaluations are immutable.');
+  }
+
+  // Check Conflict of Interest declaration next
   const conflict = await prisma.conflictDeclaration.findUnique({
     where: {
       application_id_evaluator_id: {
@@ -91,8 +104,16 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
     }
   });
 
-  if (conflict && (conflict.has_conflict || conflict.is_recused)) {
+  if (!conflict) {
+    throw new ForbiddenError('Mandatory Conflict of Interest declaration required before submitting evaluation.');
+  }
+
+  if (conflict.has_conflict || conflict.is_recused) {
     throw new ForbiddenError('Cannot submit evaluation: You have declared a conflict of interest or recused yourself from evaluating this application.');
+  }
+
+  if (assignment.status !== 'ACCEPTED') {
+    throw new ForbiddenError(`Cannot evaluate application with assignment status '${assignment.status}'. Must be ACCEPTED.`);
   }
 
   // Calculate weighted total score
@@ -113,7 +134,8 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
       scalability_score: data.scalability_score,
       cost_score: data.cost_score,
       total_score,
-      comments: data.comments?.trim() || null
+      comments: data.comments?.trim() || null,
+      is_submitted: true
     },
     create: {
       application_id: applicationId,
@@ -124,7 +146,8 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
       scalability_score: data.scalability_score,
       cost_score: data.cost_score,
       total_score,
-      comments: data.comments?.trim() || null
+      comments: data.comments?.trim() || null,
+      is_submitted: true
     },
     include: {
       evaluator: {
@@ -148,7 +171,7 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
       status: 'COMPLETED',
       completed_at: new Date()
     }
-  }).catch(() => {});
+  }).catch(() => { });
 
   await createAuditLog({
     user_id: user.id,
@@ -218,6 +241,11 @@ export const updateEvaluation = async (id, data, user, ip_address = null) => {
     throw new NotFoundError(`Evaluation with ID ${id} not found.`);
   }
 
+  // Phase 10: Immutability enforcement
+  if (evaluation.is_submitted) {
+    throw new BadRequestError('Submitted evaluation cannot be silently edited. Submitted evaluations are immutable.');
+  }
+
   if (user.role !== 'ADMIN' && evaluation.evaluator_id !== user.id) {
     throw new ForbiddenError('You can only modify your own evaluations.');
   }
@@ -267,6 +295,9 @@ export const getChallengeEvaluationSummary = async (challengeId, user = null) =>
     if (user.role === 'STARTUP') {
       throw new ForbiddenError('Startups are not authorized to view aggregated evaluation summaries.');
     }
+    if (user.role === 'EVALUATOR') {
+      throw new ForbiddenError('Evaluators are not authorized to view aggregated evaluation summaries of other evaluators.');
+    }
   }
 
   const challenge = await prisma.challenge.findUnique({
@@ -287,6 +318,7 @@ export const getChallengeEvaluationSummary = async (challengeId, user = null) =>
               verification_status: true
             }
           },
+          conflict_declarations: true,
           evaluations: {
             include: {
               evaluator: {
@@ -317,8 +349,15 @@ export const getChallengeEvaluationSummary = async (challengeId, user = null) =>
   const requiredQuorum = 2; // Configurable default evaluation quorum
 
   const applicationSummaries = challenge.applications.map(app => {
-    const evals = app.evaluations;
-    const totalEvals = evals.length;
+    // Phase 11: recused/conflicted evaluators cannot count toward quorum
+    const conflictedEvaluatorIds = new Set(
+      (app.conflict_declarations || [])
+        .filter(cd => cd.has_conflict || cd.is_recused)
+        .map(cd => cd.evaluator_id)
+    );
+
+    const validEvals = (app.evaluations || []).filter(e => !conflictedEvaluatorIds.has(e.evaluator_id) && (e.is_submitted !== false));
+    const totalEvals = validEvals.length;
     const quorumMet = totalEvals >= requiredQuorum;
 
     let avgTechnical = 0;
@@ -329,12 +368,12 @@ export const getChallengeEvaluationSummary = async (challengeId, user = null) =>
     let avgTotal = 0;
 
     if (totalEvals > 0) {
-      const sumTech = evals.reduce((sum, e) => sum + e.technical_score, 0);
-      const sumInnov = evals.reduce((sum, e) => sum + e.innovation_score, 0);
-      const sumImpact = evals.reduce((sum, e) => sum + e.impact_score, 0);
-      const sumScal = evals.reduce((sum, e) => sum + e.scalability_score, 0);
-      const sumCost = evals.reduce((sum, e) => sum + e.cost_score, 0);
-      const sumTotal = evals.reduce((sum, e) => sum + e.total_score, 0);
+      const sumTech = validEvals.reduce((sum, e) => sum + e.technical_score, 0);
+      const sumInnov = validEvals.reduce((sum, e) => sum + e.innovation_score, 0);
+      const sumImpact = validEvals.reduce((sum, e) => sum + e.impact_score, 0);
+      const sumScal = validEvals.reduce((sum, e) => sum + e.scalability_score, 0);
+      const sumCost = validEvals.reduce((sum, e) => sum + e.cost_score, 0);
+      const sumTotal = validEvals.reduce((sum, e) => sum + e.total_score, 0);
 
       avgTechnical = parseFloat((sumTech / totalEvals).toFixed(2));
       avgInnovation = parseFloat((sumInnov / totalEvals).toFixed(2));
@@ -360,7 +399,7 @@ export const getChallengeEvaluationSummary = async (challengeId, user = null) =>
         cost_effectiveness: avgCost,
         overall_total: avgTotal
       },
-      evaluations: evals
+      evaluations: validEvals
     };
   });
 
@@ -405,20 +444,22 @@ export const declareConflictOfInterest = async (applicationId, data, user, ip_ad
     throw new NotFoundError(`Application with ID ${applicationId} not found.`);
   }
 
-  // Part 5: Verify evaluator has assignment for this application
-  if (user.role === 'EVALUATOR') {
-    const assignment = await prisma.evaluatorAssignment.findUnique({
-      where: {
-        application_id_evaluator_id: {
-          application_id: applicationId,
-          evaluator_id: user.id
-        }
-      }
-    });
+  // Evaluator assignment check
+  if (user.role !== 'EVALUATOR') {
+    throw new ForbiddenError('Only assigned evaluators can declare conflicts of interest.');
+  }
 
-    if (!assignment) {
-      throw new ForbiddenError('You can only declare conflicts of interest for applications you are assigned to.');
+  const assignment = await prisma.evaluatorAssignment.findUnique({
+    where: {
+      application_id_evaluator_id: {
+        application_id: applicationId,
+        evaluator_id: user.id
+      }
     }
+  });
+
+  if (!assignment) {
+    throw new ForbiddenError('You can only declare conflicts of interest for applications you are assigned to.');
   }
 
   const { has_conflict = false, conflict_details = null, is_recused = false } = data;
@@ -455,7 +496,7 @@ export const declareConflictOfInterest = async (applicationId, data, user, ip_ad
       data: {
         status: 'RECUSED'
       }
-    }).catch(() => {});
+    }).catch(() => { });
   }
 
   await createAuditLog({

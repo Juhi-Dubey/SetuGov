@@ -360,6 +360,11 @@ export const assignEvaluatorToApplication = async (applicationId, data, currentU
     throw new NotFoundError(`Application with ID ${applicationId} not found.`);
   }
 
+  // Enforce CLOSED challenge freeze
+  if (application.challenge.status === 'CLOSED') {
+    throw new BadRequestError('Cannot assign evaluators: Problem Statement is CLOSED.');
+  }
+
   if (application.status !== 'SUBMITTED' && application.status !== 'SHORTLISTED') {
     throw new BadRequestError(`Cannot assign evaluator to application in '${application.status}' status. Application must be SUBMITTED or SHORTLISTED.`);
   }
@@ -387,6 +392,20 @@ export const assignEvaluatorToApplication = async (applicationId, data, currentU
 
   if (!evaluatorUser.is_verified || evaluatorUser.evaluator_profile?.verification_status !== 'VERIFIED') {
     throw new ForbiddenError('Cannot assign unverified evaluator. Evaluators must be verified by an Administrator before assignment.');
+  }
+
+  // 2b. Governance gate: Evaluator must belong to Challenge-specific Final Evaluator Pool
+  const poolEntry = await prisma.challengeEvaluatorPool.findUnique({
+    where: {
+      challenge_id_evaluator_id: {
+        challenge_id: application.challenge_id,
+        evaluator_id
+      }
+    }
+  });
+
+  if (!poolEntry) {
+    throw new BadRequestError('Evaluator assignment cannot bypass Final Evaluator Pool. Evaluator must be added to the Challenge Final Evaluator Pool before assignment.');
   }
 
   // 3. Prevent corrupting historical assignment lifecycle (Part 6)
