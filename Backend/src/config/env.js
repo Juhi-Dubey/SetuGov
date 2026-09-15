@@ -42,6 +42,7 @@ export const config = {
   ACCESS_REQUEST_RATE_LIMIT_MAX: parseInt(process.env.ACCESS_REQUEST_RATE_LIMIT_MAX || '5', 10),
   TURNSTILE_ENABLED: process.env.TURNSTILE_ENABLED === 'true',
   TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
+  TURNSTILE_EXPECTED_HOSTNAME: process.env.TURNSTILE_EXPECTED_HOSTNAME || '',
   CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
   EMAIL_PROVIDER: process.env.EMAIL_PROVIDER || 'console',
   EMAIL_FROM: process.env.EMAIL_FROM || 'noreply@setugov.gov.in',

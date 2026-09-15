@@ -206,15 +206,15 @@ function ChallengeEligibility() {
 
               <div>
                 <p className="text-lg font-semibold">
-                  GreenTech Solutions
+                  Eligibility Compliance Review
                 </p>
 
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  Application APP-001
+                  Challenge ID: {id}
                 </p>
 
                 <p className="mt-1 text-xs text-slate-400">
-                  Founder: Ananya Sharma
+                  Stage: Statutory & Entity Eligibility Verification
                 </p>
               </div>
             </div>

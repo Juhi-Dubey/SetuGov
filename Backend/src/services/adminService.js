@@ -164,6 +164,9 @@ export const verifyDepartment = async (departmentId, data, adminUser, ip_address
     });
 
     return d;
+  }, {
+    maxWait: 10000,
+    timeout: 15000
   });
 
   await createAuditLog({
@@ -268,7 +271,12 @@ export const updateUserRole = async (userId, data, adminUser, ip_address = null)
 
 /**
  * Admin securely provisions or invites a Government or Evaluator user
+ * directly (bypassing the public AccessRequest onboarding submission queue),
  * without exposing plaintext passwords to the administrator.
+ *
+ * NOTE: For users submitting public access requests, the formal workflow is
+ * handled via accessRequestService.approveAccessRequest(). This provisionUser
+ * method is reserved for direct, unsolicited administrative invitations.
  */
 export const provisionUser = async (data, adminUser, ip_address = null) => {
   const {
@@ -350,21 +358,40 @@ export const provisionUser = async (data, adminUser, ip_address = null) => {
     }
   });
 
-  // If Evaluator, create pending evaluator profile
+  // If Evaluator, create pending evaluator profile without fabricated defaults
   if (role === 'EVALUATOR') {
     const expertise = Array.isArray(domain_expertise)
       ? domain_expertise
-      : (domain_expertise ? domain_expertise.split(',').map(s => s.trim()) : ['General Innovation']);
+      : (domain_expertise ? domain_expertise.split(',').map(s => s.trim()) : []);
 
     await prisma.evaluatorProfile.create({
       data: {
         user_id: user.id,
-        organization: organization ? organization.trim() : 'Innovation Evaluation Board',
-        designation: designation ? designation.trim() : 'Evaluation Specialist',
+        organization: organization ? organization.trim() : null,
+        designation: designation ? designation.trim() : null,
         domain_expertise: expertise,
         verification_status: 'PENDING',
         verified_by: null,
         verified_at: null
+      }
+    }).catch(() => {});
+  }
+
+  // If Startup, create initial startup profile in DRAFT status without fabricated business defaults
+  if (role === 'STARTUP') {
+    await prisma.startup.create({
+      data: {
+        user_id: user.id,
+        company_name: '',
+        description: '',
+        domain: '',
+        technologies: [],
+        readiness_level: 1,
+        years_experience: 0,
+        previous_deployments: 0,
+        location: '',
+        verification_status: 'DRAFT',
+        verification_source: 'SELF_DECLARED'
       }
     }).catch(() => {});
   }
@@ -919,9 +946,17 @@ export const reviewStartupVerification = async (id, { action, notes, rejection_r
       throw new BadRequestError('Cannot verify startup: startup account email address has not been verified yet.');
     }
 
-    // Completeness Guard: Organization identity and bank details
+    // Submission & Declaration Guard: Registration must have been formally submitted
+    if (!startup.submitted_at) {
+      throw new BadRequestError('Cannot verify startup: registration submission and truthfulness declaration must be completed first.');
+    }
+
+    // Completeness Guard: Organization identity, complete registered address, and bank details
     if (!startup.company_name || startup.company_name.length < 2 || !startup.registered_address || !startup.pan_number) {
       throw new BadRequestError('Cannot verify startup: organization identity is incomplete.');
+    }
+    if (!startup.city || !startup.state || !startup.pincode) {
+      throw new BadRequestError('Cannot verify startup: complete registered organization city, state, and pincode are required.');
     }
     if (!startup.authorized_person_name || !startup.authorized_person_email) {
       throw new BadRequestError('Cannot verify startup: authorized signatory information is incomplete.');
@@ -961,12 +996,17 @@ export const reviewStartupVerification = async (id, { action, notes, rejection_r
   }
 
   let newStatus = startup.verification_status;
-  const updateData = {};
+  const updateData = {
+    reviewed_by: adminUser.id,
+    reviewed_at: new Date()
+  };
 
   if (action === 'START_REVIEW') {
     newStatus = 'UNDER_REVIEW';
     updateData.verification_status = 'UNDER_REVIEW';
     updateData.verification_notes = notes || startup.verification_notes;
+    updateData.verified_by = null;
+    updateData.verified_at = null;
   } else if (action === 'APPROVE') {
     newStatus = 'VERIFIED';
     updateData.verification_status = 'VERIFIED';
@@ -978,12 +1018,15 @@ export const reviewStartupVerification = async (id, { action, notes, rejection_r
   } else if (action === 'REJECT') {
     newStatus = 'REJECTED';
     updateData.verification_status = 'REJECTED';
-    // Review metadata: verified_by / verified_at must NOT be set on rejection
+    updateData.verified_by = null;
+    updateData.verified_at = null;
     updateData.rejection_reason = rejection_reason || notes || 'Organization verification rejected.';
     updateData.verification_notes = notes || null;
   } else if (action === 'REQUEST_CORRECTION') {
     newStatus = 'CORRECTION_REQUESTED';
     updateData.verification_status = 'CORRECTION_REQUESTED';
+    updateData.verified_by = null;
+    updateData.verified_at = null;
     updateData.correction_notes = correction_notes || notes || 'Please revise submitted organization details and re-upload required documents.';
   }
 
@@ -1095,6 +1138,45 @@ export const verifyStartupDocument = async (documentId, { verification_status, r
   return updated;
 };
 
+export const unlockUserAccount = async (userId, adminUser, ip_address = null) => {
+  if (adminUser.role !== 'ADMIN') {
+    throw new ForbiddenError('Only Administrators can unlock user accounts.');
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new NotFoundError(`User with ID ${userId} not found.`);
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      failed_login_attempts: 0,
+      locked_until: null
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      is_active: true,
+      failed_login_attempts: true,
+      locked_until: true
+    }
+  });
+
+  await createAuditLog({
+    user_id: adminUser.id,
+    action: 'ADMIN_ACCOUNT_UNLOCKED',
+    entity_type: 'USER',
+    entity_id: userId,
+    details: { unlocked_email: user.email, admin_id: adminUser.id },
+    ip_address
+  });
+
+  return updatedUser;
+};
+
 export default {
   getDashboardOverview,
   verifyDepartment,
@@ -1113,7 +1195,9 @@ export default {
   getStartupVerifications,
   getStartupVerificationById,
   reviewStartupVerification,
-  verifyStartupDocument
+  verifyStartupDocument,
+  unlockUserAccount
 };
+
 
 

@@ -3,9 +3,19 @@ import { NotFoundError, ForbiddenError, BadRequestError, ConflictError } from '.
 import { validateTransition } from '../utils/lifecycle.js';
 import { evaluateEligibility } from '../utils/eligibility.js';
 import { createAuditLog } from './auditService.js';
-import { sendNotification } from './notificationService.js';
+import {
+  sendNotification,
+  notifyStartupShortlisted,
+  notifyStartupFinalized
+} from './notificationService.js';
 
-export const createApplication = async (challengeId, data, user, ip_address = null) => {
+export const createApplication = async (challengeIdParam, data, user, ip_address = null) => {
+  const challengeId = challengeIdParam || data?.challenge_id || data?.challengeId;
+
+  if (!challengeId) {
+    throw new BadRequestError('A valid challengeId is required to submit an application.');
+  }
+
   // 1. Verify Challenge exists and is PUBLISHED
   const challenge = await prisma.challenge.findUnique({
     where: { id: challengeId },
@@ -28,7 +38,7 @@ export const createApplication = async (challengeId, data, user, ip_address = nu
     }
   }
 
-  // 2. Resolve Startup for user
+  // 2. Resolve Startup for user (never trust frontend startup_id)
   const startup = await prisma.startup.findFirst({
     where: { user_id: user.id }
   });
@@ -68,36 +78,54 @@ export const createApplication = async (challengeId, data, user, ip_address = nu
 
   const initialStatus = data.status || 'SUBMITTED';
 
+  // Normalize fields between UI form conventions and database schema
+  const proposal = (data.proposal || data.proposal_summary || data.problemUnderstanding || '').trim();
+  const technical_approach = (data.technical_approach || data.proposedSolution || '').trim();
+  const expected_impact = (data.expected_impact || data.expectedImpact || '').trim();
+  const estimated_cost = Number(data.estimated_cost ?? data.proposed_budget ?? data.proposedBudget ?? 0);
+  const timeline = String(data.timeline || data.proposed_timeline_days || data.proposedTimeline || '30 days').trim();
+
   // 4. Create Application
-  const application = await prisma.application.create({
-    data: {
-      challenge_id: challengeId,
-      startup_id: startup.id,
-      proposal: data.proposal.trim(),
-      technical_approach: data.technical_approach.trim(),
-      expected_impact: data.expected_impact.trim(),
-      estimated_cost: data.estimated_cost,
-      timeline: data.timeline.trim(),
-      status: initialStatus,
-      submitted_at: initialStatus === 'SUBMITTED' ? new Date() : null
-    },
-    include: {
-      challenge: {
-        select: {
-          id: true,
-          title: true,
-          status: true
-        }
+  let application;
+  try {
+    application = await prisma.application.create({
+      data: {
+        challenge_id: challengeId,
+        startup_id: startup.id,
+        proposal,
+        technical_approach,
+        expected_impact,
+        estimated_cost,
+        timeline,
+        status: initialStatus,
+        submitted_at: initialStatus === 'SUBMITTED' ? new Date() : null
       },
-      startup: {
-        select: {
-          id: true,
-          company_name: true,
-          verification_status: true
+      include: {
+        challenge: {
+          select: {
+            id: true,
+            title: true,
+            status: true
+          }
+        },
+        startup: {
+          select: {
+            id: true,
+            company_name: true,
+            verification_status: true
+          }
         }
       }
+    });
+  } catch (dbErr) {
+    if (dbErr.code === 'P2002') {
+      throw new ConflictError('Your startup has already submitted an application for this challenge.');
     }
-  });
+    if (dbErr.code === 'P2025' || dbErr.code === 'P2003') {
+      throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
+    }
+    throw dbErr;
+  }
 
   await createAuditLog({
     user_id: user.id,
@@ -321,6 +349,10 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
     }
   }
 
+  if (application.status === nextStatus) {
+    throw new BadRequestError(`Application is already in ${nextStatus} status.`);
+  }
+
   // Validate state machine transition
   validateTransition('APPLICATION', application.status, nextStatus);
 
@@ -354,7 +386,23 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
   });
 
   // Notify the startup user regarding the status transition
-  if (application.startup?.user_id) {
+  if (nextStatus === 'SHORTLISTED') {
+    await notifyStartupShortlisted({
+      applicationId: id,
+      challengeId: updated.challenge_id,
+      startupId: updated.startup_id,
+      challengeTitle: updated.challenge?.title,
+      startupName: updated.startup?.company_name
+    });
+  } else if (nextStatus === 'SELECTED') {
+    await notifyStartupFinalized({
+      applicationId: id,
+      challengeId: updated.challenge_id,
+      startupId: updated.startup_id,
+      challengeTitle: updated.challenge?.title,
+      startupName: updated.startup?.company_name
+    });
+  } else if (application.startup?.user_id) {
     await sendNotification({
       user_id: application.startup.user_id,
       title: `Application ${nextStatus}`,

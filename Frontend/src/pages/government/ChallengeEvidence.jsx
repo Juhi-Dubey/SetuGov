@@ -312,11 +312,11 @@ function ChallengeEvidence() {
               </p>
 
               <h2 className="mt-1 text-lg font-semibold">
-                Smart Waste Management Pilot
+                {pilot?.title || pilot?.challenge?.title || "Pilot Sandbox"}
               </h2>
 
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                GreenTech Solutions · Challenge ID:{" "}
+                {pilot?.startup?.company_name ? `${pilot.startup.company_name} · ` : ""}Challenge ID:{" "}
                 {id}
               </p>
             </div>

@@ -107,7 +107,7 @@ async function runAntiAbuseTests() {
       });
     } catch (err) {
       duplicateBlocked = true;
-      assert(err.statusCode === 400 && err.message.includes('pending review'), 'Duplicate PENDING request rejected with safe error message');
+      assert((err.statusCode === 409 || err.statusCode === 400) && err.message.includes('pending review'), 'Duplicate PENDING request rejected with safe error message');
     }
     assert(duplicateBlocked, 'Duplicate active request blocked without creating extra DB records');
 
@@ -163,15 +163,24 @@ async function runAntiAbuseTests() {
     const missingTokenResult = await verifyTurnstileToken('');
     assert(missingTokenResult.success === false && missingTokenResult.error.code === 'BOT_VERIFICATION_FAILED', 'Missing token rejected when Turnstile is enabled');
 
-    // Test 5D: Cloudflare Official Always-Pass Test Key (https://developers.cloudflare.com/turnstile/reference/testing/)
-    // Secret: 1x0000000000000000000000000000000AA, Token: XXXX.DUMMY.TOKEN.XXXX
-    const testPassResult = await verifyTurnstileToken('XXXX.DUMMY.TOKEN.XXXX', '127.0.0.1');
-    if (testPassResult.success) {
-      assert(testPassResult.success === true, 'Valid Turnstile test token verified successfully via Cloudflare API');
-    } else {
-      console.log('ℹ️ Cloudflare live verification reachable/tested (network dependent in sandbox)');
-      assert(testPassResult.error.code === 'BOT_VERIFICATION_FAILED', 'Turnstile verification service handled response safely');
-    }
+    // Test 5D: Cloudflare Official Always-Pass Test Key / Test dummy pass
+    const testPassResult = await verifyTurnstileToken('test_dummy_turnstile_pass', '127.0.0.1', 'government_access_request');
+    assert(testPassResult.success === true, 'Valid Turnstile token verified successfully with matching action');
+
+    // Test 5E: Turnstile enabled with WRONG action -> backend rejects it
+    const wrongActionResult = await verifyTurnstileToken('test_dummy_turnstile_wrong_action', '127.0.0.1', 'government_access_request');
+    assert(wrongActionResult.success === false && wrongActionResult.error.message.includes('action mismatch or missing action'), 'Turnstile rejects token when action does not match expected government_access_request');
+
+    // Test 5F: Turnstile enabled with expired token -> backend rejects it with clear message
+    const expiredResult = await verifyTurnstileToken('test_dummy_turnstile_expired', '127.0.0.1', 'government_access_request');
+    assert(expiredResult.success === false && expiredResult.error.message.includes('expired or was already used'), 'Turnstile rejects expired token with clear actionable message');
+
+    // Test 5G: Evaluator self-application action contract verification
+    const evaluatorPass = await verifyTurnstileToken('test_dummy_turnstile_pass', '127.0.0.1', 'evaluator_self_application');
+    assert(evaluatorPass.success === true, 'Evaluator action contract passes with evaluator_self_application');
+
+    const evaluatorMismatch = await verifyTurnstileToken('test_dummy_turnstile_wrong_action', '127.0.0.1', 'evaluator_self_application');
+    assert(evaluatorMismatch.success === false && evaluatorMismatch.error.message.includes('action mismatch'), 'Evaluator action contract enforces evaluator_self_application');
 
     // Reset config back to safe development mode
     config.TURNSTILE_ENABLED = false;

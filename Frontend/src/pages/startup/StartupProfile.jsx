@@ -37,6 +37,14 @@ import {
   submitStartupRegistration
 } from "../../services/startupService";
 import { useAuth } from "../../context/AuthContext";
+import SearchableSelect from "../../components/common/SearchableSelect";
+import TechTagInput from "../../components/common/TechTagInput";
+import {
+  getStatesAndUTs,
+  getCitiesForState,
+  isValidState,
+  isValidCityForState
+} from "../../data/indiaLocations";
 
 const ORG_TYPES = [
   { value: "PRIVATE_LIMITED", label: "Private Limited Company (Pvt Ltd)" },
@@ -139,8 +147,6 @@ export default function StartupProfile() {
     location: ""
   });
 
-  const [techInput, setTechInput] = useState("");
-
   const [bankData, setBankData] = useState({
     account_holder_name: "",
     bank_name: "",
@@ -234,7 +240,7 @@ export default function StartupProfile() {
   }, []);
 
   const vStatus = startup?.verification_status || "DRAFT";
-  const isLocked = vStatus === "UNDER_REVIEW" || vStatus === "VERIFIED";
+  const isLocked = ["SUBMITTED", "UNDER_REVIEW", "VERIFIED"].includes(vStatus);
 
   const handleSaveStep = async (stepNumber) => {
     if (!startup?.id) return;
@@ -243,6 +249,41 @@ export default function StartupProfile() {
 
     try {
       if (stepNumber === 2) {
+        if (!orgData.company_name?.trim()) {
+          setFeedback({ type: "error", message: "Organization legal name is required." });
+          setSaving(false);
+          return;
+        }
+        if (!orgData.registered_address?.trim()) {
+          setFeedback({ type: "error", message: "Registered head office address is required." });
+          setSaving(false);
+          return;
+        }
+        if (!orgData.state) {
+          setFeedback({ type: "error", message: "Please select a valid State / UT." });
+          setSaving(false);
+          return;
+        }
+        if (!isValidState(orgData.state)) {
+          setFeedback({ type: "error", message: `Invalid State / UT '${orgData.state}'. Please select a canonical Indian State or UT.` });
+          setSaving(false);
+          return;
+        }
+        if (!orgData.city) {
+          setFeedback({ type: "error", message: "Please select a valid City for the selected State / UT." });
+          setSaving(false);
+          return;
+        }
+        if (!isValidCityForState(orgData.state, orgData.city)) {
+          setFeedback({ type: "error", message: `City '${orgData.city}' does not belong to '${orgData.state}'. Please select a valid city from the dropdown.` });
+          setSaving(false);
+          return;
+        }
+        if (!orgData.pincode || !/^[1-9][0-9]{5}$/.test(String(orgData.pincode).trim())) {
+          setFeedback({ type: "error", message: "Postal PIN Code must be exactly 6 numeric digits (e.g. 560001)." });
+          setSaving(false);
+          return;
+        }
         await updateRegistration(startup.id, orgData);
       } else if (stepNumber === 3) {
         await updateRegistration(startup.id, authPersonData);
@@ -295,23 +336,6 @@ export default function StartupProfile() {
     } catch (err) {
       setFeedback({ type: "error", message: err?.message || "Failed to remove document." });
     }
-  };
-
-  const handleAddTech = () => {
-    if (techInput.trim() && !techProfileData.technologies.includes(techInput.trim())) {
-      setTechProfileData(prev => ({
-        ...prev,
-        technologies: [...prev.technologies, techInput.trim()]
-      }));
-      setTechInput("");
-    }
-  };
-
-  const handleRemoveTech = (tech) => {
-    setTechProfileData(prev => ({
-      ...prev,
-      technologies: prev.technologies.filter(t => t !== tech)
-    }));
   };
 
   const handleSubmitRegistration = async () => {
@@ -595,38 +619,60 @@ export default function StartupProfile() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">City *</label>
-                    <input
-                      type="text"
-                      required
-                      value={orgData.city}
-                      onChange={(e) => setOrgData({ ...orgData, city: e.target.value })}
-                      placeholder="e.g. Bengaluru"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">State / UT *</label>
-                    <input
-                      type="text"
-                      required
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      State / UT *
+                    </label>
+                    <SearchableSelect
+                      id="org-state"
                       value={orgData.state}
-                      onChange={(e) => setOrgData({ ...orgData, state: e.target.value })}
-                      placeholder="e.g. Karnataka"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      disabled={isLocked}
+                      options={getStatesAndUTs()}
+                      placeholder="Select State / UT"
+                      onChange={(selectedState) => {
+                        setOrgData(prev => ({
+                          ...prev,
+                          state: selectedState,
+                          city: "" // clear city when state changes
+                        }));
+                      }}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Postal PIN Code *</label>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      City *
+                    </label>
+                    <SearchableSelect
+                      id="org-city"
+                      value={orgData.city}
+                      disabled={!orgData.state || isLocked}
+                      options={getCitiesForState(orgData.state)}
+                      placeholder={orgData.state ? "Select City" : "Select City"}
+                      onChange={(selectedCity) => {
+                        setOrgData(prev => ({
+                          ...prev,
+                          city: selectedCity
+                        }));
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Postal PIN Code *
+                    </label>
                     <input
                       type="text"
                       required
+                      maxLength={6}
+                      disabled={isLocked}
                       value={orgData.pincode}
-                      onChange={(e) => setOrgData({ ...orgData, pincode: e.target.value })}
+                      onChange={(e) => {
+                        const numericOnly = e.target.value.replace(/\D/g, "").slice(0, 6);
+                        setOrgData({ ...orgData, pincode: numericOnly });
+                      }}
                       placeholder="6-digit PIN"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950 font-mono disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -944,35 +990,29 @@ export default function StartupProfile() {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Core Technologies (Press Enter or Add)
-                    </label>
-                    <div className="flex gap-2 mb-2">
-                      <input
-                        type="text"
-                        value={techInput}
-                        onChange={(e) => setTechInput(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddTech(); } }}
-                        placeholder="e.g. Edge AI, Computer Vision, HL7/FHIR, LoRaWAN"
-                        className="h-10 flex-1 rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAddTech}
-                        className="rounded-xl bg-slate-800 px-4 text-xs font-bold text-white hover:bg-slate-700 dark:bg-slate-700"
-                      >
-                        Add
-                      </button>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Core Technologies
+                      </label>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {techProfileData.technologies?.length || 0} added
+                      </span>
                     </div>
-
-                    <div className="flex flex-wrap gap-1.5 min-h-[32px]">
-                      {techProfileData.technologies.map(t => (
-                        <span key={t} className="inline-flex items-center gap-1 rounded-lg bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300">
-                          {t}
-                          <button type="button" onClick={() => handleRemoveTech(t)} className="hover:text-red-500">&times;</button>
-                        </span>
-                      ))}
-                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                      Add technologies used by your solution. Press Enter to add.
+                    </p>
+                    <TechTagInput
+                      id="core-technologies"
+                      value={techProfileData.technologies}
+                      disabled={isLocked}
+                      placeholder="Type a technology and press Enter"
+                      onChange={(newTechs) => {
+                        setTechProfileData(prev => ({
+                          ...prev,
+                          technologies: newTechs
+                        }));
+                      }}
+                    />
                   </div>
 
                   <div>
@@ -1406,7 +1446,13 @@ export default function StartupProfile() {
 
                   const missingFields = [];
                   if (!orgData.company_name) missingFields.push("Legal Company Name");
-                  if (!orgData.registered_address || !orgData.city || !orgData.state || !orgData.pincode) missingFields.push("Registered Address");
+                  if (!orgData.registered_address || !orgData.city || !orgData.state || !orgData.pincode) {
+                    missingFields.push("Registered Address & Location");
+                  } else {
+                    if (!isValidState(orgData.state)) missingFields.push("Valid State / UT");
+                    if (!isValidCityForState(orgData.state, orgData.city)) missingFields.push("Valid City for selected State / UT");
+                    if (!/^[1-9][0-9]{5}$/.test(String(orgData.pincode).trim())) missingFields.push("Valid 6-Digit Postal PIN Code");
+                  }
                   if (!authPersonData.authorized_person_name || !authPersonData.authorized_person_email) missingFields.push("Authorized Signatory");
                   if (!bizIdentityData.pan_number) missingFields.push("Business PAN");
                   if (!bankData.bank_name || !bankData.account_number || !bankData.ifsc_code) missingFields.push("Bank Details");

@@ -243,15 +243,15 @@ function ChallengeEvaluation() {
 
               <div>
                 <p className="text-lg font-semibold">
-                  GreenTech Solutions
+                  Proposal Evaluation
                 </p>
 
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  Smart Waste Management Platform
+                  Challenge ID: {id}
                 </p>
 
                 <p className="mt-1 text-xs text-slate-400">
-                  Application APP-001
+                  Stage: Technical Evaluation & Scoring
                 </p>
               </div>
             </div>
@@ -261,19 +261,19 @@ function ChallengeEvaluation() {
               <SummaryItem
                 icon={FileText}
                 label="Proposal"
-                value="Submitted"
+                value="Under Review"
               />
 
               <SummaryItem
                 icon={ShieldCheck}
                 label="Eligibility"
-                value="Passed"
+                value="Verified"
               />
 
               <SummaryItem
                 icon={IndianRupee}
                 label="Pilot Budget"
-                value="₹8.5L"
+                value="Escrow-Linked"
               />
 
               <SummaryItem

@@ -31,7 +31,7 @@ export const createStartupSchema = z.object({
   address_line2: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
   state: z.string().optional().nullable(),
-  pincode: z.string().regex(PATTERNS.PINCODE, 'Invalid 6-digit PIN code').optional().nullable(),
+  pincode: z.string().regex(PATTERNS.PINCODE, 'Invalid 6-digit PIN code').optional().nullable().or(z.literal('')),
   official_email: z.string().email('Invalid official email address').optional().nullable(),
   official_website: z.string().url('Invalid website URL').optional().nullable(),
   authorized_person_name: z.string().optional().nullable(),
@@ -47,7 +47,7 @@ export const createStartupSchema = z.object({
   incorporation_date: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}/)).optional().nullable(),
   description: z.string().min(10, 'Description must be at least 10 characters').optional().default('Startup profile pending onboarding completion.'),
   domain: z.string().min(2, 'Domain is required').optional().default('Technology'),
-  technologies: z.array(z.string()).optional().default([]),
+  technologies: z.array(z.string()).max(50, 'Cannot exceed 50 technologies').optional().default([]),
   products_services: z.string().optional().nullable(),
   readiness_level: z.number().int().min(1).max(9).default(1),
   years_experience: z.number().int().min(0).default(0),
@@ -63,7 +63,7 @@ export const updateStartupSchema = z.object({
   address_line2: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
   state: z.string().optional().nullable(),
-  pincode: z.string().optional().nullable(),
+  pincode: z.string().regex(PATTERNS.PINCODE, 'Postal PIN code must be exactly 6 digits (e.g. 560001)').optional().nullable().or(z.literal('')),
   official_email: z.string().email().optional().nullable().or(z.literal('')),
   official_website: z.string().optional().nullable().or(z.literal('')),
   authorized_person_name: z.string().optional().nullable(),
@@ -79,13 +79,13 @@ export const updateStartupSchema = z.object({
   incorporation_date: z.string().optional().nullable(),
   description: z.string().optional(),
   domain: z.string().optional(),
-  technologies: z.array(z.string()).optional(),
+  technologies: z.array(z.string()).max(50, 'Cannot exceed 50 technologies').optional(),
   products_services: z.string().optional().nullable(),
   readiness_level: z.number().int().min(1).max(9).optional(),
   years_experience: z.number().int().min(0).optional(),
   previous_deployments: z.number().int().min(0).optional(),
   location: z.string().optional()
-});
+}).strict();
 
 export const bankDetailsSchema = z.object({
   account_holder_name: z.string().min(2, 'Account holder legal name is required'),

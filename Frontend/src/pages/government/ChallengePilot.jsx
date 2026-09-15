@@ -443,7 +443,7 @@ function ChallengePilot() {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
             <p className="text-xs text-slate-400">Allocated Budget</p>
             <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
-              {pilot?.budget ? `₹${Number(pilot.budget).toLocaleString("en-IN")}` : "₹15,00,000"}
+              {pilot?.budget ? `₹${Number(pilot.budget).toLocaleString("en-IN")}` : "Not specified"}
             </p>
             <p className="mt-1 text-[11px] text-slate-400">Milestone-linked escrow</p>
           </div>
@@ -451,17 +451,23 @@ function ChallengePilot() {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
             <p className="text-xs text-slate-400">Milestones Progress</p>
             <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
-              {pilot?.milestones?.filter((m) => m.status === "COMPLETED").length || 2} / {pilot?.milestones?.length || 3}
+              {pilot?.milestones?.filter((m) => m.status === "COMPLETED").length || 0} / {pilot?.milestones?.length || 0}
             </p>
-            <p className="mt-1 text-[11px] text-indigo-600 dark:text-indigo-400">66% Completed</p>
+            <p className="mt-1 text-[11px] text-indigo-600 dark:text-indigo-400">
+              {pilot?.milestones?.length
+                ? `${Math.round(((pilot?.milestones?.filter((m) => m.status === "COMPLETED").length || 0) / pilot.milestones.length) * 100)}% Completed`
+                : "No milestones recorded"}
+            </p>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
             <p className="text-xs text-slate-400">Tracked KPIs</p>
             <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
-              {pilot?.kpis?.length || 3} Metrics
+              {pilot?.kpis?.length || 0} Metrics
             </p>
-            <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">Telemetry Active</p>
+            <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">
+              {pilot?.kpis?.length ? "Telemetry Active" : "No KPIs configured"}
+            </p>
           </div>
         </div>
 

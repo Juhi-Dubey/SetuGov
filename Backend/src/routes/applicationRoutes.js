@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  createApplication,
   getApplicationById,
   updateApplication,
   deleteApplication,
@@ -18,6 +19,7 @@ import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
 import {
+  createApplicationSchema,
   updateApplicationSchema,
   updateApplicationStatusSchema
 } from '../schemas/applicationSchemas.js';
@@ -29,6 +31,9 @@ import {
   assignEvaluatorToApplication,
   getApplicationAssignments
 } from '../controllers/evaluatorController.js';
+
+// Direct Submit Application (accepts challenge_id in body, STARTUP or ADMIN)
+router.post('/', authenticate, authorizeRoles('STARTUP', 'ADMIN'), validate(createApplicationSchema), createApplication);
 
 // Get specific application by ID
 router.get('/:application_id', authenticate, getApplicationById);

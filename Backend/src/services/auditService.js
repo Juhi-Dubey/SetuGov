@@ -2,7 +2,16 @@ import { prisma } from '../config/prisma.js';
 import { logger } from '../utils/logger.js';
 import { NotFoundError } from '../utils/errors.js';
 
+/**
+ * Create an audit log entry.
+ *
+ * @param {object} params
+ * @param {object} [params.tx] - Optional Prisma transaction client. When provided, the
+ *   insert runs inside the caller's transaction (atomic rollback). When omitted the
+ *   global prisma client is used (fire-and-forget after commit).
+ */
 export const createAuditLog = async ({
+  tx,
   user_id = null,
   action,
   entity_type,
@@ -10,8 +19,9 @@ export const createAuditLog = async ({
   details = null,
   ip_address = null
 }) => {
+  const db = tx || prisma;
   try {
-    const log = await prisma.auditLog.create({
+    const log = await db.auditLog.create({
       data: {
         user_id,
         action,
@@ -26,7 +36,11 @@ export const createAuditLog = async ({
     logger.error(
       `[AUDIT_LOG_FAILURE] Failed to record audit log: action=${action}, entity_type=${entity_type}, entity_id=${entity_id || 'null'}, user_id=${user_id || 'anonymous'}, error=${error?.message || error}`
     );
-    // Never fail the primary transaction because of audit log failure
+    // When inside an interactive transaction, propagate failure so the transaction rolls back atomically
+    if (tx) {
+      throw error;
+    }
+    // When omitted (fire-and-forget), remain best-effort without failing the primary operation
     return null;
   }
 };

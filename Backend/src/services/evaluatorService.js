@@ -1,7 +1,7 @@
 import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
-import { sendNotification } from './notificationService.js';
+import { sendNotification, notifyEvaluatorAssigned } from './notificationService.js';
 import { createGovernmentNomination } from './accessRequestService.js';
 
 /**
@@ -205,6 +205,10 @@ export const verifyEvaluator = async (profileId, data, adminUser, ip_address = n
     throw new ForbiddenError('Only Administrators are authorized to verify evaluator profiles.');
   }
 
+  if (!data.verification_status || !['VERIFIED', 'REJECTED', 'PENDING'].includes(data.verification_status)) {
+    throw new BadRequestError('Invalid verification status. Must be VERIFIED, REJECTED, or PENDING.');
+  }
+
   const profile = await prisma.evaluatorProfile.findUnique({
     where: { id: profileId },
     include: { user: true }
@@ -214,45 +218,100 @@ export const verifyEvaluator = async (profileId, data, adminUser, ip_address = n
     throw new NotFoundError(`Evaluator profile with ID ${profileId} not found.`);
   }
 
-  const updatedProfile = await prisma.$transaction(async (tx) => {
-    const p = await tx.evaluatorProfile.update({
-      where: { id: profileId },
-      data: {
-        verification_status: data.verification_status,
-        verified_by: adminUser.id,
-        verified_at: new Date()
-      },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, role: true, is_verified: true }
-        }
-      }
-    });
+  // Duplicate verification prevention (Task O)
+  if (profile.verification_status === data.verification_status) {
+    throw new BadRequestError(`Evaluator profile is already ${data.verification_status}.`);
+  }
 
-    // If verified, mark user is_verified = true
-    if (data.verification_status === 'VERIFIED') {
-      await tx.user.update({
-        where: { id: profile.user_id },
-        data: { is_verified: true }
+  // Task N: Evaluator verification guard before invitation acceptance
+  // Keep professional credential verification separate from account activation (Task M)
+  if (profile.user && !profile.user.invitation_accepted_at && !profile.user.is_active) {
+    throw new BadRequestError(
+      'Cannot verify evaluator credentials before the evaluator has accepted their invitation and activated their account.'
+    );
+  }
+
+  const verifyStartedAt = Date.now();
+  let updatedProfile;
+
+  try {
+    updatedProfile = await prisma.$transaction(async (tx) => {
+      const txStart = Date.now();
+
+      // Concurrency protection: re-check status inside tx (Task O)
+      const current = await tx.evaluatorProfile.findUnique({
+        where: { id: profileId }
       });
+      if (!current) {
+        throw new NotFoundError(`Evaluator profile with ID ${profileId} not found.`);
+      }
+      if (current.verification_status === data.verification_status) {
+        throw new BadRequestError(`Evaluator profile is already ${data.verification_status}.`);
+      }
+
+      // Step 1: evaluatorProfile.update (Task B diagnostic timing)
+      const evalUpdateStart = Date.now();
+      const p = await tx.evaluatorProfile.update({
+        where: { id: profileId },
+        data: {
+          verification_status: data.verification_status,
+          verified_by: adminUser.id,
+          verified_at: new Date()
+        },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, role: true, is_active: true, is_verified: true }
+          }
+        }
+      });
+      console.info(`[VERIFY_EVALUATOR] evaluatorProfile.update: ${Date.now() - evalUpdateStart}ms`);
+
+      // Step 2: user.update when verification_status === VERIFIED (Task B diagnostic timing)
+      // Preserves is_active state — does NOT prematurely activate the account (Task M)
+      if (data.verification_status === 'VERIFIED') {
+        const userUpdateStart = Date.now();
+        await tx.user.update({
+          where: { id: profile.user_id },
+          data: { is_verified: true }
+        });
+        console.info(`[VERIFY_EVALUATOR] user.update when verification_status === VERIFIED: ${Date.now() - userUpdateStart}ms`);
+      }
+
+      // Step 3: Atomic audit log inside tx (Task F)
+      const auditStart = Date.now();
+      await createAuditLog({
+        tx,
+        user_id: adminUser.id,
+        action: `EVALUATOR_${data.verification_status}`,
+        entity_type: 'EVALUATOR_PROFILE',
+        entity_id: profileId,
+        details: {
+          previousStatus: profile.verification_status,
+          newStatus: data.verification_status,
+          evaluator_email: profile.user?.email
+        },
+        ip_address
+      });
+      console.info(`[VERIFY_EVALUATOR] auditLog: ${Date.now() - auditStart}ms`);
+      console.info(`[VERIFY_EVALUATOR] total transaction duration: ${Date.now() - txStart}ms`);
+
+      return p;
+    }, {
+      // Task C: Explicit transaction configuration to prevent default 5000ms timeout
+      maxWait: 10000,
+      timeout: 15000
+    });
+  } catch (err) {
+    const msg = err?.message || '';
+    if (msg.includes('Transaction already closed') || msg.includes('transaction was expired')) {
+      throw new Error(
+        'Database transaction timed out during evaluator verification. Please retry.'
+      );
     }
+    throw err;
+  }
 
-    return p;
-  });
-
-  await createAuditLog({
-    user_id: adminUser.id,
-    action: `EVALUATOR_${data.verification_status}`,
-    entity_type: 'EVALUATOR_PROFILE',
-    entity_id: profileId,
-    details: {
-      previousStatus: profile.verification_status,
-      newStatus: data.verification_status,
-      evaluator_email: profile.user.email
-    },
-    ip_address
-  });
-
+  // Post-commit: Notification strictly outside the transaction (Task E)
   await sendNotification({
     user_id: profile.user_id,
     title: `Evaluator Registry: ${data.verification_status}`,
@@ -395,13 +454,14 @@ export const assignEvaluatorToApplication = async (applicationId, data, currentU
     ip_address
   });
 
-  // Notify Evaluator
-  await sendNotification({
-    user_id: evaluator_id,
-    title: 'New Evaluation Assignment',
-    message: `You have been assigned to evaluate application "${application.startup.company_name}" for challenge "${application.challenge.title}".`,
-    type: 'EVALUATOR_ASSIGNED',
-    link: '/evaluator/assignments'
+  // Notify Evaluator with transactional email
+  await notifyEvaluatorAssigned({
+    assignmentId: assignment.id,
+    applicationId,
+    evaluatorId,
+    challengeId: application.challenge_id,
+    challengeTitle: application.challenge?.title,
+    startupName: application.startup?.company_name
   });
 
   return assignment;

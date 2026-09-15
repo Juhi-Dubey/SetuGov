@@ -122,26 +122,32 @@ function ChallengeOverview() {
     }
   };
 
+  const apps = challenge?.applications || [];
+  const appCount = challenge?.applications?.length ?? challenge?._count?.applications ?? 0;
+  const eligibleCount = apps.filter(a => ['ELIGIBLE', 'SHORTLISTED', 'SELECTED'].includes(a.status)).length;
+  const evaluatedCount = apps.filter(a => ['EVALUATED', 'SHORTLISTED', 'SELECTED'].includes(a.status)).length;
+  const evalProgress = appCount > 0 ? Math.round((evaluatedCount / appCount) * 100) : 0;
+
   const displayData = {
     id: challenge?.id || id,
-    title: challenge?.title || "Smart Waste Management System",
-    department: challenge?.department?.name || "Urban Development Department",
+    title: challenge?.title || "Procurement Challenge",
+    department: challenge?.department?.name || "Department Not Specified",
     status: challenge?.status || "PUBLISHED",
-    location: challenge?.location || "Maharashtra",
+    location: challenge?.location || "Not specified",
     description:
       challenge?.problem_description ||
-      "Develop an innovative technology solution to improve municipal waste collection, monitoring, route optimization and operational efficiency.",
+      "No detailed problem description provided for this challenge.",
     desiredOutcome:
       challenge?.desired_outcome ||
-      "Improve waste collection efficiency, reduce unnecessary travel and provide real-time visibility into municipal waste operations.",
+      "No specific desired outcome defined.",
     budget: challenge?.budget_max
       ? `₹${Number(challenge.budget_max).toLocaleString("en-IN")}`
-      : "₹25,00,000",
+      : (challenge?.budget_min ? `₹${Number(challenge.budget_min).toLocaleString("en-IN")}` : "Not specified"),
     startDate: challenge?.created_at ? new Date(challenge.created_at).toLocaleDateString() : "Active",
-    endDate: challenge?.pilot_duration_days ? `${challenge.pilot_duration_days} days` : "60 days",
-    applications: challenge?.applications?.length ?? challenge?._count?.applications ?? 3,
-    eligibleStartups: 2,
-    evaluationProgress: 75,
+    endDate: challenge?.pilot_duration_days ? `${challenge.pilot_duration_days} days` : "Not specified",
+    applications: appCount,
+    eligibleStartups: eligibleCount,
+    evaluationProgress: evalProgress,
   };
 
   const handleWorkflowNavigation = (path) => {

@@ -17,8 +17,28 @@ export const verifyTurnstileToken = async (token, remoteIp = null, expectedActio
   }
 
   // Non-production test bypass support
-  if (config.NODE_ENV !== 'production' && (token === 'test_dummy_turnstile_pass' || token === 'XXXX.DUMMY.TOKEN.XXXX')) {
-    return { success: true, bypassed: true };
+  if (config.NODE_ENV !== 'production' && typeof token === 'string') {
+    if (token === 'test_dummy_turnstile_pass') {
+      return { success: true, bypassed: true, action: expectedAction };
+    }
+    if (token === 'test_dummy_turnstile_wrong_action') {
+      return {
+        success: false,
+        error: {
+          code: 'BOT_VERIFICATION_FAILED',
+          message: 'Bot verification action mismatch or missing action. Please try again.'
+        }
+      };
+    }
+    if (token === 'test_dummy_turnstile_expired') {
+      return {
+        success: false,
+        error: {
+          code: 'BOT_VERIFICATION_FAILED',
+          message: 'Bot verification token has expired or was already used. Please try again.'
+        }
+      };
+    }
   }
 
   // If enabled in production but secret key is not configured, fail safely
@@ -71,30 +91,61 @@ export const verifyTurnstileToken = async (token, remoteIp = null, expectedActio
     }
 
     const data = await response.json();
-    if (data.success) {
-      if (expectedAction) {
-        if (!data.action || data.action !== expectedAction) {
-          console.warn(`[TURNSTILE] Action mismatch or missing: expected "${expectedAction}", received "${data.action}"`);
-          return {
-            success: false,
-            error: {
-              code: 'BOT_VERIFICATION_FAILED',
-              message: 'Bot verification action mismatch or missing action. Please try again.'
-            }
-          };
-        }
+    if (!data.success) {
+      const errorCodes = data['error-codes'] || [];
+      let message = 'Bot verification failed. Please try again.';
+      if (errorCodes.includes('timeout-or-duplicate')) {
+        message = 'Bot verification token has expired or was already used. Please try again.';
+      } else if (errorCodes.includes('invalid-input-response')) {
+        message = 'Bot verification token is invalid. Please try again.';
       }
-      return { success: true };
+      // Never log raw token or secret key
+      console.warn('[TURNSTILE] Verification unsuccessful:', errorCodes);
+      return {
+        success: false,
+        error: {
+          code: 'BOT_VERIFICATION_FAILED',
+          message
+        }
+      };
     }
 
-    // Never log raw token or secret key
-    console.warn('[TURNSTILE] Verification unsuccessful:', data['error-codes'] || 'unknown rejection');
-    return {
-      success: false,
-      error: {
-        code: 'BOT_VERIFICATION_FAILED',
-        message: 'Bot verification failed. Please try again.'
+    // Verify expected action
+    if (expectedAction) {
+      if (!data.action || data.action !== expectedAction) {
+        console.warn(`[TURNSTILE] Action mismatch or missing: expected "${expectedAction}", received "${data.action || ''}"`);
+        return {
+          success: false,
+          error: {
+            code: 'BOT_VERIFICATION_FAILED',
+            message: 'Bot verification action mismatch or missing action. Please try again.'
+          }
+        };
       }
+    }
+
+    // Verify hostname if configured
+    if (config.TURNSTILE_EXPECTED_HOSTNAME) {
+      const allowedHostnames = config.TURNSTILE_EXPECTED_HOSTNAME
+        .split(',')
+        .map((h) => h.trim().toLowerCase())
+        .filter(Boolean);
+      if (allowedHostnames.length > 0 && (!data.hostname || !allowedHostnames.includes(data.hostname.toLowerCase()))) {
+        console.warn(`[TURNSTILE] Hostname mismatch: expected one of [${allowedHostnames.join(', ')}], received "${data.hostname || ''}"`);
+        return {
+          success: false,
+          error: {
+            code: 'BOT_VERIFICATION_FAILED',
+            message: 'Bot verification hostname mismatch. Please try again.'
+          }
+        };
+      }
+    }
+
+    return {
+      success: true,
+      action: data.action,
+      hostname: data.hostname
     };
   } catch (error) {
     console.error('[TURNSTILE] Verification network error:', error.message);

@@ -5,13 +5,19 @@ import { logger } from '../utils/logger.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
 import { PATTERNS } from './verificationService.js';
+import {
+  isValidState,
+  isValidCityForState,
+  getCanonicalCityName
+} from '../data/indiaLocations.js';
+import {
+  encryptString,
+  decryptString,
+  isEncrypted,
+  maskAccountNumber
+} from '../utils/encryption.js';
 
-export const maskAccountNumber = (accountNumber) => {
-  if (!accountNumber) return null;
-  const str = String(accountNumber).trim();
-  if (str.length <= 4) return str;
-  return '****' + str.slice(-4);
-};
+export { maskAccountNumber };
 
 export const getRequiredDocumentTypes = (orgType) => {
   const normalized = (orgType || 'PRIVATE_LIMITED').toUpperCase();
@@ -76,15 +82,61 @@ export const createStartup = async (data, user, ip_address = null) => {
     if (dupGst) throw new ConflictError('A startup with this GSTIN is already registered or undergoing verification.');
   }
 
+  // Validate State / UT and City if provided
+  let cleanState = data.state && typeof data.state === 'string' ? data.state.trim() : null;
+  let cleanCity = data.city && typeof data.city === 'string' ? data.city.trim() : null;
+
+  if (cleanState) {
+    if (!isValidState(cleanState)) {
+      throw new BadRequestError(`Invalid State / UT '${cleanState}'. Please select a canonical Indian State or Union Territory.`);
+    }
+  }
+
+  if (cleanCity) {
+    if (!cleanState) {
+      throw new BadRequestError('Cannot specify city without selecting a valid State / UT.');
+    }
+    if (!isValidCityForState(cleanState, cleanCity)) {
+      throw new BadRequestError(`Invalid city '${cleanCity}' for State / UT '${cleanState}'. Please select a valid canonical city.`);
+    }
+    cleanCity = getCanonicalCityName(cleanState, cleanCity) || cleanCity;
+  }
+
+  // Validate Postal PIN code if provided
+  let cleanPin = data.pincode ? String(data.pincode).trim() : null;
+  if (cleanPin) {
+    if (!PATTERNS.PINCODE.test(cleanPin)) {
+      throw new BadRequestError('Postal PIN code must be exactly 6 numeric digits (e.g. 560001).');
+    }
+  }
+
+  // Normalize and deduplicate technologies
+  let cleanTechs = [];
+  if (Array.isArray(data.technologies)) {
+    const seenLower = new Set();
+    for (const item of data.technologies) {
+      if (typeof item === 'string') {
+        const trimmed = item.trim();
+        if (trimmed && trimmed.length <= 80 && !seenLower.has(trimmed.toLowerCase())) {
+          seenLower.add(trimmed.toLowerCase());
+          cleanTechs.push(trimmed);
+        }
+      }
+    }
+    if (cleanTechs.length > 50) {
+      throw new BadRequestError('Cannot specify more than 50 technologies.');
+    }
+  }
+
   const startup = await prisma.startup.create({
     data: {
       user_id: user.id,
       company_name: data.company_name.trim(),
       org_type: data.org_type || 'PRIVATE_LIMITED',
       registered_address: data.registered_address ? data.registered_address.trim() : null,
-      city: data.city ? data.city.trim() : null,
-      state: data.state ? data.state.trim() : null,
-      pincode: data.pincode ? data.pincode.trim() : null,
+      city: cleanCity,
+      state: cleanState,
+      pincode: cleanPin,
       official_email: data.official_email ? data.official_email.trim().toLowerCase() : null,
       official_website: data.official_website ? data.official_website.trim() : null,
       authorized_person_name: data.authorized_person_name ? data.authorized_person_name.trim() : null,
@@ -100,7 +152,7 @@ export const createStartup = async (data, user, ip_address = null) => {
       incorporation_date: data.incorporation_date ? new Date(data.incorporation_date) : null,
       description: data.description ? data.description.trim() : '',
       domain: data.domain ? data.domain.trim() : '',
-      technologies: data.technologies || [],
+      technologies: cleanTechs,
       products_services: data.products_services ? data.products_services.trim() : null,
       readiness_level: data.readiness_level || 1,
       years_experience: data.years_experience || 0,
@@ -380,6 +432,21 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
     throw new BadRequestError(`Your registration is currently ${startup.verification_status.replace('_', ' ').toLowerCase()}. Profile editing is locked until review completes.`);
   }
 
+  // Reject client attempts to modify server-controlled verification fields
+  const forbiddenVerificationFields = [
+    'verification_status',
+    'verification_source',
+    'verified_by',
+    'verified_at',
+    'reviewed_by',
+    'reviewed_at'
+  ];
+  for (const field of forbiddenVerificationFields) {
+    if (user.role !== 'ADMIN' && data[field] !== undefined) {
+      throw new ForbiddenError(`Client cannot modify restricted verification field: ${field}`);
+    }
+  }
+
   // Whitelist allowable update fields
   const allowedFields = [
     'company_name',
@@ -432,6 +499,77 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
         updateData[field] = data[field];
       }
     }
+  }
+
+  // Location Validation: State/UT and City
+  if (data.state !== undefined || data.city !== undefined) {
+    const targetState = data.state !== undefined
+      ? (data.state && typeof data.state === 'string' ? data.state.trim() : null)
+      : startup.state;
+    const targetCity = data.city !== undefined
+      ? (data.city && typeof data.city === 'string' ? data.city.trim() : null)
+      : startup.city;
+
+    if (targetState) {
+      if (!isValidState(targetState)) {
+        throw new BadRequestError(`Invalid State / UT '${targetState}'. Please select a canonical Indian State or Union Territory.`);
+      }
+      updateData.state = targetState;
+    } else if (data.state !== undefined) {
+      updateData.state = null;
+    }
+
+    if (targetCity) {
+      if (!targetState) {
+        throw new BadRequestError('Cannot select city without selecting a valid State / UT.');
+      }
+      if (!isValidCityForState(targetState, targetCity)) {
+        throw new BadRequestError(`Invalid city '${targetCity}' for State / UT '${targetState}'. Please select a canonical city belonging to ${targetState}.`);
+      }
+      updateData.city = getCanonicalCityName(targetState, targetCity) || targetCity;
+    } else if (data.city !== undefined) {
+      updateData.city = null;
+    }
+  }
+
+  // Postal PIN Code Validation
+  if (data.pincode !== undefined) {
+    if (data.pincode === null || data.pincode === '') {
+      updateData.pincode = null;
+    } else {
+      const pinStr = String(data.pincode).trim();
+      if (!PATTERNS.PINCODE.test(pinStr)) {
+        throw new BadRequestError('Postal PIN code must be exactly 6 numeric digits (e.g. 560001).');
+      }
+      updateData.pincode = pinStr;
+    }
+  }
+
+  // Technologies Validation and Normalization
+  if (data.technologies !== undefined) {
+    if (!Array.isArray(data.technologies)) {
+      throw new BadRequestError('Technologies must be an array of strings.');
+    }
+    const cleanTechs = [];
+    const seenLower = new Set();
+    for (const item of data.technologies) {
+      if (typeof item !== 'string') {
+        throw new BadRequestError('All technology items must be strings.');
+      }
+      const trimmed = item.trim();
+      if (!trimmed) continue;
+      if (trimmed.length > 80) {
+        throw new BadRequestError('Technology item exceeds maximum allowed length of 80 characters.');
+      }
+      if (!seenLower.has(trimmed.toLowerCase())) {
+        seenLower.add(trimmed.toLowerCase());
+        cleanTechs.push(trimmed);
+      }
+    }
+    if (cleanTechs.length > 50) {
+      throw new BadRequestError('Cannot specify more than 50 technologies.');
+    }
+    updateData.technologies = cleanTechs;
   }
 
   // Duplicate / Race condition checks for active registrations
@@ -561,13 +699,16 @@ export const saveBankDetails = async (startupId, data, user, ip_address = null) 
     throw new BadRequestError('Account number must be between 9 and 18 digits.');
   }
 
+  // Encrypt account number before persisting to PostgreSQL
+  const encryptedAccNo = isEncrypted(accNo) ? accNo : encryptString(accNo);
+
   const bankDetails = await prisma.startupBankDetails.upsert({
     where: { startup_id: startupId },
     create: {
       startup_id: startupId,
       account_holder_name: data.account_holder_name.trim(),
       bank_name: data.bank_name.trim(),
-      account_number: accNo,
+      account_number: encryptedAccNo,
       ifsc_code: ifsc,
       branch_name: data.branch_name ? data.branch_name.trim() : null,
       account_type: data.account_type || 'CURRENT'
@@ -575,7 +716,7 @@ export const saveBankDetails = async (startupId, data, user, ip_address = null) 
     update: {
       account_holder_name: data.account_holder_name.trim(),
       bank_name: data.bank_name.trim(),
-      account_number: accNo,
+      account_number: encryptedAccNo,
       ifsc_code: ifsc,
       branch_name: data.branch_name ? data.branch_name.trim() : null,
       account_type: data.account_type || 'CURRENT'
@@ -602,7 +743,7 @@ export const saveBankDetails = async (startupId, data, user, ip_address = null) 
 
   return {
     ...bankDetails,
-    account_number: isAdminUser ? bankDetails.account_number : maskAccountNumber(bankDetails.account_number),
+    account_number: isAdminUser ? decryptString(bankDetails.account_number) : maskAccountNumber(bankDetails.account_number),
     masked_account_number: maskAccountNumber(bankDetails.account_number)
   };
 };
@@ -633,7 +774,7 @@ export const getBankDetails = async (startupId, user) => {
 
   return {
     ...startup.bank_details,
-    account_number: isAdmin ? startup.bank_details.account_number : maskAccountNumber(startup.bank_details.account_number),
+    account_number: isAdmin || isOwner ? decryptString(startup.bank_details.account_number) : maskAccountNumber(startup.bank_details.account_number),
     masked_account_number: maskAccountNumber(startup.bank_details.account_number)
   };
 };
@@ -804,7 +945,17 @@ export const getStartupDocuments = async (startupId, user = null) => {
 /**
  * Submit GeM-style startup registration for Administrative Verification
  */
-export const submitStartupRegistration = async (startupId, user, ip_address = null) => {
+export const submitStartupRegistration = async (startupId, dataOrUser, userOrIp = null, ipAddress = null) => {
+  let data = {};
+  let user = dataOrUser;
+  let ip_address = userOrIp;
+
+  if (dataOrUser && dataOrUser.role === undefined && typeof dataOrUser === 'object') {
+    data = dataOrUser;
+    user = userOrIp;
+    ip_address = ipAddress;
+  }
+
   const startup = await prisma.startup.findUnique({
     where: { id: startupId },
     include: {
@@ -828,17 +979,33 @@ export const submitStartupRegistration = async (startupId, user, ip_address = nu
   // 1. Completeness Validation
   const missing = [];
   if (!startup.company_name || startup.company_name.length < 2) missing.push('Organization Legal Name');
+  if (!startup.org_type || !['PROPRIETORSHIP', 'PARTNERSHIP', 'LLP', 'PRIVATE_LIMITED', 'PUBLIC_LIMITED', 'TRUST', 'SOCIETY', 'ASSOCIATION', 'OTHER'].includes(startup.org_type)) {
+    missing.push('Valid Organization Type');
+  }
   if (!startup.registered_address || !startup.city || !startup.state || !startup.pincode) {
     missing.push('Registered Address & Location (Street, City, State, PIN)');
+  } else {
+    if (!isValidState(startup.state)) {
+      missing.push(`Invalid State / UT '${startup.state}'. Please select a canonical Indian State or Union Territory`);
+    }
+    if (!isValidCityForState(startup.state, startup.city)) {
+      missing.push(`Invalid City '${startup.city}' for State / UT '${startup.state}'`);
+    }
+    if (!PATTERNS.PINCODE.test(startup.pincode)) {
+      missing.push('Postal PIN Code must be exactly 6 numeric digits');
+    }
   }
   if (!startup.authorized_person_name || !startup.authorized_person_email || !startup.authorized_person_phone) {
     missing.push('Authorized Person Details (Name, Email, Phone)');
   }
-  if (!startup.pan_number) {
-    missing.push('Business PAN Number');
+  if (!startup.pan_number || !PATTERNS.PAN.test(startup.pan_number)) {
+    missing.push('Valid Business PAN Number');
   }
-  if (!startup.bank_details) {
+  if (!startup.bank_details || !startup.bank_details.account_number || !startup.bank_details.ifsc_code) {
     missing.push('Bank Account Details for Procurement/Payments');
+  }
+  if (data && data.declaration_accepted === false) {
+    missing.push('Truthfulness declaration must be accepted');
   }
 
   // Enforce entity-specific required documents

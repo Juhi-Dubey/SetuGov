@@ -197,6 +197,17 @@ export const verifyStartupDocument = async (req, res, next) => {
   }
 };
 
+export const unlockUserAccount = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const user = await adminService.unlockUserAccount(id, req.user, ip_address);
+    return successResponse(res, { user }, 'User account unlocked successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getDashboard,
   getAuditLogs,
@@ -216,5 +227,7 @@ export default {
   getStartupVerifications,
   getStartupVerificationById,
   reviewStartupVerification,
-  verifyStartupDocument
+  verifyStartupDocument,
+  unlockUserAccount
 };
+

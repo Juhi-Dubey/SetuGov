@@ -101,7 +101,7 @@ async function runTests() {
       });
     } catch (err) {
       duplicatePendingBlocked = true;
-      assert(err.statusCode === 400 && err.message.includes('pending review'), 'Duplicate PENDING request rejected by backend');
+      assert((err.statusCode === 400 || err.statusCode === 409) && err.message.includes('pending review'), 'Duplicate PENDING request rejected by backend');
     }
     assert(duplicatePendingBlocked, 'Duplicate active request for same email was blocked');
 

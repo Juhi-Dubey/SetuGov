@@ -3,6 +3,7 @@ import { NotFoundError } from '../utils/errors.js';
 import { validateTransition } from '../utils/lifecycle.js';
 import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
+import { notifyPilotOutcome } from './notificationService.js';
 
 export const createValidation = async (pilotId, data, user, ip_address = null) => {
   // P0-3: Verify user has VALIDATION_MANAGE access to this pilot
@@ -62,6 +63,23 @@ export const createValidation = async (pilotId, data, user, ip_address = null) =
     entity_id: validation.id,
     details: { pilot_id: pilotId, status: validation.status, overallScore: overallValidationScore },
     ip_address
+  });
+
+  const fullPilot = await prisma.pilot.findUnique({
+    where: { id: pilotId },
+    include: { challenge: true, startup: true }
+  });
+
+  // Dispatch in-app notification and transactional email with duplicate protection
+  await notifyPilotOutcome({
+    pilotId,
+    validationId: validation.id,
+    outcome: validation.status,
+    score: overallValidationScore,
+    comments: validation.comments,
+    startupId: fullPilot?.startup_id,
+    challengeTitle: fullPilot?.challenge?.title,
+    startupName: fullPilot?.startup?.company_name
   });
 
   return validation;

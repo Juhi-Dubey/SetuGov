@@ -2,6 +2,7 @@ import { createApp } from './app.js';
 import { config } from './config/env.js';
 import { prisma } from './config/prisma.js';
 import { logger } from './utils/logger.js';
+import { warmPrismaConnection } from './utils/warmup.js';
 
 const app = createApp();
 const PORT = config.PORT;
@@ -14,6 +15,9 @@ const server = app.listen(PORT, () => {
   logger.info(`⚙️  Environment: ${config.NODE_ENV}`);
   logger.info(`🤖 AI Mock Mode: ${config.AI_MOCK_MODE ? 'ENABLED' : 'DISABLED'}`);
   logger.info(`================================================`);
+
+  // Pre-warm database pool connection to prevent Neon cold starts from causing transaction timeouts
+  warmPrismaConnection().catch(() => {});
 });
 
 // Graceful Shutdown Handler
@@ -50,3 +54,4 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
+  

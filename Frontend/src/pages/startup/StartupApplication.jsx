@@ -28,50 +28,7 @@ import { getChallengeById, getChallenges } from "../../services/challengeService
 import { getStartupApplications } from "../../services/startupService";
 import { useAuth } from "../../context/AuthContext";
 
-const defaultStartupApplications = [
-  {
-    id: "app-demo-1",
-    challenge_id: "ch-demo-1",
-    challenge_title: "AI-Based Hospital OPD Queue Reduction & Patient Flow Optimization",
-    department: "Department of Health & Family Welfare",
-    state: "Karnataka",
-    proposal: "Integrated Edge AI Cameras and Smart Token Kiosks for Hospital Waiting Time Reduction.",
-    technical_approach: "Edge computer vision for real-time crowd estimation, automated ABHA token dispensers, and doctor load balancing.",
-    expected_impact: "40% reduction in patient waiting time from 90m to 54m within 60 days.",
-    estimated_cost: "₹3,80,000",
-    status: "SELECTED",
-    submitted_at: "2026-09-02T10:00:00Z",
-    stage: "Pilot Project Active (Sandbox Deployed)"
-  },
-  {
-    id: "app-demo-2",
-    challenge_id: "ch-demo-2",
-    challenge_title: "Smart Waste Collection & IoT Route Optimization",
-    department: "Department of Urban Mobility & Transport",
-    state: "Karnataka",
-    proposal: "IoT Ultrasonic Fill-Level Sensors with dynamic truck route recalculation.",
-    technical_approach: "Deploying IP68 ultrasonic sensors with LoRaWAN telemetry to central municipal dashboard.",
-    expected_impact: "30% fuel savings and zero uncollected bins over 90 days.",
-    estimated_cost: "₹2,50,000",
-    status: "SHORTLISTED",
-    submitted_at: "2026-08-25T14:30:00Z",
-    stage: "Evaluator Review Complete"
-  },
-  {
-    id: "app-demo-3",
-    challenge_id: "ch-demo-3",
-    challenge_title: "Urban Traffic Congestion & Adaptive Signal Control",
-    department: "Department of Urban Mobility & Transport",
-    state: "Karnataka",
-    proposal: "Real-time intersection computer vision with automated signal phase adjustment.",
-    technical_approach: "Edge processing on existing CCTV infrastructure with cloud synchronization.",
-    expected_impact: "25% improvement in traffic throughput during peak hours.",
-    estimated_cost: "₹4,20,000",
-    status: "SUBMITTED",
-    submitted_at: "2026-08-18T11:00:00Z",
-    stage: "Under Eligibility & Compliance Check"
-  }
-];
+
 
 function StartupApplication() {
   const navigate = useNavigate();
@@ -267,11 +224,11 @@ function StartupApplication() {
         proposal_summary:
           form.problemUnderstanding?.trim() ||
           form.solutionName?.trim() ||
-          "AI-driven automated workflow proposal for public sector operations.",
+          "",
         technical_approach:
           form.proposedSolution?.trim() ||
           form.technology?.trim() ||
-          "State-of-the-art scalable microservices architecture with real-time telemetry.",
+          "",
         proposed_budget: Number(form.proposedBudget || 0),
         proposed_timeline_days: Number(form.proposedTimeline || 30),
         team_experience: form.teamExperience || "",

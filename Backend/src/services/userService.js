@@ -126,6 +126,22 @@ export const getUserById = async (id, currentUser = null) => {
 };
 
 export const updateUser = async (id, data, currentUser) => {
+  // Reject client attempts to modify server-controlled security fields
+  const forbiddenSecurityFields = [
+    'role',
+    'failed_login_attempts',
+    'locked_until',
+    'last_failed_login_at',
+    'is_active',
+    'is_verified',
+    'verification_status'
+  ];
+  for (const field of forbiddenSecurityFields) {
+    if (data[field] !== undefined) {
+      throw new ForbiddenError(`Client cannot modify restricted security field: ${field}`);
+    }
+  }
+
   // Check authorization: Admin can update anyone; others can only update their own profile
   if (currentUser.role !== 'ADMIN' && currentUser.id !== id) {
     throw new ForbiddenError('You can only update your own user profile.');

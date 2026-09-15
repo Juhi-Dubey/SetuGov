@@ -96,6 +96,11 @@ export default function GovernmentAccessRequestPage() {
     e.preventDefault();
     if (!validate()) return;
 
+    if (import.meta.env.VITE_TURNSTILE_SITE_KEY && !turnstileToken) {
+      setSubmitError("Please complete the bot verification before submitting.");
+      return;
+    }
+
     setLoading(true);
     setSubmitError("");
 
@@ -262,7 +267,7 @@ export default function GovernmentAccessRequestPage() {
                       value={formData.name}
                       onChange={handleChange}
                       placeholder="e.g. Dr. Ramesh Kumar, IAS"
-                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 ${
+                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900 ${
                         errors.name
                           ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                           : "border-slate-200 focus:border-blue-500 focus:ring-blue-500/10 dark:border-slate-800"
@@ -286,7 +291,7 @@ export default function GovernmentAccessRequestPage() {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="officer.name@health.gov.in"
-                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 ${
+                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900 ${
                         errors.email
                           ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                           : "border-slate-200 focus:border-blue-500 focus:ring-blue-500/10 dark:border-slate-800"
@@ -309,7 +314,7 @@ export default function GovernmentAccessRequestPage() {
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="+91 22 2202 0000"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900"
                     />
                   </div>
                 </div>
@@ -328,7 +333,7 @@ export default function GovernmentAccessRequestPage() {
                       value={formData.designation}
                       onChange={handleChange}
                       placeholder="e.g. Joint Secretary / Director IT"
-                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 ${
+                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900 ${
                         errors.designation
                           ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                           : "border-slate-200 focus:border-blue-500 focus:ring-blue-500/10 dark:border-slate-800"
@@ -352,7 +357,7 @@ export default function GovernmentAccessRequestPage() {
                       value={formData.department_name}
                       onChange={handleChange}
                       placeholder="e.g. Public Health & Family Welfare"
-                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 ${
+                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900 ${
                         errors.department_name
                           ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                           : "border-slate-200 focus:border-blue-500 focus:ring-blue-500/10 dark:border-slate-800"
@@ -373,10 +378,10 @@ export default function GovernmentAccessRequestPage() {
                       name="state"
                       value={formData.state}
                       onChange={handleChange}
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900"
                     >
                       {INDIAN_STATES.map((s) => (
-                        <option key={s} value={s}>
+                        <option key={s} value={s} className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">
                           {s}
                         </option>
                       ))}
@@ -395,7 +400,7 @@ export default function GovernmentAccessRequestPage() {
                     value={formData.department_code}
                     onChange={handleChange}
                     placeholder="e.g. MH-HLTH-2026"
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 text-xs outline-none transition focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950"
+                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900"
                   />
                 </div>
 
@@ -412,7 +417,7 @@ export default function GovernmentAccessRequestPage() {
                       value={formData.official_website}
                       onChange={handleChange}
                       placeholder="https://health.maharashtra.gov.in"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900"
                     />
                   </div>
                 </div>
@@ -430,7 +435,7 @@ export default function GovernmentAccessRequestPage() {
                   value={formData.reason}
                   onChange={handleChange}
                   placeholder="Specify planned challenges, civic pain points, or sandbox pilot requirements..."
-                  className={`w-full rounded-xl border bg-slate-50/50 p-3 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 ${
+                  className={`w-full rounded-xl border bg-slate-50/50 p-3 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900 ${
                     errors.reason
                       ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                       : "border-slate-200 focus:border-blue-500 focus:ring-blue-500/10 dark:border-slate-800"
@@ -452,16 +457,20 @@ export default function GovernmentAccessRequestPage() {
                     value={formData.supporting_document_url}
                     onChange={handleChange}
                     placeholder="https://drive.google.com/... or official letter URL"
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950"
+                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900"
                   />
                 </div>
               </div>
 
               {/* Cloudflare Turnstile Verification Widget */}
               <TurnstileWidget
+                action="government_access_request"
                 onVerify={(token) => setTurnstileToken(token)}
                 onExpire={() => setTurnstileToken(null)}
-                onError={() => setTurnstileToken(null)}
+                onError={() => {
+                  setTurnstileToken(null);
+                  setSubmitError("Bot verification encountered an issue. Please try again.");
+                }}
                 resetTrigger={resetTurnstile}
               />
 

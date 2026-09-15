@@ -81,9 +81,17 @@ export const approveAccessRequest = async (req, res, next) => {
     const { id } = req.params;
     const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
     const result = await accessRequestService.approveAccessRequest(id, req.body, req.user, ip_address);
+    // Sanitize response: strip raw setup_token so it is never exposed over HTTP
+    const sanitizedResult = {
+      ...result,
+      invitation: result.invitation ? { ...result.invitation } : undefined
+    };
+    if (sanitizedResult.invitation?.setup_token) {
+      delete sanitizedResult.invitation.setup_token;
+    }
     return successResponse(
       res,
-      result,
+      sanitizedResult,
       'Access request approved. User account provisioned and invitation token generated.',
       200
     );
@@ -108,7 +116,15 @@ export const resendInvitation = async (req, res, next) => {
     const { id } = req.params;
     const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
     const result = await accessRequestService.resendInvitation(id, req.user, ip_address);
-    return successResponse(res, result, 'Invitation re-generated successfully.', 200);
+    // Sanitize response: strip raw setup_token so it is never exposed over HTTP
+    const sanitizedResult = {
+      ...result,
+      invitation: result.invitation ? { ...result.invitation } : undefined
+    };
+    if (sanitizedResult.invitation?.setup_token) {
+      delete sanitizedResult.invitation.setup_token;
+    }
+    return successResponse(res, sanitizedResult, 'Invitation re-generated successfully.', 200);
   } catch (error) {
     next(error);
   }

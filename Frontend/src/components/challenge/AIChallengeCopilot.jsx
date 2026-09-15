@@ -89,9 +89,9 @@ function AIChallengeCopilot({ formData, onAutofill }) {
           })),
         },
         pilot: {
-          duration: `${formData?.pilotDurationDays || 60} days`,
-          sites: [formData?.location || "District Center"],
-          budget: formData?.budget ? `₹${formData.budget}` : "₹15,00,000",
+          duration: formData?.pilotDurationDays ? `${formData.pilotDurationDays} days` : "",
+          sites: formData?.location ? [formData.location] : [],
+          budget: formData?.budget ? `₹${formData.budget}` : "",
         },
         requirements: {
           technologies: (formData?.requiredTechnologies || []).map((t) =>

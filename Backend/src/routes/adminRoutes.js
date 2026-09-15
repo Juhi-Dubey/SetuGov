@@ -18,7 +18,8 @@ import {
   getStartupVerifications,
   getStartupVerificationById,
   reviewStartupVerification,
-  verifyStartupDocument
+  verifyStartupDocument,
+  unlockUserAccount
 } from '../controllers/adminController.js';
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
@@ -52,6 +53,9 @@ router.patch('/departments/:id/verify', authenticate, authorizeRoles('ADMIN'), v
 
 // Update User Role (Admin only)
 router.patch('/users/:id/role', authenticate, authorizeRoles('ADMIN'), updateUserRole);
+
+// Unlock User Account (Admin only)
+router.patch('/users/:id/unlock', authenticate, authorizeRoles('ADMIN'), unlockUserAccount);
 
 // Provision / Invite User (Admin only)
 router.post('/users/provision', authenticate, authorizeRoles('ADMIN'), provisionUser);

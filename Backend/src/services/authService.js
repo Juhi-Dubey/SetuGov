@@ -463,7 +463,29 @@ export const login = async ({ email, password, ip_address = null }) => {
   });
 
   if (!user) {
+    await createAuditLog({
+      user_id: null,
+      action: 'LOGIN_FAILED',
+      entity_type: 'USER',
+      entity_id: null,
+      details: { reason: 'User not found' },
+      ip_address
+    });
     throw new UnauthorizedError('Invalid email or password.');
+  }
+
+  // Check if account is temporarily locked
+  const now = new Date();
+  if (user.locked_until && new Date(user.locked_until) > now) {
+    await createAuditLog({
+      user_id: user.id,
+      action: 'LOGIN_FAILED',
+      entity_type: 'USER',
+      entity_id: user.id,
+      details: { reason: 'Account locked' },
+      ip_address
+    });
+    throw new UnauthorizedError('Account temporarily locked due to multiple failed login attempts. Please try again later.');
   }
 
   // If user has an unaccepted invitation token pending
@@ -482,8 +504,54 @@ export const login = async ({ email, password, ip_address = null }) => {
 
   const isPasswordValid = await bcrypt.compare(password, user.password_hash);
   if (!isPasswordValid) {
+    // If lockout has already expired, reset attempt counter baseline to 1, else increment
+    const isLockoutExpired = user.locked_until && new Date(user.locked_until) <= now;
+    const nextAttempts = isLockoutExpired ? 1 : (user.failed_login_attempts || 0) + 1;
+    const isNowLocked = nextAttempts >= 3;
+    const lockedUntil = isNowLocked ? new Date(Date.now() + 15 * 60 * 1000) : null;
+
+    // Atomic DB update
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        failed_login_attempts: nextAttempts,
+        locked_until: lockedUntil,
+        last_failed_login_at: now
+      }
+    });
+
+    await createAuditLog({
+      user_id: user.id,
+      action: 'LOGIN_FAILED',
+      entity_type: 'USER',
+      entity_id: user.id,
+      details: { attempt: nextAttempts, is_locked: isNowLocked },
+      ip_address
+    });
+
+    if (isNowLocked) {
+      await createAuditLog({
+        user_id: user.id,
+        action: 'ACCOUNT_LOCKED',
+        entity_type: 'USER',
+        entity_id: user.id,
+        details: { failed_attempts: nextAttempts, locked_until: lockedUntil },
+        ip_address
+      });
+      throw new UnauthorizedError('Account temporarily locked due to multiple failed login attempts. Please try again later.');
+    }
+
     throw new UnauthorizedError('Invalid email or password.');
   }
+
+  // Successful login: reset failed_login_attempts and locked_until
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      failed_login_attempts: 0,
+      locked_until: null
+    }
+  });
 
   // Generate JWT
   const token = jwt.sign(
@@ -494,8 +562,19 @@ export const login = async ({ email, password, ip_address = null }) => {
 
   // Exclude password_hash from response
   const { password_hash, ...userProfile } = user;
+  userProfile.failed_login_attempts = 0;
+  userProfile.locked_until = null;
 
-  // Record audit log for login
+  // Record audit logs
+  await createAuditLog({
+    user_id: user.id,
+    action: 'LOGIN_SUCCESS',
+    entity_type: 'USER',
+    entity_id: user.id,
+    details: { role: user.role, email: user.email },
+    ip_address
+  });
+
   await createAuditLog({
     user_id: user.id,
     action: 'USER_LOGIN',

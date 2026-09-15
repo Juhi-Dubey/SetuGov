@@ -83,6 +83,11 @@ export default function EvaluatorApplyPage() {
     e.preventDefault();
     if (!validate()) return;
 
+    if (import.meta.env.VITE_TURNSTILE_SITE_KEY && !turnstileToken) {
+      setSubmitError("Please complete the bot verification before submitting.");
+      return;
+    }
+
     setLoading(true);
     setSubmitError("");
 
@@ -283,7 +288,7 @@ export default function EvaluatorApplyPage() {
                       value={formData.name}
                       onChange={handleChange}
                       placeholder="e.g. Dr. Anita Desai"
-                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 ${
+                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900 ${
                         errors.name
                           ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                           : "border-slate-200 focus:border-purple-500 focus:ring-purple-500/10 dark:border-slate-800"
@@ -307,7 +312,7 @@ export default function EvaluatorApplyPage() {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="expert@institution.edu or work email"
-                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 ${
+                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900 ${
                         errors.email
                           ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                           : "border-slate-200 focus:border-purple-500 focus:ring-purple-500/10 dark:border-slate-800"
@@ -330,7 +335,7 @@ export default function EvaluatorApplyPage() {
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="+91 98765 43210"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 dark:border-slate-800 dark:bg-slate-950"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900"
                     />
                   </div>
                 </div>
@@ -349,7 +354,7 @@ export default function EvaluatorApplyPage() {
                       value={formData.designation}
                       onChange={handleChange}
                       placeholder="e.g. Principal AI Scientist / Professor"
-                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 ${
+                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900 ${
                         errors.designation
                           ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                           : "border-slate-200 focus:border-purple-500 focus:ring-purple-500/10 dark:border-slate-800"
@@ -373,7 +378,7 @@ export default function EvaluatorApplyPage() {
                       value={formData.organization}
                       onChange={handleChange}
                       placeholder={formData.employment_type === "EMPLOYED" ? "e.g. IIT Bombay / Microsoft Research" : "Self-employed / Advisory"}
-                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 ${
+                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900 ${
                         errors.organization
                           ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                           : "border-slate-200 focus:border-purple-500 focus:ring-purple-500/10 dark:border-slate-800"
@@ -392,10 +397,10 @@ export default function EvaluatorApplyPage() {
                     name="domain_expertise"
                     value={formData.domain_expertise}
                     onChange={handleChange}
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 text-xs outline-none transition focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 dark:border-slate-800 dark:bg-slate-950"
+                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 text-xs text-slate-900 outline-none transition focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900"
                   >
                     {DOMAINS.map((d) => (
-                      <option key={d} value={d}>
+                      <option key={d} value={d} className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">
                         {d}
                       </option>
                     ))}
@@ -411,12 +416,12 @@ export default function EvaluatorApplyPage() {
                     name="years_experience"
                     value={formData.years_experience}
                     onChange={handleChange}
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 text-xs outline-none transition focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 dark:border-slate-800 dark:bg-slate-950"
+                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 text-xs text-slate-900 outline-none transition focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900"
                   >
-                    <option value="3-5 years">3 - 5 years</option>
-                    <option value="5-10 years">5 - 10 years</option>
-                    <option value="10-15 years">10 - 15 years</option>
-                    <option value="15+ years">15+ years (Senior Specialist)</option>
+                    <option value="3-5 years" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">3 - 5 years</option>
+                    <option value="5-10 years" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">5 - 10 years</option>
+                    <option value="10-15 years" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">10 - 15 years</option>
+                    <option value="15+ years" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">15+ years (Senior Specialist)</option>
                   </select>
                 </div>
 
@@ -433,7 +438,7 @@ export default function EvaluatorApplyPage() {
                       value={formData.supporting_document_url}
                       onChange={handleChange}
                       placeholder="https://linkedin.com/in/... or drive link"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 dark:border-slate-800 dark:bg-slate-950"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900"
                     />
                   </div>
                 </div>
@@ -451,7 +456,7 @@ export default function EvaluatorApplyPage() {
                   value={formData.bio}
                   onChange={handleChange}
                   placeholder="Summarize your key technical achievements, patents, research papers, or industry implementations..."
-                  className={`w-full rounded-xl border bg-slate-50/50 p-3 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 ${
+                  className={`w-full rounded-xl border bg-slate-50/50 p-3 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900 ${
                     errors.bio
                       ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                       : "border-slate-200 focus:border-purple-500 focus:ring-purple-500/10 dark:border-slate-800"
@@ -472,7 +477,7 @@ export default function EvaluatorApplyPage() {
                   value={formData.reason}
                   onChange={handleChange}
                   placeholder="Specify why you would like to participate in state procurement evaluation panels..."
-                  className={`w-full rounded-xl border bg-slate-50/50 p-3 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 ${
+                  className={`w-full rounded-xl border bg-slate-50/50 p-3 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900 ${
                     errors.reason
                       ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                       : "border-slate-200 focus:border-purple-500 focus:ring-purple-500/10 dark:border-slate-800"
@@ -483,9 +488,13 @@ export default function EvaluatorApplyPage() {
 
               {/* Cloudflare Turnstile Verification Widget */}
               <TurnstileWidget
+                action="evaluator_self_application"
                 onVerify={(token) => setTurnstileToken(token)}
                 onExpire={() => setTurnstileToken(null)}
-                onError={() => setTurnstileToken(null)}
+                onError={() => {
+                  setTurnstileToken(null);
+                  setSubmitError("Bot verification encountered an issue. Please try again.");
+                }}
                 resetTrigger={resetTurnstile}
               />
 

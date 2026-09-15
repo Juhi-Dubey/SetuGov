@@ -3,7 +3,12 @@ import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.
 import { validateTransition } from '../utils/lifecycle.js';
 import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
-import { sendNotification } from './notificationService.js';
+import {
+  sendNotification,
+  notifyPilotSelected,
+  notifyPilotStarted,
+  notifyPilotCompleted
+} from './notificationService.js';
 
 export const createPilot = async (data, user, ip_address = null) => {
   // 1. Verify challenge exists
@@ -99,20 +104,17 @@ export const createPilot = async (data, user, ip_address = null) => {
     ip_address
   });
 
-  // Notify the startup user
-  const startupUser = await prisma.startup.findUnique({
-    where: { id: data.startup_id },
-    select: { user_id: true }
+  // Notify the startup user with transactional email
+  await notifyPilotSelected({
+    pilotId: pilot.id,
+    challengeId: data.challenge_id,
+    startupId: data.startup_id,
+    challengeTitle: challenge.title,
+    startupName: pilot.startup?.company_name,
+    location: data.location,
+    startDate: data.start_date,
+    budget: data.budget
   });
-  if (startupUser?.user_id) {
-    await sendNotification({
-      user_id: startupUser.user_id,
-      title: 'Pilot Project Created',
-      message: `Pilot project for "${challenge.title}" has been created in PLANNED status.`,
-      type: 'PILOT_CREATED',
-      link: '/startup/pilots'
-    });
-  }
 
   return pilot;
 };
@@ -327,6 +329,10 @@ export const updatePilot = async (id, data, user, ip_address = null) => {
 export const startPilot = async (id, user, ip_address = null, options = {}) => {
   const pilot = await verifyPilotAccess(id, user, 'PILOT_LIFECYCLE');
 
+  if (pilot.status === 'RUNNING') {
+    throw new BadRequestError('Pilot project is already in RUNNING status.');
+  }
+
   validateTransition('PILOT', pilot.status, 'RUNNING');
 
   // Phase 4-11: Pilot Readiness Checklist Enforcement
@@ -365,21 +371,25 @@ export const startPilot = async (id, user, ip_address = null, options = {}) => {
     include: { challenge: true, startup: true }
   });
 
-  if (fullPilot?.startup?.user_id) {
-    await sendNotification({
-      user_id: fullPilot.startup.user_id,
-      title: 'Pilot Started',
-      message: `Pilot project for "${fullPilot.challenge?.title || 'Challenge'}" is now officially RUNNING.`,
-      type: 'PILOT_STARTED',
-      link: '/startup/pilots'
-    });
-  }
+  // Dispatch in-app notification and transactional email with duplicate protection
+  await notifyPilotStarted({
+    pilotId: id,
+    challengeId: fullPilot?.challenge_id,
+    startupId: fullPilot?.startup_id,
+    challengeTitle: fullPilot?.challenge?.title,
+    startupName: fullPilot?.startup?.company_name,
+    startDate: fullPilot?.start_date
+  });
 
   return updated;
 };
 
 export const completePilot = async (id, user, ip_address = null) => {
   const pilot = await verifyPilotAccess(id, user, 'PILOT_LIFECYCLE');
+
+  if (pilot.status === 'COMPLETED') {
+    throw new BadRequestError('Pilot project is already in COMPLETED status.');
+  }
 
   validateTransition('PILOT', pilot.status, 'COMPLETED');
 
@@ -395,6 +405,20 @@ export const completePilot = async (id, user, ip_address = null) => {
     entity_id: id,
     details: { previousStatus: pilot.status, newStatus: 'COMPLETED' },
     ip_address
+  });
+
+  const fullPilot = await prisma.pilot.findUnique({
+    where: { id },
+    include: { challenge: true, startup: true }
+  });
+
+  // Dispatch in-app notification and transactional email with duplicate protection
+  await notifyPilotCompleted({
+    pilotId: id,
+    challengeId: fullPilot?.challenge_id,
+    startupId: fullPilot?.startup_id,
+    challengeTitle: fullPilot?.challenge?.title,
+    startupName: fullPilot?.startup?.company_name
   });
 
   return updated;

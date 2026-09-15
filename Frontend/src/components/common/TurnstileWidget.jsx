@@ -5,10 +5,16 @@ import { useEffect, useRef } from "react";
  * Dynamically loads Turnstile if VITE_TURNSTILE_SITE_KEY is configured.
  * Safely renders nothing if VITE_TURNSTILE_SITE_KEY is not set (local dev mode).
  */
-export default function TurnstileWidget({ onVerify, onExpire, onError, resetTrigger }) {
+export default function TurnstileWidget({ action, onVerify, onExpire, onError, resetTrigger }) {
   const containerRef = useRef(null);
   const widgetIdRef = useRef(null);
   const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+
+  // Preserve callback references to prevent widget re-creation on parent keystrokes
+  const callbacksRef = useRef({ onVerify, onExpire, onError });
+  useEffect(() => {
+    callbacksRef.current = { onVerify, onExpire, onError };
+  });
 
   useEffect(() => {
     if (!siteKey || !containerRef.current) return;
@@ -19,21 +25,53 @@ export default function TurnstileWidget({ onVerify, onExpire, onError, resetTrig
       if (!window.turnstile || !containerRef.current) return;
       try {
         if (widgetIdRef.current !== null) {
-          window.turnstile.remove(widgetIdRef.current);
+          try {
+            window.turnstile.remove(widgetIdRef.current);
+          } catch {
+            // ignore removal error
+          }
+          widgetIdRef.current = null;
         }
-        widgetIdRef.current = window.turnstile.render(containerRef.current, {
+
+        const renderOptions = {
           sitekey: siteKey,
           theme: "auto",
           callback: (token) => {
-            if (isMounted && onVerify) onVerify(token);
+            if (isMounted && callbacksRef.current.onVerify) {
+              callbacksRef.current.onVerify(token);
+            }
           },
           "expired-callback": () => {
-            if (isMounted && onExpire) onExpire();
+            if (isMounted) {
+              if (callbacksRef.current.onExpire) callbacksRef.current.onExpire();
+              if (widgetIdRef.current !== null) {
+                try {
+                  window.turnstile.reset(widgetIdRef.current);
+                } catch {
+                  // ignore reset error
+                }
+              }
+            }
           },
           "error-callback": () => {
-            if (isMounted && onError) onError();
+            if (isMounted) {
+              if (callbacksRef.current.onError) callbacksRef.current.onError();
+              if (widgetIdRef.current !== null) {
+                try {
+                  window.turnstile.reset(widgetIdRef.current);
+                } catch {
+                  // ignore reset error
+                }
+              }
+            }
           },
-        });
+        };
+
+        if (action) {
+          renderOptions.action = action;
+        }
+
+        widgetIdRef.current = window.turnstile.render(containerRef.current, renderOptions);
       } catch (err) {
         console.warn("[TURNSTILE] Render error:", err);
       }
@@ -69,7 +107,7 @@ export default function TurnstileWidget({ onVerify, onExpire, onError, resetTrig
         }
       }
     };
-  }, [siteKey, onVerify, onExpire, onError]);
+  }, [siteKey, action]);
 
   // Reset widget when resetTrigger changes
   useEffect(() => {
@@ -88,7 +126,12 @@ export default function TurnstileWidget({ onVerify, onExpire, onError, resetTrig
 
   return (
     <div className="flex justify-center my-3">
-      <div ref={containerRef} className="cf-turnstile" />
+      <div
+        ref={containerRef}
+        className="cf-turnstile"
+        data-sitekey={siteKey}
+        data-action={action}
+      />
     </div>
   );
 }
