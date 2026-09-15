@@ -4349,6 +4349,7 @@ export namespace Prisma {
     initiated_procurements: number
     approved_procurements: number
     accepted_deliveries: number
+    reviewed_startups: number
     application_documents: number
     evaluator_applications: number
     reviewed_evaluator_apps: number
@@ -4378,6 +4379,7 @@ export namespace Prisma {
     initiated_procurements?: boolean | UserCountOutputTypeCountInitiated_procurementsArgs
     approved_procurements?: boolean | UserCountOutputTypeCountApproved_procurementsArgs
     accepted_deliveries?: boolean | UserCountOutputTypeCountAccepted_deliveriesArgs
+    reviewed_startups?: boolean | UserCountOutputTypeCountReviewed_startupsArgs
     application_documents?: boolean | UserCountOutputTypeCountApplication_documentsArgs
     evaluator_applications?: boolean | UserCountOutputTypeCountEvaluator_applicationsArgs
     reviewed_evaluator_apps?: boolean | UserCountOutputTypeCountReviewed_evaluator_appsArgs
@@ -4535,6 +4537,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountAccepted_deliveriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ProcurementRecordWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountReviewed_startupsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StartupWhereInput
   }
 
   /**
@@ -5090,8 +5099,18 @@ export namespace Prisma {
 
   export type AggregateUser = {
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
+  }
+
+  export type UserAvgAggregateOutputType = {
+    failed_login_attempts: number | null
+  }
+
+  export type UserSumAggregateOutputType = {
+    failed_login_attempts: number | null
   }
 
   export type UserMinAggregateOutputType = {
@@ -5113,6 +5132,9 @@ export namespace Prisma {
     email_verified_at: Date | null
     created_at: Date | null
     updated_at: Date | null
+    failed_login_attempts: number | null
+    locked_until: Date | null
+    last_failed_login_at: Date | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -5134,6 +5156,9 @@ export namespace Prisma {
     email_verified_at: Date | null
     created_at: Date | null
     updated_at: Date | null
+    failed_login_attempts: number | null
+    locked_until: Date | null
+    last_failed_login_at: Date | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -5155,9 +5180,20 @@ export namespace Prisma {
     email_verified_at: number
     created_at: number
     updated_at: number
+    failed_login_attempts: number
+    locked_until: number
+    last_failed_login_at: number
     _all: number
   }
 
+
+  export type UserAvgAggregateInputType = {
+    failed_login_attempts?: true
+  }
+
+  export type UserSumAggregateInputType = {
+    failed_login_attempts?: true
+  }
 
   export type UserMinAggregateInputType = {
     id?: true
@@ -5178,6 +5214,9 @@ export namespace Prisma {
     email_verified_at?: true
     created_at?: true
     updated_at?: true
+    failed_login_attempts?: true
+    locked_until?: true
+    last_failed_login_at?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -5199,6 +5238,9 @@ export namespace Prisma {
     email_verified_at?: true
     created_at?: true
     updated_at?: true
+    failed_login_attempts?: true
+    locked_until?: true
+    last_failed_login_at?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -5220,6 +5262,9 @@ export namespace Prisma {
     email_verified_at?: true
     created_at?: true
     updated_at?: true
+    failed_login_attempts?: true
+    locked_until?: true
+    last_failed_login_at?: true
     _all?: true
   }
 
@@ -5261,6 +5306,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: UserAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: UserMinAggregateInputType
@@ -5291,6 +5348,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: UserCountAggregateInputType | true
+    _avg?: UserAvgAggregateInputType
+    _sum?: UserSumAggregateInputType
     _min?: UserMinAggregateInputType
     _max?: UserMaxAggregateInputType
   }
@@ -5314,7 +5373,12 @@ export namespace Prisma {
     email_verified_at: Date | null
     created_at: Date
     updated_at: Date
+    failed_login_attempts: number
+    locked_until: Date | null
+    last_failed_login_at: Date | null
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
   }
@@ -5352,6 +5416,9 @@ export namespace Prisma {
     email_verified_at?: boolean
     created_at?: boolean
     updated_at?: boolean
+    failed_login_attempts?: boolean
+    locked_until?: boolean
+    last_failed_login_at?: boolean
     audit_logs?: boolean | User$audit_logsArgs<ExtArgs>
     created_challenges?: boolean | User$created_challengesArgs<ExtArgs>
     evaluations?: boolean | User$evaluationsArgs<ExtArgs>
@@ -5374,6 +5441,7 @@ export namespace Prisma {
     initiated_procurements?: boolean | User$initiated_procurementsArgs<ExtArgs>
     approved_procurements?: boolean | User$approved_procurementsArgs<ExtArgs>
     accepted_deliveries?: boolean | User$accepted_deliveriesArgs<ExtArgs>
+    reviewed_startups?: boolean | User$reviewed_startupsArgs<ExtArgs>
     application_documents?: boolean | User$application_documentsArgs<ExtArgs>
     evaluator_applications?: boolean | User$evaluator_applicationsArgs<ExtArgs>
     reviewed_evaluator_apps?: boolean | User$reviewed_evaluator_appsArgs<ExtArgs>
@@ -5402,6 +5470,9 @@ export namespace Prisma {
     email_verified_at?: boolean
     created_at?: boolean
     updated_at?: boolean
+    failed_login_attempts?: boolean
+    locked_until?: boolean
+    last_failed_login_at?: boolean
     department?: boolean | User$departmentArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -5424,6 +5495,9 @@ export namespace Prisma {
     email_verified_at?: boolean
     created_at?: boolean
     updated_at?: boolean
+    failed_login_attempts?: boolean
+    locked_until?: boolean
+    last_failed_login_at?: boolean
     department?: boolean | User$departmentArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -5446,9 +5520,12 @@ export namespace Prisma {
     email_verified_at?: boolean
     created_at?: boolean
     updated_at?: boolean
+    failed_login_attempts?: boolean
+    locked_until?: boolean
+    last_failed_login_at?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "password_hash" | "role" | "department_id" | "is_active" | "is_verified" | "designation" | "phone" | "invitation_token_hash" | "invitation_expires_at" | "invitation_accepted_at" | "email_verification_token_hash" | "email_verification_expires_at" | "email_verified_at" | "created_at" | "updated_at", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "password_hash" | "role" | "department_id" | "is_active" | "is_verified" | "designation" | "phone" | "invitation_token_hash" | "invitation_expires_at" | "invitation_accepted_at" | "email_verification_token_hash" | "email_verification_expires_at" | "email_verified_at" | "created_at" | "updated_at" | "failed_login_attempts" | "locked_until" | "last_failed_login_at", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     audit_logs?: boolean | User$audit_logsArgs<ExtArgs>
     created_challenges?: boolean | User$created_challengesArgs<ExtArgs>
@@ -5472,6 +5549,7 @@ export namespace Prisma {
     initiated_procurements?: boolean | User$initiated_procurementsArgs<ExtArgs>
     approved_procurements?: boolean | User$approved_procurementsArgs<ExtArgs>
     accepted_deliveries?: boolean | User$accepted_deliveriesArgs<ExtArgs>
+    reviewed_startups?: boolean | User$reviewed_startupsArgs<ExtArgs>
     application_documents?: boolean | User$application_documentsArgs<ExtArgs>
     evaluator_applications?: boolean | User$evaluator_applicationsArgs<ExtArgs>
     reviewed_evaluator_apps?: boolean | User$reviewed_evaluator_appsArgs<ExtArgs>
@@ -5512,6 +5590,7 @@ export namespace Prisma {
       initiated_procurements: Prisma.$ProcurementRecordPayload<ExtArgs>[]
       approved_procurements: Prisma.$ProcurementRecordPayload<ExtArgs>[]
       accepted_deliveries: Prisma.$ProcurementRecordPayload<ExtArgs>[]
+      reviewed_startups: Prisma.$StartupPayload<ExtArgs>[]
       application_documents: Prisma.$ApplicationDocumentPayload<ExtArgs>[]
       evaluator_applications: Prisma.$EvaluatorApplicationPayload<ExtArgs>[]
       reviewed_evaluator_apps: Prisma.$EvaluatorApplicationPayload<ExtArgs>[]
@@ -5538,6 +5617,9 @@ export namespace Prisma {
       email_verified_at: Date | null
       created_at: Date
       updated_at: Date
+      failed_login_attempts: number
+      locked_until: Date | null
+      last_failed_login_at: Date | null
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -5954,6 +6036,7 @@ export namespace Prisma {
     initiated_procurements<T extends User$initiated_procurementsArgs<ExtArgs> = {}>(args?: Subset<T, User$initiated_procurementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProcurementRecordPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     approved_procurements<T extends User$approved_procurementsArgs<ExtArgs> = {}>(args?: Subset<T, User$approved_procurementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProcurementRecordPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     accepted_deliveries<T extends User$accepted_deliveriesArgs<ExtArgs> = {}>(args?: Subset<T, User$accepted_deliveriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProcurementRecordPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
+    reviewed_startups<T extends User$reviewed_startupsArgs<ExtArgs> = {}>(args?: Subset<T, User$reviewed_startupsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StartupPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     application_documents<T extends User$application_documentsArgs<ExtArgs> = {}>(args?: Subset<T, User$application_documentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ApplicationDocumentPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     evaluator_applications<T extends User$evaluator_applicationsArgs<ExtArgs> = {}>(args?: Subset<T, User$evaluator_applicationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EvaluatorApplicationPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     reviewed_evaluator_apps<T extends User$reviewed_evaluator_appsArgs<ExtArgs> = {}>(args?: Subset<T, User$reviewed_evaluator_appsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EvaluatorApplicationPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
@@ -6007,6 +6090,9 @@ export namespace Prisma {
     readonly email_verified_at: FieldRef<"User", 'DateTime'>
     readonly created_at: FieldRef<"User", 'DateTime'>
     readonly updated_at: FieldRef<"User", 'DateTime'>
+    readonly failed_login_attempts: FieldRef<"User", 'Int'>
+    readonly locked_until: FieldRef<"User", 'DateTime'>
+    readonly last_failed_login_at: FieldRef<"User", 'DateTime'>
   }
     
 
@@ -6918,6 +7004,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ProcurementRecordScalarFieldEnum | ProcurementRecordScalarFieldEnum[]
+  }
+
+  /**
+   * User.reviewed_startups
+   */
+  export type User$reviewed_startupsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Startup
+     */
+    select?: StartupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Startup
+     */
+    omit?: StartupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StartupInclude<ExtArgs> | null
+    where?: StartupWhereInput
+    orderBy?: StartupOrderByWithRelationInput | StartupOrderByWithRelationInput[]
+    cursor?: StartupWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: StartupScalarFieldEnum | StartupScalarFieldEnum[]
   }
 
   /**
@@ -11137,6 +11247,8 @@ export namespace Prisma {
     submitted_at: Date | null
     verified_at: Date | null
     verified_by: string | null
+    reviewed_at: Date | null
+    reviewed_by: string | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -11179,6 +11291,8 @@ export namespace Prisma {
     submitted_at: Date | null
     verified_at: Date | null
     verified_by: string | null
+    reviewed_at: Date | null
+    reviewed_by: string | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -11222,6 +11336,8 @@ export namespace Prisma {
     submitted_at: number
     verified_at: number
     verified_by: number
+    reviewed_at: number
+    reviewed_by: number
     created_at: number
     updated_at: number
     _all: number
@@ -11278,6 +11394,8 @@ export namespace Prisma {
     submitted_at?: true
     verified_at?: true
     verified_by?: true
+    reviewed_at?: true
+    reviewed_by?: true
     created_at?: true
     updated_at?: true
   }
@@ -11320,6 +11438,8 @@ export namespace Prisma {
     submitted_at?: true
     verified_at?: true
     verified_by?: true
+    reviewed_at?: true
+    reviewed_by?: true
     created_at?: true
     updated_at?: true
   }
@@ -11363,6 +11483,8 @@ export namespace Prisma {
     submitted_at?: true
     verified_at?: true
     verified_by?: true
+    reviewed_at?: true
+    reviewed_by?: true
     created_at?: true
     updated_at?: true
     _all?: true
@@ -11493,6 +11615,8 @@ export namespace Prisma {
     submitted_at: Date | null
     verified_at: Date | null
     verified_by: string | null
+    reviewed_at: Date | null
+    reviewed_by: string | null
     created_at: Date
     updated_at: Date
     _count: StartupCountAggregateOutputType | null
@@ -11555,6 +11679,8 @@ export namespace Prisma {
     submitted_at?: boolean
     verified_at?: boolean
     verified_by?: boolean
+    reviewed_at?: boolean
+    reviewed_by?: boolean
     created_at?: boolean
     updated_at?: boolean
     applications?: boolean | Startup$applicationsArgs<ExtArgs>
@@ -11565,6 +11691,7 @@ export namespace Prisma {
     procurements?: boolean | Startup$procurementsArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
     verifier?: boolean | Startup$verifierArgs<ExtArgs>
+    reviewer?: boolean | Startup$reviewerArgs<ExtArgs>
     _count?: boolean | StartupCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["startup"]>
 
@@ -11607,10 +11734,13 @@ export namespace Prisma {
     submitted_at?: boolean
     verified_at?: boolean
     verified_by?: boolean
+    reviewed_at?: boolean
+    reviewed_by?: boolean
     created_at?: boolean
     updated_at?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     verifier?: boolean | Startup$verifierArgs<ExtArgs>
+    reviewer?: boolean | Startup$reviewerArgs<ExtArgs>
   }, ExtArgs["result"]["startup"]>
 
   export type StartupSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -11652,10 +11782,13 @@ export namespace Prisma {
     submitted_at?: boolean
     verified_at?: boolean
     verified_by?: boolean
+    reviewed_at?: boolean
+    reviewed_by?: boolean
     created_at?: boolean
     updated_at?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     verifier?: boolean | Startup$verifierArgs<ExtArgs>
+    reviewer?: boolean | Startup$reviewerArgs<ExtArgs>
   }, ExtArgs["result"]["startup"]>
 
   export type StartupSelectScalar = {
@@ -11697,11 +11830,13 @@ export namespace Prisma {
     submitted_at?: boolean
     verified_at?: boolean
     verified_by?: boolean
+    reviewed_at?: boolean
+    reviewed_by?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
 
-  export type StartupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "user_id" | "company_name" | "description" | "domain" | "technologies" | "readiness_level" | "years_experience" | "previous_deployments" | "verification_status" | "org_type" | "registered_address" | "city" | "state" | "pincode" | "official_email" | "official_website" | "authorized_person_name" | "authorized_person_designation" | "authorized_person_email" | "authorized_person_phone" | "authorization_type" | "pan_number" | "cin_number" | "gstin" | "dpiit_number" | "certificate_number" | "registration_number" | "incorporation_date" | "verification_source" | "products_services" | "location" | "verification_notes" | "correction_notes" | "rejection_reason" | "submitted_at" | "verified_at" | "verified_by" | "created_at" | "updated_at", ExtArgs["result"]["startup"]>
+  export type StartupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "user_id" | "company_name" | "description" | "domain" | "technologies" | "readiness_level" | "years_experience" | "previous_deployments" | "verification_status" | "org_type" | "registered_address" | "city" | "state" | "pincode" | "official_email" | "official_website" | "authorized_person_name" | "authorized_person_designation" | "authorized_person_email" | "authorized_person_phone" | "authorization_type" | "pan_number" | "cin_number" | "gstin" | "dpiit_number" | "certificate_number" | "registration_number" | "incorporation_date" | "verification_source" | "products_services" | "location" | "verification_notes" | "correction_notes" | "rejection_reason" | "submitted_at" | "verified_at" | "verified_by" | "reviewed_at" | "reviewed_by" | "created_at" | "updated_at", ExtArgs["result"]["startup"]>
   export type StartupInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     applications?: boolean | Startup$applicationsArgs<ExtArgs>
     match_scores?: boolean | Startup$match_scoresArgs<ExtArgs>
@@ -11711,15 +11846,18 @@ export namespace Prisma {
     procurements?: boolean | Startup$procurementsArgs<ExtArgs>
     user?: boolean | UserDefaultArgs<ExtArgs>
     verifier?: boolean | Startup$verifierArgs<ExtArgs>
+    reviewer?: boolean | Startup$reviewerArgs<ExtArgs>
     _count?: boolean | StartupCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type StartupIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     verifier?: boolean | Startup$verifierArgs<ExtArgs>
+    reviewer?: boolean | Startup$reviewerArgs<ExtArgs>
   }
   export type StartupIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     verifier?: boolean | Startup$verifierArgs<ExtArgs>
+    reviewer?: boolean | Startup$reviewerArgs<ExtArgs>
   }
 
   export type $StartupPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -11733,6 +11871,7 @@ export namespace Prisma {
       procurements: Prisma.$ProcurementRecordPayload<ExtArgs>[]
       user: Prisma.$UserPayload<ExtArgs>
       verifier: Prisma.$UserPayload<ExtArgs> | null
+      reviewer: Prisma.$UserPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -11773,6 +11912,8 @@ export namespace Prisma {
       submitted_at: Date | null
       verified_at: Date | null
       verified_by: string | null
+      reviewed_at: Date | null
+      reviewed_by: string | null
       created_at: Date
       updated_at: Date
     }, ExtArgs["result"]["startup"]>
@@ -12177,6 +12318,7 @@ export namespace Prisma {
     procurements<T extends Startup$procurementsArgs<ExtArgs> = {}>(args?: Subset<T, Startup$procurementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProcurementRecordPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | Null, Null, ExtArgs, ClientOptions>
     verifier<T extends Startup$verifierArgs<ExtArgs> = {}>(args?: Subset<T, Startup$verifierArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | null, null, ExtArgs, ClientOptions>
+    reviewer<T extends Startup$reviewerArgs<ExtArgs> = {}>(args?: Subset<T, Startup$reviewerArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | null, null, ExtArgs, ClientOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -12244,6 +12386,8 @@ export namespace Prisma {
     readonly submitted_at: FieldRef<"Startup", 'DateTime'>
     readonly verified_at: FieldRef<"Startup", 'DateTime'>
     readonly verified_by: FieldRef<"Startup", 'String'>
+    readonly reviewed_at: FieldRef<"Startup", 'DateTime'>
+    readonly reviewed_by: FieldRef<"Startup", 'String'>
     readonly created_at: FieldRef<"Startup", 'DateTime'>
     readonly updated_at: FieldRef<"Startup", 'DateTime'>
   }
@@ -12784,6 +12928,25 @@ export namespace Prisma {
    * Startup.verifier
    */
   export type Startup$verifierArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * Startup.reviewer
+   */
+  export type Startup$reviewerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
      * Select specific fields to fetch from the User
      */
@@ -50147,7 +50310,10 @@ export namespace Prisma {
     email_verification_expires_at: 'email_verification_expires_at',
     email_verified_at: 'email_verified_at',
     created_at: 'created_at',
-    updated_at: 'updated_at'
+    updated_at: 'updated_at',
+    failed_login_attempts: 'failed_login_attempts',
+    locked_until: 'locked_until',
+    last_failed_login_at: 'last_failed_login_at'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -50257,6 +50423,8 @@ export namespace Prisma {
     submitted_at: 'submitted_at',
     verified_at: 'verified_at',
     verified_by: 'verified_by',
+    reviewed_at: 'reviewed_at',
+    reviewed_by: 'reviewed_by',
     created_at: 'created_at',
     updated_at: 'updated_at'
   };
@@ -50936,6 +51104,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Int'
+   */
+  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int[]'
+   */
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
    * Reference to a field of type 'StartupVerificationStatus'
    */
   export type EnumStartupVerificationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StartupVerificationStatus'>
@@ -50960,20 +51142,6 @@ export namespace Prisma {
    * Reference to a field of type 'Decimal[]'
    */
   export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Int'
-   */
-  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-  /**
-   * Reference to a field of type 'Int[]'
-   */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 
@@ -51254,6 +51422,9 @@ export namespace Prisma {
     email_verified_at?: DateTimeNullableFilter<"User"> | Date | string | null
     created_at?: DateTimeFilter<"User"> | Date | string
     updated_at?: DateTimeFilter<"User"> | Date | string
+    failed_login_attempts?: IntFilter<"User"> | number
+    locked_until?: DateTimeNullableFilter<"User"> | Date | string | null
+    last_failed_login_at?: DateTimeNullableFilter<"User"> | Date | string | null
     audit_logs?: AuditLogListRelationFilter
     created_challenges?: ChallengeListRelationFilter
     evaluations?: EvaluationListRelationFilter
@@ -51276,6 +51447,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordListRelationFilter
     approved_procurements?: ProcurementRecordListRelationFilter
     accepted_deliveries?: ProcurementRecordListRelationFilter
+    reviewed_startups?: StartupListRelationFilter
     application_documents?: ApplicationDocumentListRelationFilter
     evaluator_applications?: EvaluatorApplicationListRelationFilter
     reviewed_evaluator_apps?: EvaluatorApplicationListRelationFilter
@@ -51303,6 +51475,9 @@ export namespace Prisma {
     email_verified_at?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
+    failed_login_attempts?: SortOrder
+    locked_until?: SortOrderInput | SortOrder
+    last_failed_login_at?: SortOrderInput | SortOrder
     audit_logs?: AuditLogOrderByRelationAggregateInput
     created_challenges?: ChallengeOrderByRelationAggregateInput
     evaluations?: EvaluationOrderByRelationAggregateInput
@@ -51325,6 +51500,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordOrderByRelationAggregateInput
     approved_procurements?: ProcurementRecordOrderByRelationAggregateInput
     accepted_deliveries?: ProcurementRecordOrderByRelationAggregateInput
+    reviewed_startups?: StartupOrderByRelationAggregateInput
     application_documents?: ApplicationDocumentOrderByRelationAggregateInput
     evaluator_applications?: EvaluatorApplicationOrderByRelationAggregateInput
     reviewed_evaluator_apps?: EvaluatorApplicationOrderByRelationAggregateInput
@@ -51355,6 +51531,9 @@ export namespace Prisma {
     email_verified_at?: DateTimeNullableFilter<"User"> | Date | string | null
     created_at?: DateTimeFilter<"User"> | Date | string
     updated_at?: DateTimeFilter<"User"> | Date | string
+    failed_login_attempts?: IntFilter<"User"> | number
+    locked_until?: DateTimeNullableFilter<"User"> | Date | string | null
+    last_failed_login_at?: DateTimeNullableFilter<"User"> | Date | string | null
     audit_logs?: AuditLogListRelationFilter
     created_challenges?: ChallengeListRelationFilter
     evaluations?: EvaluationListRelationFilter
@@ -51377,6 +51556,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordListRelationFilter
     approved_procurements?: ProcurementRecordListRelationFilter
     accepted_deliveries?: ProcurementRecordListRelationFilter
+    reviewed_startups?: StartupListRelationFilter
     application_documents?: ApplicationDocumentListRelationFilter
     evaluator_applications?: EvaluatorApplicationListRelationFilter
     reviewed_evaluator_apps?: EvaluatorApplicationListRelationFilter
@@ -51404,9 +51584,14 @@ export namespace Prisma {
     email_verified_at?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
+    failed_login_attempts?: SortOrder
+    locked_until?: SortOrderInput | SortOrder
+    last_failed_login_at?: SortOrderInput | SortOrder
     _count?: UserCountOrderByAggregateInput
+    _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
+    _sum?: UserSumOrderByAggregateInput
   }
 
   export type UserScalarWhereWithAggregatesInput = {
@@ -51431,6 +51616,9 @@ export namespace Prisma {
     email_verified_at?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     created_at?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    failed_login_attempts?: IntWithAggregatesFilter<"User"> | number
+    locked_until?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    last_failed_login_at?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   }
 
   export type DepartmentWhereInput = {
@@ -51841,6 +52029,8 @@ export namespace Prisma {
     submitted_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
     verified_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
     verified_by?: StringNullableFilter<"Startup"> | string | null
+    reviewed_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
+    reviewed_by?: StringNullableFilter<"Startup"> | string | null
     created_at?: DateTimeFilter<"Startup"> | Date | string
     updated_at?: DateTimeFilter<"Startup"> | Date | string
     applications?: ApplicationListRelationFilter
@@ -51851,6 +52041,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordListRelationFilter
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     verifier?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    reviewer?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }
 
   export type StartupOrderByWithRelationInput = {
@@ -51892,6 +52083,8 @@ export namespace Prisma {
     submitted_at?: SortOrderInput | SortOrder
     verified_at?: SortOrderInput | SortOrder
     verified_by?: SortOrderInput | SortOrder
+    reviewed_at?: SortOrderInput | SortOrder
+    reviewed_by?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     applications?: ApplicationOrderByRelationAggregateInput
@@ -51902,6 +52095,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordOrderByRelationAggregateInput
     user?: UserOrderByWithRelationInput
     verifier?: UserOrderByWithRelationInput
+    reviewer?: UserOrderByWithRelationInput
   }
 
   export type StartupWhereUniqueInput = Prisma.AtLeast<{
@@ -51946,6 +52140,8 @@ export namespace Prisma {
     submitted_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
     verified_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
     verified_by?: StringNullableFilter<"Startup"> | string | null
+    reviewed_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
+    reviewed_by?: StringNullableFilter<"Startup"> | string | null
     created_at?: DateTimeFilter<"Startup"> | Date | string
     updated_at?: DateTimeFilter<"Startup"> | Date | string
     applications?: ApplicationListRelationFilter
@@ -51956,6 +52152,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordListRelationFilter
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     verifier?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    reviewer?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }, "id">
 
   export type StartupOrderByWithAggregationInput = {
@@ -51997,6 +52194,8 @@ export namespace Prisma {
     submitted_at?: SortOrderInput | SortOrder
     verified_at?: SortOrderInput | SortOrder
     verified_by?: SortOrderInput | SortOrder
+    reviewed_at?: SortOrderInput | SortOrder
+    reviewed_by?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     _count?: StartupCountOrderByAggregateInput
@@ -52048,6 +52247,8 @@ export namespace Prisma {
     submitted_at?: DateTimeNullableWithAggregatesFilter<"Startup"> | Date | string | null
     verified_at?: DateTimeNullableWithAggregatesFilter<"Startup"> | Date | string | null
     verified_by?: StringNullableWithAggregatesFilter<"Startup"> | string | null
+    reviewed_at?: DateTimeNullableWithAggregatesFilter<"Startup"> | Date | string | null
+    reviewed_by?: StringNullableWithAggregatesFilter<"Startup"> | string | null
     created_at?: DateTimeWithAggregatesFilter<"Startup"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"Startup"> | Date | string
   }
@@ -55102,6 +55303,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -55124,6 +55328,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -55151,6 +55356,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -55172,6 +55380,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -55198,6 +55407,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -55220,6 +55432,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -55247,6 +55460,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -55268,6 +55484,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -55295,6 +55512,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
   }
 
   export type UserUpdateManyMutationInput = {
@@ -55315,6 +55535,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -55336,6 +55559,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type DepartmentCreateInput = {
@@ -55807,6 +56033,7 @@ export namespace Prisma {
     rejection_reason?: string | null
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
+    reviewed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
@@ -55817,6 +56044,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
+    reviewer?: UserCreateNestedOneWithoutReviewed_startupsInput
   }
 
   export type StartupUncheckedCreateInput = {
@@ -55858,6 +56086,8 @@ export namespace Prisma {
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
+    reviewed_at?: Date | string | null
+    reviewed_by?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
@@ -55905,6 +56135,7 @@ export namespace Prisma {
     rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
@@ -55915,6 +56146,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
+    reviewer?: UserUpdateOneWithoutReviewed_startupsNestedInput
   }
 
   export type StartupUncheckedUpdateInput = {
@@ -55956,6 +56188,8 @@ export namespace Prisma {
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_by?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
@@ -56005,6 +56239,8 @@ export namespace Prisma {
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
+    reviewed_at?: Date | string | null
+    reviewed_by?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -56046,6 +56282,7 @@ export namespace Prisma {
     rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -56089,6 +56326,8 @@ export namespace Prisma {
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_by?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -59515,6 +59754,17 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
   export type AuditLogListRelationFilter = {
     every?: AuditLogWhereInput
     some?: AuditLogWhereInput
@@ -59739,6 +59989,13 @@ export namespace Prisma {
     email_verified_at?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
+    failed_login_attempts?: SortOrder
+    locked_until?: SortOrder
+    last_failed_login_at?: SortOrder
+  }
+
+  export type UserAvgOrderByAggregateInput = {
+    failed_login_attempts?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -59760,6 +60017,9 @@ export namespace Prisma {
     email_verified_at?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
+    failed_login_attempts?: SortOrder
+    locked_until?: SortOrder
+    last_failed_login_at?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -59781,6 +60041,13 @@ export namespace Prisma {
     email_verified_at?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
+    failed_login_attempts?: SortOrder
+    locked_until?: SortOrder
+    last_failed_login_at?: SortOrder
+  }
+
+  export type UserSumOrderByAggregateInput = {
+    failed_login_attempts?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -59865,6 +60132,22 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
   export type EnumStartupVerificationStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.StartupVerificationStatus | EnumStartupVerificationStatusFieldRefInput<$PrismaModel>
     in?: $Enums.StartupVerificationStatus[] | ListEnumStartupVerificationStatusFieldRefInput<$PrismaModel>
@@ -59946,17 +60229,6 @@ export namespace Prisma {
     gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
     not?: NestedDecimalFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string
-  }
-
-  export type IntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
   }
 
   export type StringNullableListFilter<$PrismaModel = never> = {
@@ -60119,22 +60391,6 @@ export namespace Prisma {
     _sum?: NestedDecimalFilter<$PrismaModel>
     _min?: NestedDecimalFilter<$PrismaModel>
     _max?: NestedDecimalFilter<$PrismaModel>
-  }
-
-  export type IntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
   }
 
   export type EnumChallengeStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -60312,6 +60568,8 @@ export namespace Prisma {
     submitted_at?: SortOrder
     verified_at?: SortOrder
     verified_by?: SortOrder
+    reviewed_at?: SortOrder
+    reviewed_by?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -60360,6 +60618,8 @@ export namespace Prisma {
     submitted_at?: SortOrder
     verified_at?: SortOrder
     verified_by?: SortOrder
+    reviewed_at?: SortOrder
+    reviewed_by?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -60402,6 +60662,8 @@ export namespace Prisma {
     submitted_at?: SortOrder
     verified_at?: SortOrder
     verified_by?: SortOrder
+    reviewed_at?: SortOrder
+    reviewed_by?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -62712,6 +62974,13 @@ export namespace Prisma {
     connect?: ProcurementRecordWhereUniqueInput | ProcurementRecordWhereUniqueInput[]
   }
 
+  export type StartupCreateNestedManyWithoutReviewerInput = {
+    create?: XOR<StartupCreateWithoutReviewerInput, StartupUncheckedCreateWithoutReviewerInput> | StartupCreateWithoutReviewerInput[] | StartupUncheckedCreateWithoutReviewerInput[]
+    connectOrCreate?: StartupCreateOrConnectWithoutReviewerInput | StartupCreateOrConnectWithoutReviewerInput[]
+    createMany?: StartupCreateManyReviewerInputEnvelope
+    connect?: StartupWhereUniqueInput | StartupWhereUniqueInput[]
+  }
+
   export type ApplicationDocumentCreateNestedManyWithoutUploaderInput = {
     create?: XOR<ApplicationDocumentCreateWithoutUploaderInput, ApplicationDocumentUncheckedCreateWithoutUploaderInput> | ApplicationDocumentCreateWithoutUploaderInput[] | ApplicationDocumentUncheckedCreateWithoutUploaderInput[]
     connectOrCreate?: ApplicationDocumentCreateOrConnectWithoutUploaderInput | ApplicationDocumentCreateOrConnectWithoutUploaderInput[]
@@ -62900,6 +63169,13 @@ export namespace Prisma {
     connect?: ProcurementRecordWhereUniqueInput | ProcurementRecordWhereUniqueInput[]
   }
 
+  export type StartupUncheckedCreateNestedManyWithoutReviewerInput = {
+    create?: XOR<StartupCreateWithoutReviewerInput, StartupUncheckedCreateWithoutReviewerInput> | StartupCreateWithoutReviewerInput[] | StartupUncheckedCreateWithoutReviewerInput[]
+    connectOrCreate?: StartupCreateOrConnectWithoutReviewerInput | StartupCreateOrConnectWithoutReviewerInput[]
+    createMany?: StartupCreateManyReviewerInputEnvelope
+    connect?: StartupWhereUniqueInput | StartupWhereUniqueInput[]
+  }
+
   export type ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput = {
     create?: XOR<ApplicationDocumentCreateWithoutUploaderInput, ApplicationDocumentUncheckedCreateWithoutUploaderInput> | ApplicationDocumentCreateWithoutUploaderInput[] | ApplicationDocumentUncheckedCreateWithoutUploaderInput[]
     connectOrCreate?: ApplicationDocumentCreateOrConnectWithoutUploaderInput | ApplicationDocumentCreateOrConnectWithoutUploaderInput[]
@@ -62964,6 +63240,14 @@ export namespace Prisma {
 
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
+  }
+
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
   }
 
   export type AuditLogUpdateManyWithoutUserNestedInput = {
@@ -63264,6 +63548,20 @@ export namespace Prisma {
     update?: ProcurementRecordUpdateWithWhereUniqueWithoutAcceptorInput | ProcurementRecordUpdateWithWhereUniqueWithoutAcceptorInput[]
     updateMany?: ProcurementRecordUpdateManyWithWhereWithoutAcceptorInput | ProcurementRecordUpdateManyWithWhereWithoutAcceptorInput[]
     deleteMany?: ProcurementRecordScalarWhereInput | ProcurementRecordScalarWhereInput[]
+  }
+
+  export type StartupUpdateManyWithoutReviewerNestedInput = {
+    create?: XOR<StartupCreateWithoutReviewerInput, StartupUncheckedCreateWithoutReviewerInput> | StartupCreateWithoutReviewerInput[] | StartupUncheckedCreateWithoutReviewerInput[]
+    connectOrCreate?: StartupCreateOrConnectWithoutReviewerInput | StartupCreateOrConnectWithoutReviewerInput[]
+    upsert?: StartupUpsertWithWhereUniqueWithoutReviewerInput | StartupUpsertWithWhereUniqueWithoutReviewerInput[]
+    createMany?: StartupCreateManyReviewerInputEnvelope
+    set?: StartupWhereUniqueInput | StartupWhereUniqueInput[]
+    disconnect?: StartupWhereUniqueInput | StartupWhereUniqueInput[]
+    delete?: StartupWhereUniqueInput | StartupWhereUniqueInput[]
+    connect?: StartupWhereUniqueInput | StartupWhereUniqueInput[]
+    update?: StartupUpdateWithWhereUniqueWithoutReviewerInput | StartupUpdateWithWhereUniqueWithoutReviewerInput[]
+    updateMany?: StartupUpdateManyWithWhereWithoutReviewerInput | StartupUpdateManyWithWhereWithoutReviewerInput[]
+    deleteMany?: StartupScalarWhereInput | StartupScalarWhereInput[]
   }
 
   export type ApplicationDocumentUpdateManyWithoutUploaderNestedInput = {
@@ -63638,6 +63936,20 @@ export namespace Prisma {
     update?: ProcurementRecordUpdateWithWhereUniqueWithoutAcceptorInput | ProcurementRecordUpdateWithWhereUniqueWithoutAcceptorInput[]
     updateMany?: ProcurementRecordUpdateManyWithWhereWithoutAcceptorInput | ProcurementRecordUpdateManyWithWhereWithoutAcceptorInput[]
     deleteMany?: ProcurementRecordScalarWhereInput | ProcurementRecordScalarWhereInput[]
+  }
+
+  export type StartupUncheckedUpdateManyWithoutReviewerNestedInput = {
+    create?: XOR<StartupCreateWithoutReviewerInput, StartupUncheckedCreateWithoutReviewerInput> | StartupCreateWithoutReviewerInput[] | StartupUncheckedCreateWithoutReviewerInput[]
+    connectOrCreate?: StartupCreateOrConnectWithoutReviewerInput | StartupCreateOrConnectWithoutReviewerInput[]
+    upsert?: StartupUpsertWithWhereUniqueWithoutReviewerInput | StartupUpsertWithWhereUniqueWithoutReviewerInput[]
+    createMany?: StartupCreateManyReviewerInputEnvelope
+    set?: StartupWhereUniqueInput | StartupWhereUniqueInput[]
+    disconnect?: StartupWhereUniqueInput | StartupWhereUniqueInput[]
+    delete?: StartupWhereUniqueInput | StartupWhereUniqueInput[]
+    connect?: StartupWhereUniqueInput | StartupWhereUniqueInput[]
+    update?: StartupUpdateWithWhereUniqueWithoutReviewerInput | StartupUpdateWithWhereUniqueWithoutReviewerInput[]
+    updateMany?: StartupUpdateManyWithWhereWithoutReviewerInput | StartupUpdateManyWithWhereWithoutReviewerInput[]
+    deleteMany?: StartupScalarWhereInput | StartupScalarWhereInput[]
   }
 
   export type ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput = {
@@ -64018,14 +64330,6 @@ export namespace Prisma {
     divide?: Decimal | DecimalJsLike | number | string
   }
 
-  export type IntFieldUpdateOperationsInput = {
-    set?: number
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
-  }
-
   export type ChallengeUpdaterequired_technologiesInput = {
     set?: string[]
     push?: string | string[]
@@ -64340,6 +64644,12 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
+  export type UserCreateNestedOneWithoutReviewed_startupsInput = {
+    create?: XOR<UserCreateWithoutReviewed_startupsInput, UserUncheckedCreateWithoutReviewed_startupsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReviewed_startupsInput
+    connect?: UserWhereUniqueInput
+  }
+
   export type ApplicationUncheckedCreateNestedManyWithoutStartupInput = {
     create?: XOR<ApplicationCreateWithoutStartupInput, ApplicationUncheckedCreateWithoutStartupInput> | ApplicationCreateWithoutStartupInput[] | ApplicationUncheckedCreateWithoutStartupInput[]
     connectOrCreate?: ApplicationCreateOrConnectWithoutStartupInput | ApplicationCreateOrConnectWithoutStartupInput[]
@@ -64490,6 +64800,16 @@ export namespace Prisma {
     delete?: UserWhereInput | boolean
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutVerified_startupsInput, UserUpdateWithoutVerified_startupsInput>, UserUncheckedUpdateWithoutVerified_startupsInput>
+  }
+
+  export type UserUpdateOneWithoutReviewed_startupsNestedInput = {
+    create?: XOR<UserCreateWithoutReviewed_startupsInput, UserUncheckedCreateWithoutReviewed_startupsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReviewed_startupsInput
+    upsert?: UserUpsertWithoutReviewed_startupsInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReviewed_startupsInput, UserUpdateWithoutReviewed_startupsInput>, UserUncheckedUpdateWithoutReviewed_startupsInput>
   }
 
   export type ApplicationUncheckedUpdateManyWithoutStartupNestedInput = {
@@ -66492,6 +66812,17 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type NestedIntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -66507,17 +66838,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
     _max?: NestedStringFilter<$PrismaModel>
-  }
-
-  export type NestedIntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
   }
 
   export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
@@ -66594,6 +66914,33 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type NestedFloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
   export type NestedEnumStartupVerificationStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.StartupVerificationStatus | EnumStartupVerificationStatusFieldRefInput<$PrismaModel>
     in?: $Enums.StartupVerificationStatus[] | ListEnumStartupVerificationStatusFieldRefInput<$PrismaModel>
@@ -66643,33 +66990,6 @@ export namespace Prisma {
     _sum?: NestedDecimalFilter<$PrismaModel>
     _min?: NestedDecimalFilter<$PrismaModel>
     _max?: NestedDecimalFilter<$PrismaModel>
-  }
-
-  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
-  }
-
-  export type NestedFloatFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatFilter<$PrismaModel> | number
   }
 
   export type NestedEnumChallengeStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -67390,6 +67710,7 @@ export namespace Prisma {
     rejection_reason?: string | null
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
+    reviewed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
@@ -67399,6 +67720,7 @@ export namespace Prisma {
     bank_details?: StartupBankDetailsCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
+    reviewer?: UserCreateNestedOneWithoutReviewed_startupsInput
   }
 
   export type StartupUncheckedCreateWithoutUserInput = {
@@ -67439,6 +67761,8 @@ export namespace Prisma {
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
+    reviewed_at?: Date | string | null
+    reviewed_by?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
@@ -67640,6 +67964,7 @@ export namespace Prisma {
     rejection_reason?: string | null
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
+    reviewed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
@@ -67649,6 +67974,7 @@ export namespace Prisma {
     bank_details?: StartupBankDetailsCreateNestedOneWithoutStartupInput
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
+    reviewer?: UserCreateNestedOneWithoutReviewed_startupsInput
   }
 
   export type StartupUncheckedCreateWithoutVerifierInput = {
@@ -67689,6 +68015,8 @@ export namespace Prisma {
     rejection_reason?: string | null
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
+    reviewed_at?: Date | string | null
+    reviewed_by?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
@@ -68287,6 +68615,116 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type StartupCreateWithoutReviewerInput = {
+    id?: string
+    company_name: string
+    description: string
+    domain: string
+    technologies?: StartupCreatetechnologiesInput | string[]
+    readiness_level?: number
+    years_experience?: number
+    previous_deployments?: number
+    verification_status?: $Enums.StartupVerificationStatus
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
+    cin_number?: string | null
+    gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
+    reviewed_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    applications?: ApplicationCreateNestedManyWithoutStartupInput
+    match_scores?: MatchScoreCreateNestedManyWithoutStartupInput
+    pilots?: PilotCreateNestedManyWithoutStartupInput
+    documents?: StartupDocumentCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsCreateNestedOneWithoutStartupInput
+    procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
+    user: UserCreateNestedOneWithoutStartupsInput
+    verifier?: UserCreateNestedOneWithoutVerified_startupsInput
+  }
+
+  export type StartupUncheckedCreateWithoutReviewerInput = {
+    id?: string
+    user_id: string
+    company_name: string
+    description: string
+    domain: string
+    technologies?: StartupCreatetechnologiesInput | string[]
+    readiness_level?: number
+    years_experience?: number
+    previous_deployments?: number
+    verification_status?: $Enums.StartupVerificationStatus
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
+    cin_number?: string | null
+    gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
+    verified_by?: string | null
+    reviewed_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
+    match_scores?: MatchScoreUncheckedCreateNestedManyWithoutStartupInput
+    pilots?: PilotUncheckedCreateNestedManyWithoutStartupInput
+    documents?: StartupDocumentUncheckedCreateNestedManyWithoutStartupInput
+    bank_details?: StartupBankDetailsUncheckedCreateNestedOneWithoutStartupInput
+    procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutStartupInput
+  }
+
+  export type StartupCreateOrConnectWithoutReviewerInput = {
+    where: StartupWhereUniqueInput
+    create: XOR<StartupCreateWithoutReviewerInput, StartupUncheckedCreateWithoutReviewerInput>
+  }
+
+  export type StartupCreateManyReviewerInputEnvelope = {
+    data: StartupCreateManyReviewerInput | StartupCreateManyReviewerInput[]
+    skipDuplicates?: boolean
+  }
+
   export type ApplicationDocumentCreateWithoutUploaderInput = {
     id?: string
     original_filename: string
@@ -68791,6 +69229,8 @@ export namespace Prisma {
     submitted_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
     verified_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
     verified_by?: StringNullableFilter<"Startup"> | string | null
+    reviewed_at?: DateTimeNullableFilter<"Startup"> | Date | string | null
+    reviewed_by?: StringNullableFilter<"Startup"> | string | null
     created_at?: DateTimeFilter<"Startup"> | Date | string
     updated_at?: DateTimeFilter<"Startup"> | Date | string
   }
@@ -69240,6 +69680,22 @@ export namespace Prisma {
     data: XOR<ProcurementRecordUpdateManyMutationInput, ProcurementRecordUncheckedUpdateManyWithoutAcceptorInput>
   }
 
+  export type StartupUpsertWithWhereUniqueWithoutReviewerInput = {
+    where: StartupWhereUniqueInput
+    update: XOR<StartupUpdateWithoutReviewerInput, StartupUncheckedUpdateWithoutReviewerInput>
+    create: XOR<StartupCreateWithoutReviewerInput, StartupUncheckedCreateWithoutReviewerInput>
+  }
+
+  export type StartupUpdateWithWhereUniqueWithoutReviewerInput = {
+    where: StartupWhereUniqueInput
+    data: XOR<StartupUpdateWithoutReviewerInput, StartupUncheckedUpdateWithoutReviewerInput>
+  }
+
+  export type StartupUpdateManyWithWhereWithoutReviewerInput = {
+    where: StartupScalarWhereInput
+    data: XOR<StartupUpdateManyMutationInput, StartupUncheckedUpdateManyWithoutReviewerInput>
+  }
+
   export type ApplicationDocumentUpsertWithWhereUniqueWithoutUploaderInput = {
     where: ApplicationDocumentWhereUniqueInput
     update: XOR<ApplicationDocumentUpdateWithoutUploaderInput, ApplicationDocumentUncheckedUpdateWithoutUploaderInput>
@@ -69497,6 +69953,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -69518,6 +69977,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -69544,6 +70004,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -69565,6 +70028,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -69803,6 +70267,9 @@ export namespace Prisma {
     email_verified_at?: DateTimeNullableFilter<"User"> | Date | string | null
     created_at?: DateTimeFilter<"User"> | Date | string
     updated_at?: DateTimeFilter<"User"> | Date | string
+    failed_login_attempts?: IntFilter<"User"> | number
+    locked_until?: DateTimeNullableFilter<"User"> | Date | string | null
+    last_failed_login_at?: DateTimeNullableFilter<"User"> | Date | string | null
   }
 
   export type AccessRequestUpsertWithWhereUniqueWithoutDepartmentInput = {
@@ -69903,6 +70370,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
     uploaded_evidence?: EvidenceCreateNestedManyWithoutUploaderInput
@@ -69924,6 +70394,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -69951,6 +70422,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
     uploaded_evidence?: EvidenceUncheckedCreateNestedManyWithoutUploaderInput
@@ -69971,6 +70445,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -70400,6 +70875,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
     uploaded_evidence?: EvidenceUpdateManyWithoutUploaderNestedInput
@@ -70421,6 +70899,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -70448,6 +70927,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
     uploaded_evidence?: EvidenceUncheckedUpdateManyWithoutUploaderNestedInput
@@ -70468,6 +70950,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -70768,6 +71251,7 @@ export namespace Prisma {
     rejection_reason?: string | null
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
+    reviewed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
@@ -70777,6 +71261,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
+    reviewer?: UserCreateNestedOneWithoutReviewed_startupsInput
   }
 
   export type StartupUncheckedCreateWithoutMatch_scoresInput = {
@@ -70818,6 +71303,8 @@ export namespace Prisma {
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
+    reviewed_at?: Date | string | null
+    reviewed_by?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
@@ -70957,6 +71444,7 @@ export namespace Prisma {
     rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
@@ -70966,6 +71454,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
+    reviewer?: UserUpdateOneWithoutReviewed_startupsNestedInput
   }
 
   export type StartupUncheckedUpdateWithoutMatch_scoresInput = {
@@ -71007,6 +71496,8 @@ export namespace Prisma {
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_by?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
@@ -71359,6 +71850,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -71380,6 +71874,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -71407,6 +71902,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -71427,6 +71925,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -71458,6 +71957,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -71479,6 +71981,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -71506,6 +72009,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -71526,6 +72032,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -71537,6 +72044,113 @@ export namespace Prisma {
   export type UserCreateOrConnectWithoutVerified_startupsInput = {
     where: UserWhereUniqueInput
     create: XOR<UserCreateWithoutVerified_startupsInput, UserUncheckedCreateWithoutVerified_startupsInput>
+  }
+
+  export type UserCreateWithoutReviewed_startupsInput = {
+    id?: string
+    name: string
+    email: string
+    password_hash: string
+    role: $Enums.UserRole
+    is_active?: boolean
+    is_verified?: boolean
+    designation?: string | null
+    phone?: string | null
+    invitation_token_hash?: string | null
+    invitation_expires_at?: Date | string | null
+    invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
+    audit_logs?: AuditLogCreateNestedManyWithoutUserInput
+    created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
+    evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
+    uploaded_evidence?: EvidenceCreateNestedManyWithoutUploaderInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    approved_decisions?: ScaleDecisionCreateNestedManyWithoutApproverInput
+    verified_documents?: StartupDocumentCreateNestedManyWithoutVerifierInput
+    startups?: StartupCreateNestedManyWithoutUserInput
+    department?: DepartmentCreateNestedOneWithoutUsersInput
+    validations?: ValidationCreateNestedManyWithoutValidatorInput
+    evaluator_profile?: EvaluatorProfileCreateNestedOneWithoutUserInput
+    conflict_declarations?: ConflictDeclarationCreateNestedManyWithoutEvaluatorInput
+    verified_startups?: StartupCreateNestedManyWithoutVerifierInput
+    verified_evaluators?: EvaluatorProfileCreateNestedManyWithoutVerifierInput
+    verified_compliance?: ComplianceItemCreateNestedManyWithoutVerifierInput
+    reviewed_access_requests?: AccessRequestCreateNestedManyWithoutReviewerInput
+    nominated_access_requests?: AccessRequestCreateNestedManyWithoutNominatorInput
+    evaluator_assignments?: EvaluatorAssignmentCreateNestedManyWithoutEvaluatorInput
+    created_evaluator_assignments?: EvaluatorAssignmentCreateNestedManyWithoutAssignerInput
+    initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
+    approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
+    accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
+    evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
+    reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
+    evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
+    added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
+    evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+  }
+
+  export type UserUncheckedCreateWithoutReviewed_startupsInput = {
+    id?: string
+    name: string
+    email: string
+    password_hash: string
+    role: $Enums.UserRole
+    department_id?: string | null
+    is_active?: boolean
+    is_verified?: boolean
+    designation?: string | null
+    phone?: string | null
+    invitation_token_hash?: string | null
+    invitation_expires_at?: Date | string | null
+    invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
+    audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
+    evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
+    uploaded_evidence?: EvidenceUncheckedCreateNestedManyWithoutUploaderInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    approved_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutApproverInput
+    verified_documents?: StartupDocumentUncheckedCreateNestedManyWithoutVerifierInput
+    startups?: StartupUncheckedCreateNestedManyWithoutUserInput
+    validations?: ValidationUncheckedCreateNestedManyWithoutValidatorInput
+    evaluator_profile?: EvaluatorProfileUncheckedCreateNestedOneWithoutUserInput
+    conflict_declarations?: ConflictDeclarationUncheckedCreateNestedManyWithoutEvaluatorInput
+    verified_startups?: StartupUncheckedCreateNestedManyWithoutVerifierInput
+    verified_evaluators?: EvaluatorProfileUncheckedCreateNestedManyWithoutVerifierInput
+    verified_compliance?: ComplianceItemUncheckedCreateNestedManyWithoutVerifierInput
+    reviewed_access_requests?: AccessRequestUncheckedCreateNestedManyWithoutReviewerInput
+    nominated_access_requests?: AccessRequestUncheckedCreateNestedManyWithoutNominatorInput
+    evaluator_assignments?: EvaluatorAssignmentUncheckedCreateNestedManyWithoutEvaluatorInput
+    created_evaluator_assignments?: EvaluatorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+    initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
+    approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
+    accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
+    reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
+    evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
+    added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
+    evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+  }
+
+  export type UserCreateOrConnectWithoutReviewed_startupsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutReviewed_startupsInput, UserUncheckedCreateWithoutReviewed_startupsInput>
   }
 
   export type ApplicationUpsertWithWhereUniqueWithoutStartupInput = {
@@ -71683,6 +72297,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -71704,6 +72321,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -71731,6 +72349,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -71751,6 +72372,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -71788,6 +72410,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -71809,6 +72434,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -71836,6 +72462,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -71847,6 +72476,120 @@ export namespace Prisma {
     validations?: ValidationUncheckedUpdateManyWithoutValidatorNestedInput
     evaluator_profile?: EvaluatorProfileUncheckedUpdateOneWithoutUserNestedInput
     conflict_declarations?: ConflictDeclarationUncheckedUpdateManyWithoutEvaluatorNestedInput
+    verified_evaluators?: EvaluatorProfileUncheckedUpdateManyWithoutVerifierNestedInput
+    verified_compliance?: ComplianceItemUncheckedUpdateManyWithoutVerifierNestedInput
+    reviewed_access_requests?: AccessRequestUncheckedUpdateManyWithoutReviewerNestedInput
+    nominated_access_requests?: AccessRequestUncheckedUpdateManyWithoutNominatorNestedInput
+    evaluator_assignments?: EvaluatorAssignmentUncheckedUpdateManyWithoutEvaluatorNestedInput
+    created_evaluator_assignments?: EvaluatorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+    initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
+    approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
+    accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
+    application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
+    reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
+    evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
+    added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
+    evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+  }
+
+  export type UserUpsertWithoutReviewed_startupsInput = {
+    update: XOR<UserUpdateWithoutReviewed_startupsInput, UserUncheckedUpdateWithoutReviewed_startupsInput>
+    create: XOR<UserCreateWithoutReviewed_startupsInput, UserUncheckedCreateWithoutReviewed_startupsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutReviewed_startupsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutReviewed_startupsInput, UserUncheckedUpdateWithoutReviewed_startupsInput>
+  }
+
+  export type UserUpdateWithoutReviewed_startupsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    is_verified?: BoolFieldUpdateOperationsInput | boolean
+    designation?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
+    created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
+    evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
+    uploaded_evidence?: EvidenceUpdateManyWithoutUploaderNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    approved_decisions?: ScaleDecisionUpdateManyWithoutApproverNestedInput
+    verified_documents?: StartupDocumentUpdateManyWithoutVerifierNestedInput
+    startups?: StartupUpdateManyWithoutUserNestedInput
+    department?: DepartmentUpdateOneWithoutUsersNestedInput
+    validations?: ValidationUpdateManyWithoutValidatorNestedInput
+    evaluator_profile?: EvaluatorProfileUpdateOneWithoutUserNestedInput
+    conflict_declarations?: ConflictDeclarationUpdateManyWithoutEvaluatorNestedInput
+    verified_startups?: StartupUpdateManyWithoutVerifierNestedInput
+    verified_evaluators?: EvaluatorProfileUpdateManyWithoutVerifierNestedInput
+    verified_compliance?: ComplianceItemUpdateManyWithoutVerifierNestedInput
+    reviewed_access_requests?: AccessRequestUpdateManyWithoutReviewerNestedInput
+    nominated_access_requests?: AccessRequestUpdateManyWithoutNominatorNestedInput
+    evaluator_assignments?: EvaluatorAssignmentUpdateManyWithoutEvaluatorNestedInput
+    created_evaluator_assignments?: EvaluatorAssignmentUpdateManyWithoutAssignerNestedInput
+    initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
+    approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
+    accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
+    evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
+    reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
+    evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
+    added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
+    evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutReviewed_startupsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    department_id?: NullableStringFieldUpdateOperationsInput | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    is_verified?: BoolFieldUpdateOperationsInput | boolean
+    designation?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
+    evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
+    uploaded_evidence?: EvidenceUncheckedUpdateManyWithoutUploaderNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    approved_decisions?: ScaleDecisionUncheckedUpdateManyWithoutApproverNestedInput
+    verified_documents?: StartupDocumentUncheckedUpdateManyWithoutVerifierNestedInput
+    startups?: StartupUncheckedUpdateManyWithoutUserNestedInput
+    validations?: ValidationUncheckedUpdateManyWithoutValidatorNestedInput
+    evaluator_profile?: EvaluatorProfileUncheckedUpdateOneWithoutUserNestedInput
+    conflict_declarations?: ConflictDeclarationUncheckedUpdateManyWithoutEvaluatorNestedInput
+    verified_startups?: StartupUncheckedUpdateManyWithoutVerifierNestedInput
     verified_evaluators?: EvaluatorProfileUncheckedUpdateManyWithoutVerifierNestedInput
     verified_compliance?: ComplianceItemUncheckedUpdateManyWithoutVerifierNestedInput
     reviewed_access_requests?: AccessRequestUncheckedUpdateManyWithoutReviewerNestedInput
@@ -71901,6 +72644,7 @@ export namespace Prisma {
     rejection_reason?: string | null
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
+    reviewed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
@@ -71910,6 +72654,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
+    reviewer?: UserCreateNestedOneWithoutReviewed_startupsInput
   }
 
   export type StartupUncheckedCreateWithoutBank_detailsInput = {
@@ -71951,6 +72696,8 @@ export namespace Prisma {
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
+    reviewed_at?: Date | string | null
+    reviewed_by?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
@@ -72013,6 +72760,7 @@ export namespace Prisma {
     rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
@@ -72022,6 +72770,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
+    reviewer?: UserUpdateOneWithoutReviewed_startupsNestedInput
   }
 
   export type StartupUncheckedUpdateWithoutBank_detailsInput = {
@@ -72063,6 +72812,8 @@ export namespace Prisma {
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_by?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
@@ -72109,6 +72860,7 @@ export namespace Prisma {
     rejection_reason?: string | null
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
+    reviewed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
@@ -72118,6 +72870,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
+    reviewer?: UserCreateNestedOneWithoutReviewed_startupsInput
   }
 
   export type StartupUncheckedCreateWithoutDocumentsInput = {
@@ -72159,6 +72912,8 @@ export namespace Prisma {
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
+    reviewed_at?: Date | string | null
+    reviewed_by?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
@@ -72191,6 +72946,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -72212,6 +72970,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -72239,6 +72998,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -72259,6 +73021,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -72320,6 +73083,7 @@ export namespace Prisma {
     rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
@@ -72329,6 +73093,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
+    reviewer?: UserUpdateOneWithoutReviewed_startupsNestedInput
   }
 
   export type StartupUncheckedUpdateWithoutDocumentsInput = {
@@ -72370,6 +73135,8 @@ export namespace Prisma {
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_by?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
@@ -72408,6 +73175,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -72429,6 +73199,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -72456,6 +73227,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -72476,6 +73250,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -72592,6 +73367,7 @@ export namespace Prisma {
     rejection_reason?: string | null
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
+    reviewed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     match_scores?: MatchScoreCreateNestedManyWithoutStartupInput
@@ -72601,6 +73377,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
+    reviewer?: UserCreateNestedOneWithoutReviewed_startupsInput
   }
 
   export type StartupUncheckedCreateWithoutApplicationsInput = {
@@ -72642,6 +73419,8 @@ export namespace Prisma {
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
+    reviewed_at?: Date | string | null
+    reviewed_by?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     match_scores?: MatchScoreUncheckedCreateNestedManyWithoutStartupInput
@@ -72968,6 +73747,7 @@ export namespace Prisma {
     rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     match_scores?: MatchScoreUpdateManyWithoutStartupNestedInput
@@ -72977,6 +73757,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
+    reviewer?: UserUpdateOneWithoutReviewed_startupsNestedInput
   }
 
   export type StartupUncheckedUpdateWithoutApplicationsInput = {
@@ -73018,6 +73799,8 @@ export namespace Prisma {
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_by?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     match_scores?: MatchScoreUncheckedUpdateManyWithoutStartupNestedInput
@@ -73158,6 +73941,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -73179,6 +73965,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -73206,6 +73993,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -73226,6 +74016,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -73257,6 +74048,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -73278,6 +74072,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -73305,6 +74100,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -73325,6 +74123,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -73367,6 +74166,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -73388,6 +74190,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -73415,6 +74218,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -73435,6 +74241,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -73472,6 +74279,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -73493,6 +74303,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -73520,6 +74331,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -73540,6 +74354,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -73609,6 +74424,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -73630,6 +74448,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -73657,6 +74476,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -73677,6 +74499,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -73768,6 +74591,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -73789,6 +74615,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -73816,6 +74643,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -73836,6 +74666,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -73905,6 +74736,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     uploaded_evidence?: EvidenceCreateNestedManyWithoutUploaderInput
@@ -73926,6 +74760,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -73953,6 +74788,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     uploaded_evidence?: EvidenceUncheckedCreateNestedManyWithoutUploaderInput
@@ -73973,6 +74811,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -74064,6 +74903,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     uploaded_evidence?: EvidenceUpdateManyWithoutUploaderNestedInput
@@ -74085,6 +74927,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -74112,6 +74955,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     uploaded_evidence?: EvidenceUncheckedUpdateManyWithoutUploaderNestedInput
@@ -74132,6 +74978,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -74201,6 +75048,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -74223,6 +75073,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
@@ -74249,6 +75100,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -74270,6 +75124,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -74360,6 +75215,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -74382,6 +75240,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
@@ -74408,6 +75267,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -74429,6 +75291,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -74617,6 +75480,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -74639,6 +75505,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -74665,6 +75532,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -74686,6 +75556,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -74804,6 +75675,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -74826,6 +75700,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -74852,6 +75727,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -74873,6 +75751,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -74969,6 +75848,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -74991,6 +75873,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
@@ -75017,6 +75900,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -75038,6 +75924,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -75068,6 +75955,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -75090,6 +75980,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
@@ -75116,6 +76007,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -75137,6 +76031,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -75255,6 +76150,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -75277,6 +76175,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
@@ -75303,6 +76202,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -75324,6 +76226,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -75360,6 +76263,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -75382,6 +76288,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
@@ -75408,6 +76315,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -75429,6 +76339,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -75525,6 +76436,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -75547,6 +76461,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -75573,6 +76488,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -75594,6 +76512,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -75624,6 +76543,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -75646,6 +76568,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -75672,6 +76595,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -75693,6 +76619,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -75811,6 +76738,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -75833,6 +76763,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -75859,6 +76790,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -75880,6 +76814,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -75916,6 +76851,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -75938,6 +76876,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -75964,6 +76903,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -75985,6 +76927,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -76352,6 +77295,7 @@ export namespace Prisma {
     rejection_reason?: string | null
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
+    reviewed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
@@ -76361,6 +77305,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordCreateNestedManyWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
+    reviewer?: UserCreateNestedOneWithoutReviewed_startupsInput
   }
 
   export type StartupUncheckedCreateWithoutPilotsInput = {
@@ -76402,6 +77347,8 @@ export namespace Prisma {
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
+    reviewed_at?: Date | string | null
+    reviewed_by?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
@@ -76979,6 +77926,7 @@ export namespace Prisma {
     rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
@@ -76988,6 +77936,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
+    reviewer?: UserUpdateOneWithoutReviewed_startupsNestedInput
   }
 
   export type StartupUncheckedUpdateWithoutPilotsInput = {
@@ -77029,6 +77978,8 @@ export namespace Prisma {
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_by?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
@@ -77944,6 +78895,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -77965,6 +78919,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -77992,6 +78947,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -78012,6 +78970,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -78172,6 +79131,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -78193,6 +79155,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -78220,6 +79183,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -78240,6 +79206,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -78623,6 +79590,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -78644,6 +79614,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -78671,6 +79642,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -78691,6 +79665,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -78808,6 +79783,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -78829,6 +79807,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -78856,6 +79835,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -78876,6 +79858,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -79310,6 +80293,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -79331,6 +80317,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -79358,6 +80345,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -79378,6 +80368,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -79489,6 +80480,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -79510,6 +80504,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -79537,6 +80532,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -79557,6 +80555,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -79727,6 +80726,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -79748,6 +80750,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -79775,6 +80778,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -79795,6 +80801,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -79912,6 +80919,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -79933,6 +80943,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -79960,6 +80971,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -79980,6 +80994,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -80150,6 +81165,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -80171,6 +81189,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -80198,6 +81217,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -80218,6 +81240,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -80260,6 +81283,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -80281,6 +81307,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -80308,6 +81335,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -80328,6 +81358,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -80354,6 +81385,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
     uploaded_evidence?: EvidenceCreateNestedManyWithoutUploaderInput
@@ -80375,6 +81409,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -80402,6 +81437,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
     uploaded_evidence?: EvidenceUncheckedCreateNestedManyWithoutUploaderInput
@@ -80422,6 +81460,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -80464,6 +81503,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
     uploaded_evidence?: EvidenceUpdateManyWithoutUploaderNestedInput
@@ -80485,6 +81527,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -80512,6 +81555,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
     uploaded_evidence?: EvidenceUncheckedUpdateManyWithoutUploaderNestedInput
@@ -80532,6 +81578,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -80599,6 +81646,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -80620,6 +81670,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -80647,6 +81698,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -80667,6 +81721,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -80698,6 +81753,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -80719,6 +81777,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -80746,6 +81805,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -80766,6 +81828,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -80855,6 +81918,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -80876,6 +81942,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -80903,6 +81970,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -80923,6 +81993,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -80960,6 +82031,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -80981,6 +82055,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -81008,6 +82083,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -81028,6 +82106,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -81097,6 +82176,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -81118,6 +82200,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -81145,6 +82228,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -81165,6 +82251,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -81196,6 +82283,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -81217,6 +82307,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -81244,6 +82335,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -81264,6 +82358,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -81355,6 +82450,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -81376,6 +82474,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -81403,6 +82502,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -81423,6 +82525,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -81460,6 +82563,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -81481,6 +82587,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -81508,6 +82615,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -81528,6 +82638,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -81713,6 +82824,7 @@ export namespace Prisma {
     rejection_reason?: string | null
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
+    reviewed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutStartupInput
@@ -81722,6 +82834,7 @@ export namespace Prisma {
     bank_details?: StartupBankDetailsCreateNestedOneWithoutStartupInput
     user: UserCreateNestedOneWithoutStartupsInput
     verifier?: UserCreateNestedOneWithoutVerified_startupsInput
+    reviewer?: UserCreateNestedOneWithoutReviewed_startupsInput
   }
 
   export type StartupUncheckedCreateWithoutProcurementsInput = {
@@ -81763,6 +82876,8 @@ export namespace Prisma {
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
+    reviewed_at?: Date | string | null
+    reviewed_by?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutStartupInput
@@ -81836,6 +82951,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -81857,6 +82975,7 @@ export namespace Prisma {
     created_evaluator_assignments?: EvaluatorAssignmentCreateNestedManyWithoutAssignerInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -81884,6 +83003,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -81904,6 +83026,7 @@ export namespace Prisma {
     created_evaluator_assignments?: EvaluatorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -81935,6 +83058,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -81956,6 +83082,7 @@ export namespace Prisma {
     created_evaluator_assignments?: EvaluatorAssignmentCreateNestedManyWithoutAssignerInput
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -81983,6 +83110,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -82003,6 +83133,7 @@ export namespace Prisma {
     created_evaluator_assignments?: EvaluatorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -82034,6 +83165,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
@@ -82055,6 +83189,7 @@ export namespace Prisma {
     created_evaluator_assignments?: EvaluatorAssignmentCreateNestedManyWithoutAssignerInput
     initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
@@ -82082,6 +83217,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
     audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
     evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
@@ -82102,6 +83240,7 @@ export namespace Prisma {
     created_evaluator_assignments?: EvaluatorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
     initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
     approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
     application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
@@ -82355,6 +83494,7 @@ export namespace Prisma {
     rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
@@ -82364,6 +83504,7 @@ export namespace Prisma {
     bank_details?: StartupBankDetailsUpdateOneWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
+    reviewer?: UserUpdateOneWithoutReviewed_startupsNestedInput
   }
 
   export type StartupUncheckedUpdateWithoutProcurementsInput = {
@@ -82405,6 +83546,8 @@ export namespace Prisma {
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_by?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
@@ -82490,6 +83633,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -82511,6 +83657,7 @@ export namespace Prisma {
     created_evaluator_assignments?: EvaluatorAssignmentUpdateManyWithoutAssignerNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -82538,6 +83685,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -82558,6 +83708,7 @@ export namespace Prisma {
     created_evaluator_assignments?: EvaluatorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -82595,6 +83746,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -82616,6 +83770,7 @@ export namespace Prisma {
     created_evaluator_assignments?: EvaluatorAssignmentUpdateManyWithoutAssignerNestedInput
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -82643,6 +83798,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -82663,6 +83821,7 @@ export namespace Prisma {
     created_evaluator_assignments?: EvaluatorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -82700,6 +83859,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -82721,6 +83883,7 @@ export namespace Prisma {
     created_evaluator_assignments?: EvaluatorAssignmentUpdateManyWithoutAssignerNestedInput
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -82748,6 +83911,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -82768,6 +83934,7 @@ export namespace Prisma {
     created_evaluator_assignments?: EvaluatorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -82930,6 +84097,8 @@ export namespace Prisma {
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
     verified_by?: string | null
+    reviewed_at?: Date | string | null
+    reviewed_by?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -82996,6 +84165,8 @@ export namespace Prisma {
     rejection_reason?: string | null
     submitted_at?: Date | string | null
     verified_at?: Date | string | null
+    reviewed_at?: Date | string | null
+    reviewed_by?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -83237,6 +84408,50 @@ export namespace Prisma {
     acceptance_status?: $Enums.AcceptanceStatus
     accepted_at?: Date | string | null
     acceptance_remarks?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type StartupCreateManyReviewerInput = {
+    id?: string
+    user_id: string
+    company_name: string
+    description: string
+    domain: string
+    technologies?: StartupCreatetechnologiesInput | string[]
+    readiness_level?: number
+    years_experience?: number
+    previous_deployments?: number
+    verification_status?: $Enums.StartupVerificationStatus
+    org_type?: $Enums.StartupOrgType
+    registered_address?: string | null
+    city?: string | null
+    state?: string | null
+    pincode?: string | null
+    official_email?: string | null
+    official_website?: string | null
+    authorized_person_name?: string | null
+    authorized_person_designation?: string | null
+    authorized_person_email?: string | null
+    authorized_person_phone?: string | null
+    authorization_type?: string | null
+    pan_number?: string | null
+    cin_number?: string | null
+    gstin?: string | null
+    dpiit_number?: string | null
+    certificate_number?: string | null
+    registration_number?: string | null
+    incorporation_date?: Date | string | null
+    verification_source?: $Enums.VerificationSource
+    products_services?: string | null
+    location: string
+    verification_notes?: string | null
+    correction_notes?: string | null
+    rejection_reason?: string | null
+    submitted_at?: Date | string | null
+    verified_at?: Date | string | null
+    verified_by?: string | null
+    reviewed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -83665,6 +84880,7 @@ export namespace Prisma {
     rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
@@ -83674,6 +84890,7 @@ export namespace Prisma {
     bank_details?: StartupBankDetailsUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
+    reviewer?: UserUpdateOneWithoutReviewed_startupsNestedInput
   }
 
   export type StartupUncheckedUpdateWithoutUserInput = {
@@ -83714,6 +84931,8 @@ export namespace Prisma {
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_by?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
@@ -83762,6 +84981,8 @@ export namespace Prisma {
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_by?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_by?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -83875,6 +85096,7 @@ export namespace Prisma {
     rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutStartupNestedInput
@@ -83884,6 +85106,7 @@ export namespace Prisma {
     bank_details?: StartupBankDetailsUpdateOneWithoutStartupNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
     user?: UserUpdateOneRequiredWithoutStartupsNestedInput
+    reviewer?: UserUpdateOneWithoutReviewed_startupsNestedInput
   }
 
   export type StartupUncheckedUpdateWithoutVerifierInput = {
@@ -83924,6 +85147,8 @@ export namespace Prisma {
     rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_by?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
@@ -83972,6 +85197,8 @@ export namespace Prisma {
     rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
     submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_by?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -84705,6 +85932,150 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type StartupUpdateWithoutReviewerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    company_name?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    domain?: StringFieldUpdateOperationsInput | string
+    technologies?: StartupUpdatetechnologiesInput | string[]
+    readiness_level?: IntFieldUpdateOperationsInput | number
+    years_experience?: IntFieldUpdateOperationsInput | number
+    previous_deployments?: IntFieldUpdateOperationsInput | number
+    verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
+    cin_number?: NullableStringFieldUpdateOperationsInput | string | null
+    gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    applications?: ApplicationUpdateManyWithoutStartupNestedInput
+    match_scores?: MatchScoreUpdateManyWithoutStartupNestedInput
+    pilots?: PilotUpdateManyWithoutStartupNestedInput
+    documents?: StartupDocumentUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUpdateOneWithoutStartupNestedInput
+    procurements?: ProcurementRecordUpdateManyWithoutStartupNestedInput
+    user?: UserUpdateOneRequiredWithoutStartupsNestedInput
+    verifier?: UserUpdateOneWithoutVerified_startupsNestedInput
+  }
+
+  export type StartupUncheckedUpdateWithoutReviewerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: StringFieldUpdateOperationsInput | string
+    company_name?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    domain?: StringFieldUpdateOperationsInput | string
+    technologies?: StartupUpdatetechnologiesInput | string[]
+    readiness_level?: IntFieldUpdateOperationsInput | number
+    years_experience?: IntFieldUpdateOperationsInput | number
+    previous_deployments?: IntFieldUpdateOperationsInput | number
+    verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
+    cin_number?: NullableStringFieldUpdateOperationsInput | string | null
+    gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_by?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    applications?: ApplicationUncheckedUpdateManyWithoutStartupNestedInput
+    match_scores?: MatchScoreUncheckedUpdateManyWithoutStartupNestedInput
+    pilots?: PilotUncheckedUpdateManyWithoutStartupNestedInput
+    documents?: StartupDocumentUncheckedUpdateManyWithoutStartupNestedInput
+    bank_details?: StartupBankDetailsUncheckedUpdateOneWithoutStartupNestedInput
+    procurements?: ProcurementRecordUncheckedUpdateManyWithoutStartupNestedInput
+  }
+
+  export type StartupUncheckedUpdateManyWithoutReviewerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: StringFieldUpdateOperationsInput | string
+    company_name?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    domain?: StringFieldUpdateOperationsInput | string
+    technologies?: StartupUpdatetechnologiesInput | string[]
+    readiness_level?: IntFieldUpdateOperationsInput | number
+    years_experience?: IntFieldUpdateOperationsInput | number
+    previous_deployments?: IntFieldUpdateOperationsInput | number
+    verification_status?: EnumStartupVerificationStatusFieldUpdateOperationsInput | $Enums.StartupVerificationStatus
+    org_type?: EnumStartupOrgTypeFieldUpdateOperationsInput | $Enums.StartupOrgType
+    registered_address?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: NullableStringFieldUpdateOperationsInput | string | null
+    state?: NullableStringFieldUpdateOperationsInput | string | null
+    pincode?: NullableStringFieldUpdateOperationsInput | string | null
+    official_email?: NullableStringFieldUpdateOperationsInput | string | null
+    official_website?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_name?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_designation?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_email?: NullableStringFieldUpdateOperationsInput | string | null
+    authorized_person_phone?: NullableStringFieldUpdateOperationsInput | string | null
+    authorization_type?: NullableStringFieldUpdateOperationsInput | string | null
+    pan_number?: NullableStringFieldUpdateOperationsInput | string | null
+    cin_number?: NullableStringFieldUpdateOperationsInput | string | null
+    gstin?: NullableStringFieldUpdateOperationsInput | string | null
+    dpiit_number?: NullableStringFieldUpdateOperationsInput | string | null
+    certificate_number?: NullableStringFieldUpdateOperationsInput | string | null
+    registration_number?: NullableStringFieldUpdateOperationsInput | string | null
+    incorporation_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verification_source?: EnumVerificationSourceFieldUpdateOperationsInput | $Enums.VerificationSource
+    products_services?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: StringFieldUpdateOperationsInput | string
+    verification_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    correction_notes?: NullableStringFieldUpdateOperationsInput | string | null
+    rejection_reason?: NullableStringFieldUpdateOperationsInput | string | null
+    submitted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verified_by?: NullableStringFieldUpdateOperationsInput | string | null
+    reviewed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ApplicationDocumentUpdateWithoutUploaderInput = {
     id?: StringFieldUpdateOperationsInput | string
     original_filename?: StringFieldUpdateOperationsInput | string
@@ -84968,6 +86339,9 @@ export namespace Prisma {
     email_verified_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
   }
 
   export type AccessRequestCreateManyDepartmentInput = {
@@ -85152,6 +86526,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
@@ -85173,6 +86550,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
@@ -85199,6 +86577,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
     evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
@@ -85220,6 +86601,7 @@ export namespace Prisma {
     initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
     approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
     accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
     application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
@@ -85246,6 +86628,9 @@ export namespace Prisma {
     email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type AccessRequestUpdateWithoutDepartmentInput = {

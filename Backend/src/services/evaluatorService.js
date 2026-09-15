@@ -477,7 +477,7 @@ export const assignEvaluatorToApplication = async (applicationId, data, currentU
   await notifyEvaluatorAssigned({
     assignmentId: assignment.id,
     applicationId,
-    evaluatorId,
+    evaluatorId: evaluator_id,
     challengeId: application.challenge_id,
     challengeTitle: application.challenge?.title,
     startupName: application.startup?.company_name

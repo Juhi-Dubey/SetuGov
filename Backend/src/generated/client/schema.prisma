@@ -51,6 +51,10 @@ model User {
   initiated_procurements        ProcurementRecord[]      @relation("ProcurementInitiator")
   approved_procurements         ProcurementRecord[]      @relation("ProcurementApprover")
   accepted_deliveries           ProcurementRecord[]      @relation("DeliveryAcceptor")
+  failed_login_attempts         Int                      @default(0)
+  locked_until                  DateTime?
+  last_failed_login_at          DateTime?
+  reviewed_startups             Startup[]                @relation("StartupReviewer")
   application_documents         ApplicationDocument[]    @relation("ApplicationDocumentUploader")
   evaluator_applications        EvaluatorApplication[]   @relation("EvaluatorApplicant")
   reviewed_evaluator_apps       EvaluatorApplication[]   @relation("EvaluatorApplicationReviewer")
@@ -177,7 +181,7 @@ model Startup {
   certificate_number            String?
   registration_number           String?
   incorporation_date            DateTime?
-  verification_source           VerificationSource          @default(DOCUMENT_VERIFIED)
+  verification_source           VerificationSource          @default(SELF_DECLARED)
   products_services             String?
   location                      String
   verification_notes            String?
@@ -186,6 +190,8 @@ model Startup {
   submitted_at                  DateTime?
   verified_at                   DateTime?
   verified_by                   String?
+  reviewed_at                   DateTime?
+  reviewed_by                   String?
   embedding                     Unsupported("vector(768)")?
   created_at                    DateTime                    @default(now())
   updated_at                    DateTime                    @updatedAt
@@ -197,6 +203,7 @@ model Startup {
   procurements                  ProcurementRecord[]
   user                          User                        @relation(fields: [user_id], references: [id], onDelete: Cascade)
   verifier                      User?                       @relation("StartupVerifier", fields: [verified_by], references: [id])
+  reviewer                      User?                       @relation("StartupReviewer", fields: [reviewed_by], references: [id])
 
   @@index([verification_status])
   @@index([domain])

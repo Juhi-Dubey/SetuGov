@@ -135,7 +135,10 @@ exports.Prisma.UserScalarFieldEnum = {
   email_verification_expires_at: 'email_verification_expires_at',
   email_verified_at: 'email_verified_at',
   created_at: 'created_at',
-  updated_at: 'updated_at'
+  updated_at: 'updated_at',
+  failed_login_attempts: 'failed_login_attempts',
+  locked_until: 'locked_until',
+  last_failed_login_at: 'last_failed_login_at'
 };
 
 exports.Prisma.DepartmentScalarFieldEnum = {
@@ -233,6 +236,8 @@ exports.Prisma.StartupScalarFieldEnum = {
   submitted_at: 'submitted_at',
   verified_at: 'verified_at',
   verified_by: 'verified_by',
+  reviewed_at: 'reviewed_at',
+  reviewed_by: 'reviewed_by',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };
