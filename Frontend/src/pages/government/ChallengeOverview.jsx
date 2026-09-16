@@ -100,7 +100,7 @@ function ChallengeOverview() {
       setLoading(true);
       const res = await getChallengeById(id);
       if (res?.data) {
-        setChallenge(res.data);
+        setChallenge(res.data?.challenge || res.data);
       }
     } catch (err) {
       console.warn("Challenge load fallback:", err);
@@ -227,7 +227,8 @@ function ChallengeOverview() {
             icon={Users}
             label="Applications"
             value={displayData.applications}
-            description="Total submitted"
+            description="Total submitted (Click to view)"
+            onClick={() => navigate(`/government/challenges/${id}/applications`)}
           />
 
           <SummaryCard
@@ -330,9 +331,16 @@ function ChallengeOverview() {
   );
 }
 
-function SummaryCard({ icon: Icon, label, value, description }) {
+function SummaryCard({ icon: Icon, label, value, description, onClick }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+    <div
+      onClick={onClick}
+      className={`rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 ${
+        onClick
+          ? "cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-400 hover:shadow-md"
+          : ""
+      }`}
+    >
       <div className="flex items-center justify-between">
         <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">

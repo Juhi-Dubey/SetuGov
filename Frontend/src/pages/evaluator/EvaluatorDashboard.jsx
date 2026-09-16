@@ -210,7 +210,7 @@ function EvaluatorDashboard() {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-purple-500 dark:border-slate-800 dark:bg-slate-950"
             >
-              <option value="All">All Statuses</option>
+              <option value="All">All Status</option>
               <option value="PENDING">Pending</option>
               <option value="ACCEPTED">Accepted</option>
               <option value="COMPLETED">Completed</option>

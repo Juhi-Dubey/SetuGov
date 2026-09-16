@@ -12,6 +12,7 @@ import {
   Sun,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function NotFound() {
   const navigate = useNavigate();
@@ -30,36 +31,22 @@ function NotFound() {
     setIsDark((prev) => !prev);
   };
 
-  // Smart detection of role & dashboard URL
-  let dashboardUrl = "/role-selection";
+  const { user, role } = useAuth();
 
-  if (location.pathname.startsWith("/admin")) {
-    dashboardUrl = "/admin/dashboard";
-  } else if (location.pathname.startsWith("/startup")) {
-    dashboardUrl = "/startup/dashboard";
-  } else if (location.pathname.startsWith("/evaluator")) {
-    dashboardUrl = "/evaluator/dashboard";
-  } else if (location.pathname.startsWith("/government")) {
-    dashboardUrl = "/government/dashboard";
-  } else {
-    try {
-      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-      const savedRole =
-        storedUser.role ||
-        localStorage.getItem("role") ||
-        localStorage.getItem("selectedRole");
+  // Determine dashboard URL strictly based on authenticated role
+  const normalizedRole = String(role || user?.role || "").toUpperCase();
+  const dashboardUrl =
+    {
+      ADMIN: "/admin/dashboard",
+      GOVERNMENT: "/government/dashboard",
+      STARTUP: "/startup/dashboard",
+      EVALUATOR: "/evaluator/dashboard",
+    }[normalizedRole] || "/login";
 
-      if (savedRole) {
-        const r = savedRole.toLowerCase();
-        if (r.includes("admin")) dashboardUrl = "/admin/dashboard";
-        else if (r.includes("startup")) dashboardUrl = "/startup/dashboard";
-        else if (r.includes("evaluator")) dashboardUrl = "/evaluator/dashboard";
-        else if (r.includes("gov")) dashboardUrl = "/government/dashboard";
-      }
-    } catch {
-      dashboardUrl = "/role-selection";
-    }
-  }
+  useEffect(() => {
+    console.log(`[AUTH DEBUG] dashboard redirect role: ${normalizedRole || "NONE"}`);
+    console.log(`[AUTH DEBUG] dashboard redirect path: ${dashboardUrl}`);
+  }, [normalizedRole, dashboardUrl]);
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-50 px-4 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-white sm:px-6 lg:px-8">

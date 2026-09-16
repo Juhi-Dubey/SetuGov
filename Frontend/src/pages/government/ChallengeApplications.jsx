@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -13,20 +13,26 @@ import {
   Filter,
   Building2,
   CalendarDays,
+  Calendar,
   FileCheck2,
+  FileText,
   Sparkles,
   Loader2,
   ShieldCheck,
   AlertCircle,
   Lock,
   Check,
+  X,
+  RotateCcw,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   ClipboardCheck,
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
 import {
+  getChallenges,
   getChallengeById,
   getChallengeApplications,
   getChallengeMatches,
@@ -47,10 +53,22 @@ import {
   reviewEvaluatorApplication,
 } from "../../services/evaluatorService";
 
+import {
+  normalizeDomain,
+  VERIFICATION_STATUS_LABELS,
+  APPLICATION_STATUS_LABELS,
+  EVALUATION_STATUS_LABELS,
+} from "../../utils/filterUtils.js";
+
+// Re-export canonical domain mapping helper
+export const getCanonicalDomain = normalizeDomain;
+export { VERIFICATION_STATUS_LABELS };
+
 function ChallengeApplications() {
   const navigate = useNavigate();
   const { id: paramId, challengeId } = useParams();
-  const id = paramId || challengeId || "1";
+  const [activeChallengeId, setActiveChallengeId] = useState(paramId || challengeId || null);
+  const id = paramId || challengeId || activeChallengeId;
 
   const [activeTab, setActiveTab] = useState("ai-matches"); // 'ai-matches' | 'applications'
   const [challengeDetails, setChallengeDetails] = useState(null);
@@ -70,10 +88,33 @@ function ChallengeApplications() {
 
   const [loading, setLoading] = useState(true);
   const [matchingLoading, setMatchingLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [actionMessage, setActionMessage] = useState("");
   const [showIneligible, setShowIneligible] = useState(false);
+
+  // Separate Filter State: Startup Discovery (Tab 1)
+  const [discoverySearch, setDiscoverySearch] = useState("");
+  const [discoveryDomain, setDiscoveryDomain] = useState("all");
+  const [discoveryReadiness, setDiscoveryReadiness] = useState("all");
+  const [discoveryMatchScore, setDiscoveryMatchScore] = useState("all");
+  const [discoveryVerification, setDiscoveryVerification] = useState("all");
+
+  // Separate Filter State: Submitted Proposals (Tab 2)
+  const [proposalsSearch, setProposalsSearch] = useState("");
+  const [proposalStatusFilter, setProposalStatusFilter] = useState("all");
+  const [proposalEvaluationFilter, setProposalEvaluationFilter] = useState("all");
+  const [proposalDateFilter, setProposalDateFilter] = useState("all");
+
+  // Separate Filter State: Shortlisted Startups (Tab 3)
+  const [shortlistedSearch, setShortlistedSearch] = useState("");
+
+  // Auto-dismiss shortlist / action success notification after 4.5 seconds
+  useEffect(() => {
+    if (!actionMessage) return;
+    const timer = setTimeout(() => {
+      setActionMessage("");
+    }, 4500);
+    return () => clearTimeout(timer);
+  }, [actionMessage]);
 
   // Shortlist Modal State
   const [shortlistModalOpen, setShortlistModalOpen] = useState(false);
@@ -107,14 +148,15 @@ function ChallengeApplications() {
 
   useEffect(() => {
     loadData();
-    loadVerifiedEvaluators();
-  }, [id]);
+  }, [paramId, challengeId]);
 
-  const loadVerifiedEvaluators = async () => {
+  const loadVerifiedEvaluators = async (evalTargetId) => {
+    const targetId = evalTargetId || id;
+    if (!targetId || targetId === "1") return;
     try {
       const [evalRes, poolRes] = await Promise.all([
         getEvaluators().catch(() => ({ data: { evaluators: [] } })),
-        getChallengeEvaluatorPool(id).catch(() => ({ data: [] }))
+        getChallengeEvaluatorPool(targetId).catch(() => ({ data: [] }))
       ]);
       const list = evalRes?.data?.evaluators || evalRes?.evaluators || [];
       const pool = poolRes?.data || poolRes || [];
@@ -128,11 +170,29 @@ function ChallengeApplications() {
   const loadData = async () => {
     try {
       setLoading(true);
+      let targetId = paramId || challengeId || activeChallengeId;
+      if (!targetId || targetId === "1") {
+        const allChallengesRes = await getChallenges().catch(() => ({ data: { challenges: [] } }));
+        const list = allChallengesRes?.data?.challenges || allChallengesRes?.challenges || [];
+        const found = list.find((c) => (c._count?.applications || c.applications?.length || 0) > 0) || list[0];
+        if (found?.id) {
+          targetId = found.id;
+          setActiveChallengeId(found.id);
+        }
+      }
+
+      if (!targetId) {
+        setLoading(false);
+        return;
+      }
+
+      await loadVerifiedEvaluators(targetId);
+
       const [chRes, appsRes, matchesRes, decisionsRes] = await Promise.all([
-        getChallengeById(id).catch(() => null),
-        getChallengeApplications(id).catch(() => ({ data: [] })),
-        getChallengeMatches(id).catch(() => ({ data: {} })),
-        getChallengeDecisions(id).catch(() => ({ data: {} })),
+        getChallengeById(targetId).catch(() => null),
+        getChallengeApplications(targetId).catch(() => ({ data: [] })),
+        getChallengeMatches(targetId).catch(() => ({ data: {} })),
+        getChallengeDecisions(targetId).catch(() => ({ data: {} })),
       ]);
 
       const challenge = chRes?.data?.challenge || chRes?.challenge || null;
@@ -356,11 +416,13 @@ function ChallengeApplications() {
     e.preventDefault();
     if (!selectedCandidateForShortlist) return;
 
+    const challengeIdToUse = id || activeChallengeId || challengeDetails?.id;
+
     try {
       setShortlistLoading(true);
       setActionMessage("");
       await shortlistStartup(
-        id,
+        challengeIdToUse,
         selectedCandidateForShortlist.startup_id,
         shortlistNotes
       );
@@ -470,28 +532,453 @@ function ChallengeApplications() {
     }
   };
 
-  const filteredApplications = useMemo(() => {
-    return applications.filter((app) => {
-      const name =
+  // Dynamic options extracted from actual backend matches data with canonical normalization
+  const availableDomains = useMemo(() => {
+    const set = new Set();
+    matches.forEach((m) => {
+      const raw = m.startup?.domain || m.domain;
+      if (raw) {
+        const canonical = getCanonicalDomain(raw);
+        if (canonical) set.add(canonical);
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [matches]);
+
+  const availableReadiness = useMemo(() => {
+    const set = new Set();
+    matches.forEach((m) => {
+      const r = m.startup?.readiness_level ?? m.readiness_level;
+      if (r !== undefined && r !== null) set.add(Number(r));
+    });
+    return Array.from(set).sort((a, b) => a - b);
+  }, [matches]);
+
+  const verificationFilterOptions = useMemo(() => [
+    { value: "all", label: "All Verifications" },
+    { value: "VERIFIED", label: "Verified" },
+    { value: "UNVERIFIED", label: "Unverified" },
+  ], []);
+
+  // Startup Discovery Match Filter Predicate
+  const filterMatch = (match) => {
+    if (discoverySearch.trim()) {
+      const q = discoverySearch.trim().toLowerCase();
+      const name = (
+        match.company_name ||
+        match.startup_name ||
+        match.startup?.company_name ||
+        match.startup?.name ||
+        ""
+      ).toLowerCase();
+      if (!name.includes(q)) return false;
+    }
+
+    if (discoveryDomain !== "all") {
+      const rawDomain = match.startup?.domain || match.domain || "";
+      const canonicalMatchDomain = getCanonicalDomain(rawDomain);
+      const selectedCanonical = getCanonicalDomain(discoveryDomain);
+      if (canonicalMatchDomain !== selectedCanonical) return false;
+    }
+
+    if (discoveryReadiness !== "all") {
+      const trl = String(match.startup?.readiness_level ?? match.readiness_level ?? "");
+      if (trl !== String(discoveryReadiness)) return false;
+    }
+
+    if (discoveryMatchScore !== "all") {
+      const minScore = Number(discoveryMatchScore);
+      const score = Number(match.overall_score ?? match.match_score ?? 0);
+      if (score < minScore) return false;
+    }
+
+    if (discoveryVerification !== "all") {
+      const rawStatus =
+        match.verification_status ||
+        match.startup?.verification_status ||
+        (match.startup?.is_verified ? "VERIFIED" : "PENDING");
+      const normalizedStatus = String(rawStatus || "").trim().toUpperCase();
+      const isVerified = normalizedStatus === "VERIFIED" || match.startup?.is_verified === true;
+
+      if (discoveryVerification === "VERIFIED") {
+        if (!isVerified) return false;
+      } else if (discoveryVerification === "UNVERIFIED") {
+        if (isVerified) return false;
+      }
+    }
+
+    return true;
+  };
+
+  const filteredEligibleMatches = useMemo(() => {
+    return eligibleMatches.filter(filterMatch);
+  }, [eligibleMatches, discoverySearch, discoveryDomain, discoveryReadiness, discoveryMatchScore, discoveryVerification]);
+
+  const filteredNeedsReviewMatches = useMemo(() => {
+    return needsReviewMatches.filter(filterMatch);
+  }, [needsReviewMatches, discoverySearch, discoveryDomain, discoveryReadiness, discoveryMatchScore, discoveryVerification]);
+
+  const filteredIneligibleMatches = useMemo(() => {
+    return ineligibleMatches.filter(filterMatch);
+  }, [ineligibleMatches, discoverySearch, discoveryDomain, discoveryReadiness, discoveryMatchScore, discoveryVerification]);
+
+  const filteredTotalMatchesCount = useMemo(() => {
+    return matches.filter(filterMatch).length;
+  }, [matches, discoverySearch, discoveryDomain, discoveryReadiness, discoveryMatchScore, discoveryVerification]);
+
+  const isDiscoveryFiltered = Boolean(
+    discoverySearch.trim() ||
+    discoveryDomain !== "all" ||
+    discoveryReadiness !== "all" ||
+    discoveryMatchScore !== "all" ||
+    discoveryVerification !== "all"
+  );
+
+  const handleClearDiscoveryFilters = () => {
+    setDiscoverySearch("");
+    setDiscoveryDomain("all");
+    setDiscoveryReadiness("all");
+    setDiscoveryMatchScore("all");
+    setDiscoveryVerification("all");
+  };
+
+  // Submitted Proposals Filter Predicate
+  const filterApplication = (app) => {
+    if (proposalsSearch.trim()) {
+      const q = proposalsSearch.trim().toLowerCase();
+      const companyName = (
         app.startup?.company_name ||
         app.startup?.name ||
         app.startup_name ||
-        "";
-      const proposal = app.proposal_summary || app.proposal || "";
-      const matchesSearch =
-        name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        proposal.toLowerCase().includes(searchQuery.toLowerCase());
+        ""
+      ).toLowerCase();
+      const proposalText = (
+        app.proposal_title ||
+        app.proposal_summary ||
+        app.proposal ||
+        ""
+      ).toLowerCase();
+      if (!companyName.includes(q) && !proposalText.includes(q)) return false;
+    }
 
-      if (statusFilter === "all") return matchesSearch;
-      return matchesSearch && app.status === statusFilter;
+    if (proposalStatusFilter !== "all") {
+      if (app.status !== proposalStatusFilter) return false;
+    }
+
+    if (proposalEvaluationFilter !== "all") {
+      const dec = decisions[app.id];
+      const rec = dec?.recommendation;
+      const assignments = app.evaluator_assignments || [];
+      const hasCompleted = assignments.some((a) => a.status === "COMPLETED");
+
+      if (proposalEvaluationFilter === "RECOMMENDED_FOR_PILOT") {
+        if (rec !== "RECOMMENDED_FOR_PILOT") return false;
+      } else if (proposalEvaluationFilter === "RESERVE_CANDIDATE") {
+        if (rec !== "RESERVE_CANDIDATE") return false;
+      } else if (proposalEvaluationFilter === "EVALUATION_PENDING_QUORUM") {
+        if (rec !== "EVALUATION_PENDING_QUORUM") return false;
+      } else if (proposalEvaluationFilter === "NOT_RECOMMENDED") {
+        if (rec !== "NOT_RECOMMENDED") return false;
+      } else if (proposalEvaluationFilter === "EVALUATED") {
+        if (!hasCompleted && !dec) return false;
+      } else if (proposalEvaluationFilter === "PENDING") {
+        if (hasCompleted || (dec && rec === "RECOMMENDED_FOR_PILOT")) return false;
+      } else if (proposalEvaluationFilter === "UNASSIGNED") {
+        if (assignments.length > 0) return false;
+      }
+    }
+
+    if (proposalDateFilter !== "all") {
+      const dateStr = app.submitted_at || app.created_at;
+      if (!dateStr) return false;
+      const appTime = new Date(dateStr).getTime();
+      const now = Date.now();
+      const days = proposalDateFilter === "7d" ? 7 : proposalDateFilter === "30d" ? 30 : 90;
+      const cutoff = now - days * 24 * 60 * 60 * 1000;
+      if (appTime < cutoff) return false;
+    }
+
+    return true;
+  };
+
+  const filteredApplications = useMemo(() => {
+    return applications.filter(filterApplication);
+  }, [applications, decisions, proposalsSearch, proposalStatusFilter, proposalEvaluationFilter, proposalDateFilter]);
+
+  const isProposalsFiltered = Boolean(
+    proposalsSearch.trim() ||
+    proposalStatusFilter !== "all" ||
+    proposalEvaluationFilter !== "all" ||
+    proposalDateFilter !== "all"
+  );
+
+  const handleClearProposalsFilters = () => {
+    setProposalsSearch("");
+    setProposalStatusFilter("all");
+    setProposalEvaluationFilter("all");
+    setProposalDateFilter("all");
+  };
+
+  // Authoritative Shortlisted Startups (Tab 3) derived from real backend data
+  const shortlistedList = useMemo(() => {
+    const map = new Map();
+    // 1. Authoritative MatchScore records marked is_shortlisted
+    (matches || []).forEach((m) => {
+      if (m.is_shortlisted) {
+        map.set(m.startup_id, {
+          id: m.startup_id,
+          startup_id: m.startup_id,
+          company_name: m.company_name || m.startup_name || m.startup?.company_name || "Startup",
+          domain: m.startup?.domain || m.domain,
+          overall_score: m.overall_score,
+          technology_score: m.technology_score,
+          domain_score: m.domain_score,
+          readiness_score: m.readiness_score,
+          experience_score: m.experience_score,
+          deployment_score: m.deployment_score,
+          has_applied: m.has_applied,
+          application_id: m.application_id,
+          application_status: m.application_status,
+          shortlisted_at: m.shortlisted_at,
+          shortlist_notes: m.shortlist_notes,
+          readiness_level: m.startup?.readiness_level,
+          verification_status: m.startup?.verification_status,
+          city: m.startup?.city,
+          state: m.startup?.state,
+          why_matched: m.why_matched,
+          strengths: m.strengths,
+          match: m,
+        });
+      }
     });
-  }, [applications, searchQuery, statusFilter]);
+
+    // 2. Also incorporate applications with SHORTLISTED status
+    (applications || []).forEach((app) => {
+      if (app.status === "SHORTLISTED") {
+        const existing = map.get(app.startup_id);
+        if (existing) {
+          existing.has_applied = true;
+          existing.application_id = app.id;
+          existing.application_status = app.status;
+          existing.proposal_summary = app.proposal_summary || app.proposal;
+          existing.submitted_at = app.submitted_at || app.created_at;
+          existing.application = app;
+        } else {
+          map.set(app.startup_id, {
+            id: app.startup_id,
+            startup_id: app.startup_id,
+            company_name: app.startup?.company_name || app.startup?.name || "Startup",
+            domain: app.startup?.domain,
+            overall_score: null,
+            has_applied: true,
+            application_id: app.id,
+            application_status: app.status,
+            shortlisted_at: app.updated_at,
+            shortlist_notes: null,
+            readiness_level: app.startup?.readiness_level,
+            verification_status: app.startup?.verification_status,
+            proposal_summary: app.proposal_summary || app.proposal,
+            submitted_at: app.submitted_at || app.created_at,
+            application: app,
+          });
+        }
+      }
+    });
+
+    return Array.from(map.values());
+  }, [matches, applications]);
+
+  const filteredShortlisted = useMemo(() => {
+    if (!shortlistedSearch.trim()) return shortlistedList;
+    const q = shortlistedSearch.trim().toLowerCase();
+    return shortlistedList.filter((s) => {
+      const name = (s.company_name || "").toLowerCase();
+      const domain = (s.domain || "").toLowerCase();
+      return name.includes(q) || domain.includes(q);
+    });
+  }, [shortlistedList, shortlistedSearch]);
+
+  const renderShortlistedCard = (item, idx) => {
+    const isApplied = item.has_applied || Boolean(item.application_id);
+    const dateFormatted = item.shortlisted_at
+      ? new Date(item.shortlisted_at).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "Recorded";
+
+    return (
+      <div
+        key={item.startup_id || item.id || idx}
+        className="rounded-2xl border border-purple-200/80 bg-white p-5 shadow-sm dark:border-purple-900/40 dark:bg-slate-900 space-y-3.5"
+      >
+        {/* Top row: Rank, Name, Badges, Match Score */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-100 text-xs font-bold text-purple-700 dark:bg-purple-900/60 dark:text-purple-300">
+                #{idx + 1}
+              </span>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white truncate">
+                {item.company_name}
+              </h3>
+
+              {/* Status Badges */}
+              <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-bold text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 shrink-0">
+                <CheckCircle2 className="h-3 w-3" /> Shortlisted
+              </span>
+
+              {isApplied ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 shrink-0">
+                  Proposal Submitted ({item.application_status || "SHORTLISTED"})
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
+                  Discovery Shortlist
+                </span>
+              )}
+            </div>
+
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              Domain: <span className="font-semibold text-slate-700 dark:text-slate-200">{item.domain || "GovTech & Innovation"}</span>
+              {item.readiness_level && ` · TRL ${item.readiness_level}`}
+              {item.city && ` · ${item.city}, ${item.state}`}
+            </p>
+          </div>
+
+          {item.overall_score != null && (
+            <div className="text-right shrink-0">
+              <span className="rounded-full bg-purple-100 px-2.5 py-1 text-xs font-bold text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">
+                {Math.round(item.overall_score)}% Match
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* 5-Factor Score Breakdown (if scores exist) */}
+        {item.technology_score != null && (
+          <div className="overflow-x-auto scrollbar-none">
+            <div className="grid grid-cols-5 gap-1.5 text-center min-w-[380px] sm:min-w-0">
+              <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 px-1 py-2 dark:bg-slate-800/60 min-w-0">
+                <div className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                  <span>Tech</span>
+                  <span> (30%)</span>
+                </div>
+                <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {Math.round(item.technology_score || 0)}%
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 px-1 py-2 dark:bg-slate-800/60 min-w-0">
+                <div className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                  <span>Domain</span>
+                  <span> (25%)</span>
+                </div>
+                <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {Math.round(item.domain_score || 0)}%
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 px-1 py-2 dark:bg-slate-800/60 min-w-0">
+                <div className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                  <span>Readiness</span>
+                  <span> (20%)</span>
+                </div>
+                <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {Math.round(item.readiness_score || 0)}%
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 px-1 py-2 dark:bg-slate-800/60 min-w-0">
+                <div className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                  <span>Experience</span>
+                  <span> (15%)</span>
+                </div>
+                <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {Math.round(item.experience_score || 0)}%
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 px-1 py-2 dark:bg-slate-800/60 min-w-0">
+                <div className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                  <span>Deploy Fit</span>
+                  <span> (10%)</span>
+                </div>
+                <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {Math.round(item.deployment_score || 0)}%
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Shortlist Notes / Audit Callout */}
+        {item.shortlist_notes && (
+          <div className="rounded-xl border border-purple-200 bg-purple-50/50 p-2.5 text-xs text-purple-900 dark:border-purple-800/40 dark:bg-purple-950/30 dark:text-purple-300">
+            <span className="font-semibold flex items-center gap-1">
+              <FileText className="h-3.5 w-3.5 text-purple-600" /> Government Shortlist Notes:
+            </span>
+            <p className="mt-1 text-[11px] leading-relaxed text-purple-800 dark:text-purple-300">
+              "{item.shortlist_notes}"
+            </p>
+          </div>
+        )}
+
+        {/* AI Qualitative Reasoning */}
+        {item.why_matched && (
+          <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2.5 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-300">
+            <p className="line-clamp-2">
+              <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                Brain 2 Reasoning:
+              </span>{" "}
+              {item.why_matched}
+            </p>
+          </div>
+        )}
+
+        {/* Footer / Meta Row */}
+        <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400">
+          <div className="flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+            <span>Shortlisted on {dateFormatted}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {isApplied && (
+              <button
+                type="button"
+                onClick={() => {
+                  setProposalsSearch(item.company_name);
+                  setActiveTab("applications");
+                }}
+                className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 transition"
+              >
+                View Proposal
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            )}
+
+            <span className="inline-flex items-center gap-1 rounded-lg bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700 dark:bg-purple-950/50 dark:text-purple-300">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Qualified
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const isClosed = challengeDetails?.status === "CLOSED";
 
   // Reusable Candidate Card Renderer
   const renderCandidateCard = (match, idx, category = "ELIGIBLE") => {
-    const isShortlisted = match.is_shortlisted;
+    const isShortlisted = Boolean(
+      match.is_shortlisted ||
+      match.application_status === "SHORTLISTED" ||
+      (applications || []).some(
+        (a) => a.startup_id === (match.startup_id || match.id) && a.status === "SHORTLISTED"
+      )
+    );
     const isIneligible =
       category === "INELIGIBLE" || match.eligibility_status === "INELIGIBLE";
     const isNeedsReview =
@@ -518,8 +1005,8 @@ function ChallengeApplications() {
       >
         {/* Top row: Rank, Company Name, Badges, Overall Score */}
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span
                 className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
                   isShortlisted
@@ -551,14 +1038,27 @@ function ChallengeApplications() {
                   AI Discovered (Not Applied)
                 </span>
               )}
-            </div>
 
-            <p className="mt-1 text-xs text-slate-400">
-              {match.startup?.domain || "Technology Specialist"} •{" "}
-              {match.startup?.location || "India"} • TRL{" "}
-              {match.startup?.readiness_level || 1} •{" "}
-              {match.startup?.years_experience || 0} yrs exp
-            </p>
+              {/* Verification Status Badge */}
+              {(() => {
+                const rawStatus =
+                  match.verification_status ||
+                  match.startup?.verification_status ||
+                  (match.startup?.is_verified ? "VERIFIED" : "PENDING");
+                const isVerified =
+                  String(rawStatus).toUpperCase() === "VERIFIED" || match.startup?.is_verified === true;
+                return isVerified ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-800">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                    Verified
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
+                    Unverified
+                  </span>
+                );
+              })()}
+            </div>
           </div>
 
           <div className="text-right shrink-0">
@@ -576,37 +1076,65 @@ function ChallengeApplications() {
           </div>
         </div>
 
+        {/* Metadata row — placed outside the top-row flex so it gets full card width */}
+        <p className="mt-1 text-xs text-slate-400">
+          {getCanonicalDomain(match.startup?.domain || match.domain) || "Technology Specialist"} •{" "}
+          {match.startup?.location || "India"} • TRL {match.startup?.readiness_level || 1} •{" "}
+          <span className="whitespace-nowrap">{match.startup?.years_experience || 0} yrs experience</span>
+        </p>
+
         {/* 5-Factor Score Breakdown */}
-        <div className="mt-4 grid grid-cols-5 gap-1.5 text-center">
-          <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/60">
-            <p className="text-[10px] text-slate-400 font-medium">Tech (30%)</p>
-            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              {Math.round(match.technology_score || 0)}%
-            </p>
-          </div>
-          <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/60">
-            <p className="text-[10px] text-slate-400 font-medium">Domain (25%)</p>
-            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              {Math.round(match.domain_score || 0)}%
-            </p>
-          </div>
-          <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/60">
-            <p className="text-[10px] text-slate-400 font-medium">Readiness (20%)</p>
-            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              {Math.round(match.readiness_score || 0)}%
-            </p>
-          </div>
-          <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/60">
-            <p className="text-[10px] text-slate-400 font-medium">Experience (15%)</p>
-            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              {Math.round(match.experience_score || 0)}%
-            </p>
-          </div>
-          <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/60">
-            <p className="text-[10px] text-slate-400 font-medium">Deploy Fit (10%)</p>
-            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              {Math.round(match.deployment_score || 0)}%
-            </p>
+        <div className="mt-4 overflow-x-auto scrollbar-none">
+          <div className="grid grid-cols-5 gap-1.5 text-center min-w-[380px] sm:min-w-0">
+            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 px-1 py-2 dark:bg-slate-800/60 min-w-0">
+              <div className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                <span>Tech</span>
+                <span> (30%)</span>
+              </div>
+              <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                {Math.round(match.technology_score || 0)}%
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 px-1 py-2 dark:bg-slate-800/60 min-w-0">
+              <div className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                <span>Domain</span>
+                <span> (25%)</span>
+              </div>
+              <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                {Math.round(match.domain_score || 0)}%
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 px-1 py-2 dark:bg-slate-800/60 min-w-0">
+              <div className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                <span>Readiness</span>
+                <span> (20%)</span>
+              </div>
+              <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                {Math.round(match.readiness_score || 0)}%
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 px-1 py-2 dark:bg-slate-800/60 min-w-0">
+              <div className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                <span>Experience</span>
+                <span> (15%)</span>
+              </div>
+              <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                {Math.round(match.experience_score || 0)}%
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center justify-center rounded-xl bg-slate-50 px-1 py-2 dark:bg-slate-800/60 min-w-0">
+              <div className="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                <span>Deploy Fit</span>
+                <span> (10%)</span>
+              </div>
+              <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                {Math.round(match.deployment_score || 0)}%
+              </p>
+            </div>
           </div>
         </div>
 
@@ -736,15 +1264,21 @@ function ChallengeApplications() {
         >
           <button
             type="button"
-            onClick={() => navigate(`/government/challenges/${id}/overview`)}
+            onClick={() => {
+              if (id) {
+                navigate(`/government/challenges/${id}/overview`);
+              } else {
+                navigate("/government/challenges");
+              }
+            }}
             className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Challenge Overview
           </button>
 
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1 pr-0 lg:pr-6">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                   <Users className="h-3.5 w-3.5" />
@@ -780,16 +1314,17 @@ function ChallengeApplications() {
                 <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
                   {matchSummary.eligible} eligible matches
                 </span>{" "}
-                ({matchSummary.total} total verified profiles evaluated; {matchSummary.shortlisted} shortlisted; {matchSummary.applied} applied)
+                (total verified profiles evaluated : {matchSummary.total}; shortlisted : {matchSummary.shortlisted}; Applied : {matchSummary.applied})
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
+            {/* Action Buttons: Vertically Stacked & Right Aligned */}
+            <div className="flex flex-col items-stretch sm:items-end gap-2.5 shrink-0">
               {!isClosed && (
                 <button
                   type="button"
                   onClick={() => setCloseModalOpen(true)}
-                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 text-xs font-semibold text-rose-700 shadow-sm transition hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-300"
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-4 text-xs font-semibold text-rose-700 shadow-sm transition hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-300 whitespace-nowrap"
                 >
                   <Lock className="h-3.5 w-3.5" />
                   Close Problem Statement
@@ -801,7 +1336,7 @@ function ChallengeApplications() {
                 onClick={handleRunBrain2Matching}
                 disabled={matchingLoading || isClosed}
                 title={isClosed ? "Problem statement is closed. Candidate pool is frozen." : ""}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-semibold text-white shadow-md shadow-indigo-600/20 transition hover:bg-indigo-500 disabled:opacity-50"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-semibold text-white shadow-md shadow-indigo-600/20 transition hover:bg-indigo-500 disabled:opacity-50 whitespace-nowrap"
               >
                 {matchingLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -814,38 +1349,76 @@ function ChallengeApplications() {
           </div>
         </motion.div>
 
-        {actionMessage && (
-          <div className="mb-6 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-medium text-emerald-800 dark:border-emerald-900/30 dark:bg-emerald-950/30 dark:text-emerald-300">
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-            <span>{actionMessage}</span>
-          </div>
-        )}
+        {/* Action Message Toast / Banner with auto-dismiss and manual dismiss */}
+        <AnimatePresence>
+          {actionMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-medium text-emerald-800 dark:border-emerald-900/30 dark:bg-emerald-950/30 dark:text-emerald-300 shadow-sm"
+            >
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                <span>{actionMessage}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActionMessage("")}
+                className="text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200 transition-colors p-1"
+                aria-label="Dismiss notification"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* TABS */}
-        <div className="mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
+        <div className="mb-6 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 overflow-x-auto scrollbar-none">
           <button
             type="button"
             onClick={() => setActiveTab("ai-matches")}
-            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold whitespace-nowrap shrink-0 transition-colors ${
               activeTab === "ai-matches"
                 ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
-            <Sparkles className="h-4 w-4 text-indigo-500" />
-            Startup Discovery ({matchSummary.eligible} Eligible / {matchSummary.total} Evaluated)
+            <Sparkles className="h-4 w-4 text-indigo-500 shrink-0" />
+            <span className="whitespace-nowrap">
+              Startup Discovery ({matchSummary.eligible} Eligible / {matchSummary.total} Evaluated)
+            </span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("applications")}
-            className={`border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+            className={`border-b-2 px-4 py-3 text-sm font-semibold whitespace-nowrap shrink-0 transition-colors ${
               activeTab === "applications"
                 ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
-            Submitted Proposals ({applications.length})
+            <span className="whitespace-nowrap">
+              Submitted Proposals ({applications.length})
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("shortlisted")}
+            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold whitespace-nowrap shrink-0 transition-colors ${
+              activeTab === "shortlisted"
+                ? "border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400"
+                : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            }`}
+          >
+            <CheckCircle2 className="h-4 w-4 text-purple-500 shrink-0" />
+            <span className="whitespace-nowrap">
+              Shortlisted Startups ({shortlistedList.length})
+            </span>
           </button>
 
           <button
@@ -854,14 +1427,16 @@ function ChallengeApplications() {
               setActiveTab("evaluator-pool");
               loadEvaluatorPoolData();
             }}
-            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold whitespace-nowrap shrink-0 transition-colors ${
               activeTab === "evaluator-pool"
                 ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
-            <Users className="h-4 w-4 text-purple-500" />
-            Final Evaluator Pool & Review ({challengePool.length} Pool Members)
+            <Users className="h-4 w-4 text-purple-500 shrink-0" />
+            <span className="whitespace-nowrap">
+              Final Evaluator Pool & Review ({challengePool.length} Pool Members)
+            </span>
           </button>
         </div>
 
@@ -888,94 +1463,232 @@ function ChallengeApplications() {
               </div>
             ) : (
               <>
-                {/* SECTION 1: PRIMARY ELIGIBLE CANDIDATES */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
-                    <div>
-                      <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <ShieldCheck className="h-5 w-5 text-emerald-500" />
-                        Primary Eligible Candidates ({eligibleMatches.length})
-                      </h2>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Startups satisfying all mandatory eligibility criteria, ranked authoritatively by deterministic 5-factor scoring.
-                      </p>
+                {/* STARTUP DISCOVERY FILTER TOOLBAR */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-2.5">
+                  <div className="flex flex-wrap lg:flex-nowrap items-center gap-2.5">
+                    {/* Search Field */}
+                    <div className="relative min-w-0 flex-1">
+                      <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        value={discoverySearch}
+                        onChange={(e) => setDiscoverySearch(e.target.value)}
+                        placeholder="Search startups by name..."
+                        className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-8.5 pr-3 text-xs outline-none focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900"
+                      />
                     </div>
-                    <span className="rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 px-3 py-1 text-xs font-semibold">
-                      Recommended for Shortlist
-                    </span>
+
+                    {/* Domain Filter */}
+                    <div className="w-full sm:w-[155px] lg:w-[155px] shrink-0">
+                      <select
+                        value={discoveryDomain}
+                        onChange={(e) => setDiscoveryDomain(e.target.value)}
+                        className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                      >
+                        <option value="all">All Domains</option>
+                        {availableDomains.map((dom) => (
+                          <option key={dom} value={dom}>
+                            {dom}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Readiness Level Filter */}
+                    <div className="w-full sm:w-[175px] lg:w-[175px] shrink-0">
+                      <select
+                        value={discoveryReadiness}
+                        onChange={(e) => setDiscoveryReadiness(e.target.value)}
+                        className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-2.5 pr-5 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                      >
+                        <option value="all">All Readiness Levels</option>
+                        {availableReadiness.map((lvl) => (
+                          <option key={lvl} value={lvl}>
+                            Level {lvl}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Match Score Filter */}
+                    <div className="w-full sm:w-[160px] lg:w-[160px] shrink-0">
+                      <select
+                        value={discoveryMatchScore}
+                        onChange={(e) => setDiscoveryMatchScore(e.target.value)}
+                        className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                      >
+                        <option value="all">All Match Scores</option>
+                        <option value="90">90%+</option>
+                        <option value="80">80%+</option>
+                        <option value="70">70%+</option>
+                        <option value="60">60%+</option>
+                        <option value="50">50%+</option>
+                      </select>
+                    </div>
+
+                    {/* Verification Status Filter */}
+                    <div className="w-full sm:w-[158px] lg:w-[158px] shrink-0">
+                      <select
+                        value={discoveryVerification}
+                        onChange={(e) => setDiscoveryVerification(e.target.value)}
+                        className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                      >
+                        {verificationFilterOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
-                  {eligibleMatches.length === 0 ? (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-xs text-slate-400 dark:border-slate-800 dark:bg-slate-900">
-                      No verified startups currently meet all mandatory eligibility criteria for this Problem Statement.
-                    </div>
-                  ) : (
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {eligibleMatches.map((m, idx) => renderCandidateCard(m, idx, "ELIGIBLE"))}
-                    </div>
-                  )}
+                  {/* Filtered Result Count */}
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                    <span>
+                      <strong className="font-semibold text-slate-900 dark:text-white">
+                        {filteredTotalMatchesCount} {filteredTotalMatchesCount === 1 ? "startup" : "startups"} found
+                      </strong>
+                      {isDiscoveryFiltered && ` (filtered from ${matches.length} total)`}
+                    </span>
+
+                    {isDiscoveryFiltered && (
+                      <button
+                        type="button"
+                        onClick={handleClearDiscoveryFilters}
+                        className="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Clear Filters
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                {/* SECTION 2: NEEDS REVIEW CANDIDATES */}
-                {needsReviewMatches.length > 0 && (
-                  <div className="space-y-4 pt-4">
-                    <div className="flex items-center justify-between border-b border-amber-200 pb-3 dark:border-amber-900/40">
-                      <div>
-                        <h2 className="text-base font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2">
-                          <AlertCircle className="h-5 w-5 text-amber-500" />
-                          Candidates Requiring Review ({needsReviewMatches.length})
-                        </h2>
-                        <p className="text-xs text-amber-700/80 dark:text-amber-400/80">
-                          Startups with borderline or alternative domain/technology alignment. Review departmental considerations before shortlisting.
-                        </p>
-                      </div>
-                      <span className="rounded-full bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 px-3 py-1 text-xs font-semibold">
-                        Needs Official Review
-                      </span>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {needsReviewMatches.map((m, idx) =>
-                        renderCandidateCard(m, eligibleMatches.length + idx, "NEEDS_REVIEW")
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* SECTION 3: INELIGIBLE PROFILES (AUDIT TRAIL) */}
-                {ineligibleMatches.length > 0 && (
-                  <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                {/* NO RESULTS EMPTY STATE */}
+                {isDiscoveryFiltered && filteredTotalMatchesCount === 0 ? (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
+                    <Search className="mx-auto h-8 w-8 text-slate-400" />
+                    <h3 className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">
+                      No startups match the selected filters.
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Try adjusting your search query, lowering the match score threshold, or clearing all filters.
+                    </p>
                     <button
                       type="button"
-                      onClick={() => setShowIneligible(!showIneligible)}
-                      className="flex w-full items-center justify-between rounded-xl bg-slate-50 p-3 text-left transition hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+                      onClick={handleClearDiscoveryFilters}
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
                     >
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
-                        <XCircle className="h-4 w-4 text-slate-400" />
-                        Ineligible Profiles — Audit Trail ({ineligibleMatches.length} startups)
-                        <span className="text-[11px] font-normal text-slate-400">
-                          (Retained for regulatory history; cannot be shortlisted)
+                      <X className="h-3.5 w-3.5" />
+                      Clear Filters
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* SECTION 1: PRIMARY ELIGIBLE CANDIDATES */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
+                        <div>
+                          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                            Primary Eligible Candidates ({filteredEligibleMatches.length})
+                          </h2>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Startups satisfying all mandatory eligibility criteria, ranked authoritatively by deterministic 5-factor scoring.
+                          </p>
+                        </div>
+                        <span className="rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 px-3 py-1 text-xs font-semibold">
+                          Recommended for Shortlist
                         </span>
                       </div>
-                      {showIneligible ? (
-                        <ChevronUp className="h-4 w-4 text-slate-400" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-slate-400" />
-                      )}
-                    </button>
 
-                    {showIneligible && (
-                      <div className="grid gap-4 md:grid-cols-2">
-                        {ineligibleMatches.map((m, idx) =>
-                          renderCandidateCard(
-                            m,
-                            eligibleMatches.length + needsReviewMatches.length + idx,
-                            "INELIGIBLE"
+                      {filteredEligibleMatches.length === 0 ? (
+                        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-xs text-slate-400 dark:border-slate-800 dark:bg-slate-900">
+                          {isDiscoveryFiltered
+                            ? "No eligible candidates match the current filters."
+                            : "No verified startups currently meet all mandatory eligibility criteria for this Problem Statement."}
+                        </div>
+                      ) : (
+                        <div className="grid gap-4 md:grid-cols-2">
+                          {filteredEligibleMatches.map((m, idx) => renderCandidateCard(m, idx, "ELIGIBLE"))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* SECTION 2: NEEDS REVIEW CANDIDATES */}
+                    {needsReviewMatches.length > 0 && (
+                      <div className="space-y-4 pt-4">
+                        <div className="flex items-center justify-between border-b border-amber-200 pb-3 dark:border-amber-900/40">
+                          <div>
+                            <h2 className="text-base font-bold text-amber-900 dark:text-amber-300 flex items-center gap-2">
+                              <AlertCircle className="h-5 w-5 text-amber-500" />
+                              Candidates Requiring Review ({filteredNeedsReviewMatches.length})
+                            </h2>
+                            <p className="text-xs text-amber-700/80 dark:text-amber-400/80">
+                              Startups with borderline or alternative domain/technology alignment. Review departmental considerations before shortlisting.
+                            </p>
+                          </div>
+                          <span className="rounded-full bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 px-3 py-1 text-xs font-semibold">
+                            Needs Official Review
+                          </span>
+                        </div>
+
+                        {filteredNeedsReviewMatches.length === 0 ? (
+                          <div className="rounded-2xl border border-amber-200/50 bg-amber-50/20 p-8 text-center text-xs text-amber-700/70 dark:border-amber-900/30 dark:bg-amber-950/10">
+                            No review candidates match the current filters.
+                          </div>
+                        ) : (
+                          <div className="grid gap-4 md:grid-cols-2">
+                            {filteredNeedsReviewMatches.map((m, idx) =>
+                              renderCandidateCard(m, filteredEligibleMatches.length + idx, "NEEDS_REVIEW")
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* SECTION 3: INELIGIBLE PROFILES (AUDIT TRAIL) */}
+                    {ineligibleMatches.length > 0 && (
+                      <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+                        <button
+                          type="button"
+                          onClick={() => setShowIneligible(!showIneligible)}
+                          className="flex w-full items-center justify-between rounded-xl bg-slate-50 p-3 text-left transition hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+                        >
+                          <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+                            <XCircle className="h-4 w-4 text-slate-400" />
+                            Ineligible Profiles — Audit Trail ({filteredIneligibleMatches.length} matching / {ineligibleMatches.length} total)
+                            <span className="text-[11px] font-normal text-slate-400">
+                              (Retained for regulatory history; cannot be shortlisted)
+                            </span>
+                          </div>
+                          {showIneligible ? (
+                            <ChevronUp className="h-4 w-4 text-slate-400" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-slate-400" />
+                          )}
+                        </button>
+
+                        {showIneligible && (
+                          filteredIneligibleMatches.length === 0 ? (
+                            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-xs text-slate-400 dark:border-slate-800 dark:bg-slate-900">
+                              No ineligible profiles match the current filters.
+                            </div>
+                          ) : (
+                            <div className="grid gap-4 md:grid-cols-2">
+                              {filteredIneligibleMatches.map((m, idx) =>
+                                renderCandidateCard(
+                                  m,
+                                  filteredEligibleMatches.length + filteredNeedsReviewMatches.length + idx,
+                                  "INELIGIBLE"
+                                )
+                              )}
+                            </div>
                           )
                         )}
                       </div>
                     )}
-                  </div>
+                  </>
                 )}
               </>
             )}
@@ -985,32 +1698,89 @@ function ChallengeApplications() {
         {/* TAB 2: APPLICATIONS (FORMAL PROPOSALS) */}
         {activeTab === "applications" && (
           <div className="space-y-4">
-            {/* SEARCH & FILTERS */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search startups, proposal text..."
-                  className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-10 pr-4 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900"
-                />
+            {/* SUBMITTED PROPOSALS FILTER TOOLBAR */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative min-w-[240px] flex-1">
+                  <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={proposalsSearch}
+                    onChange={(e) => setProposalsSearch(e.target.value)}
+                    placeholder="Search proposals by startup name or proposal title..."
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-10 pr-4 text-xs outline-none focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900"
+                  />
+                </div>
+
+                {/* Application Status Filter */}
+                <div className="flex items-center gap-1.5">
+                  <select
+                    value={proposalStatusFilter}
+                    onChange={(e) => setProposalStatusFilter(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  >
+                    <option value="all">All Application Statuses</option>
+                    <option value="SUBMITTED">Submitted</option>
+                    <option value="SHORTLISTED">Shortlisted</option>
+                    <option value="SELECTED">Selected</option>
+                    <option value="REJECTED">Rejected</option>
+                    <option value="DRAFT">Draft</option>
+                  </select>
+                </div>
+
+                {/* Evaluation Status Filter */}
+                <div className="flex items-center gap-1.5">
+                  <select
+                    value={proposalEvaluationFilter}
+                    onChange={(e) => setProposalEvaluationFilter(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  >
+                    <option value="all">All Evaluation Statuses</option>
+                    <option value="RECOMMENDED_FOR_PILOT">Recommended for Pilot</option>
+                    <option value="RESERVE_CANDIDATE">Reserve Candidate</option>
+                    <option value="EVALUATION_PENDING_QUORUM">Pending Quorum</option>
+                    <option value="NOT_RECOMMENDED">Not Recommended</option>
+                    <option value="EVALUATED">Evaluated</option>
+                    <option value="PENDING">Pending Evaluation</option>
+                    <option value="UNASSIGNED">Unassigned</option>
+                  </select>
+                </div>
+
+                {/* Submission Date Filter */}
+                <div className="flex items-center gap-1.5">
+                  <select
+                    value={proposalDateFilter}
+                    onChange={(e) => setProposalDateFilter(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  >
+                    <option value="all">All Submission Dates</option>
+                    <option value="7d">Last 7 Days</option>
+                    <option value="30d">Last 30 Days</option>
+                    <option value="90d">Last 90 Days</option>
+                  </select>
+                </div>
+
+                {/* Clear Filters Button */}
+                {isProposalsFiltered && (
+                  <button
+                    type="button"
+                    onClick={handleClearProposalsFilters}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    Clear Filters
+                  </button>
+                )}
               </div>
 
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-slate-400" />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="SUBMITTED">SUBMITTED</option>
-                  <option value="SHORTLISTED">SHORTLISTED</option>
-                  <option value="SELECTED">SELECTED</option>
-                  <option value="REJECTED">REJECTED</option>
-                </select>
+              {/* Filtered Result Count */}
+              <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                <span>
+                  <strong className="font-semibold text-slate-900 dark:text-white">
+                    {filteredApplications.length} {filteredApplications.length === 1 ? "proposal" : "proposals"} found
+                  </strong>
+                  {isProposalsFiltered && ` (filtered from ${applications.length} total)`}
+                </span>
               </div>
             </div>
 
@@ -1018,12 +1788,28 @@ function ChallengeApplications() {
             {filteredApplications.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
                 <FileCheck2 className="mx-auto h-8 w-8 text-slate-400" />
-                <h3 className="mt-3 text-sm font-semibold">No Proposals Found</h3>
+                <h3 className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">
+                  {isProposalsFiltered
+                    ? "No proposals match the selected filters."
+                    : "No Proposals Found"}
+                </h3>
                 <p className="mt-1 text-xs text-slate-400">
-                  {isClosed
+                  {isProposalsFiltered
+                    ? "Try adjusting your search query or clearing the status filters."
+                    : isClosed
                     ? "This Problem Statement is closed and no proposals were submitted."
                     : "Verified startups will submit proposals through the portal while this challenge is open."}
                 </p>
+                {isProposalsFiltered && (
+                  <button
+                    type="button"
+                    onClick={handleClearProposalsFilters}
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    Clear Filters
+                  </button>
+                )}
               </div>
             ) : (
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -1168,7 +1954,87 @@ function ChallengeApplications() {
           </div>
         )}
 
-        {/* TAB 3: FINAL EVALUATOR POOL & REVIEW */}
+        {/* TAB 3: SHORTLISTED STARTUPS */}
+        {activeTab === "shortlisted" && (
+          <div className="space-y-6">
+            {/* Header intro card */}
+            <div className="rounded-2xl border border-purple-100 bg-purple-50/40 p-4 sm:p-5 dark:border-purple-900/40 dark:bg-purple-950/20">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                      Official Challenge Shortlist ({shortlistedList.length})
+                    </h2>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                    Authoritatively shortlisted startups for this Problem Statement. Shortlisted candidates are qualified for technical evaluation and pilot stage fast-tracking.
+                  </p>
+                </div>
+
+                {shortlistedList.length > 0 && (
+                  <div className="relative min-w-[220px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={shortlistedSearch}
+                      onChange={(e) => setShortlistedSearch(e.target.value)}
+                      placeholder="Search shortlisted startups..."
+                      className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-8.5 pr-8 text-xs outline-none focus:border-purple-500 dark:border-slate-800 dark:bg-slate-900"
+                    />
+                    {shortlistedSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setShortlistedSearch("")}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Content: Empty State vs Cards Grid */}
+            {shortlistedList.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
+                <CheckCircle2 className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-700" />
+                <h3 className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">
+                  No startups have been shortlisted for this challenge yet.
+                </h3>
+                <p className="mt-1 text-xs text-slate-400 max-w-sm mx-auto">
+                  Evaluate verified candidates in the Startup Discovery tab and click "Shortlist Candidate" to advance them into this official shortlist.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("ai-matches")}
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Explore Startup Discovery
+                </button>
+              </div>
+            ) : filteredShortlisted.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-xs text-slate-400 dark:border-slate-800 dark:bg-slate-900">
+                No shortlisted startups match "{shortlistedSearch}".
+                <button
+                  type="button"
+                  onClick={() => setShortlistedSearch("")}
+                  className="ml-2 font-semibold text-purple-600 hover:underline"
+                >
+                  Clear search
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {filteredShortlisted.map((item, idx) => renderShortlistedCard(item, idx))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 4: FINAL EVALUATOR POOL & REVIEW */}
         {activeTab === "evaluator-pool" && (
           <div className="space-y-8">
             {/* Header / Intro */}
@@ -1326,7 +2192,7 @@ function ChallengeApplications() {
                             </div>
 
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                              {m.evaluator?.evaluator_profile?.designation} — {m.evaluator?.evaluator_profile?.organization} ({m.evaluator?.evaluator_profile?.years_experience || 0} yrs exp)
+                              {m.evaluator?.evaluator_profile?.designation} — {m.evaluator?.evaluator_profile?.organization} ({m.evaluator?.evaluator_profile?.years_experience || 0} yrs experience)
                             </p>
 
                             {/* Breakdown */}

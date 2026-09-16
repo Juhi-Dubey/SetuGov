@@ -1,50 +1,113 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { getCurrentUser, loginUser, logoutUser } from "../services/authService";
 
 const AuthContext = createContext(null);
 
+function decodeJwtPayload(token) {
+  if (!token || typeof token !== "string") return null;
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
+  const sessionVersionRef = useRef(0);
+
+  const [token, setToken] = useState(() => {
     try {
-      const savedUser = localStorage.getItem("user");
-      return savedUser ? JSON.parse(savedUser) : null;
+      const savedToken = localStorage.getItem("token");
+      if (!savedToken) return null;
+      const payload = decodeJwtPayload(savedToken);
+      if (payload && payload.exp && Date.now() >= payload.exp * 1000) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        return null;
+      }
+      return savedToken;
     } catch {
       return null;
     }
   });
 
-  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem("user");
+      const parsedUser = savedUser ? JSON.parse(savedUser) : null;
+      const savedToken = localStorage.getItem("token");
+      if (!savedToken) return null;
+      const payload = decodeJwtPayload(savedToken);
+      // Prioritize authoritative JWT payload role if discrepancy exists with cached user JSON
+      if (payload && parsedUser && payload.role && parsedUser.role !== payload.role) {
+        parsedUser.role = payload.role;
+      }
+      return parsedUser;
+    } catch {
+      return null;
+    }
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Restore user session on startup via GET /auth/me
   const refreshUser = useCallback(async () => {
+    const version = ++sessionVersionRef.current;
     const activeToken = localStorage.getItem("token");
     if (!activeToken) {
-      setUser(null);
-      setToken(null);
-      setLoading(false);
+      if (sessionVersionRef.current === version) {
+        setUser(null);
+        setToken(null);
+        setLoading(false);
+      }
       return null;
     }
 
     try {
       setLoading(true);
       const response = await getCurrentUser();
+
+      // Guard against race condition: discard if session changed while request was in flight
+      if (sessionVersionRef.current !== version) {
+        return null;
+      }
+      if (localStorage.getItem("token") !== activeToken) {
+        return null;
+      }
+
       const userData = response?.data?.user || response?.user || response?.data;
       if (userData) {
+        console.log(`[AUTH DEBUG] /auth/me role: ${userData.role}`);
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
         return userData;
       }
     } catch (err) {
-      console.warn("Session restore failed:", err?.message);
-      // Clear expired or revoked session
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      setUser(null);
-      setToken(null);
+      if (sessionVersionRef.current === version && localStorage.getItem("token") === activeToken) {
+        console.warn("Session restore failed:", err?.message);
+        // Clear expired or revoked session
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("role");
+        localStorage.removeItem("selectedRole");
+        setUser(null);
+        setToken(null);
+      }
     } finally {
-      setLoading(false);
+      if (sessionVersionRef.current === version) {
+        setLoading(false);
+      }
     }
     return null;
   }, []);
@@ -53,10 +116,21 @@ export function AuthProvider({ children }) {
     refreshUser();
   }, [refreshUser]);
 
+  // Safe development diagnostics (Requirement 17)
+  useEffect(() => {
+    console.log(`[AUTH DEBUG] current user role: ${user?.role || "NONE"}`);
+    console.log(`[AUTH DEBUG] current token present: ${Boolean(token)}`);
+  }, [user?.role, token]);
+
   // Login handler
   const login = async (credentials) => {
     setError(null);
+    const version = ++sessionVersionRef.current;
     try {
+      // Clear legacy/stale keys before processing new session
+      localStorage.removeItem("role");
+      localStorage.removeItem("selectedRole");
+
       const response = await loginUser(credentials);
       const token = response?.data?.token || response?.token;
       const user = response?.data?.user || response?.user;
@@ -65,10 +139,15 @@ export function AuthProvider({ children }) {
         throw new Error("Invalid response from authentication server");
       }
 
-      setToken(token);
-      setUser(user);
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
+      console.log(`[AUTH DEBUG] login response role: ${user.role}`);
+
+      if (sessionVersionRef.current === version) {
+        setToken(token);
+        setUser(user);
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
+      }
+
       return { success: true, user, token };
     } catch (err) {
       const message = err?.message || "Invalid email or password.";
@@ -79,6 +158,7 @@ export function AuthProvider({ children }) {
 
   // Logout handler
   const logout = async () => {
+    ++sessionVersionRef.current;
     try {
       await logoutUser();
     } catch (err) {
@@ -86,6 +166,8 @@ export function AuthProvider({ children }) {
     } finally {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      localStorage.removeItem("role");
+      localStorage.removeItem("selectedRole");
       setUser(null);
       setToken(null);
       setError(null);

@@ -119,7 +119,7 @@ function AdminEvaluators() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900"
           >
-            <option value="ALL">All Verification Statuses</option>
+            <option value="ALL">All Verification Status</option>
             <option value="VERIFIED">Verified Evaluators</option>
             <option value="PENDING">Pending Review</option>
             <option value="REJECTED">Rejected</option>

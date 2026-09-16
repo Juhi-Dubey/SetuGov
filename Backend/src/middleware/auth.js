@@ -131,6 +131,12 @@ export const authenticate = async (req, res, next) => {
     req.user = user;
     req.startup = user.startups && user.startups.length > 0 ? user.startups[0] : null;
 
+    // Development diagnostic logging
+    if (config.NODE_ENV !== 'production') {
+      logger.info(`[AUTH DEBUG] authenticated user id: ${user.id}`);
+      logger.info(`[AUTH DEBUG] authenticated user role: ${user.role}`);
+    }
+
     next();
   } catch (error) {
     next(error);

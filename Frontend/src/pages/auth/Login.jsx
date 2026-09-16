@@ -98,30 +98,41 @@ function Login() {
   };
 
   const handleRedirectByRole = (userRole) => {
+    const role = String(userRole || "").toUpperCase();
     const fromPath = location.state?.from?.pathname;
-    if (fromPath && fromPath !== "/login") {
-      navigate(fromPath, { replace: true });
-      return;
+
+    const defaultDashboard =
+      {
+        ADMIN: "/admin/dashboard",
+        GOVERNMENT: "/government/dashboard",
+        STARTUP: "/startup/dashboard",
+        EVALUATOR: "/evaluator/dashboard",
+      }[role] || "/role-selection";
+
+    console.log(`[AUTH DEBUG] dashboard redirect role: ${role}`);
+    console.log(`[AUTH DEBUG] dashboard redirect path: ${defaultDashboard}`);
+
+    // Validate that fromPath is strictly allowed for the authenticated role
+    if (fromPath && fromPath !== "/login" && fromPath !== "/") {
+      let isPathAllowed = false;
+
+      if (role === "ADMIN") {
+        isPathAllowed = true;
+      } else if (role === "GOVERNMENT") {
+        isPathAllowed = fromPath.startsWith("/government");
+      } else if (role === "EVALUATOR") {
+        isPathAllowed = fromPath.startsWith("/evaluator");
+      } else if (role === "STARTUP") {
+        isPathAllowed = fromPath.startsWith("/startup");
+      }
+
+      if (isPathAllowed) {
+        navigate(fromPath, { replace: true });
+        return;
+      }
     }
 
-    const role = String(userRole || "").toUpperCase();
-    switch (role) {
-      case "ADMIN":
-        navigate("/admin/dashboard", { replace: true });
-        break;
-      case "GOVERNMENT":
-        navigate("/government/dashboard", { replace: true });
-        break;
-      case "STARTUP":
-        navigate("/startup/dashboard", { replace: true });
-        break;
-      case "EVALUATOR":
-        navigate("/evaluator/dashboard", { replace: true });
-        break;
-      default:
-        navigate("/role-selection", { replace: true });
-        break;
-    }
+    navigate(defaultDashboard, { replace: true });
   };
 
   const handleSubmit = async (event) => {
@@ -136,6 +147,7 @@ function Login() {
         email: formData.email.trim(),
         password: formData.password,
       });
+      console.log(`[AUTH DEBUG] login response role: ${result.user?.role}`);
       handleRedirectByRole(result.user?.role);
     } catch (err) {
       setAuthError(err?.message || "Invalid email or password. Please try again.");

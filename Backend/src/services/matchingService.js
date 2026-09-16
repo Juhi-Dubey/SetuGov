@@ -610,7 +610,32 @@ export const getChallengeMatches = async (challengeId, user = null, options = {}
       } catch {}
     }
 
-    const app = applicationMap.get(m.startup_id);
+    let app = applicationMap.get(m.startup_id);
+    if (parsed.is_shortlisted && !app) {
+      try {
+        app = await prisma.application.create({
+          data: {
+            challenge_id: challengeId,
+            startup_id: m.startup_id,
+            proposal: `Discovered and shortlisted via Government Problem Statement Discovery & Evaluation. Overall Match Score: ${m.overall_score}%.`,
+            technical_approach: m.startup?.solution_summary || (m.startup?.technologies?.length ? m.startup.technologies.join(', ') : 'Verified Technical Capability'),
+            expected_impact: `Candidate evaluation: ${m.startup?.company_name || 'Startup'} aligns with challenge requirements in ${m.startup?.domain || 'domain'}.`,
+            estimated_cost: 0,
+            timeline: 'Candidate Evaluation',
+            status: 'SHORTLISTED',
+            submitted_at: new Date()
+          }
+        });
+        applicationMap.set(m.startup_id, app);
+      } catch (appErr) {
+        // If created concurrently
+        app = await prisma.application.findUnique({
+          where: { challenge_id_startup_id: { challenge_id: challengeId, startup_id: m.startup_id } }
+        });
+        if (app) applicationMap.set(m.startup_id, app);
+      }
+    }
+
     const has_applied = Boolean(app);
     const is_shortlisted = Boolean(parsed.is_shortlisted) || app?.status === 'SHORTLISTED';
     const participation_status = is_shortlisted ? 'SHORTLISTED' : (has_applied ? 'APPLIED' : 'NOT_APPLIED');
@@ -622,9 +647,11 @@ export const getChallengeMatches = async (challengeId, user = null, options = {}
       eligibility_status = ELIGIBILITY_STATUS.INELIGIBLE;
     }
 
-    // Flatten helpful discovery fields onto the match object
     m.startup_name = m.startup?.company_name || m.startup?.name || 'Unknown Startup';
     m.company_name = m.startup?.company_name || m.startup?.name;
+    m.domain = m.startup?.domain || m.domain || '';
+    m.readiness_level = m.startup?.readiness_level ?? m.readiness_level ?? 1;
+    m.verification_status = m.startup?.verification_status || m.verification_status || (m.startup?.is_verified ? 'VERIFIED' : 'PENDING');
     m.eligibility_status = eligibility_status;
     m.is_eligible = eligibility_status === ELIGIBILITY_STATUS.ELIGIBLE;
     m.participation_status = participation_status;

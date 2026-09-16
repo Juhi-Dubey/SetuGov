@@ -17,6 +17,7 @@ import {
   isEncrypted,
   maskAccountNumber
 } from '../utils/encryption.js';
+import { normalizeDomain } from '../utils/domainUtils.js';
 
 export { maskAccountNumber };
 
@@ -152,7 +153,7 @@ export const createStartup = async (data, user, ip_address = null) => {
       certificate_number: data.certificate_number ? data.certificate_number.trim() : null,
       incorporation_date: data.incorporation_date ? new Date(data.incorporation_date) : null,
       description: data.description ? data.description.trim() : '',
-      domain: data.domain ? data.domain.trim() : '',
+      domain: data.domain ? normalizeDomain(data.domain) : '',
       technologies: cleanTechs,
       products_services: data.products_services ? data.products_services.trim() : null,
       readiness_level: data.readiness_level || 1,
@@ -289,7 +290,7 @@ export const getStartups = async (query = {}, user = null) => {
   } = query;
 
   const where = {};
-  if (domain) where.domain = domain;
+  if (domain) where.domain = normalizeDomain(domain);
   if (verification_status) {
     where.verification_status = verification_status;
   } else if (!user || user.role !== 'ADMIN') {
@@ -629,6 +630,10 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
   // If startup was previously CORRECTION_REQUESTED, editing resets it to DRAFT until resubmitted
   if (startup.verification_status === 'CORRECTION_REQUESTED') {
     updateData.verification_status = 'DRAFT';
+  }
+
+  if (updateData.domain) {
+    updateData.domain = normalizeDomain(updateData.domain);
   }
 
   const updated = await prisma.startup.update({

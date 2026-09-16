@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -52,6 +52,7 @@ import { analyzePilotWithAI, getScaleRecommendationWithAI } from "../../services
 
 function ChallengePilot() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id: paramId, challengeId } = useParams();
   const id = paramId || challengeId;
 
@@ -106,18 +107,19 @@ function ChallengePilot() {
 
   useEffect(() => {
     loadPilot();
-  }, [id]);
+  }, [id, location.search]);
 
   const loadPilot = async () => {
     try {
       setLoading(true);
+      const queryStatus = new URLSearchParams(location.search).get("status");
       let targetPilot = null;
       if (id) {
         // Try getting pilot by ID or find first pilot for challenge
         const res = await getPilotById(id).catch(async () => {
           const all = await getPilots();
           const list = all?.data?.pilots || all?.data || [];
-          return { data: list[0] };
+          return { data: (queryStatus && list.find((p) => p.status === queryStatus)) || list[0] };
         });
         if (res?.data) {
           targetPilot = res.data;
@@ -127,8 +129,8 @@ function ChallengePilot() {
         const all = await getPilots();
         const list = all?.data?.pilots || all?.data || [];
         if (list.length > 0) {
-          targetPilot = list[0];
-          setPilot(list[0]);
+          targetPilot = (queryStatus && list.find((p) => p.status === queryStatus)) || list[0];
+          setPilot(targetPilot);
         }
       }
 

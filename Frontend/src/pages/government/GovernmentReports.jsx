@@ -361,7 +361,7 @@ function GovernmentReports() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="h-9 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-slate-700 focus:border-blue-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
           >
-            <option value="ALL">All Statuses</option>
+            <option value="ALL">All Status</option>
             <option value="RUNNING">Running</option>
             <option value="VALIDATION">In Validation</option>
             <option value="COMPLETED">Completed</option>

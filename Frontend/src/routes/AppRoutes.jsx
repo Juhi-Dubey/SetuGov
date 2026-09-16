@@ -70,6 +70,21 @@ import AdminEvaluators from "../pages/admin/AdminEvaluators";
 import NotFound from "../pages/NotFound";
 import AppLayout from "../components/layout/AppLayout";
 import InviteAccept from "../pages/auth/InviteAccept";
+import { useAuth } from "../context/AuthContext";
+
+function DashboardRedirect() {
+  const { user, role } = useAuth();
+  const normalizedRole = String(role || user?.role || "").toUpperCase();
+  const defaultDashboard =
+    {
+      ADMIN: "/admin/dashboard",
+      GOVERNMENT: "/government/dashboard",
+      STARTUP: "/startup/dashboard",
+      EVALUATOR: "/evaluator/dashboard",
+    }[normalizedRole] || "/role-selection";
+
+  return <Navigate to={defaultDashboard} replace />;
+}
 
 function AppRoutes() {
   return (
@@ -93,6 +108,16 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RoleSelection />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Dynamic Role-Aware Dashboard Redirection */}
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardRedirect />
           </ProtectedRoute>
         }
       />
@@ -163,6 +188,10 @@ function AppRoutes() {
             </RoleRoute>
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/government/applications"
+        element={<Navigate to="/government/challenges" replace />}
       />
       <Route
         path="/government/challenges/:id/eligibility"

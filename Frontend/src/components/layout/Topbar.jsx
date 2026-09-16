@@ -26,6 +26,10 @@ import {
   Clock,
   Loader2,
   Check,
+  UserCheck,
+  FlaskConical,
+  CreditCard,
+  BarChart3,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -35,7 +39,7 @@ import {
 } from "../../services/notificationService.js";
 
 const searchDatabase = [
-  // Challenges
+  // Challenges (accessible to startups and admin)
   {
     type: "Challenge",
     title: "AI-Based Citizen Grievance Management",
@@ -43,6 +47,7 @@ const searchDatabase = [
     path: "/startup/challenges/1",
     category: "Challenges",
     icon: FileText,
+    allowedRoles: ["STARTUP", "ADMIN"],
   },
   {
     type: "Challenge",
@@ -51,6 +56,7 @@ const searchDatabase = [
     path: "/startup/challenges/2",
     category: "Challenges",
     icon: FileText,
+    allowedRoles: ["STARTUP", "ADMIN"],
   },
   {
     type: "Challenge",
@@ -59,6 +65,7 @@ const searchDatabase = [
     path: "/startup/challenges/3",
     category: "Challenges",
     icon: FileText,
+    allowedRoles: ["STARTUP", "ADMIN"],
   },
   {
     type: "Challenge",
@@ -67,6 +74,7 @@ const searchDatabase = [
     path: "/startup/challenges/4",
     category: "Challenges",
     icon: FileText,
+    allowedRoles: ["STARTUP", "ADMIN"],
   },
   {
     type: "Challenge",
@@ -75,9 +83,57 @@ const searchDatabase = [
     path: "/startup/challenges/5",
     category: "Challenges",
     icon: FileText,
+    allowedRoles: ["STARTUP", "ADMIN"],
   },
 
-  // Startups
+  // Government Pages
+  {
+    type: "Page",
+    title: "Government Challenges",
+    desc: "Manage department challenges and problem statements",
+    path: "/government/challenges",
+    category: "Navigation",
+    icon: FileText,
+    allowedRoles: ["GOVERNMENT", "ADMIN"],
+  },
+  {
+    type: "Page",
+    title: "Verified Evaluators Directory",
+    desc: "View verified evaluators and nominate domain experts",
+    path: "/government/evaluators",
+    category: "Navigation",
+    icon: UserCheck,
+    allowedRoles: ["GOVERNMENT", "ADMIN"],
+  },
+  {
+    type: "Page",
+    title: "Pilot Deployments",
+    desc: "Track sandbox trials, KPI baselines and milestones",
+    path: "/government/pilots",
+    category: "Navigation",
+    icon: FlaskConical,
+    allowedRoles: ["GOVERNMENT", "ADMIN"],
+  },
+  {
+    type: "Page",
+    title: "Payment Disbursals",
+    desc: "Authorize milestone disbursals and inspect pilot escrows",
+    path: "/government/payments",
+    category: "Navigation",
+    icon: CreditCard,
+    allowedRoles: ["GOVERNMENT", "ADMIN"],
+  },
+  {
+    type: "Page",
+    title: "Government Reports",
+    desc: "Analytics, procurement metrics and compliance reports",
+    path: "/government/reports",
+    category: "Navigation",
+    icon: BarChart3,
+    allowedRoles: ["GOVERNMENT", "ADMIN"],
+  },
+
+  // Startups Directory (Admin)
   {
     type: "Startup",
     title: "TechNova Solutions",
@@ -85,6 +141,7 @@ const searchDatabase = [
     path: "/admin/startups",
     category: "Startups",
     icon: Rocket,
+    allowedRoles: ["ADMIN"],
   },
   {
     type: "Startup",
@@ -93,6 +150,7 @@ const searchDatabase = [
     path: "/admin/startups",
     category: "Startups",
     icon: Rocket,
+    allowedRoles: ["ADMIN"],
   },
   {
     type: "Startup",
@@ -101,6 +159,7 @@ const searchDatabase = [
     path: "/admin/startups",
     category: "Startups",
     icon: Rocket,
+    allowedRoles: ["ADMIN"],
   },
   {
     type: "Startup",
@@ -109,9 +168,10 @@ const searchDatabase = [
     path: "/admin/startups",
     category: "Startups",
     icon: Rocket,
+    allowedRoles: ["ADMIN"],
   },
 
-  // Pages
+  // Startup Pages
   {
     type: "Page",
     title: "Startup Challenges Directory",
@@ -119,6 +179,7 @@ const searchDatabase = [
     path: "/startup/challenges",
     category: "Navigation",
     icon: FileText,
+    allowedRoles: ["STARTUP", "ADMIN"],
   },
   {
     type: "Page",
@@ -127,6 +188,7 @@ const searchDatabase = [
     path: "/startup/pilot",
     category: "Navigation",
     icon: Rocket,
+    allowedRoles: ["STARTUP", "ADMIN"],
   },
   {
     type: "Page",
@@ -135,7 +197,10 @@ const searchDatabase = [
     path: "/startup/documents",
     category: "Navigation",
     icon: FileText,
+    allowedRoles: ["STARTUP", "ADMIN"],
   },
+
+  // Evaluator Pages (strictly EVALUATOR and ADMIN)
   {
     type: "Page",
     title: "Evaluator Assignments",
@@ -143,6 +208,7 @@ const searchDatabase = [
     path: "/evaluator/assignments",
     category: "Navigation",
     icon: ClipboardCheck,
+    allowedRoles: ["EVALUATOR", "ADMIN"],
   },
   {
     type: "Page",
@@ -151,7 +217,10 @@ const searchDatabase = [
     path: "/evaluator/evaluations",
     category: "Navigation",
     icon: ClipboardCheck,
+    allowedRoles: ["EVALUATOR", "ADMIN"],
   },
+
+  // Admin Pages
   {
     type: "Page",
     title: "Evaluation Criteria Configuration",
@@ -159,6 +228,7 @@ const searchDatabase = [
     path: "/admin/criteria",
     category: "Navigation",
     icon: Settings,
+    allowedRoles: ["ADMIN"],
   },
   {
     type: "Page",
@@ -167,6 +237,7 @@ const searchDatabase = [
     path: "/admin/users",
     category: "Navigation",
     icon: User,
+    allowedRoles: ["ADMIN"],
   },
   {
     type: "Page",
@@ -175,6 +246,7 @@ const searchDatabase = [
     path: "/admin/templates",
     category: "Navigation",
     icon: FileText,
+    allowedRoles: ["ADMIN"],
   },
   {
     type: "Page",
@@ -183,6 +255,7 @@ const searchDatabase = [
     path: "/admin/settings",
     category: "Navigation",
     icon: Settings,
+    allowedRoles: ["ADMIN"],
   },
 ];
 
@@ -354,21 +427,42 @@ function Topbar({ onMenuClick, role = "government" }) {
     }
   };
 
+  const currentRole = String(authUser?.role || role || "").toUpperCase();
+
   const searchResults = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return [];
-    return searchDatabase.filter(
-      (item) =>
+    return searchDatabase.filter((item) => {
+      if (item.allowedRoles && item.allowedRoles.length > 0) {
+        if (!currentRole || !item.allowedRoles.includes(currentRole)) {
+          return false;
+        }
+      }
+      return (
         item.title.toLowerCase().includes(q) ||
         item.desc.toLowerCase().includes(q) ||
         item.type.toLowerCase().includes(q)
-    );
-  }, [searchQuery]);
+      );
+    });
+  }, [searchQuery, currentRole]);
 
-  const handleSelectResult = (path) => {
+  const handleSelectResult = (itemOrPath) => {
     setSearchQuery("");
     setSearchOpen(false);
-    navigate(path);
+    const targetPath = typeof itemOrPath === "string" ? itemOrPath : itemOrPath?.path;
+    const targetItem =
+      typeof itemOrPath === "object"
+        ? itemOrPath
+        : searchDatabase.find((i) => i.path === itemOrPath);
+
+    if (targetItem?.allowedRoles && targetItem.allowedRoles.length > 0) {
+      if (!currentRole || !targetItem.allowedRoles.includes(currentRole)) {
+        return;
+      }
+    }
+    if (targetPath) {
+      navigate(targetPath);
+    }
   };
 
   const handleLogout = async () => {

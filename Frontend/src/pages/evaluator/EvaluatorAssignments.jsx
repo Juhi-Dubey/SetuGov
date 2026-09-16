@@ -272,7 +272,7 @@ function EvaluatorAssignments() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-purple-500 dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white"
               >
-                <option value="All">All Assignment Statuses</option>
+                <option value="All">All Assignment Status</option>
                 <option value="PENDING">Pending Acceptance</option>
                 <option value="ACCEPTED">Accepted / Ready to Evaluate</option>
                 <option value="COMPLETED">Completed Evaluations</option>

@@ -249,7 +249,7 @@ export default function AdminStartups() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-600 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
               >
-                <option value="ALL">All Statuses</option>
+                <option value="ALL">All Status</option>
                 <option value="SUBMITTED">Submitted</option>
                 <option value="UNDER_REVIEW">Under Review</option>
                 <option value="VERIFIED">Verified</option>

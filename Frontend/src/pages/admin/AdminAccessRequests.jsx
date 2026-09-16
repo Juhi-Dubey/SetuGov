@@ -220,7 +220,7 @@ function AdminAccessRequests() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900"
           >
-            <option value="ALL">All Statuses</option>
+            <option value="ALL">All Status</option>
             <option value="PENDING">Pending Verification</option>
             <option value="UNDER_REVIEW">Under Review</option>
             <option value="APPROVED">Approved</option>

@@ -16,20 +16,29 @@ import {
 } from '../controllers/evaluatorPoolController.js';
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
+import { logger } from '../utils/logger.js';
+import { config } from '../config/env.js';
 
 const router = Router();
+
+const logEvaluatorRequest = (req, res, next) => {
+  if (config.NODE_ENV !== 'production' && req.user) {
+    logger.info(`[AUTH DEBUG] evaluator request role: ${req.user.role}`);
+  }
+  next();
+};
 
 // List evaluators (Admin, Government)
 router.get('/', authenticate, authorizeRoles('ADMIN', 'GOVERNMENT'), getEvaluators);
 
 // Evaluator self-application discovery & tracking
-router.get('/open-challenges', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), getOpenChallengesForEvaluator);
-router.get('/my-applications', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), getMyEvaluatorApplications);
+router.get('/open-challenges', authenticate, logEvaluatorRequest, authorizeRoles('EVALUATOR', 'ADMIN'), getOpenChallengesForEvaluator);
+router.get('/my-applications', authenticate, logEvaluatorRequest, authorizeRoles('EVALUATOR', 'ADMIN'), getMyEvaluatorApplications);
 
 // Evaluator assignments (for currently logged in evaluator)
-router.get('/my-assignments', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), getMyAssignments);
-router.patch('/assignments/:id', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), updateAssignmentStatus);
-router.patch('/assignments/:id/status', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), updateAssignmentStatus);
+router.get('/my-assignments', authenticate, logEvaluatorRequest, authorizeRoles('EVALUATOR', 'ADMIN'), getMyAssignments);
+router.patch('/assignments/:id', authenticate, logEvaluatorRequest, authorizeRoles('EVALUATOR', 'ADMIN'), updateAssignmentStatus);
+router.patch('/assignments/:id/status', authenticate, logEvaluatorRequest, authorizeRoles('EVALUATOR', 'ADMIN'), updateAssignmentStatus);
 
 // Get evaluator profile
 router.get('/profile/:id', authenticate, getEvaluatorProfile);

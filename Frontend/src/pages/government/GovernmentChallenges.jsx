@@ -13,6 +13,7 @@ import {
   IndianRupee,
   Users,
   FlaskConical,
+  ChevronLeft,
   ChevronRight,
   Sparkles,
   ArrowUpRight,
@@ -68,6 +69,10 @@ export default function GovernmentChallenges() {
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
   const [actionFeedback, setActionFeedback] = useState(null);
 
+  // Pagination Controls
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9); // 9 items fits 3-column grid cleanly
+
   useEffect(() => {
     fetchChallenges();
   }, []);
@@ -76,7 +81,7 @@ export default function GovernmentChallenges() {
     try {
       setLoading(true);
       setError(null);
-      const res = await getChallenges();
+      const res = await getChallenges({ limit: 500 });
 
       const raw =
         res?.data?.challenges ||
@@ -212,6 +217,19 @@ export default function GovernmentChallenges() {
       });
   }, [challenges, statusFilter, selectedDept, searchQuery, sortBy]);
 
+  // Reset page when filters or sorting change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, selectedDept, sortBy]);
+
+  const totalPages = Math.ceil(filteredChallenges.length / pageSize) || 1;
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const paginatedChallenges = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    return filteredChallenges.slice(start, start + pageSize);
+  }, [filteredChallenges, safePage, pageSize]);
+
   // Summary Metrics
   const stats = useMemo(() => {
     const total = challenges.length;
@@ -330,92 +348,103 @@ export default function GovernmentChallenges() {
             <p className="mt-1 text-xs text-slate-500">Live sandbox execution</p>
           </div>
 
-          <div className="col-span-2 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-indigo-950 p-4 text-white shadow-sm transition-all hover:shadow-md lg:col-span-1">
+          <div className="col-span-2 rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-sm transition-all hover:shadow-md lg:col-span-1">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-300">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Total Budget
               </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white">
+
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
                 <IndianRupee className="h-4 w-4" />
               </div>
             </div>
-            <p className="mt-3 text-2xl font-bold text-white">
+
+            <p className="mt-3 text-2xl font-bold text-slate-900">
               {formatBudget(stats.totalBudget)}
             </p>
-            <p className="mt-1 text-xs text-indigo-200/80">
+
+            <p className="mt-1 text-xs text-slate-500">
               {stats.totalApps} startup proposals
             </p>
           </div>
-        </div>
+        </div>  
 
         {/* Filter & Search Toolbar */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            {/* Search Input */}
-            <div className="relative flex-1 max-w-md">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-wrap lg:flex-nowrap items-center gap-3">
+            {/* Search Input (flexible, 220-260px minimum) */}
+            <div className="relative w-full flex-1 min-w-[200px] lg:min-w-[220px]">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search challenges, keywords, tech stack, dept..."
+                placeholder="Search challenges, keywords..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-8 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
               />
               {searchQuery && (
                 <button
+                  type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  aria-label="Clear search"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
 
-            {/* Controls: Department, Sort, View Mode */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Department Dropdown */}
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-slate-400 shrink-0" />
-                <select
-                  value={selectedDept}
-                  onChange={(e) => setSelectedDept(e.target.value)}
-                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
-                >
-                  {departments.map((dept) => (
-                    <option key={dept} value={dept}>
-                      {dept === "ALL" ? "All Departments" : dept}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {/* Filters: Status (140-150px) & Department (210-225px) */}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-10 w-full sm:w-[145px] lg:w-[145px] shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 cursor-pointer"
+            >
+              {statusTabs.map((tab) => (
+                <option key={tab.id} value={tab.id}>
+                  {tab.id === "ALL" ? "All Status" : tab.label}
+                </option>
+              ))}
+            </select>
 
-              {/* Sort Dropdown */}
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="h-4 w-4 text-slate-400 shrink-0" />
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
-                >
-                  <option value="newest">Newest First</option>
-                  <option value="budget-desc">Budget: High to Low</option>
-                  <option value="applications-desc">Most Proposals</option>
-                  <option value="title-asc">Alphabetical (A-Z)</option>
-                </select>
-              </div>
+            <select
+              value={selectedDept}
+              onChange={(e) => setSelectedDept(e.target.value)}
+              className="h-10 w-full sm:w-[220px] lg:w-[220px] shrink-0 truncate rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 cursor-pointer"
+            >
+              {departments.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept === "ALL" ? "All Departments" : dept}
+                </option>
+              ))}
+            </select>
 
-              {/* Refresh */}
+            {/* Sort Dropdown (150-160px) */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="h-10 w-full sm:w-[155px] lg:w-[155px] shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 cursor-pointer"
+            >
+              <option value="newest">Newest First</option>
+              <option value="budget-desc">Budget: High to Low</option>
+              <option value="applications-desc">Most Proposals</option>
+              <option value="title-asc">Alphabetical (A-Z)</option>
+            </select>
+
+            {/* Actions: Refresh & Segmented Grid/List Toggle */}
+            <div className="flex items-center gap-3 shrink-0">
               <button
+                type="button"
                 onClick={fetchChallenges}
                 title="Refresh challenges"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white transition-colors"
               >
                 <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               </button>
 
-              {/* View Toggle */}
-              <div className="flex items-center rounded-xl border border-slate-200 bg-slate-100 p-0.5 dark:border-slate-800 dark:bg-slate-950">
+              <div className="flex h-10 w-[76px] shrink-0 items-center justify-between rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-950">
                 <button
+                  type="button"
                   onClick={() => setViewMode("grid")}
                   className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all ${
                     viewMode === "grid"
@@ -427,6 +456,7 @@ export default function GovernmentChallenges() {
                   <Grid className="h-4 w-4" />
                 </button>
                 <button
+                  type="button"
                   onClick={() => setViewMode("table")}
                   className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all ${
                     viewMode === "table"
@@ -522,7 +552,7 @@ export default function GovernmentChallenges() {
              GRID VIEW
           ===================================================== */
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredChallenges.map((challenge, idx) => (
+            {paginatedChallenges.map((challenge, idx) => (
               <ChallengeCard
                 key={challenge.id}
                 challenge={challenge}
@@ -542,18 +572,18 @@ export default function GovernmentChallenges() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[900px]">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-400">
-                    <th className="px-5 py-4">Challenge & Details</th>
-                    <th className="px-5 py-4">Department</th>
-                    <th className="px-5 py-4">Budget</th>
-                    <th className="px-5 py-4">Proposals</th>
-                    <th className="px-5 py-4">Pilot Duration</th>
-                    <th className="px-5 py-4">Status</th>
-                    <th className="px-5 py-4 text-right">Actions</th>
+                  <tr className="border-b border-slate-200 bg-slate-200 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
+                    <th className="px-5 py-3.5">Challenge & Details</th>
+                    <th className="px-5 py-3.5">Department</th>
+                    <th className="px-5 py-3.5">Budget</th>
+                    <th className="px-5 py-3.5">Proposals</th>
+                    <th className="px-5 py-3.5">Pilot Duration</th>
+                    <th className="px-5 py-3.5">Status</th>
+                    <th className="px-5 py-3.5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredChallenges.map((challenge) => (
+                  {paginatedChallenges.map((challenge) => (
                     <tr
                       key={challenge.id}
                       onClick={() => navigate(`/government/challenges/${challenge.id}/overview`)}
@@ -620,7 +650,7 @@ export default function GovernmentChallenges() {
                             onClick={() =>
                               navigate(`/government/challenges/${challenge.id}/overview`)
                             }
-                            className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-indigo-500/20 dark:hover:text-indigo-300"
+                            className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-900 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-indigo-500/20 dark:hover:text-indigo-300"
                           >
                             Pipeline
                             <ChevronRight className="h-3.5 w-3.5" />
@@ -632,6 +662,105 @@ export default function GovernmentChallenges() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* Pagination Toolbar */}
+        {!loading && filteredChallenges.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+              <span>
+                Showing{" "}
+                <strong className="font-semibold text-slate-900 dark:text-white">
+                  {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, filteredChallenges.length)}
+                </strong>{" "}
+                of{" "}
+                <strong className="font-semibold text-slate-900 dark:text-white">
+                  {filteredChallenges.length}
+                </strong>{" "}
+                challenges
+              </span>
+
+              <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3 dark:border-slate-700">
+                <span className="text-slate-400">Per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                >
+                  <option value={6}>6</option>
+                  <option value={9}>9</option>
+                  <option value={18}>18</option>
+                  <option value={27}>27</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Page Navigation Buttons */}
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={safePage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  aria-label="Previous Page"
+                  className="inline-flex h-8 items-center gap-1 rounded-xl border border-slate-200 px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Previous</span>
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                    if (
+                      totalPages > 7 &&
+                      pageNum !== 1 &&
+                      pageNum !== totalPages &&
+                      Math.abs(pageNum - safePage) > 1
+                    ) {
+                      if (pageNum === 2 || pageNum === totalPages - 1) {
+                        return (
+                          <span key={pageNum} className="px-1 text-xs text-slate-400">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    }
+
+                    const isActive = pageNum === safePage;
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`flex h-8 min-w-[32px] items-center justify-center rounded-xl px-2 text-xs font-semibold transition-all ${
+                          isActive
+                            ? "bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900"
+                            : "border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  disabled={safePage === totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  aria-label="Next Page"
+                  className="inline-flex h-8 items-center gap-1 rounded-xl border border-slate-200 px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -755,7 +884,7 @@ function ChallengeCard({
               e.stopPropagation();
               navigate(`/government/challenges/${challenge.id}/overview`);
             }}
-            className="inline-flex items-center gap-1 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-600 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+            className="inline-flex items-center gap-1 rounded-xl bg-blue-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-600 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
           >
             Pipeline
             <ChevronRight className="h-3.5 w-3.5" />

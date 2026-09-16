@@ -572,7 +572,7 @@ export const updateAssignmentStatus = async (assignmentId, data, user, ip_addres
   const { status, notes } = data;
 
   if (!['ACCEPTED', 'DECLINED', 'RECUSED'].includes(status)) {
-    throw new BadRequestError('Invalid assignment status. Valid statuses: ACCEPTED, DECLINED, RECUSED.');
+    throw new BadRequestError('Invalid assignment status. Valid status: ACCEPTED, DECLINED, RECUSED.');
   }
 
   const assignment = await prisma.evaluatorAssignment.findUnique({

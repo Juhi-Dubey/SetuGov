@@ -148,7 +148,7 @@ export const getChallenges = async (query = {}, user = null) => {
   }
 
   const safePage = Math.max(1, parseInt(page, 10) || 1);
-  const safeLimit = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+  const safeLimit = Math.min(1000, Math.max(1, parseInt(limit, 10) || 20));
   const skip = (safePage - 1) * safeLimit;
   const take = safeLimit;
 
@@ -699,9 +699,30 @@ export const shortlistStartup = async (challengeId, startupId, user, ip_address 
     throw new BadRequestError(`Cannot shortlist an ineligible startup. Reason: ${reasons}`);
   }
 
-  // Duplicate prevention
-  if (parsedReasoning.is_shortlisted) {
-    throw new BadRequestError(`Startup "${startup.company_name}" is already shortlisted for this problem statement.`);
+  // Check if an application already exists for this challenge + startup
+  const existingApp = await prisma.application.findUnique({
+    where: {
+      challenge_id_startup_id: {
+        challenge_id: challengeId,
+        startup_id: startupId
+      }
+    }
+  });
+
+  // Duplicate prevention: check both MatchScore and Application
+  if (parsedReasoning.is_shortlisted || existingApp?.status === 'SHORTLISTED') {
+    return {
+      challenge_id: challengeId,
+      application_id: existingApp?.id || null,
+      startup_id: startupId,
+      startup_name: startup.company_name,
+      application_status: 'SHORTLISTED',
+      is_shortlisted: true,
+      shortlisted_at: parsedReasoning.shortlisted_at || existingApp?.updated_at?.toISOString() || new Date().toISOString(),
+      shortlisted_by: parsedReasoning.shortlisted_by || user.id,
+      notes: notes || parsedReasoning.shortlist_notes || null,
+      message: `Startup "${startup.company_name}" is already shortlisted for this problem statement.`
+    };
   }
 
   const shortlistedAt = new Date().toISOString();
@@ -713,35 +734,54 @@ export const shortlistStartup = async (challengeId, startupId, user, ip_address 
     shortlist_notes: notes || null
   };
 
-  // Persist shortlist state inside MatchScore
-  await prisma.matchScore.update({
-    where: {
-      challenge_id_startup_id: {
-        challenge_id: challengeId,
-        startup_id: startupId
+  // Persist shortlist state inside Prisma transaction
+  const savedApp = await prisma.$transaction(async (tx) => {
+    // 1. Update MatchScore record
+    await tx.matchScore.update({
+      where: {
+        challenge_id_startup_id: {
+          challenge_id: challengeId,
+          startup_id: startupId
+        }
+      },
+      data: {
+        ai_reasoning: JSON.stringify(updatedReasoning)
       }
-    },
-    data: {
-      ai_reasoning: JSON.stringify(updatedReasoning)
-    }
-  });
-
-  // Synchronize Application status if formal application exists
-  const application = await prisma.application.findUnique({
-    where: {
-      challenge_id_startup_id: {
-        challenge_id: challengeId,
-        startup_id: startupId
-      }
-    }
-  });
-
-  if (application) {
-    await prisma.application.update({
-      where: { id: application.id },
-      data: { status: 'SHORTLISTED' }
     });
-  }
+
+    // 2. Persist Application record with status = SHORTLISTED
+    let app = await tx.application.findUnique({
+      where: {
+        challenge_id_startup_id: {
+          challenge_id: challengeId,
+          startup_id: startupId
+        }
+      }
+    });
+
+    if (app) {
+      app = await tx.application.update({
+        where: { id: app.id },
+        data: { status: 'SHORTLISTED' }
+      });
+    } else {
+      app = await tx.application.create({
+        data: {
+          challenge_id: challengeId,
+          startup_id: startupId,
+          proposal: `Discovered and shortlisted via Government Problem Statement Discovery & Evaluation. Overall Match Score: ${matchScore.overall_score}%.`,
+          technical_approach: startup.solution_summary || (startup.technologies?.length ? startup.technologies.join(', ') : 'Verified Technical Capability'),
+          expected_impact: `Government candidate evaluation: ${startup.company_name} aligns with challenge requirements in ${startup.domain || 'domain'}.`,
+          estimated_cost: 0,
+          timeline: 'Candidate Evaluation',
+          status: 'SHORTLISTED',
+          submitted_at: new Date()
+        }
+      });
+    }
+
+    return app;
+  });
 
   // Audit logging
   await createAuditLog({
@@ -752,9 +792,10 @@ export const shortlistStartup = async (challengeId, startupId, user, ip_address 
     details: {
       startup_id: startupId,
       startup_name: startup.company_name,
+      application_id: savedApp.id,
       overall_score: matchScore.overall_score,
       eligibility_status: eligibilityStatus,
-      has_application: Boolean(application),
+      has_application: true,
       notes
     },
     ip_address
@@ -787,8 +828,10 @@ export const shortlistStartup = async (challengeId, startupId, user, ip_address 
 
   return {
     challenge_id: challengeId,
+    application_id: savedApp.id,
     startup_id: startupId,
     startup_name: startup.company_name,
+    application_status: savedApp.status,
     is_shortlisted: true,
     shortlisted_at: shortlistedAt,
     shortlisted_by: user.id,
