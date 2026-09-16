@@ -27,6 +27,9 @@ import {
   AlertTriangle,
   Award,
   Layers,
+  LayoutDashboard,
+  BarChart2,
+  Flag,
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
@@ -81,13 +84,22 @@ function ChallengePilot() {
   });
 
   // Scale Decision Form State (Official Government Decision)
+  // All fields start empty to force the user to make explicit choices
   const [govDecision, setGovDecision] = useState({
-    decision: "SCALE",
+    decision: "",
     justification: "",
-    scaling_scope: "Statewide expansion across 36 municipal districts",
-    budget_allocated: "12000000",
+    scaling_scope: "",
+    budget_allocated: "",
   });
   const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
+
+  // Per-field validation errors for the Official Scaling Decision form
+  const [decisionErrors, setDecisionErrors] = useState({
+    decision: "",
+    scaling_scope: "",
+    budget_allocated: "",
+    justification: "",
+  });
 
   // New KPI Form State
   const [newKpi, setNewKpi] = useState({
@@ -338,13 +350,40 @@ function ChallengePilot() {
   const handleRecordOfficialScaleDecision = async (e) => {
     e.preventDefault();
     if (!pilot?.id) return;
+
+    // ── Validate all four required fields ──────────────────────────────────
+    const errors = { decision: "", scaling_scope: "", budget_allocated: "", justification: "" };
+    let hasError = false;
+
+    if (!govDecision.decision) {
+      errors.decision = "Please select an official decision.";
+      hasError = true;
+    }
+    if (!govDecision.scaling_scope || !govDecision.scaling_scope.trim()) {
+      errors.scaling_scope = "Scaling scope is required.";
+      hasError = true;
+    }
+    const budgetNum = Number(govDecision.budget_allocated);
+    if (!govDecision.budget_allocated || isNaN(budgetNum) || budgetNum <= 0) {
+      errors.budget_allocated = "Enter a valid positive budget amount.";
+      hasError = true;
+    }
+    if (!govDecision.justification || !govDecision.justification.trim()) {
+      errors.justification = "Official sanction justification is required.";
+      hasError = true;
+    }
+
+    setDecisionErrors(errors);
+    if (hasError) return; // Block API call when validation fails
+    // ── End validation ────────────────────────────────────────────────────
+
     try {
       setIsSubmittingDecision(true);
       await createScaleDecision(pilot.id, {
         decision: govDecision.decision,
-        justification: govDecision.justification || "Approved following pilot milestone review",
-        scaling_scope: govDecision.scaling_scope,
-        budget_allocated: Number(govDecision.budget_allocated) || 0,
+        justification: govDecision.justification.trim(),
+        scaling_scope: govDecision.scaling_scope.trim(),
+        budget_allocated: budgetNum,
       });
       alert("Official Government Scale Decision recorded and logged into Platform Audit Trail!");
       loadPilot();
@@ -478,36 +517,39 @@ function ChallengePilot() {
           <button
             type="button"
             onClick={() => setActiveTab("overview")}
-            className={`border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
               activeTab === "overview"
                 ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
+            <LayoutDashboard className="h-4 w-4 text-sky-500" />
             Sandbox Overview
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("kpis")}
-            className={`border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
               activeTab === "kpis"
                 ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
+            <BarChart2 className="h-4 w-4 text-cyan-500" />
             KPIs & Measurements ({pilot?.kpis?.length || 0})
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("milestones")}
-            className={`border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
               activeTab === "milestones"
                 ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
+            <Flag className="h-4 w-4 text-violet-500" />
             Milestones ({pilot?.milestones?.length || 0})
           </button>
 
@@ -1093,7 +1135,7 @@ function ChallengePilot() {
                 <div className="flex flex-col sm:items-end gap-1 shrink-0">
                   <span className="text-[11px] font-medium text-slate-400">Estimated Scaling Budget</span>
                   <span className="text-lg font-bold text-slate-900 dark:text-white">
-                    {scaleRecommendation?.scaling_plan?.estimated_scaling_budget || (pilot.budget ? `₹${Number(pilot.budget).toLocaleString("en-IN")}` : "Not estimated")}
+                    {scaleRecommendation?.scaling_plan?.estimated_scaling_budget || (pilot?.budget ? `₹${Number(pilot.budget).toLocaleString("en-IN")}` : "Not estimated")}
                   </span>
                 </div>
               </div>
@@ -1217,53 +1259,123 @@ function ChallengePilot() {
               </div>
 
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                {/* Field 1: Official Decision */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Official Decision</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Official Decision{" "}
+                    <span className="text-red-500" aria-hidden="true">*</span>
+                  </label>
                   <select
                     value={govDecision.decision}
-                    onChange={(e) => setGovDecision({ ...govDecision, decision: e.target.value })}
-                    className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                    onChange={(e) => {
+                      setGovDecision({ ...govDecision, decision: e.target.value });
+                      if (e.target.value) setDecisionErrors((prev) => ({ ...prev, decision: "" }));
+                    }}
+                    className={`mt-1.5 h-10 w-full rounded-xl border bg-white px-3 text-xs outline-none focus:border-indigo-500 dark:bg-slate-950 ${
+                      decisionErrors.decision
+                        ? "border-red-400 dark:border-red-600"
+                        : "border-slate-200 dark:border-slate-800"
+                    }`}
                   >
-                    <option value="SCALE">SCALE (Procure & Deploy State-wide)</option>
+                    <option value="">— Select a decision —</option>
+                    <option value="SCALE">SCALE (Procure &amp; Deploy State-wide)</option>
                     <option value="EXTEND">EXTEND (Expand Sandbox Trial)</option>
                     <option value="STOP">STOP (Conclude Pilot Without Procurement)</option>
                   </select>
+                  {decisionErrors.decision && (
+                    <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      {decisionErrors.decision}
+                    </p>
+                  )}
                 </div>
 
+                {/* Field 2: Scaling Scope */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Scaling Scope</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Scaling Scope{" "}
+                    <span className="text-red-500" aria-hidden="true">*</span>
+                  </label>
                   <input
                     type="text"
                     value={govDecision.scaling_scope}
-                    onChange={(e) => setGovDecision({ ...govDecision, scaling_scope: e.target.value })}
-                    className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                    onChange={(e) => {
+                      setGovDecision({ ...govDecision, scaling_scope: e.target.value });
+                      if (e.target.value.trim()) setDecisionErrors((prev) => ({ ...prev, scaling_scope: "" }));
+                    }}
+                    className={`mt-1.5 h-10 w-full rounded-xl border px-3 text-xs outline-none focus:border-indigo-500 dark:bg-slate-950 ${
+                      decisionErrors.scaling_scope
+                        ? "border-red-400 dark:border-red-600"
+                        : "border-slate-200 dark:border-slate-800"
+                    }`}
                     placeholder="e.g., Statewide expansion across 36 municipal districts"
-                    required
                   />
+                  {decisionErrors.scaling_scope && (
+                    <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      {decisionErrors.scaling_scope}
+                    </p>
+                  )}
                 </div>
 
+                {/* Field 3: Sanctioned Budget */}
                 <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Sanctioned Budget (INR)</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Sanctioned Budget (INR){" "}
+                    <span className="text-red-500" aria-hidden="true">*</span>
+                  </label>
                   <input
                     type="number"
+                    min="1"
                     value={govDecision.budget_allocated}
-                    onChange={(e) => setGovDecision({ ...govDecision, budget_allocated: e.target.value })}
-                    className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                    onChange={(e) => {
+                      setGovDecision({ ...govDecision, budget_allocated: e.target.value });
+                      const v = Number(e.target.value);
+                      if (e.target.value && !isNaN(v) && v > 0)
+                        setDecisionErrors((prev) => ({ ...prev, budget_allocated: "" }));
+                    }}
+                    className={`mt-1.5 h-10 w-full rounded-xl border px-3 text-xs outline-none focus:border-indigo-500 dark:bg-slate-950 ${
+                      decisionErrors.budget_allocated
+                        ? "border-red-400 dark:border-red-600"
+                        : "border-slate-200 dark:border-slate-800"
+                    }`}
                     placeholder="e.g., 12000000"
                   />
+                  {decisionErrors.budget_allocated && (
+                    <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      {decisionErrors.budget_allocated}
+                    </p>
+                  )}
                 </div>
               </div>
 
+              {/* Field 4: Official Sanction Justification */}
               <div className="mt-4">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Official Sanction Justification</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Official Sanction Justification{" "}
+                  <span className="text-red-500" aria-hidden="true">*</span>
+                </label>
                 <textarea
                   rows={2}
                   value={govDecision.justification}
-                  onChange={(e) => setGovDecision({ ...govDecision, justification: e.target.value })}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                  onChange={(e) => {
+                    setGovDecision({ ...govDecision, justification: e.target.value });
+                    if (e.target.value.trim()) setDecisionErrors((prev) => ({ ...prev, justification: "" }));
+                  }}
+                  className={`mt-1.5 w-full rounded-xl border p-3 text-xs outline-none focus:border-indigo-500 dark:bg-slate-950 ${
+                    decisionErrors.justification
+                      ? "border-red-400 dark:border-red-600"
+                      : "border-slate-200 dark:border-slate-800"
+                  }`}
                   placeholder="State the statutory justification and empirical basis for this scaling decision..."
-                  required
                 />
+                {decisionErrors.justification && (
+                  <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
+                    <AlertCircle className="h-3 w-3 shrink-0" />
+                    {decisionErrors.justification}
+                  </p>
+                )}
               </div>
 
               <div className="mt-4 flex justify-end">

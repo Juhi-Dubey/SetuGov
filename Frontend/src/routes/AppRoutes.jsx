@@ -31,6 +31,7 @@ import ChallengeContract from "../pages/government/ChallengeContract";
 import ChallengeAudit from "../pages/government/ChallengeAudit";
 import GovernmentReports from "../pages/government/GovernmentReports";
 import GovernmentEvaluators from "../pages/government/GovernmentEvaluators";
+import GovernmentEvaluatorDetail from "../pages/government/GovernmentEvaluatorDetail";
 
 // =====================================================
 // STARTUP
@@ -372,6 +373,20 @@ function AppRoutes() {
             <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
               <AppLayout role="government">
                 <GovernmentEvaluators />
+              </AppLayout>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Dynamic evaluator detail — works for any evaluator ID, current or future */}
+      <Route
+        path="/government/evaluators/:evaluatorId"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
+              <AppLayout role="government">
+                <GovernmentEvaluatorDetail />
               </AppLayout>
             </RoleRoute>
           </ProtectedRoute>
