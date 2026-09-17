@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -19,6 +20,7 @@ import {
 import { getEvaluators, nominateEvaluator } from "../../services/evaluatorService";
 
 function GovernmentEvaluators() {
+  const navigate = useNavigate();
   const [evaluators, setEvaluators] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -193,20 +195,33 @@ function GovernmentEvaluators() {
                 key={profile.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between"
+                role="button"
+                tabIndex={0}
+                aria-label={`View profile of ${profile.user?.name || "evaluator"}`}
+                onClick={() => navigate(`/government/evaluators/${profile.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate(`/government/evaluators/${profile.id}`);
+                  }
+                }}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between cursor-pointer transition-all duration-200 hover:border-purple-400 hover:shadow-md hover:shadow-purple-100/50 dark:hover:border-purple-700 dark:hover:shadow-purple-900/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2"
               >
                 <div>
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                      <h3 className="font-bold text-slate-900 dark:text-white text-base group-hover:text-purple-700">
                         {profile.user?.name}
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        {profile.designation} · {profile.organization}
+                        {[profile.designation, profile.organization].filter(Boolean).join(" · ") || "—"}
                       </p>
                     </div>
 
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    {/* Verified badge — pointer-events-none so it doesn't interfere with card click */}
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 pointer-events-none flex-shrink-0"
+                    >
                       <CheckCircle2 className="h-3 w-3" /> Verified
                     </span>
                   </div>
@@ -220,7 +235,7 @@ function GovernmentEvaluators() {
                       profile.domain_expertise.map((exp, idx) => (
                         <span
                           key={idx}
-                          className="rounded-md bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-700 dark:bg-purple-950/40 dark:text-purple-300"
+                          className="rounded-md bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 pointer-events-none"
                         >
                           {exp}
                         </span>
@@ -229,8 +244,14 @@ function GovernmentEvaluators() {
                 </div>
 
                 <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
-                  <span>Experience: {profile.years_experience} yrs</span>
-                  <span className="text-slate-400">{profile.employment_type || "Independent"}</span>
+                  <span>
+                    {profile.years_experience != null
+                      ? `Experience: ${profile.years_experience} yr${profile.years_experience !== 1 ? "s" : ""}`
+                      : "Experience: —"}
+                  </span>
+                  <span className="text-slate-400">
+                    {profile.employment_type || "Independent"}
+                  </span>
                 </div>
               </motion.div>
             ))}
