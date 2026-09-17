@@ -106,6 +106,17 @@ export default function StartupProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
+  const [errors, setErrors] = useState({});
+
+  const clearError = (field) => {
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
 
   // Form State
   const [orgData, setOrgData] = useState({
@@ -121,10 +132,10 @@ export default function StartupProfile() {
   });
 
   const [authPersonData, setAuthPersonData] = useState({
-    authorized_person_name: "",
-    authorized_person_designation: "",
-    authorized_person_email: "",
-    authorized_person_phone: "",
+    authorized_person_name: user?.name || "",
+    authorized_person_designation: user?.designation || "",
+    authorized_person_email: user?.email || "",
+    authorized_person_phone: user?.phone || "",
     authorization_type: "BOARD_RESOLUTION"
   });
 
@@ -228,8 +239,10 @@ export default function StartupProfile() {
         }
       }
     } catch (err) {
-      console.error("Failed to load startup registration:", err);
-      setFeedback({ type: "error", message: err?.message || "Failed to load registration data." });
+      console.warn("Startup registration fetch notice:", err);
+      if (user?.role === "STARTUP") {
+        setFeedback({ type: "error", message: err?.message || "Failed to load registration data." });
+      }
     } finally {
       setLoading(false);
     }
@@ -239,60 +252,235 @@ export default function StartupProfile() {
     fetchDossier();
   }, []);
 
+  useEffect(() => {
+    if (user && !startup) {
+      setAuthPersonData((prev) => ({
+        ...prev,
+        authorized_person_name: prev.authorized_person_name || user.name || "",
+        authorized_person_email: prev.authorized_person_email || user.email || "",
+        authorized_person_phone: prev.authorized_person_phone || user.phone || "",
+        authorized_person_designation: prev.authorized_person_designation || user.designation || "",
+      }));
+    }
+  }, [user, startup]);
+
   const vStatus = startup?.verification_status || "DRAFT";
   const isLocked = ["SUBMITTED", "UNDER_REVIEW", "VERIFIED"].includes(vStatus);
 
+  const validateStep1 = () => {
+    return {};
+  };
+
+  const validateStep2 = () => {
+    const errs = {};
+    if (!orgData.company_name?.trim()) {
+      errs.company_name = "Organization legal name is required.";
+    } else if (orgData.company_name.trim().length < 2) {
+      errs.company_name = "Organization legal name must be at least 2 characters.";
+    }
+
+    if (!orgData.org_type) {
+      errs.org_type = "Please select constitution / entity type.";
+    }
+
+    if (!orgData.registered_address?.trim()) {
+      errs.registered_address = "Registered head office address is required.";
+    }
+
+    if (!orgData.state) {
+      errs.state = "Please select a State / UT.";
+    } else if (!isValidState(orgData.state)) {
+      errs.state = `Invalid State / UT '${orgData.state}'. Please select a canonical Indian State or UT.`;
+    }
+
+    if (!orgData.city) {
+      errs.city = "Please select a City.";
+    } else if (orgData.state && !isValidCityForState(orgData.state, orgData.city)) {
+      errs.city = `City '${orgData.city}' does not belong to '${orgData.state}'.`;
+    }
+
+    const pinStr = String(orgData.pincode || "").trim();
+    if (!pinStr) {
+      errs.pincode = "Postal PIN Code is required.";
+    } else if (!/^[1-9][0-9]{5}$/.test(pinStr)) {
+      errs.pincode = "Postal PIN Code must be exactly 6 numeric digits (e.g. 560001).";
+    }
+
+    return errs;
+  };
+
+  const validateStep3 = () => {
+    const errs = {};
+    if (!authPersonData.authorized_person_name?.trim()) {
+      errs.authorized_person_name = "Authorized signatory full name is required.";
+    }
+
+    if (!authPersonData.authorized_person_designation?.trim()) {
+      errs.authorized_person_designation = "Official designation is required.";
+    }
+
+    const email = (authPersonData.authorized_person_email || "").trim();
+    if (!email) {
+      errs.authorized_person_email = "Official email address is required.";
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+      errs.authorized_person_email = "Please enter a valid official email address.";
+    }
+
+    const phone = (authPersonData.authorized_person_phone || "").trim();
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, "");
+    if (!phone) {
+      errs.authorized_person_phone = "Authorized contact phone is required.";
+    } else if (!/^(?:\+91|0)?[6-9]\d{9}$/.test(cleanPhone)) {
+      errs.authorized_person_phone = "Please enter a valid 10-digit Indian phone number.";
+    }
+
+    if (!authPersonData.authorization_type) {
+      errs.authorization_type = "Please select authorization type / basis.";
+    }
+
+    return errs;
+  };
+
+  const validateStep4 = () => {
+    const errs = {};
+    const pan = (bizIdentityData.pan_number || "").trim().toUpperCase();
+    if (!pan) {
+      errs.pan_number = "Business PAN is required.";
+    } else if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
+      errs.pan_number = "Invalid PAN format. Must be 10 characters alphanumeric (e.g. ABCDE1234F).";
+    }
+
+    const gstin = (bizIdentityData.gstin || "").trim().toUpperCase();
+    if (gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstin)) {
+      errs.gstin = "Invalid GSTIN format (e.g. 29ABCDE1234F1Z5).";
+    }
+
+    const cin = (bizIdentityData.cin_number || "").trim().toUpperCase();
+    if (cin && !/^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/.test(cin)) {
+      errs.cin_number = "Invalid CIN format (e.g. U72900KA2024PTC123456).";
+    }
+
+    return errs;
+  };
+
+  const validateStep5 = () => {
+    const errs = {};
+    const desc = (techProfileData.description || "").trim();
+    if (!desc) {
+      errs.description = "Organization executive summary is required.";
+    } else if (desc.length < 10) {
+      errs.description = "Summary must be at least 10 characters long.";
+    }
+
+    if (!techProfileData.domain?.trim()) {
+      errs.domain = "Please select primary sector / domain.";
+    }
+
+    const trl = parseInt(techProfileData.readiness_level, 10);
+    if (!trl || trl < 1 || trl > 9) {
+      errs.readiness_level = "Technology Readiness Level must be between 1 and 9.";
+    }
+
+    return errs;
+  };
+
+  const validateStep6 = () => {
+    const errs = {};
+    if (!bankData.account_holder_name?.trim()) {
+      errs.account_holder_name = "Account holder name is required.";
+    }
+    if (!bankData.bank_name?.trim()) {
+      errs.bank_name = "Bank name is required.";
+    }
+    const acc = (bankData.account_number || "").trim();
+    if (!acc) {
+      errs.account_number = "Bank account number is required.";
+    } else if (!/^\d{9,18}$/.test(acc)) {
+      errs.account_number = "Bank account number must be between 9 and 18 digits.";
+    }
+    const ifsc = (bankData.ifsc_code || "").trim().toUpperCase();
+    if (!ifsc) {
+      errs.ifsc_code = "Bank IFSC code is required.";
+    } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) {
+      errs.ifsc_code = "Invalid IFSC format (e.g. SBIN0001234).";
+    }
+    return errs;
+  };
+
+  const validateStep7 = () => {
+    const errs = {};
+    const reqDocs = getRequiredDocumentTypes(orgData.org_type);
+    const uploaded = new Set((documents || []).map((d) => d.document_type));
+    const missing = reqDocs.filter((t) => !uploaded.has(t));
+    if (missing.length > 0) {
+      errs.documents = `Please upload all required statutory documents: ${missing.map(m => m.replace(/_/g, ' ')).join(', ')}`;
+    }
+    return errs;
+  };
+
+  const validateStep8 = () => {
+    const errs = {};
+    if (!declarationAccepted) {
+      errs.declaration = "Please accept the legal accuracy declaration before submission.";
+    }
+    return errs;
+  };
+
   const handleSaveStep = async (stepNumber) => {
-    if (!startup?.id) return;
-    setSaving(true);
+    if (stepNumber === 1) {
+      setErrors({});
+      setFeedback({ type: "", message: "" });
+      setActiveStep(2);
+      return;
+    }
+
+    let stepErrors = {};
+    if (stepNumber === 2) stepErrors = validateStep2();
+    else if (stepNumber === 3) stepErrors = validateStep3();
+    else if (stepNumber === 4) stepErrors = validateStep4();
+    else if (stepNumber === 5) stepErrors = validateStep5();
+    else if (stepNumber === 6) stepErrors = validateStep6();
+    else if (stepNumber === 7) stepErrors = validateStep7();
+
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors(stepErrors);
+      setFeedback({
+        type: "error",
+        message: "Please complete all required fields marked with * before proceeding."
+      });
+      return;
+    }
+
+    setErrors({});
     setFeedback({ type: "", message: "" });
 
+    if (stepNumber === 7) {
+      setActiveStep(8);
+      return;
+    }
+
+    if (!startup?.id) {
+      setFeedback({ type: "error", message: "Registration session not initialized. Please refresh the page." });
+      return;
+    }
+
+    setSaving(true);
     try {
       if (stepNumber === 2) {
-        if (!orgData.company_name?.trim()) {
-          setFeedback({ type: "error", message: "Organization legal name is required." });
-          setSaving(false);
-          return;
-        }
-        if (!orgData.registered_address?.trim()) {
-          setFeedback({ type: "error", message: "Registered head office address is required." });
-          setSaving(false);
-          return;
-        }
-        if (!orgData.state) {
-          setFeedback({ type: "error", message: "Please select a valid State / UT." });
-          setSaving(false);
-          return;
-        }
-        if (!isValidState(orgData.state)) {
-          setFeedback({ type: "error", message: `Invalid State / UT '${orgData.state}'. Please select a canonical Indian State or UT.` });
-          setSaving(false);
-          return;
-        }
-        if (!orgData.city) {
-          setFeedback({ type: "error", message: "Please select a valid City for the selected State / UT." });
-          setSaving(false);
-          return;
-        }
-        if (!isValidCityForState(orgData.state, orgData.city)) {
-          setFeedback({ type: "error", message: `City '${orgData.city}' does not belong to '${orgData.state}'. Please select a valid city from the dropdown.` });
-          setSaving(false);
-          return;
-        }
-        if (!orgData.pincode || !/^[1-9][0-9]{5}$/.test(String(orgData.pincode).trim())) {
-          setFeedback({ type: "error", message: "Postal PIN Code must be exactly 6 numeric digits (e.g. 560001)." });
-          setSaving(false);
-          return;
-        }
-        await updateRegistration(startup.id, orgData);
+        const res = await updateRegistration(startup.id, orgData);
+        if (res?.data?.startup) setStartup(res.data.startup);
       } else if (stepNumber === 3) {
-        await updateRegistration(startup.id, authPersonData);
+        const res = await updateRegistration(startup.id, authPersonData);
+        if (res?.data?.startup) setStartup(res.data.startup);
       } else if (stepNumber === 4) {
-        await updateRegistration(startup.id, bizIdentityData);
+        const res = await updateRegistration(startup.id, bizIdentityData);
+        if (res?.data?.startup) setStartup(res.data.startup);
       } else if (stepNumber === 5) {
-        await updateRegistration(startup.id, techProfileData);
+        const res = await updateRegistration(startup.id, techProfileData);
+        if (res?.data?.startup) setStartup(res.data.startup);
       } else if (stepNumber === 6) {
-        await saveBankDetails(startup.id, bankData);
+        const res = await saveBankDetails(startup.id, bankData);
+        if (res?.data?.startup) setStartup(res.data.startup);
       }
 
       setFeedback({ type: "success", message: "Section saved successfully!" });
@@ -340,8 +528,10 @@ export default function StartupProfile() {
 
   const handleSubmitRegistration = async () => {
     if (!startup?.id) return;
-    if (!declarationAccepted) {
-      setFeedback({ type: "error", message: "Please accept the legal accuracy declaration before submission." });
+    const step8Errors = validateStep8();
+    if (Object.keys(step8Errors).length > 0) {
+      setErrors(step8Errors);
+      setFeedback({ type: "error", message: step8Errors.declaration });
       return;
     }
 
@@ -371,6 +561,31 @@ export default function StartupProfile() {
     { num: 8, title: "Review & Sign" },
     { num: 9, title: "Verification Status" }
   ];
+
+  const isStepComplete = (stepNum) => {
+    switch (stepNum) {
+      case 1:
+        return Boolean(startup?.user?.email || user?.email);
+      case 2:
+        return Object.keys(validateStep2()).length === 0;
+      case 3:
+        return Object.keys(validateStep3()).length === 0;
+      case 4:
+        return Object.keys(validateStep4()).length === 0;
+      case 5:
+        return Object.keys(validateStep5()).length === 0;
+      case 6:
+        return Object.keys(validateStep6()).length === 0;
+      case 7:
+        return Object.keys(validateStep7()).length === 0;
+      case 8:
+        return Boolean(declarationAccepted || (vStatus && vStatus !== "DRAFT"));
+      case 9:
+        return vStatus === "VERIFIED";
+      default:
+        return false;
+    }
+  };
 
   if (loading) {
     return (
@@ -461,7 +676,7 @@ export default function StartupProfile() {
           <div className="flex min-w-[760px] items-center justify-between rounded-2xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
             {steps.map((s) => {
               const isCurrent = activeStep === s.num;
-              const isPast = activeStep > s.num;
+              const isComplete = isStepComplete(s.num);
               return (
                 <button
                   key={s.num}
@@ -470,7 +685,7 @@ export default function StartupProfile() {
                   className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition ${
                     isCurrent
                       ? "bg-slate-900 text-white shadow-sm dark:bg-emerald-600 dark:text-white"
-                      : isPast
+                      : isComplete
                       ? "text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-slate-800"
                       : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                   }`}
@@ -478,11 +693,11 @@ export default function StartupProfile() {
                   <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
                     isCurrent
                       ? "bg-white text-slate-900 dark:bg-slate-950 dark:text-emerald-400"
-                      : isPast
+                      : isComplete
                       ? "bg-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300"
                       : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
                   }`}>
-                    {isPast ? <Check className="h-3 w-3" /> : s.num}
+                    {isComplete ? <Check className="h-3 w-3" /> : s.num}
                   </span>
                   <span className="whitespace-nowrap">{s.title}</span>
                 </button>
@@ -514,29 +729,42 @@ export default function StartupProfile() {
                 <div className="grid gap-4 sm:grid-cols-2 rounded-2xl border border-slate-100 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950/50">
                   <div>
                     <span className="text-[11px] font-bold text-slate-500">Account Name:</span>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{startup?.user?.name}</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">{startup?.user?.name || user?.name || "N/A"}</p>
                   </div>
                   <div>
-                    <span className="text-[11px] font-bold text-slate-500">Founder Email:</span>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{startup?.user?.email}</p>
+                    <span className="text-[11px] font-bold text-slate-500">
+                      {user?.role === "STARTUP" ? "Founder Email:" : "Account Email:"}
+                    </span>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">{startup?.user?.email || user?.email || "N/A"}</p>
                   </div>
                   <div>
                     <span className="text-[11px] font-bold text-slate-500">Email Verification Status:</span>
                     <div className="mt-1 flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="h-4 w-4" />
-                      <span>{startup?.user?.is_verified ? "Verified & Authenticated" : "Pending Verification"}</span>
+                      <span>{startup?.user?.is_verified ?? user?.is_verified ? "Verified & Authenticated" : "Pending Verification"}</span>
                     </div>
                   </div>
                   <div>
                     <span className="text-[11px] font-bold text-slate-500">Platform Role:</span>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">STARTUP / INNOVATOR</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">
+                      {{
+                        STARTUP: "STARTUP / INNOVATOR",
+                        GOVERNMENT: "GOVERNMENT OFFICER",
+                        EVALUATOR: "EXPERT EVALUATOR",
+                        ADMIN: "PLATFORM ADMINISTRATOR"
+                      }[String(user?.role || "").toUpperCase()] || String(user?.role || "STARTUP").toUpperCase()}
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex justify-end pt-4">
                   <button
                     type="button"
-                    onClick={() => setActiveStep(2)}
+                    onClick={() => {
+                      setErrors({});
+                      setFeedback({ type: "", message: "" });
+                      setActiveStep(2);
+                    }}
                     className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
                   >
                     Continue to Organization Details
@@ -565,31 +793,51 @@ export default function StartupProfile() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Legal Entity Name *
+                      Legal Entity Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={orgData.company_name}
-                      onChange={(e) => setOrgData({ ...orgData, company_name: e.target.value })}
+                      onChange={(e) => {
+                        setOrgData({ ...orgData, company_name: e.target.value });
+                        clearError("company_name");
+                      }}
                       placeholder="e.g. Setu Diagnostic Systems Private Limited"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      className={`h-10 w-full rounded-xl border ${
+                        errors.company_name
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
                     />
+                    {errors.company_name && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.company_name}</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Organization Constitution / Type *
+                      Organization Constitution / Type <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={orgData.org_type}
-                      onChange={(e) => setOrgData({ ...orgData, org_type: e.target.value })}
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      onChange={(e) => {
+                        setOrgData({ ...orgData, org_type: e.target.value });
+                        clearError("org_type");
+                      }}
+                      className={`h-10 w-full rounded-xl border ${
+                        errors.org_type
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
                     >
                       {ORG_TYPES.map(t => (
                         <option key={t.value} value={t.value}>{t.label}</option>
                       ))}
                     </select>
+                    {errors.org_type && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.org_type}</p>
+                    )}
                   </div>
 
                   <div>
@@ -606,21 +854,31 @@ export default function StartupProfile() {
 
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Registered Head Office Address *
+                      Registered Head Office Address <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={orgData.registered_address}
-                      onChange={(e) => setOrgData({ ...orgData, registered_address: e.target.value })}
+                      onChange={(e) => {
+                        setOrgData({ ...orgData, registered_address: e.target.value });
+                        clearError("registered_address");
+                      }}
                       placeholder="Street address, building, industrial area"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      className={`h-10 w-full rounded-xl border ${
+                        errors.registered_address
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
                     />
+                    {errors.registered_address && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.registered_address}</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      State / UT *
+                      State / UT <span className="text-red-500">*</span>
                     </label>
                     <SearchableSelect
                       id="org-state"
@@ -628,38 +886,49 @@ export default function StartupProfile() {
                       disabled={isLocked}
                       options={getStatesAndUTs()}
                       placeholder="Select State / UT"
+                      error={errors.state}
                       onChange={(selectedState) => {
                         setOrgData(prev => ({
                           ...prev,
                           state: selectedState,
                           city: "" // clear city when state changes
                         }));
+                        clearError("state");
+                        clearError("city");
                       }}
                     />
+                    {errors.state && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.state}</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      City *
+                      City <span className="text-red-500">*</span>
                     </label>
                     <SearchableSelect
                       id="org-city"
                       value={orgData.city}
                       disabled={!orgData.state || isLocked}
                       options={getCitiesForState(orgData.state)}
-                      placeholder={orgData.state ? "Select City" : "Select City"}
+                      placeholder={orgData.state ? "Select City" : "Select State First"}
+                      error={errors.city}
                       onChange={(selectedCity) => {
                         setOrgData(prev => ({
                           ...prev,
                           city: selectedCity
                         }));
+                        clearError("city");
                       }}
                     />
+                    {errors.city && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.city}</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Postal PIN Code *
+                      Postal PIN Code <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -670,10 +939,18 @@ export default function StartupProfile() {
                       onChange={(e) => {
                         const numericOnly = e.target.value.replace(/\D/g, "").slice(0, 6);
                         setOrgData({ ...orgData, pincode: numericOnly });
+                        clearError("pincode");
                       }}
                       placeholder="6-digit PIN"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950 font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`h-10 w-full rounded-xl border ${
+                        errors.pincode
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950 font-mono disabled:opacity-50 disabled:cursor-not-allowed`}
                     />
+                    {errors.pincode && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.pincode}</p>
+                    )}
                   </div>
 
                   <div>
@@ -727,74 +1004,124 @@ export default function StartupProfile() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Authorized Signatory Full Name *
+                      Authorized Signatory Full Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={authPersonData.authorized_person_name}
-                      onChange={(e) => setAuthPersonData({ ...authPersonData, authorized_person_name: e.target.value })}
+                      onChange={(e) => {
+                        setAuthPersonData({ ...authPersonData, authorized_person_name: e.target.value });
+                        clearError("authorized_person_name");
+                      }}
                       placeholder="e.g. Ramesh Chandra"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      className={`h-10 w-full rounded-xl border ${
+                        errors.authorized_person_name
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
                     />
+                    {errors.authorized_person_name && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.authorized_person_name}</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Official Designation *
+                      Official Designation <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={authPersonData.authorized_person_designation}
-                      onChange={(e) => setAuthPersonData({ ...authPersonData, authorized_person_designation: e.target.value })}
+                      onChange={(e) => {
+                        setAuthPersonData({ ...authPersonData, authorized_person_designation: e.target.value });
+                        clearError("authorized_person_designation");
+                      }}
                       placeholder="e.g. Founder & Chief Executive Officer"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      className={`h-10 w-full rounded-xl border ${
+                        errors.authorized_person_designation
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
                     />
+                    {errors.authorized_person_designation && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.authorized_person_designation}</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Official Email Address *
+                      Official Email Address <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="email"
                       required
                       value={authPersonData.authorized_person_email}
-                      onChange={(e) => setAuthPersonData({ ...authPersonData, authorized_person_email: e.target.value })}
+                      onChange={(e) => {
+                        setAuthPersonData({ ...authPersonData, authorized_person_email: e.target.value });
+                        clearError("authorized_person_email");
+                      }}
                       placeholder="ceo@company.ai"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      className={`h-10 w-full rounded-xl border ${
+                        errors.authorized_person_email
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
                     />
+                    {errors.authorized_person_email && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.authorized_person_email}</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Authorized Contact Phone *
+                      Authorized Contact Phone <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="tel"
                       required
                       value={authPersonData.authorized_person_phone}
-                      onChange={(e) => setAuthPersonData({ ...authPersonData, authorized_person_phone: e.target.value })}
+                      onChange={(e) => {
+                        setAuthPersonData({ ...authPersonData, authorized_person_phone: e.target.value });
+                        clearError("authorized_person_phone");
+                      }}
                       placeholder="+91 98765 43210"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      className={`h-10 w-full rounded-xl border ${
+                        errors.authorized_person_phone
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
                     />
+                    {errors.authorized_person_phone && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.authorized_person_phone}</p>
+                    )}
                   </div>
 
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Authorization Type / Basis *
+                      Authorization Type / Basis <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={authPersonData.authorization_type}
-                      onChange={(e) => setAuthPersonData({ ...authPersonData, authorization_type: e.target.value })}
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      onChange={(e) => {
+                        setAuthPersonData({ ...authPersonData, authorization_type: e.target.value });
+                        clearError("authorization_type");
+                      }}
+                      className={`h-10 w-full rounded-xl border ${
+                        errors.authorization_type
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
                     >
                       <option value="BOARD_RESOLUTION">Board Resolution (Companies / LLPs)</option>
                       <option value="POWER_OF_ATTORNEY">Power of Attorney (POA)</option>
                       <option value="PROPRIETOR_FOUNDER">Sole Proprietor / Direct Founder</option>
                       <option value="PARTNER_AUTHORIZATION">Partner Authorization Deed</option>
                     </select>
+                    {errors.authorization_type && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.authorization_type}</p>
+                    )}
                   </div>
                 </div>
 
@@ -837,17 +1164,27 @@ export default function StartupProfile() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Business PAN (10 chars alphanumeric) *
+                      Business PAN (10 chars alphanumeric) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       maxLength={10}
                       value={bizIdentityData.pan_number}
-                      onChange={(e) => setBizIdentityData({ ...bizIdentityData, pan_number: e.target.value.toUpperCase() })}
+                      onChange={(e) => {
+                        setBizIdentityData({ ...bizIdentityData, pan_number: e.target.value.toUpperCase() });
+                        clearError("pan_number");
+                      }}
                       placeholder="e.g. ABCDE1234F"
-                      className="h-10 w-full font-mono rounded-xl border border-slate-200 bg-white px-3.5 text-xs uppercase outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      className={`h-10 w-full font-mono rounded-xl border ${
+                        errors.pan_number
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs uppercase outline-none dark:bg-slate-950`}
                     />
+                    {errors.pan_number && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.pan_number}</p>
+                    )}
                   </div>
 
                   <div>
@@ -858,10 +1195,20 @@ export default function StartupProfile() {
                       type="text"
                       maxLength={15}
                       value={bizIdentityData.gstin}
-                      onChange={(e) => setBizIdentityData({ ...bizIdentityData, gstin: e.target.value.toUpperCase() })}
+                      onChange={(e) => {
+                        setBizIdentityData({ ...bizIdentityData, gstin: e.target.value.toUpperCase() });
+                        clearError("gstin");
+                      }}
                       placeholder="e.g. 29ABCDE1234F1Z5"
-                      className="h-10 w-full font-mono rounded-xl border border-slate-200 bg-white px-3.5 text-xs uppercase outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      className={`h-10 w-full font-mono rounded-xl border ${
+                        errors.gstin
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs uppercase outline-none dark:bg-slate-950`}
                     />
+                    {errors.gstin && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.gstin}</p>
+                    )}
                   </div>
 
                   <div>
@@ -872,10 +1219,20 @@ export default function StartupProfile() {
                       type="text"
                       maxLength={21}
                       value={bizIdentityData.cin_number}
-                      onChange={(e) => setBizIdentityData({ ...bizIdentityData, cin_number: e.target.value.toUpperCase() })}
+                      onChange={(e) => {
+                        setBizIdentityData({ ...bizIdentityData, cin_number: e.target.value.toUpperCase() });
+                        clearError("cin_number");
+                      }}
                       placeholder="e.g. U72900KA2024PTC123456"
-                      className="h-10 w-full font-mono rounded-xl border border-slate-200 bg-white px-3.5 text-xs uppercase outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      className={`h-10 w-full font-mono rounded-xl border ${
+                        errors.cin_number
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs uppercase outline-none dark:bg-slate-950`}
                     />
+                    {errors.cin_number && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.cin_number}</p>
+                    )}
                   </div>
 
                   <div>
@@ -885,7 +1242,10 @@ export default function StartupProfile() {
                     <input
                       type="text"
                       value={bizIdentityData.dpiit_number}
-                      onChange={(e) => setBizIdentityData({ ...bizIdentityData, dpiit_number: e.target.value })}
+                      onChange={(e) => {
+                        setBizIdentityData({ ...bizIdentityData, dpiit_number: e.target.value });
+                        clearError("dpiit_number");
+                      }}
                       placeholder="e.g. DIPP12345"
                       className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
                     />
@@ -941,41 +1301,68 @@ export default function StartupProfile() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Organization Executive Summary *
+                      Organization Executive Summary <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       rows={3}
                       required
                       value={techProfileData.description}
-                      onChange={(e) => setTechProfileData({ ...techProfileData, description: e.target.value })}
+                      onChange={(e) => {
+                        setTechProfileData({ ...techProfileData, description: e.target.value });
+                        clearError("description");
+                      }}
                       placeholder="Brief overview of innovations, mission delivery capabilities, and key product offerings..."
-                      className="w-full rounded-xl border border-slate-200 bg-white p-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      className={`w-full rounded-xl border ${
+                        errors.description
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white p-3.5 text-xs outline-none dark:bg-slate-950`}
                     />
+                    {errors.description && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.description}</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Primary Sector / Domain *
+                      Primary Sector / Domain <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={techProfileData.domain}
-                      onChange={(e) => setTechProfileData({ ...techProfileData, domain: e.target.value })}
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
+                      onChange={(e) => {
+                        setTechProfileData({ ...techProfileData, domain: e.target.value });
+                        clearError("domain");
+                      }}
+                      className={`h-10 w-full rounded-xl border ${
+                        errors.domain
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
                     >
                       {DOMAINS.map(d => (
                         <option key={d} value={d}>{d}</option>
                       ))}
                     </select>
+                    {errors.domain && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.domain}</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Technology Readiness Level (TRL 1-9) *
+                      Technology Readiness Level (TRL 1-9) <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={techProfileData.readiness_level}
-                      onChange={(e) => setTechProfileData({ ...techProfileData, readiness_level: parseInt(e.target.value, 10) })}
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950 font-bold"
+                      onChange={(e) => {
+                        setTechProfileData({ ...techProfileData, readiness_level: parseInt(e.target.value, 10) });
+                        clearError("readiness_level");
+                      }}
+                      className={`h-10 w-full rounded-xl border ${
+                        errors.readiness_level
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950 font-bold`}
                     >
                       <option value={1}>TRL 1 - Basic Principles Observed</option>
                       <option value={2}>TRL 2 - Technology Concept Formulated</option>
@@ -987,6 +1374,9 @@ export default function StartupProfile() {
                       <option value={8}>TRL 8 - Actual System Completed and Qualified</option>
                       <option value={9}>TRL 9 - Actual System Proven in Operational Sandbox</option>
                     </select>
+                    {errors.readiness_level && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.readiness_level}</p>
+                    )}
                   </div>
 
                   <div className="sm:col-span-2">
@@ -1092,38 +1482,58 @@ export default function StartupProfile() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Account Holder Legal Name *
+                      Account Holder Legal Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       disabled={isLocked}
                       value={bankData.account_holder_name}
-                      onChange={(e) => setBankData({ ...bankData, account_holder_name: e.target.value })}
+                      onChange={(e) => {
+                        setBankData({ ...bankData, account_holder_name: e.target.value });
+                        clearError("account_holder_name");
+                      }}
                       placeholder="Must match Legal Entity Name"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950 disabled:opacity-60"
+                      className={`h-10 w-full rounded-xl border ${
+                        errors.account_holder_name
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950 disabled:opacity-60`}
                     />
+                    {errors.account_holder_name && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.account_holder_name}</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Bank Name *
+                      Bank Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       disabled={isLocked}
                       value={bankData.bank_name}
-                      onChange={(e) => setBankData({ ...bankData, bank_name: e.target.value })}
+                      onChange={(e) => {
+                        setBankData({ ...bankData, bank_name: e.target.value });
+                        clearError("bank_name");
+                      }}
                       placeholder="e.g. State Bank of India"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950 disabled:opacity-60"
+                      className={`h-10 w-full rounded-xl border ${
+                        errors.bank_name
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950 disabled:opacity-60`}
                     />
+                    {errors.bank_name && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.bank_name}</p>
+                    )}
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                        Bank Account Number *
+                        Bank Account Number <span className="text-red-500">*</span>
                       </label>
                       {bankData.account_number && (
                         <button
@@ -1141,15 +1551,25 @@ export default function StartupProfile() {
                       required
                       disabled={isLocked}
                       value={bankData.account_number}
-                      onChange={(e) => setBankData({ ...bankData, account_number: e.target.value })}
+                      onChange={(e) => {
+                        setBankData({ ...bankData, account_number: e.target.value });
+                        clearError("account_number");
+                      }}
                       placeholder="9 to 18 digits"
-                      className="h-10 w-full font-mono rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950 disabled:opacity-60"
+                      className={`h-10 w-full font-mono rounded-xl border ${
+                        errors.account_number
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950 disabled:opacity-60`}
                     />
+                    {errors.account_number && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.account_number}</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Bank IFSC Code (11 chars) *
+                      Bank IFSC Code (11 chars) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1157,10 +1577,20 @@ export default function StartupProfile() {
                       disabled={isLocked}
                       maxLength={11}
                       value={bankData.ifsc_code}
-                      onChange={(e) => setBankData({ ...bankData, ifsc_code: e.target.value.toUpperCase() })}
+                      onChange={(e) => {
+                        setBankData({ ...bankData, ifsc_code: e.target.value.toUpperCase() });
+                        clearError("ifsc_code");
+                      }}
                       placeholder="e.g. SBIN0001234"
-                      className="h-10 w-full font-mono uppercase rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950 disabled:opacity-60"
+                      className={`h-10 w-full font-mono uppercase rounded-xl border ${
+                        errors.ifsc_code
+                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
+                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950 disabled:opacity-60`}
                     />
+                    {errors.ifsc_code && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.ifsc_code}</p>
+                    )}
                   </div>
 
                   <div>
@@ -1402,6 +1832,12 @@ export default function StartupProfile() {
                   )}
                 </div>
 
+                {errors.documents && (
+                  <div className="rounded-xl border border-red-200 bg-red-50/80 p-3.5 text-xs text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 font-medium">
+                    {errors.documents}
+                  </div>
+                )}
+
                 <div className="flex justify-between pt-4">
                   <button
                     type="button"
@@ -1412,7 +1848,7 @@ export default function StartupProfile() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setActiveStep(8)}
+                    onClick={() => handleSaveStep(7)}
                     className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
                   >
                     Continue to Final Review <ArrowRight className="h-4 w-4" />
@@ -1540,18 +1976,28 @@ export default function StartupProfile() {
                 })()}
 
                 {/* Legal Declaration Checkbox */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <div className={`rounded-2xl border ${
+                  errors.declaration
+                    ? "border-red-500 ring-2 ring-red-500/10 bg-red-50/20"
+                    : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+                } p-5`}>
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={declarationAccepted}
-                      onChange={(e) => setDeclarationAccepted(e.target.checked)}
+                      onChange={(e) => {
+                        setDeclarationAccepted(e.target.checked);
+                        clearError("declaration");
+                      }}
                       className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     />
                     <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                      <strong className="text-slate-900 dark:text-white">Legal Declaration & Authority:</strong> I hereby declare that all statutory business identity numbers, organization constitution data, banking credentials, and uploaded documents are genuine, authentic, and authorized under applicable Indian laws. I acknowledge that submitting fraudulent representations will lead to immediate disqualification and blacklisting from government sandbox tenders.
+                      <strong className="text-slate-900 dark:text-white">Legal Declaration & Authority: <span className="text-red-500">*</span></strong> I hereby declare that all statutory business identity numbers, organization constitution data, banking credentials, and uploaded documents are genuine, authentic, and authorized under applicable Indian laws. I acknowledge that submitting fraudulent representations will lead to immediate disqualification and blacklisting from government sandbox tenders.
                     </div>
                   </label>
+                  {errors.declaration && (
+                    <p className="mt-2 text-xs text-red-600 dark:text-red-400 font-medium">{errors.declaration}</p>
+                  )}
                 </div>
 
                 <div className="flex justify-between pt-4">

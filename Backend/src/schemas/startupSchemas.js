@@ -64,6 +64,7 @@ export const updateStartupSchema = z.object({
   city: z.string().optional().nullable(),
   state: z.string().optional().nullable(),
   pincode: z.string().regex(PATTERNS.PINCODE, 'Postal PIN code must be exactly 6 digits (e.g. 560001)').optional().nullable().or(z.literal('')),
+  country: z.string().optional().nullable(),
   official_email: z.string().email().optional().nullable().or(z.literal('')),
   official_website: z.string().optional().nullable().or(z.literal('')),
   authorized_person_name: z.string().optional().nullable(),
@@ -82,6 +83,7 @@ export const updateStartupSchema = z.object({
   technologies: z.array(z.string()).max(50, 'Cannot exceed 50 technologies').optional(),
   products_services: z.string().optional().nullable(),
   readiness_level: z.number().int().min(1).max(9).optional(),
+  trl: z.number().int().min(1).max(9).optional(),
   years_experience: z.number().int().min(0).optional(),
   previous_deployments: z.number().int().min(0).optional(),
   location: z.string().optional()

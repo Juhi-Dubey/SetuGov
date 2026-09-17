@@ -1247,112 +1247,71 @@ function ChallengePilot() {
               </div>
             )}
 
-            {/* TAB 2: KPIS */}
-            {activeTab === "kpis" && (
-              <div className="space-y-6">
-                <form
-                  onSubmit={handleAddKpi}
-                  className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm"
+        {/* TAB 2: KPIS */}
+        {activeTab === "kpis" && (
+          <div className="space-y-6">
+            <form onSubmit={handleAddKpi} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+              <h3 className="text-sm font-bold mb-3">Add Custom Pilot KPI</h3>
+              <div className="grid gap-3 sm:grid-cols-4">
+                <input
+                  type="text"
+                  placeholder="Metric name (e.g., Wait time)"
+                  value={newKpi.name}
+                  onChange={(e) => setNewKpi({ ...newKpi, name: e.target.value })}
+                  className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Unit (e.g., %, mins)"
+                  value={newKpi.unit}
+                  onChange={(e) => setNewKpi({ ...newKpi, unit: e.target.value })}
+                  className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                />
+                <input
+                  type="number"
+                  placeholder="Baseline"
+                  value={newKpi.baseline}
+                  onChange={(e) => setNewKpi({ ...newKpi, baseline: e.target.value })}
+                  className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                />
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
                 >
-                  <h3 className="text-sm font-bold mb-3 text-slate-900 dark:text-white">Add Custom Pilot KPI</h3>
-                  <div className="grid gap-3 sm:grid-cols-5">
-                    <input
-                      type="text"
-                      placeholder="Metric name (e.g. Queue Wait Time)"
-                      value={newKpi.name}
-                      onChange={(e) => setNewKpi({ ...newKpi, name: e.target.value })}
-                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white sm:col-span-2"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="Unit (e.g. %, mins, count)"
-                      value={newKpi.unit}
-                      onChange={(e) => setNewKpi({ ...newKpi, unit: e.target.value })}
-                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                      required
-                    />
-                    <input
-                      type="number"
-                      step="any"
-                      placeholder="Baseline Value"
-                      value={newKpi.baseline_value}
-                      onChange={(e) => setNewKpi({ ...newKpi, baseline_value: e.target.value })}
-                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                      required
-                    />
-                    <input
-                      type="number"
-                      step="any"
-                      placeholder="Target Value"
-                      value={newKpi.target_value}
-                      onChange={(e) => setNewKpi({ ...newKpi, target_value: e.target.value })}
-                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                      required
-                    />
-                  </div>
-                  <div className="mt-3 flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={isSaving}
-                      className="btn-primary inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
-                    >
-                      <Plus className="h-4 w-4" /> Save KPI to PostgreSQL
-                    </button>
-                  </div>
-                </form>
-
-                {(!pilot?.kpis || pilot.kpis.length === 0) ? (
-                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
-                    <BarChart2 className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
-                    <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      No KPIs Configured for this Pilot
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Use the form above to add verifiable quantitative metrics.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {pilot.kpis.map((kpi) => (
-                      <div
-                        key={kpi.id}
-                        className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm"
-                      >
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-bold text-slate-900 dark:text-white">{kpi.name}</h4>
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold dark:bg-slate-800 dark:text-slate-300">
-                            Unit: {kpi.unit}
-                          </span>
-                        </div>
-                        <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs">
-                          <div className="rounded-xl bg-slate-50 p-2.5 dark:bg-slate-800/50">
-                            <p className="text-slate-400">Baseline</p>
-                            <p className="font-bold text-slate-900 dark:text-white mt-0.5">
-                              {kpi.baseline_value} {kpi.unit}
-                            </p>
-                          </div>
-                          <div className="rounded-xl bg-slate-50 p-2.5 dark:bg-slate-800/50">
-                            <p className="text-slate-400">Target</p>
-                            <p className="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
-                              {kpi.target_value} {kpi.unit}
-                            </p>
-                          </div>
-                        </div>
-                        {kpi.actual_value != null && (
-                          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs flex justify-between">
-                            <span className="text-slate-400">Actual Value Measured:</span>
-                            <span className="font-bold text-blue-600 dark:text-blue-400">
-                              {kpi.actual_value} {kpi.unit}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  <Plus className="h-4 w-4" /> Save KPI
+                </button>
               </div>
-            )}
+            </form>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {(pilot?.kpis || [
+                { id: "1", name: "Patient Queue Wait Time", unit: "mins", baseline: 45, target: 15 },
+                { id: "2", name: "Daily Throughput Capacity", unit: "patients", baseline: 120, target: 200 },
+              ]).map((kpi) => (
+                <div key={kpi.id} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold">{kpi.name}</h4>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold dark:bg-slate-800">
+                      Unit: {kpi.unit}
+                    </span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs">
+                    <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/50">
+                      <p className="text-slate-400">Baseline</p>
+                      <p className="font-bold">{kpi.baseline} {kpi.unit}</p>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/50">
+                      <p className="text-slate-400">Target</p>
+                      <p className="font-bold text-emerald-600 dark:text-emerald-400">{kpi.target} {kpi.unit}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
             {/* TAB 3: MILESTONES */}
             {activeTab === "milestones" && (
