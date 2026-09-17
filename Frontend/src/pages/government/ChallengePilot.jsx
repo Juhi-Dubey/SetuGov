@@ -672,7 +672,7 @@ function ChallengePilot() {
           <div className="space-y-6">
             <form onSubmit={handleAddKpi} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
               <h3 className="text-sm font-bold mb-3">Add Custom Pilot KPI</h3>
-              <div className="grid gap-3 sm:grid-cols-4">
+              <div className="grid gap-3 sm:grid-cols-5">
                 <input
                   type="text"
                   placeholder="Metric name (e.g., Wait time)"
@@ -688,13 +688,55 @@ function ChallengePilot() {
                   onChange={(e) => setNewKpi({ ...newKpi, unit: e.target.value })}
                   className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
                 />
-                <input
-                  type="number"
-                  placeholder="Baseline"
-                  value={newKpi.baseline}
-                  onChange={(e) => setNewKpi({ ...newKpi, baseline: e.target.value })}
-                  className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
-                />
+
+                {/* Baseline */}
+                {newKpi.unit === "%" ? (
+                  <div className="relative flex h-10 items-center overflow-hidden rounded-xl border border-slate-200 focus-within:border-indigo-500 dark:border-slate-800 dark:bg-slate-950">
+                    <input
+                      type="number"
+                      placeholder="Baseline"
+                      value={newKpi.baseline}
+                      onChange={(e) => setNewKpi({ ...newKpi, baseline: e.target.value })}
+                      className="h-full w-full min-w-0 bg-transparent pl-3 pr-8 text-xs outline-none dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="pointer-events-none absolute right-3 select-none text-xs font-semibold text-slate-400 dark:text-slate-500">
+                      %
+                    </span>
+                  </div>
+                ) : (
+                  <input
+                    type="number"
+                    placeholder="Baseline"
+                    value={newKpi.baseline}
+                    onChange={(e) => setNewKpi({ ...newKpi, baseline: e.target.value })}
+                    className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                  />
+                )}
+
+                {/* Target */}
+                {newKpi.unit === "%" ? (
+                  <div className="relative flex h-10 items-center overflow-hidden rounded-xl border border-slate-200 focus-within:border-indigo-500 dark:border-slate-800 dark:bg-slate-950">
+                    <input
+                      type="number"
+                      placeholder="Target"
+                      value={newKpi.target}
+                      onChange={(e) => setNewKpi({ ...newKpi, target: e.target.value })}
+                      className="h-full w-full min-w-0 bg-transparent pl-3 pr-8 text-xs outline-none dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="pointer-events-none absolute right-3 select-none text-xs font-semibold text-slate-400 dark:text-slate-500">
+                      %
+                    </span>
+                  </div>
+                ) : (
+                  <input
+                    type="number"
+                    placeholder="Target"
+                    value={newKpi.target}
+                    onChange={(e) => setNewKpi({ ...newKpi, target: e.target.value })}
+                    className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                  />
+                )}
+
                 <button
                   type="submit"
                   disabled={isSaving}
@@ -720,11 +762,15 @@ function ChallengePilot() {
                   <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs">
                     <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/50">
                       <p className="text-slate-400">Baseline</p>
-                      <p className="font-bold">{kpi.baseline} {kpi.unit}</p>
+                      <p className="font-bold">
+                        {kpi.unit === "%" ? `${kpi.baseline}%` : `${kpi.baseline} ${kpi.unit}`}
+                      </p>
                     </div>
                     <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/50">
                       <p className="text-slate-400">Target</p>
-                      <p className="font-bold text-emerald-600 dark:text-emerald-400">{kpi.target} {kpi.unit}</p>
+                      <p className="font-bold text-emerald-600 dark:text-emerald-400">
+                        {kpi.unit === "%" ? `${kpi.target}%` : `${kpi.target} ${kpi.unit}`}
+                      </p>
                     </div>
                   </div>
                 </div>

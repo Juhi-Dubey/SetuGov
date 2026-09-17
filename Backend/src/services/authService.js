@@ -86,7 +86,7 @@ export const register = async ({
   const startup = await prisma.startup.create({
     data: {
       user_id: user.id,
-      company_name: '',
+      company_name: data.company_name ? data.company_name.trim() : '',
       description: '',
       domain: '',
       technologies: [],

@@ -123,6 +123,12 @@ function AppRoutes() {
         }
       />
 
+      {/* Common Profile Route */}
+      <Route
+        path="/profile"
+        element={<Navigate to="/startup/profile" replace />}
+      />
+
       {/* =====================================================
           GOVERNMENT ROUTES (Role: GOVERNMENT, ADMIN)
       ===================================================== */}
@@ -512,7 +518,7 @@ function AppRoutes() {
         path="/startup/profile"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "EVALUATOR", "ADMIN"]}>
               <AppLayout role="startup">
                 <StartupProfile />
               </AppLayout>

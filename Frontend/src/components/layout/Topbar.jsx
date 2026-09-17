@@ -465,6 +465,19 @@ function Topbar({ onMenuClick, role = "government" }) {
     }
   };
 
+  const handleProfileNavigation = () => {
+    setProfileOpen(false);
+    const normalizedRole = String(authUser?.role || role || "").toUpperCase();
+    const profileRouteMap = {
+      STARTUP: "/startup/profile",
+      GOVERNMENT: "/startup/profile",
+      EVALUATOR: "/startup/profile",
+      ADMIN: "/startup/profile",
+    };
+    const targetRoute = profileRouteMap[normalizedRole] || "/startup/profile";
+    navigate(targetRoute);
+  };
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -857,6 +870,7 @@ function Topbar({ onMenuClick, role = "government" }) {
 
                   <button
                     type="button"
+                    onClick={handleProfileNavigation}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                   >
                     <User className="h-4 w-4" />
