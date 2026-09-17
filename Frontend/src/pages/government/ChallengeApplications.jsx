@@ -1314,7 +1314,7 @@ function ChallengeApplications() {
                 <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
                   {matchSummary.eligible} eligible matches
                 </span>{" "}
-                (total verified profiles evaluated : {matchSummary.total}; shortlisted : {matchSummary.shortlisted}; Applied : {matchSummary.applied})
+                (total verified profiles evaluated: {matchSummary.total}; shortlisted: {matchSummary.shortlisted}; Applied: {matchSummary.applied})
               </p>
             </div>
 
