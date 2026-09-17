@@ -181,7 +181,7 @@ export default function VerifyEmail() {
               <button
                 type="submit"
                 disabled={isResending}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-xs font-bold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 disabled:opacity-50"
+                className="btn-primary flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-blue-900 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-800 disabled:opacity-50 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
               >
                 <Send className="h-3.5 w-3.5" />
                 {isResending ? "Dispatching..." : "Resend Verification Link"}

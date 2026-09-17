@@ -119,13 +119,13 @@ function StartupPayments() {
         <button
           type="button"
           onClick={() => navigate("/startup")}
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+          className="back-nav"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </button>
 
-        <div className="mt-6 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mt-2 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">

@@ -167,7 +167,7 @@ function ChallengeOverview() {
           <button
             type="button"
             onClick={() => navigate("/government/dashboard")}
-            className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            className="back-nav"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
@@ -195,6 +195,17 @@ function ChallengeOverview() {
             </div>
 
             <div className="flex items-center gap-3">
+              {challenge?.status === "DRAFT" && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/government/challenges/${id}/edit`)}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 text-sm font-semibold text-amber-800 shadow-sm transition hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/50"
+                >
+                  <FileText className="h-4 w-4" />
+                  Edit Draft
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={handleRunMatching}
@@ -212,7 +223,7 @@ function ChallengeOverview() {
               <button
                 type="button"
                 onClick={() => navigate(`/government/challenges/${id}/applications`)}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-900 px-5 text-sm font-semibold text-white shadow-lg shadow-blue-900/15 transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
               >
                 View Applications
                 <ArrowRight className="h-4 w-4" />

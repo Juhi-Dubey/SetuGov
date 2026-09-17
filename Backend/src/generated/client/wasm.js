@@ -179,7 +179,29 @@ exports.Prisma.ChallengeScalarFieldEnum = {
   ip_ownership: 'ip_ownership',
   licensing_terms: 'licensing_terms',
   confidentiality_terms: 'confidentiality_terms',
+  current_process: 'current_process',
+  pilot_location: 'pilot_location',
+  pilot_start_date: 'pilot_start_date',
+  pilot_end_date: 'pilot_end_date',
+  startup_requirements: 'startup_requirements',
+  kpis: 'kpis',
+  milestones: 'milestones',
+  eligibility_requirements: 'eligibility_requirements',
+  required_documents: 'required_documents',
+  cybersecurity_requirements: 'cybersecurity_requirements',
+  data_compliance: 'data_compliance',
   created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.ChallengeEligibilityReviewScalarFieldEnum = {
+  id: 'id',
+  challenge_id: 'challenge_id',
+  reviewed_by: 'reviewed_by',
+  decision: 'decision',
+  remarks: 'remarks',
+  checks: 'checks',
+  reviewed_at: 'reviewed_at',
   updated_at: 'updated_at'
 };
 
@@ -898,6 +920,7 @@ exports.Prisma.ModelName = {
   User: 'User',
   Department: 'Department',
   Challenge: 'Challenge',
+  ChallengeEligibilityReview: 'ChallengeEligibilityReview',
   MatchScore: 'MatchScore',
   Startup: 'Startup',
   StartupBankDetails: 'StartupBankDetails',

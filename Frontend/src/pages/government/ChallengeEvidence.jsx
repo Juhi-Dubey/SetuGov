@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
+import Pagination from "../../components/common/Pagination";
 import { getPilots, getPilotEvidence, addPilotEvidence, updateEvidence as apiUpdateEvidence } from "../../services/pilotService.js";
 
 const initialEvidence = [
@@ -43,6 +44,13 @@ function ChallengeEvidence() {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  const paginatedEvidence = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return evidence.slice(start, start + pageSize);
+  }, [evidence, currentPage, pageSize]);
 
   // Load pilot and its evidence from backend
   useEffect(() => {
@@ -236,7 +244,7 @@ function ChallengeEvidence() {
                 `/government/challenges/${id}/pilot`
               )
             }
-            className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            className="back-nav"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Pilot
@@ -262,7 +270,7 @@ function ChallengeEvidence() {
             <button
               type="button"
               onClick={addEvidence}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              className="btn-primary inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
             >
               <Plus className="h-4 w-4" />
               Add Evidence
@@ -339,7 +347,7 @@ function ChallengeEvidence() {
 
         <section className="space-y-5">
 
-          {evidence.map(
+          {paginatedEvidence.map(
             (item, index) => (
               <motion.article
                 key={item.id}
@@ -657,6 +665,17 @@ function ChallengeEvidence() {
 
         </section>
 
+        <Pagination
+          currentPage={currentPage}
+          totalItems={evidence.length}
+          pageSize={pageSize}
+          pageSizeOptions={[5, 10, 20]}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          itemName="evidence items"
+          className="mt-6"
+        />
+
         {statusMessage && (
           <div className="mt-6 flex items-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-xs font-semibold text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
@@ -675,7 +694,7 @@ function ChallengeEvidence() {
                 `/government/challenges/${id}/pilot`
               )
             }
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-5 text-sm font-semibold transition hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800"
+            className="back-nav"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Pilot
@@ -709,7 +728,7 @@ function ChallengeEvidence() {
                   `/government/challenges/${id}/decision`
                 )
               }
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-lg transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-900/15 transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
             >
               Continue to Decision
               <CheckCircle2 className="h-4 w-4" />

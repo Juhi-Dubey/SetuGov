@@ -97,8 +97,31 @@ export const createProcurementReadiness = async (pilotId, data, user, ip_address
     throw new BadRequestError('Procurement readiness requires empirical pilot validation. Current validation status is incomplete.');
   }
 
+  // Verify challenge scoping if supplied in request
+  if (data.challenge_id && pilot.challenge_id !== data.challenge_id) {
+    throw new BadRequestError(`Pilot ${pilotId} does not belong to Challenge ${data.challenge_id}.`);
+  }
+
+  // Prevent accidental duplicate active procurement records for the same pilot
+  const existingActive = await prisma.procurementRecord.findFirst({
+    where: {
+      pilot_id: pilotId,
+      status: { notIn: ['CANCELLED', 'REJECTED'] }
+    }
+  });
+
+  if (existingActive) {
+    throw new BadRequestError(`An active procurement record already exists for this pilot (ID: ${existingActive.id}, Status: ${existingActive.status}).`);
+  }
+
+  const CANONICAL_ROUTES = ['GEM', 'OTHER_APPROVED_ROUTE', 'DIRECT_APPROVED_ROUTE', 'OFFLINE_HANDOFF'];
+  const route = data.route || data.procurement_route || 'GEM';
+
+  if (!CANONICAL_ROUTES.includes(route)) {
+    throw new BadRequestError(`Invalid procurement route "${route}". Valid routes are: ${CANONICAL_ROUTES.join(', ')}.`);
+  }
+
   const {
-    route = 'GEM',
     estimated_value,
     justification,
     technical_readiness = true,
@@ -118,7 +141,7 @@ export const createProcurementReadiness = async (pilotId, data, user, ip_address
       startup_id: pilot.startup_id,
       department_id: pilot.challenge.department_id,
       status: 'READINESS_CHECK',
-      route: route || 'GEM',
+      route: route,
       estimated_value: estimated_value,
       justification: justification.trim(),
       technical_readiness: Boolean(technical_readiness),
@@ -221,6 +244,7 @@ export const handoffToGeM = async (procurementId, data, user, ip_address = null)
     throw new BadRequestError(`Procurement must be in "APPROVED" status before handoff. Current status: ${procurement.status}`);
   }
 
+  const CANONICAL_HANDOFF_STATUSES = ['NOT_STARTED', 'READY', 'HANDED_OFF', 'EXTERNAL_PROCESSING', 'COMPLETED', 'FAILED_RETURNED'];
   const {
     gem_reference_number,
     gem_officer_name,
@@ -229,11 +253,16 @@ export const handoffToGeM = async (procurementId, data, user, ip_address = null)
     gem_handoff_status = 'HANDED_OFF'
   } = data;
 
+  const validHandoffStatus = gem_handoff_status || 'HANDED_OFF';
+  if (!CANONICAL_HANDOFF_STATUSES.includes(validHandoffStatus)) {
+    throw new BadRequestError(`Invalid GeM handoff status "${validHandoffStatus}". Valid statuses are: ${CANONICAL_HANDOFF_STATUSES.join(', ')}.`);
+  }
+
   const updated = await prisma.procurementRecord.update({
     where: { id: procurementId },
     data: {
       status: 'HANDED_OFF',
-      gem_handoff_status: gem_handoff_status || 'HANDED_OFF',
+      gem_handoff_status: validHandoffStatus,
       gem_handoff_date: new Date(),
       gem_reference_number: gem_reference_number ? gem_reference_number.trim() : null,
       gem_officer_name: gem_officer_name ? gem_officer_name.trim() : user.name,
@@ -412,7 +441,54 @@ export const acceptDelivery = async (procurementId, data, user, ip_address = nul
 };
 
 /**
- * 7. Create Payment Record linked to Verified Acceptance
+ * 7. Complete Procurement Lifecycle
+ */
+export const completeProcurement = async (procurementId, data = {}, user, ip_address = null) => {
+  if (user.role !== 'GOVERNMENT' && user.role !== 'ADMIN') {
+    throw new ForbiddenError('Only Government officers and Administrators can mark a procurement as completed.');
+  }
+
+  const procurement = await verifyProcurementAccess(procurementId, user, 'COMPLETE');
+
+  if (procurement.status !== 'ACCEPTED') {
+    throw new BadRequestError(`Cannot complete procurement currently in "${procurement.status}" status. Delivery must be ACCEPTED first.`);
+  }
+
+  const { completion_notes = '' } = data;
+
+  const updated = await prisma.procurementRecord.update({
+    where: { id: procurementId },
+    data: {
+      status: 'COMPLETED'
+    },
+    include: {
+      pilot: true,
+      challenge: true,
+      startup: true,
+      payments: true,
+      initiator: { select: { id: true, name: true, role: true } },
+      approver: { select: { id: true, name: true, role: true } },
+      acceptor: { select: { id: true, name: true, role: true } }
+    }
+  });
+
+  await createAuditLog({
+    user_id: user.id,
+    action: 'PROCUREMENT_COMPLETED',
+    entity_type: 'PROCUREMENT',
+    entity_id: procurementId,
+    details: {
+      completed_by: user.name,
+      notes: completion_notes
+    },
+    ip_address
+  });
+
+  return updated;
+};
+
+/**
+ * 8. Create Payment Record linked to Verified Acceptance
  */
 export const createProcurementPayment = async (procurementId, data, user, ip_address = null) => {
   if (user.role !== 'GOVERNMENT' && user.role !== 'ADMIN') {
@@ -484,6 +560,9 @@ export const getProcurements = async (query = {}, user) => {
   if (query.pilot_id) {
     where.pilot_id = query.pilot_id;
   }
+  if (query.challenge_id) {
+    where.challenge_id = query.challenge_id;
+  }
 
   return prisma.procurementRecord.findMany({
     where,
@@ -515,6 +594,7 @@ export default {
   issueContract,
   submitDelivery,
   acceptDelivery,
+  completeProcurement,
   createProcurementPayment,
   getProcurements,
   getProcurementById

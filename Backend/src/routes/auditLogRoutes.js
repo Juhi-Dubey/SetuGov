@@ -5,10 +5,11 @@ import { authorizeRoles } from '../middleware/rbac.js';
 
 const router = Router();
 
-// Retrieve all audit logs (Admin only)
-router.get('/', authenticate, authorizeRoles('ADMIN'), getAuditLogs);
+// Retrieve audit logs (Admin and Department-scoped Government)
+router.get('/', authenticate, authorizeRoles('ADMIN', 'GOVERNMENT'), getAuditLogs);
 
 // Retrieve specific audit log by ID
-router.get('/:audit_log_id', authenticate, authorizeRoles('ADMIN'), getAuditLogById);
+router.get('/:audit_log_id', authenticate, authorizeRoles('ADMIN', 'GOVERNMENT'), getAuditLogById);
 
 export default router;
+

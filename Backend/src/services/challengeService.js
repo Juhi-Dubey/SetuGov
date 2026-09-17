@@ -56,6 +56,17 @@ export const createChallenge = async (data, user, ip_address = null) => {
       ip_ownership: data.ip_ownership || 'STARTUP_OWNED',
       licensing_terms: data.licensing_terms ? data.licensing_terms.trim() : null,
       confidentiality_terms: data.confidentiality_terms ? data.confidentiality_terms.trim() : null,
+      current_process: data.current_process ? data.current_process.trim() : null,
+      pilot_location: data.pilot_location ? data.pilot_location.trim() : null,
+      pilot_start_date: data.pilot_start_date ? new Date(data.pilot_start_date) : null,
+      pilot_end_date: data.pilot_end_date ? new Date(data.pilot_end_date) : null,
+      startup_requirements: data.startup_requirements ? data.startup_requirements.trim() : null,
+      kpis: data.kpis || null,
+      milestones: data.milestones || null,
+      eligibility_requirements: data.eligibility_requirements || null,
+      required_documents: data.required_documents || null,
+      cybersecurity_requirements: data.cybersecurity_requirements ? data.cybersecurity_requirements.trim() : null,
+      data_compliance: data.data_compliance ? data.data_compliance.trim() : null,
       status: 'DRAFT',
       created_by: user.id
     },
@@ -281,13 +292,24 @@ export const updateChallenge = async (id, data, user, ip_address = null) => {
     'data_retention_period',
     'ip_ownership',
     'licensing_terms',
-    'confidentiality_terms'
+    'confidentiality_terms',
+    'current_process',
+    'pilot_location',
+    'pilot_start_date',
+    'pilot_end_date',
+    'startup_requirements',
+    'kpis',
+    'milestones',
+    'eligibility_requirements',
+    'required_documents',
+    'cybersecurity_requirements',
+    'data_compliance'
   ];
 
   const updateData = {};
   for (const field of allowedFields) {
     if (data[field] !== undefined) {
-      if (field === 'application_deadline') {
+      if (field === 'application_deadline' || field === 'pilot_start_date' || field === 'pilot_end_date') {
         updateData[field] = data[field] ? new Date(data[field]) : null;
       } else {
         updateData[field] = typeof data[field] === 'string' ? data[field].trim() : data[field];
@@ -927,6 +949,229 @@ export const generateChallengeBrain1 = async (id, user, ip_address = null) => {
   };
 };
 
+export const getChallengeEligibility = async (challengeId, user) => {
+  const challenge = await prisma.challenge.findUnique({
+    where: { id: challengeId },
+    include: {
+      department: {
+        select: { id: true, name: true, state: true }
+      },
+      eligibility_review: {
+        include: {
+          reviewer: {
+            select: { id: true, name: true, role: true }
+          }
+        }
+      }
+    }
+  });
+
+  if (!challenge) {
+    throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
+  }
+
+  // Authorization: GOVERNMENT role is restricted to their own department's challenges
+  if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You do not have permission to view eligibility for challenges from other departments.');
+    }
+  } else if (user.role !== 'ADMIN') {
+    throw new ForbiddenError('Only government officials and administrators can access challenge eligibility reviews.');
+  }
+
+  const review = challenge.eligibility_review;
+
+  // If a saved review exists, return the saved checks and decision
+  if (review) {
+    return {
+      challenge_id: challenge.id,
+      challenge_title: challenge.title,
+      department: challenge.department,
+      status: challenge.status,
+      decision: review.decision,
+      remarks: review.remarks || '',
+      checks: Array.isArray(review.checks) ? review.checks : [],
+      reviewed_at: review.reviewed_at,
+      reviewer: review.reviewer,
+      has_review: true
+    };
+  }
+
+  // Otherwise, synthesize initial checks strictly from configured eligibility requirements and documents
+  const reqs = Array.isArray(challenge.eligibility_requirements)
+    ? challenge.eligibility_requirements
+    : typeof challenge.eligibility_requirements === 'string' && challenge.eligibility_requirements.trim()
+    ? [{ id: 'req-1', title: 'Eligibility Criteria', description: challenge.eligibility_requirements, required: true }]
+    : [];
+
+  const initialChecks = [];
+
+  if (reqs.length > 0) {
+    reqs.forEach((req, idx) => {
+      if (typeof req === 'string') {
+        initialChecks.push({
+          id: `req-${idx + 1}`,
+          title: req,
+          description: `Configured requirement for ${challenge.title}`,
+          status: 'PENDING',
+          required: true
+        });
+      } else if (req && typeof req === 'object') {
+        initialChecks.push({
+          id: req.id || `req-${idx + 1}`,
+          title: req.title || req.name || `Requirement ${idx + 1}`,
+          description: req.description || req.details || 'Configured eligibility criterion',
+          status: 'PENDING',
+          required: req.required !== false
+        });
+      }
+    });
+  }
+
+  // Also include required documents if specified on the challenge
+  if (Array.isArray(challenge.required_documents) && challenge.required_documents.length > 0) {
+    challenge.required_documents.forEach((doc, idx) => {
+      const docTitle = typeof doc === 'string' ? doc : (doc.title || doc.name || `Document ${idx + 1}`);
+      const docDesc = typeof doc === 'object' && doc.description ? doc.description : 'Required statutory / technical document';
+      initialChecks.push({
+        id: `doc-${idx + 1}`,
+        title: `Document: ${docTitle}`,
+        description: docDesc,
+        status: 'PENDING',
+        required: true
+      });
+    });
+  }
+
+  // Also include cybersecurity requirements if specified on challenge
+  if (challenge.cybersecurity_requirements && challenge.cybersecurity_requirements.trim()) {
+    initialChecks.push({
+      id: 'cybersecurity',
+      title: 'Cybersecurity & Compliance',
+      description: challenge.cybersecurity_requirements.trim(),
+      status: 'PENDING',
+      required: true
+    });
+  }
+
+  // Also include data compliance if specified on challenge
+  if (challenge.data_compliance && challenge.data_compliance.trim()) {
+    initialChecks.push({
+      id: 'data-compliance',
+      title: 'Data Privacy & Regulatory Compliance',
+      description: challenge.data_compliance.trim(),
+      status: 'PENDING',
+      required: true
+    });
+  }
+
+  return {
+    challenge_id: challenge.id,
+    challenge_title: challenge.title,
+    department: challenge.department,
+    status: challenge.status,
+    decision: 'PENDING',
+    remarks: '',
+    checks: initialChecks,
+    reviewed_at: null,
+    reviewer: null,
+    has_review: false
+  };
+};
+
+export const saveChallengeEligibility = async (challengeId, data, user, ip_address = null) => {
+  const challenge = await prisma.challenge.findUnique({
+    where: { id: challengeId }
+  });
+
+  if (!challenge) {
+    throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
+  }
+
+  // Authorization: GOVERNMENT role must match assigned department
+  if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only review eligibility for challenges belonging to your assigned department.');
+    }
+  } else if (user.role !== 'ADMIN') {
+    throw new ForbiddenError('Only government officials and administrators can save challenge eligibility reviews.');
+  }
+
+  // Canonical normalization of checks
+  const normalizedChecks = (data.checks || []).map((c, idx) => {
+    const rawStatus = String(c.status || 'PENDING').toUpperCase();
+    let status = 'PENDING';
+    if (rawStatus === 'PASSED' || rawStatus === 'PASS' || rawStatus === 'COMPLIANT' || rawStatus === 'ELIGIBLE') {
+      status = 'PASSED';
+    } else if (rawStatus === 'FAILED' || rawStatus === 'FAIL' || rawStatus === 'NON_COMPLIANT' || rawStatus === 'INELIGIBLE') {
+      status = 'FAILED';
+    }
+
+    return {
+      id: c.id || `check-${idx + 1}`,
+      title: c.title || c.name || `Check ${idx + 1}`,
+      description: c.description || '',
+      status,
+      required: c.required !== false
+    };
+  });
+
+  // Canonical normalization of decision
+  const rawDec = String(data.decision || 'PENDING').toUpperCase();
+  let normalizedDecision = 'PENDING';
+  if (rawDec === 'ELIGIBLE' || rawDec === 'PASSED' || rawDec === 'APPROVED') {
+    normalizedDecision = 'ELIGIBLE';
+  } else if (rawDec === 'CLARIFICATION' || rawDec === 'NEEDS_REVIEW' || rawDec === 'PENDING_CLARIFICATION') {
+    normalizedDecision = 'CLARIFICATION';
+  } else if (rawDec === 'NOT_ELIGIBLE' || rawDec === 'INELIGIBLE' || rawDec === 'REJECTED' || rawDec === 'FAILED') {
+    normalizedDecision = 'NOT_ELIGIBLE';
+  }
+
+  const review = await prisma.challengeEligibilityReview.upsert({
+    where: { challenge_id: challengeId },
+    create: {
+      challenge_id: challengeId,
+      reviewed_by: user.id,
+      decision: normalizedDecision,
+      remarks: data.remarks ? data.remarks.trim() : null,
+      checks: normalizedChecks
+    },
+    update: {
+      reviewed_by: user.id,
+      decision: normalizedDecision,
+      remarks: data.remarks ? data.remarks.trim() : null,
+      checks: normalizedChecks
+    },
+    include: {
+      reviewer: {
+        select: {
+          id: true,
+          name: true,
+          role: true,
+          email: true
+        }
+      }
+    }
+  });
+
+  await createAuditLog({
+    user_id: user.id,
+    action: 'CHALLENGE_ELIGIBILITY_REVIEWED',
+    entity_type: 'CHALLENGE',
+    entity_id: challengeId,
+    details: {
+      decision: normalizedDecision,
+      checks_count: normalizedChecks.length,
+      passed_count: normalizedChecks.filter(c => c.status === 'PASSED').length,
+      failed_count: normalizedChecks.filter(c => c.status === 'FAILED').length,
+      pending_count: normalizedChecks.filter(c => c.status === 'PENDING').length
+    },
+    ip_address
+  });
+
+  return review;
+};
+
 export default {
   createChallenge,
   getChallenges,
@@ -940,5 +1185,7 @@ export default {
   getChallengeApplications,
   getChallengeMatches,
   getChallengePilot,
-  generateChallengeBrain1
+  generateChallengeBrain1,
+  getChallengeEligibility,
+  saveChallengeEligibility
 };

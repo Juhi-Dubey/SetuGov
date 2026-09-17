@@ -29,6 +29,11 @@ export type Department = $Result.DefaultSelection<Prisma.$DepartmentPayload>
  */
 export type Challenge = $Result.DefaultSelection<Prisma.$ChallengePayload>
 /**
+ * Model ChallengeEligibilityReview
+ * 
+ */
+export type ChallengeEligibilityReview = $Result.DefaultSelection<Prisma.$ChallengeEligibilityReviewPayload>
+/**
  * Model MatchScore
  * 
  */
@@ -626,6 +631,16 @@ export class PrismaClient<
     * ```
     */
   get challenge(): Prisma.ChallengeDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.challengeEligibilityReview`: Exposes CRUD operations for the **ChallengeEligibilityReview** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ChallengeEligibilityReviews
+    * const challengeEligibilityReviews = await prisma.challengeEligibilityReview.findMany()
+    * ```
+    */
+  get challengeEligibilityReview(): Prisma.ChallengeEligibilityReviewDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.matchScore`: Exposes CRUD operations for the **MatchScore** model.
@@ -1399,6 +1414,7 @@ export namespace Prisma {
     User: 'User',
     Department: 'Department',
     Challenge: 'Challenge',
+    ChallengeEligibilityReview: 'ChallengeEligibilityReview',
     MatchScore: 'MatchScore',
     Startup: 'Startup',
     StartupBankDetails: 'StartupBankDetails',
@@ -1447,7 +1463,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "department" | "challenge" | "matchScore" | "startup" | "startupBankDetails" | "startupDocument" | "application" | "evaluatorProfile" | "conflictDeclaration" | "evaluation" | "applicationDocument" | "applicationProposalAnalysis" | "evaluatorMatchScore" | "evaluatorApplication" | "challengeEvaluatorPool" | "pilot" | "pilotKpi" | "pilotMeasurement" | "milestone" | "evidence" | "risk" | "pilotIssue" | "validation" | "payment" | "scaleDecision" | "complianceItem" | "pilotFeedback" | "notification" | "auditLog" | "accessRequest" | "evaluatorAssignment" | "procurementRecord" | "systemSetting" | "evaluationCriterion" | "systemTemplate"
+      modelProps: "user" | "department" | "challenge" | "challengeEligibilityReview" | "matchScore" | "startup" | "startupBankDetails" | "startupDocument" | "application" | "evaluatorProfile" | "conflictDeclaration" | "evaluation" | "applicationDocument" | "applicationProposalAnalysis" | "evaluatorMatchScore" | "evaluatorApplication" | "challengeEvaluatorPool" | "pilot" | "pilotKpi" | "pilotMeasurement" | "milestone" | "evidence" | "risk" | "pilotIssue" | "validation" | "payment" | "scaleDecision" | "complianceItem" | "pilotFeedback" | "notification" | "auditLog" | "accessRequest" | "evaluatorAssignment" | "procurementRecord" | "systemSetting" | "evaluationCriterion" | "systemTemplate"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1670,6 +1686,80 @@ export namespace Prisma {
           count: {
             args: Prisma.ChallengeCountArgs<ExtArgs>
             result: $Utils.Optional<ChallengeCountAggregateOutputType> | number
+          }
+        }
+      }
+      ChallengeEligibilityReview: {
+        payload: Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>
+        fields: Prisma.ChallengeEligibilityReviewFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ChallengeEligibilityReviewFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChallengeEligibilityReviewPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ChallengeEligibilityReviewFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChallengeEligibilityReviewPayload>
+          }
+          findFirst: {
+            args: Prisma.ChallengeEligibilityReviewFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChallengeEligibilityReviewPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ChallengeEligibilityReviewFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChallengeEligibilityReviewPayload>
+          }
+          findMany: {
+            args: Prisma.ChallengeEligibilityReviewFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChallengeEligibilityReviewPayload>[]
+          }
+          create: {
+            args: Prisma.ChallengeEligibilityReviewCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChallengeEligibilityReviewPayload>
+          }
+          createMany: {
+            args: Prisma.ChallengeEligibilityReviewCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ChallengeEligibilityReviewCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChallengeEligibilityReviewPayload>[]
+          }
+          delete: {
+            args: Prisma.ChallengeEligibilityReviewDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChallengeEligibilityReviewPayload>
+          }
+          update: {
+            args: Prisma.ChallengeEligibilityReviewUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChallengeEligibilityReviewPayload>
+          }
+          deleteMany: {
+            args: Prisma.ChallengeEligibilityReviewDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ChallengeEligibilityReviewUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ChallengeEligibilityReviewUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChallengeEligibilityReviewPayload>[]
+          }
+          upsert: {
+            args: Prisma.ChallengeEligibilityReviewUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ChallengeEligibilityReviewPayload>
+          }
+          aggregate: {
+            args: Prisma.ChallengeEligibilityReviewAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateChallengeEligibilityReview>
+          }
+          groupBy: {
+            args: Prisma.ChallengeEligibilityReviewGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ChallengeEligibilityReviewGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ChallengeEligibilityReviewCountArgs<ExtArgs>
+            result: $Utils.Optional<ChallengeEligibilityReviewCountAggregateOutputType> | number
           }
         }
       }
@@ -4202,6 +4292,7 @@ export namespace Prisma {
     user?: UserOmit
     department?: DepartmentOmit
     challenge?: ChallengeOmit
+    challengeEligibilityReview?: ChallengeEligibilityReviewOmit
     matchScore?: MatchScoreOmit
     startup?: StartupOmit
     startupBankDetails?: StartupBankDetailsOmit
@@ -4356,6 +4447,7 @@ export namespace Prisma {
     evaluator_pool_memberships: number
     added_evaluator_pools: number
     evaluator_match_scores: number
+    eligibility_reviews: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4386,6 +4478,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: boolean | UserCountOutputTypeCountEvaluator_pool_membershipsArgs
     added_evaluator_pools?: boolean | UserCountOutputTypeCountAdded_evaluator_poolsArgs
     evaluator_match_scores?: boolean | UserCountOutputTypeCountEvaluator_match_scoresArgs
+    eligibility_reviews?: boolean | UserCountOutputTypeCountEligibility_reviewsArgs
   }
 
   // Custom InputTypes
@@ -4586,6 +4679,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountEvaluator_match_scoresArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: EvaluatorMatchScoreWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountEligibility_reviewsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ChallengeEligibilityReviewWhereInput
   }
 
 
@@ -5448,6 +5548,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: boolean | User$evaluator_pool_membershipsArgs<ExtArgs>
     added_evaluator_pools?: boolean | User$added_evaluator_poolsArgs<ExtArgs>
     evaluator_match_scores?: boolean | User$evaluator_match_scoresArgs<ExtArgs>
+    eligibility_reviews?: boolean | User$eligibility_reviewsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -5556,6 +5657,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: boolean | User$evaluator_pool_membershipsArgs<ExtArgs>
     added_evaluator_pools?: boolean | User$added_evaluator_poolsArgs<ExtArgs>
     evaluator_match_scores?: boolean | User$evaluator_match_scoresArgs<ExtArgs>
+    eligibility_reviews?: boolean | User$eligibility_reviewsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5597,6 +5699,7 @@ export namespace Prisma {
       evaluator_pool_memberships: Prisma.$ChallengeEvaluatorPoolPayload<ExtArgs>[]
       added_evaluator_pools: Prisma.$ChallengeEvaluatorPoolPayload<ExtArgs>[]
       evaluator_match_scores: Prisma.$EvaluatorMatchScorePayload<ExtArgs>[]
+      eligibility_reviews: Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -6043,6 +6146,7 @@ export namespace Prisma {
     evaluator_pool_memberships<T extends User$evaluator_pool_membershipsArgs<ExtArgs> = {}>(args?: Subset<T, User$evaluator_pool_membershipsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChallengeEvaluatorPoolPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     added_evaluator_pools<T extends User$added_evaluator_poolsArgs<ExtArgs> = {}>(args?: Subset<T, User$added_evaluator_poolsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChallengeEvaluatorPoolPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     evaluator_match_scores<T extends User$evaluator_match_scoresArgs<ExtArgs> = {}>(args?: Subset<T, User$evaluator_match_scoresArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EvaluatorMatchScorePayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
+    eligibility_reviews<T extends User$eligibility_reviewsArgs<ExtArgs> = {}>(args?: Subset<T, User$eligibility_reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7172,6 +7276,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: EvaluatorMatchScoreScalarFieldEnum | EvaluatorMatchScoreScalarFieldEnum[]
+  }
+
+  /**
+   * User.eligibility_reviews
+   */
+  export type User$eligibility_reviewsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewInclude<ExtArgs> | null
+    where?: ChallengeEligibilityReviewWhereInput
+    orderBy?: ChallengeEligibilityReviewOrderByWithRelationInput | ChallengeEligibilityReviewOrderByWithRelationInput[]
+    cursor?: ChallengeEligibilityReviewWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ChallengeEligibilityReviewScalarFieldEnum | ChallengeEligibilityReviewScalarFieldEnum[]
   }
 
   /**
@@ -8484,6 +8612,13 @@ export namespace Prisma {
     ip_ownership: string | null
     licensing_terms: string | null
     confidentiality_terms: string | null
+    current_process: string | null
+    pilot_location: string | null
+    pilot_start_date: Date | null
+    pilot_end_date: Date | null
+    startup_requirements: string | null
+    cybersecurity_requirements: string | null
+    data_compliance: string | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -8510,6 +8645,13 @@ export namespace Prisma {
     ip_ownership: string | null
     licensing_terms: string | null
     confidentiality_terms: string | null
+    current_process: string | null
+    pilot_location: string | null
+    pilot_start_date: Date | null
+    pilot_end_date: Date | null
+    startup_requirements: string | null
+    cybersecurity_requirements: string | null
+    data_compliance: string | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -8537,6 +8679,17 @@ export namespace Prisma {
     ip_ownership: number
     licensing_terms: number
     confidentiality_terms: number
+    current_process: number
+    pilot_location: number
+    pilot_start_date: number
+    pilot_end_date: number
+    startup_requirements: number
+    kpis: number
+    milestones: number
+    eligibility_requirements: number
+    required_documents: number
+    cybersecurity_requirements: number
+    data_compliance: number
     created_at: number
     updated_at: number
     _all: number
@@ -8577,6 +8730,13 @@ export namespace Prisma {
     ip_ownership?: true
     licensing_terms?: true
     confidentiality_terms?: true
+    current_process?: true
+    pilot_location?: true
+    pilot_start_date?: true
+    pilot_end_date?: true
+    startup_requirements?: true
+    cybersecurity_requirements?: true
+    data_compliance?: true
     created_at?: true
     updated_at?: true
   }
@@ -8603,6 +8763,13 @@ export namespace Prisma {
     ip_ownership?: true
     licensing_terms?: true
     confidentiality_terms?: true
+    current_process?: true
+    pilot_location?: true
+    pilot_start_date?: true
+    pilot_end_date?: true
+    startup_requirements?: true
+    cybersecurity_requirements?: true
+    data_compliance?: true
     created_at?: true
     updated_at?: true
   }
@@ -8630,6 +8797,17 @@ export namespace Prisma {
     ip_ownership?: true
     licensing_terms?: true
     confidentiality_terms?: true
+    current_process?: true
+    pilot_location?: true
+    pilot_start_date?: true
+    pilot_end_date?: true
+    startup_requirements?: true
+    kpis?: true
+    milestones?: true
+    eligibility_requirements?: true
+    required_documents?: true
+    cybersecurity_requirements?: true
+    data_compliance?: true
     created_at?: true
     updated_at?: true
     _all?: true
@@ -8744,6 +8922,17 @@ export namespace Prisma {
     ip_ownership: string | null
     licensing_terms: string | null
     confidentiality_terms: string | null
+    current_process: string | null
+    pilot_location: string | null
+    pilot_start_date: Date | null
+    pilot_end_date: Date | null
+    startup_requirements: string | null
+    kpis: JsonValue | null
+    milestones: JsonValue | null
+    eligibility_requirements: JsonValue | null
+    required_documents: JsonValue | null
+    cybersecurity_requirements: string | null
+    data_compliance: string | null
     created_at: Date
     updated_at: Date
     _count: ChallengeCountAggregateOutputType | null
@@ -8790,6 +8979,17 @@ export namespace Prisma {
     ip_ownership?: boolean
     licensing_terms?: boolean
     confidentiality_terms?: boolean
+    current_process?: boolean
+    pilot_location?: boolean
+    pilot_start_date?: boolean
+    pilot_end_date?: boolean
+    startup_requirements?: boolean
+    kpis?: boolean
+    milestones?: boolean
+    eligibility_requirements?: boolean
+    required_documents?: boolean
+    cybersecurity_requirements?: boolean
+    data_compliance?: boolean
     created_at?: boolean
     updated_at?: boolean
     applications?: boolean | Challenge$applicationsArgs<ExtArgs>
@@ -8801,6 +9001,7 @@ export namespace Prisma {
     evaluator_applications?: boolean | Challenge$evaluator_applicationsArgs<ExtArgs>
     evaluator_pools?: boolean | Challenge$evaluator_poolsArgs<ExtArgs>
     evaluator_match_scores?: boolean | Challenge$evaluator_match_scoresArgs<ExtArgs>
+    eligibility_review?: boolean | Challenge$eligibility_reviewArgs<ExtArgs>
     _count?: boolean | ChallengeCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["challenge"]>
 
@@ -8827,6 +9028,17 @@ export namespace Prisma {
     ip_ownership?: boolean
     licensing_terms?: boolean
     confidentiality_terms?: boolean
+    current_process?: boolean
+    pilot_location?: boolean
+    pilot_start_date?: boolean
+    pilot_end_date?: boolean
+    startup_requirements?: boolean
+    kpis?: boolean
+    milestones?: boolean
+    eligibility_requirements?: boolean
+    required_documents?: boolean
+    cybersecurity_requirements?: boolean
+    data_compliance?: boolean
     created_at?: boolean
     updated_at?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
@@ -8856,6 +9068,17 @@ export namespace Prisma {
     ip_ownership?: boolean
     licensing_terms?: boolean
     confidentiality_terms?: boolean
+    current_process?: boolean
+    pilot_location?: boolean
+    pilot_start_date?: boolean
+    pilot_end_date?: boolean
+    startup_requirements?: boolean
+    kpis?: boolean
+    milestones?: boolean
+    eligibility_requirements?: boolean
+    required_documents?: boolean
+    cybersecurity_requirements?: boolean
+    data_compliance?: boolean
     created_at?: boolean
     updated_at?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
@@ -8885,11 +9108,22 @@ export namespace Prisma {
     ip_ownership?: boolean
     licensing_terms?: boolean
     confidentiality_terms?: boolean
+    current_process?: boolean
+    pilot_location?: boolean
+    pilot_start_date?: boolean
+    pilot_end_date?: boolean
+    startup_requirements?: boolean
+    kpis?: boolean
+    milestones?: boolean
+    eligibility_requirements?: boolean
+    required_documents?: boolean
+    cybersecurity_requirements?: boolean
+    data_compliance?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
 
-  export type ChallengeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "department_id" | "title" | "problem_description" | "current_baseline" | "desired_outcome" | "location" | "budget_min" | "budget_max" | "pilot_duration_days" | "required_technologies" | "application_deadline" | "finalist_submission_start" | "finalist_submission_deadline" | "status" | "created_by" | "data_classification" | "data_access_requirements" | "data_retention_period" | "ip_ownership" | "licensing_terms" | "confidentiality_terms" | "created_at" | "updated_at", ExtArgs["result"]["challenge"]>
+  export type ChallengeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "department_id" | "title" | "problem_description" | "current_baseline" | "desired_outcome" | "location" | "budget_min" | "budget_max" | "pilot_duration_days" | "required_technologies" | "application_deadline" | "finalist_submission_start" | "finalist_submission_deadline" | "status" | "created_by" | "data_classification" | "data_access_requirements" | "data_retention_period" | "ip_ownership" | "licensing_terms" | "confidentiality_terms" | "current_process" | "pilot_location" | "pilot_start_date" | "pilot_end_date" | "startup_requirements" | "kpis" | "milestones" | "eligibility_requirements" | "required_documents" | "cybersecurity_requirements" | "data_compliance" | "created_at" | "updated_at", ExtArgs["result"]["challenge"]>
   export type ChallengeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     applications?: boolean | Challenge$applicationsArgs<ExtArgs>
     creator?: boolean | UserDefaultArgs<ExtArgs>
@@ -8900,6 +9134,7 @@ export namespace Prisma {
     evaluator_applications?: boolean | Challenge$evaluator_applicationsArgs<ExtArgs>
     evaluator_pools?: boolean | Challenge$evaluator_poolsArgs<ExtArgs>
     evaluator_match_scores?: boolean | Challenge$evaluator_match_scoresArgs<ExtArgs>
+    eligibility_review?: boolean | Challenge$eligibility_reviewArgs<ExtArgs>
     _count?: boolean | ChallengeCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ChallengeIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -8923,6 +9158,7 @@ export namespace Prisma {
       evaluator_applications: Prisma.$EvaluatorApplicationPayload<ExtArgs>[]
       evaluator_pools: Prisma.$ChallengeEvaluatorPoolPayload<ExtArgs>[]
       evaluator_match_scores: Prisma.$EvaluatorMatchScorePayload<ExtArgs>[]
+      eligibility_review: Prisma.$ChallengeEligibilityReviewPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -8947,6 +9183,17 @@ export namespace Prisma {
       ip_ownership: string | null
       licensing_terms: string | null
       confidentiality_terms: string | null
+      current_process: string | null
+      pilot_location: string | null
+      pilot_start_date: Date | null
+      pilot_end_date: Date | null
+      startup_requirements: string | null
+      kpis: Prisma.JsonValue | null
+      milestones: Prisma.JsonValue | null
+      eligibility_requirements: Prisma.JsonValue | null
+      required_documents: Prisma.JsonValue | null
+      cybersecurity_requirements: string | null
+      data_compliance: string | null
       created_at: Date
       updated_at: Date
     }, ExtArgs["result"]["challenge"]>
@@ -9352,6 +9599,7 @@ export namespace Prisma {
     evaluator_applications<T extends Challenge$evaluator_applicationsArgs<ExtArgs> = {}>(args?: Subset<T, Challenge$evaluator_applicationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EvaluatorApplicationPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     evaluator_pools<T extends Challenge$evaluator_poolsArgs<ExtArgs> = {}>(args?: Subset<T, Challenge$evaluator_poolsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChallengeEvaluatorPoolPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     evaluator_match_scores<T extends Challenge$evaluator_match_scoresArgs<ExtArgs> = {}>(args?: Subset<T, Challenge$evaluator_match_scoresArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EvaluatorMatchScorePayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
+    eligibility_review<T extends Challenge$eligibility_reviewArgs<ExtArgs> = {}>(args?: Subset<T, Challenge$eligibility_reviewArgs<ExtArgs>>): Prisma__ChallengeEligibilityReviewClient<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | null, null, ExtArgs, ClientOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9403,6 +9651,17 @@ export namespace Prisma {
     readonly ip_ownership: FieldRef<"Challenge", 'String'>
     readonly licensing_terms: FieldRef<"Challenge", 'String'>
     readonly confidentiality_terms: FieldRef<"Challenge", 'String'>
+    readonly current_process: FieldRef<"Challenge", 'String'>
+    readonly pilot_location: FieldRef<"Challenge", 'String'>
+    readonly pilot_start_date: FieldRef<"Challenge", 'DateTime'>
+    readonly pilot_end_date: FieldRef<"Challenge", 'DateTime'>
+    readonly startup_requirements: FieldRef<"Challenge", 'String'>
+    readonly kpis: FieldRef<"Challenge", 'Json'>
+    readonly milestones: FieldRef<"Challenge", 'Json'>
+    readonly eligibility_requirements: FieldRef<"Challenge", 'Json'>
+    readonly required_documents: FieldRef<"Challenge", 'Json'>
+    readonly cybersecurity_requirements: FieldRef<"Challenge", 'String'>
+    readonly data_compliance: FieldRef<"Challenge", 'String'>
     readonly created_at: FieldRef<"Challenge", 'DateTime'>
     readonly updated_at: FieldRef<"Challenge", 'DateTime'>
   }
@@ -9969,6 +10228,25 @@ export namespace Prisma {
   }
 
   /**
+   * Challenge.eligibility_review
+   */
+  export type Challenge$eligibility_reviewArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewInclude<ExtArgs> | null
+    where?: ChallengeEligibilityReviewWhereInput
+  }
+
+  /**
    * Challenge without action
    */
   export type ChallengeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -9984,6 +10262,1107 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: ChallengeInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ChallengeEligibilityReview
+   */
+
+  export type AggregateChallengeEligibilityReview = {
+    _count: ChallengeEligibilityReviewCountAggregateOutputType | null
+    _min: ChallengeEligibilityReviewMinAggregateOutputType | null
+    _max: ChallengeEligibilityReviewMaxAggregateOutputType | null
+  }
+
+  export type ChallengeEligibilityReviewMinAggregateOutputType = {
+    id: string | null
+    challenge_id: string | null
+    reviewed_by: string | null
+    decision: string | null
+    remarks: string | null
+    reviewed_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type ChallengeEligibilityReviewMaxAggregateOutputType = {
+    id: string | null
+    challenge_id: string | null
+    reviewed_by: string | null
+    decision: string | null
+    remarks: string | null
+    reviewed_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type ChallengeEligibilityReviewCountAggregateOutputType = {
+    id: number
+    challenge_id: number
+    reviewed_by: number
+    decision: number
+    remarks: number
+    checks: number
+    reviewed_at: number
+    updated_at: number
+    _all: number
+  }
+
+
+  export type ChallengeEligibilityReviewMinAggregateInputType = {
+    id?: true
+    challenge_id?: true
+    reviewed_by?: true
+    decision?: true
+    remarks?: true
+    reviewed_at?: true
+    updated_at?: true
+  }
+
+  export type ChallengeEligibilityReviewMaxAggregateInputType = {
+    id?: true
+    challenge_id?: true
+    reviewed_by?: true
+    decision?: true
+    remarks?: true
+    reviewed_at?: true
+    updated_at?: true
+  }
+
+  export type ChallengeEligibilityReviewCountAggregateInputType = {
+    id?: true
+    challenge_id?: true
+    reviewed_by?: true
+    decision?: true
+    remarks?: true
+    checks?: true
+    reviewed_at?: true
+    updated_at?: true
+    _all?: true
+  }
+
+  export type ChallengeEligibilityReviewAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ChallengeEligibilityReview to aggregate.
+     */
+    where?: ChallengeEligibilityReviewWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChallengeEligibilityReviews to fetch.
+     */
+    orderBy?: ChallengeEligibilityReviewOrderByWithRelationInput | ChallengeEligibilityReviewOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ChallengeEligibilityReviewWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChallengeEligibilityReviews from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChallengeEligibilityReviews.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ChallengeEligibilityReviews
+    **/
+    _count?: true | ChallengeEligibilityReviewCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ChallengeEligibilityReviewMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ChallengeEligibilityReviewMaxAggregateInputType
+  }
+
+  export type GetChallengeEligibilityReviewAggregateType<T extends ChallengeEligibilityReviewAggregateArgs> = {
+        [P in keyof T & keyof AggregateChallengeEligibilityReview]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateChallengeEligibilityReview[P]>
+      : GetScalarType<T[P], AggregateChallengeEligibilityReview[P]>
+  }
+
+
+
+
+  export type ChallengeEligibilityReviewGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ChallengeEligibilityReviewWhereInput
+    orderBy?: ChallengeEligibilityReviewOrderByWithAggregationInput | ChallengeEligibilityReviewOrderByWithAggregationInput[]
+    by: ChallengeEligibilityReviewScalarFieldEnum[] | ChallengeEligibilityReviewScalarFieldEnum
+    having?: ChallengeEligibilityReviewScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ChallengeEligibilityReviewCountAggregateInputType | true
+    _min?: ChallengeEligibilityReviewMinAggregateInputType
+    _max?: ChallengeEligibilityReviewMaxAggregateInputType
+  }
+
+  export type ChallengeEligibilityReviewGroupByOutputType = {
+    id: string
+    challenge_id: string
+    reviewed_by: string
+    decision: string
+    remarks: string | null
+    checks: JsonValue
+    reviewed_at: Date
+    updated_at: Date
+    _count: ChallengeEligibilityReviewCountAggregateOutputType | null
+    _min: ChallengeEligibilityReviewMinAggregateOutputType | null
+    _max: ChallengeEligibilityReviewMaxAggregateOutputType | null
+  }
+
+  type GetChallengeEligibilityReviewGroupByPayload<T extends ChallengeEligibilityReviewGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ChallengeEligibilityReviewGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ChallengeEligibilityReviewGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ChallengeEligibilityReviewGroupByOutputType[P]>
+            : GetScalarType<T[P], ChallengeEligibilityReviewGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ChallengeEligibilityReviewSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    challenge_id?: boolean
+    reviewed_by?: boolean
+    decision?: boolean
+    remarks?: boolean
+    checks?: boolean
+    reviewed_at?: boolean
+    updated_at?: boolean
+    challenge?: boolean | ChallengeDefaultArgs<ExtArgs>
+    reviewer?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["challengeEligibilityReview"]>
+
+  export type ChallengeEligibilityReviewSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    challenge_id?: boolean
+    reviewed_by?: boolean
+    decision?: boolean
+    remarks?: boolean
+    checks?: boolean
+    reviewed_at?: boolean
+    updated_at?: boolean
+    challenge?: boolean | ChallengeDefaultArgs<ExtArgs>
+    reviewer?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["challengeEligibilityReview"]>
+
+  export type ChallengeEligibilityReviewSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    challenge_id?: boolean
+    reviewed_by?: boolean
+    decision?: boolean
+    remarks?: boolean
+    checks?: boolean
+    reviewed_at?: boolean
+    updated_at?: boolean
+    challenge?: boolean | ChallengeDefaultArgs<ExtArgs>
+    reviewer?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["challengeEligibilityReview"]>
+
+  export type ChallengeEligibilityReviewSelectScalar = {
+    id?: boolean
+    challenge_id?: boolean
+    reviewed_by?: boolean
+    decision?: boolean
+    remarks?: boolean
+    checks?: boolean
+    reviewed_at?: boolean
+    updated_at?: boolean
+  }
+
+  export type ChallengeEligibilityReviewOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "challenge_id" | "reviewed_by" | "decision" | "remarks" | "checks" | "reviewed_at" | "updated_at", ExtArgs["result"]["challengeEligibilityReview"]>
+  export type ChallengeEligibilityReviewInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    challenge?: boolean | ChallengeDefaultArgs<ExtArgs>
+    reviewer?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ChallengeEligibilityReviewIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    challenge?: boolean | ChallengeDefaultArgs<ExtArgs>
+    reviewer?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ChallengeEligibilityReviewIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    challenge?: boolean | ChallengeDefaultArgs<ExtArgs>
+    reviewer?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $ChallengeEligibilityReviewPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ChallengeEligibilityReview"
+    objects: {
+      challenge: Prisma.$ChallengePayload<ExtArgs>
+      reviewer: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      challenge_id: string
+      reviewed_by: string
+      decision: string
+      remarks: string | null
+      checks: Prisma.JsonValue
+      reviewed_at: Date
+      updated_at: Date
+    }, ExtArgs["result"]["challengeEligibilityReview"]>
+    composites: {}
+  }
+
+  type ChallengeEligibilityReviewGetPayload<S extends boolean | null | undefined | ChallengeEligibilityReviewDefaultArgs> = $Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload, S>
+
+  type ChallengeEligibilityReviewCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ChallengeEligibilityReviewFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ChallengeEligibilityReviewCountAggregateInputType | true
+    }
+
+  export interface ChallengeEligibilityReviewDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ChallengeEligibilityReview'], meta: { name: 'ChallengeEligibilityReview' } }
+    /**
+     * Find zero or one ChallengeEligibilityReview that matches the filter.
+     * @param {ChallengeEligibilityReviewFindUniqueArgs} args - Arguments to find a ChallengeEligibilityReview
+     * @example
+     * // Get one ChallengeEligibilityReview
+     * const challengeEligibilityReview = await prisma.challengeEligibilityReview.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ChallengeEligibilityReviewFindUniqueArgs>(args: SelectSubset<T, ChallengeEligibilityReviewFindUniqueArgs<ExtArgs>>): Prisma__ChallengeEligibilityReviewClient<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "findUnique", ClientOptions> | null, null, ExtArgs, ClientOptions>
+
+    /**
+     * Find one ChallengeEligibilityReview that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ChallengeEligibilityReviewFindUniqueOrThrowArgs} args - Arguments to find a ChallengeEligibilityReview
+     * @example
+     * // Get one ChallengeEligibilityReview
+     * const challengeEligibilityReview = await prisma.challengeEligibilityReview.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ChallengeEligibilityReviewFindUniqueOrThrowArgs>(args: SelectSubset<T, ChallengeEligibilityReviewFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ChallengeEligibilityReviewClient<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Find the first ChallengeEligibilityReview that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChallengeEligibilityReviewFindFirstArgs} args - Arguments to find a ChallengeEligibilityReview
+     * @example
+     * // Get one ChallengeEligibilityReview
+     * const challengeEligibilityReview = await prisma.challengeEligibilityReview.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ChallengeEligibilityReviewFindFirstArgs>(args?: SelectSubset<T, ChallengeEligibilityReviewFindFirstArgs<ExtArgs>>): Prisma__ChallengeEligibilityReviewClient<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "findFirst", ClientOptions> | null, null, ExtArgs, ClientOptions>
+
+    /**
+     * Find the first ChallengeEligibilityReview that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChallengeEligibilityReviewFindFirstOrThrowArgs} args - Arguments to find a ChallengeEligibilityReview
+     * @example
+     * // Get one ChallengeEligibilityReview
+     * const challengeEligibilityReview = await prisma.challengeEligibilityReview.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ChallengeEligibilityReviewFindFirstOrThrowArgs>(args?: SelectSubset<T, ChallengeEligibilityReviewFindFirstOrThrowArgs<ExtArgs>>): Prisma__ChallengeEligibilityReviewClient<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "findFirstOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Find zero or more ChallengeEligibilityReviews that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChallengeEligibilityReviewFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ChallengeEligibilityReviews
+     * const challengeEligibilityReviews = await prisma.challengeEligibilityReview.findMany()
+     * 
+     * // Get first 10 ChallengeEligibilityReviews
+     * const challengeEligibilityReviews = await prisma.challengeEligibilityReview.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const challengeEligibilityReviewWithIdOnly = await prisma.challengeEligibilityReview.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ChallengeEligibilityReviewFindManyArgs>(args?: SelectSubset<T, ChallengeEligibilityReviewFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "findMany", ClientOptions>>
+
+    /**
+     * Create a ChallengeEligibilityReview.
+     * @param {ChallengeEligibilityReviewCreateArgs} args - Arguments to create a ChallengeEligibilityReview.
+     * @example
+     * // Create one ChallengeEligibilityReview
+     * const ChallengeEligibilityReview = await prisma.challengeEligibilityReview.create({
+     *   data: {
+     *     // ... data to create a ChallengeEligibilityReview
+     *   }
+     * })
+     * 
+     */
+    create<T extends ChallengeEligibilityReviewCreateArgs>(args: SelectSubset<T, ChallengeEligibilityReviewCreateArgs<ExtArgs>>): Prisma__ChallengeEligibilityReviewClient<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "create", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Create many ChallengeEligibilityReviews.
+     * @param {ChallengeEligibilityReviewCreateManyArgs} args - Arguments to create many ChallengeEligibilityReviews.
+     * @example
+     * // Create many ChallengeEligibilityReviews
+     * const challengeEligibilityReview = await prisma.challengeEligibilityReview.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ChallengeEligibilityReviewCreateManyArgs>(args?: SelectSubset<T, ChallengeEligibilityReviewCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ChallengeEligibilityReviews and returns the data saved in the database.
+     * @param {ChallengeEligibilityReviewCreateManyAndReturnArgs} args - Arguments to create many ChallengeEligibilityReviews.
+     * @example
+     * // Create many ChallengeEligibilityReviews
+     * const challengeEligibilityReview = await prisma.challengeEligibilityReview.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ChallengeEligibilityReviews and only return the `id`
+     * const challengeEligibilityReviewWithIdOnly = await prisma.challengeEligibilityReview.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ChallengeEligibilityReviewCreateManyAndReturnArgs>(args?: SelectSubset<T, ChallengeEligibilityReviewCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "createManyAndReturn", ClientOptions>>
+
+    /**
+     * Delete a ChallengeEligibilityReview.
+     * @param {ChallengeEligibilityReviewDeleteArgs} args - Arguments to delete one ChallengeEligibilityReview.
+     * @example
+     * // Delete one ChallengeEligibilityReview
+     * const ChallengeEligibilityReview = await prisma.challengeEligibilityReview.delete({
+     *   where: {
+     *     // ... filter to delete one ChallengeEligibilityReview
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ChallengeEligibilityReviewDeleteArgs>(args: SelectSubset<T, ChallengeEligibilityReviewDeleteArgs<ExtArgs>>): Prisma__ChallengeEligibilityReviewClient<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "delete", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Update one ChallengeEligibilityReview.
+     * @param {ChallengeEligibilityReviewUpdateArgs} args - Arguments to update one ChallengeEligibilityReview.
+     * @example
+     * // Update one ChallengeEligibilityReview
+     * const challengeEligibilityReview = await prisma.challengeEligibilityReview.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ChallengeEligibilityReviewUpdateArgs>(args: SelectSubset<T, ChallengeEligibilityReviewUpdateArgs<ExtArgs>>): Prisma__ChallengeEligibilityReviewClient<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "update", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Delete zero or more ChallengeEligibilityReviews.
+     * @param {ChallengeEligibilityReviewDeleteManyArgs} args - Arguments to filter ChallengeEligibilityReviews to delete.
+     * @example
+     * // Delete a few ChallengeEligibilityReviews
+     * const { count } = await prisma.challengeEligibilityReview.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ChallengeEligibilityReviewDeleteManyArgs>(args?: SelectSubset<T, ChallengeEligibilityReviewDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ChallengeEligibilityReviews.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChallengeEligibilityReviewUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ChallengeEligibilityReviews
+     * const challengeEligibilityReview = await prisma.challengeEligibilityReview.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ChallengeEligibilityReviewUpdateManyArgs>(args: SelectSubset<T, ChallengeEligibilityReviewUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ChallengeEligibilityReviews and returns the data updated in the database.
+     * @param {ChallengeEligibilityReviewUpdateManyAndReturnArgs} args - Arguments to update many ChallengeEligibilityReviews.
+     * @example
+     * // Update many ChallengeEligibilityReviews
+     * const challengeEligibilityReview = await prisma.challengeEligibilityReview.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ChallengeEligibilityReviews and only return the `id`
+     * const challengeEligibilityReviewWithIdOnly = await prisma.challengeEligibilityReview.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ChallengeEligibilityReviewUpdateManyAndReturnArgs>(args: SelectSubset<T, ChallengeEligibilityReviewUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "updateManyAndReturn", ClientOptions>>
+
+    /**
+     * Create or update one ChallengeEligibilityReview.
+     * @param {ChallengeEligibilityReviewUpsertArgs} args - Arguments to update or create a ChallengeEligibilityReview.
+     * @example
+     * // Update or create a ChallengeEligibilityReview
+     * const challengeEligibilityReview = await prisma.challengeEligibilityReview.upsert({
+     *   create: {
+     *     // ... data to create a ChallengeEligibilityReview
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ChallengeEligibilityReview we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ChallengeEligibilityReviewUpsertArgs>(args: SelectSubset<T, ChallengeEligibilityReviewUpsertArgs<ExtArgs>>): Prisma__ChallengeEligibilityReviewClient<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "upsert", ClientOptions>, never, ExtArgs, ClientOptions>
+
+
+    /**
+     * Count the number of ChallengeEligibilityReviews.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChallengeEligibilityReviewCountArgs} args - Arguments to filter ChallengeEligibilityReviews to count.
+     * @example
+     * // Count the number of ChallengeEligibilityReviews
+     * const count = await prisma.challengeEligibilityReview.count({
+     *   where: {
+     *     // ... the filter for the ChallengeEligibilityReviews we want to count
+     *   }
+     * })
+    **/
+    count<T extends ChallengeEligibilityReviewCountArgs>(
+      args?: Subset<T, ChallengeEligibilityReviewCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ChallengeEligibilityReviewCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ChallengeEligibilityReview.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChallengeEligibilityReviewAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ChallengeEligibilityReviewAggregateArgs>(args: Subset<T, ChallengeEligibilityReviewAggregateArgs>): Prisma.PrismaPromise<GetChallengeEligibilityReviewAggregateType<T>>
+
+    /**
+     * Group by ChallengeEligibilityReview.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ChallengeEligibilityReviewGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ChallengeEligibilityReviewGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ChallengeEligibilityReviewGroupByArgs['orderBy'] }
+        : { orderBy?: ChallengeEligibilityReviewGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ChallengeEligibilityReviewGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetChallengeEligibilityReviewGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ChallengeEligibilityReview model
+   */
+  readonly fields: ChallengeEligibilityReviewFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ChallengeEligibilityReview.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ChallengeEligibilityReviewClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    challenge<T extends ChallengeDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ChallengeDefaultArgs<ExtArgs>>): Prisma__ChallengeClient<$Result.GetResult<Prisma.$ChallengePayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | Null, Null, ExtArgs, ClientOptions>
+    reviewer<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | Null, Null, ExtArgs, ClientOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ChallengeEligibilityReview model
+   */ 
+  interface ChallengeEligibilityReviewFieldRefs {
+    readonly id: FieldRef<"ChallengeEligibilityReview", 'String'>
+    readonly challenge_id: FieldRef<"ChallengeEligibilityReview", 'String'>
+    readonly reviewed_by: FieldRef<"ChallengeEligibilityReview", 'String'>
+    readonly decision: FieldRef<"ChallengeEligibilityReview", 'String'>
+    readonly remarks: FieldRef<"ChallengeEligibilityReview", 'String'>
+    readonly checks: FieldRef<"ChallengeEligibilityReview", 'Json'>
+    readonly reviewed_at: FieldRef<"ChallengeEligibilityReview", 'DateTime'>
+    readonly updated_at: FieldRef<"ChallengeEligibilityReview", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ChallengeEligibilityReview findUnique
+   */
+  export type ChallengeEligibilityReviewFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewInclude<ExtArgs> | null
+    /**
+     * Filter, which ChallengeEligibilityReview to fetch.
+     */
+    where: ChallengeEligibilityReviewWhereUniqueInput
+  }
+
+  /**
+   * ChallengeEligibilityReview findUniqueOrThrow
+   */
+  export type ChallengeEligibilityReviewFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewInclude<ExtArgs> | null
+    /**
+     * Filter, which ChallengeEligibilityReview to fetch.
+     */
+    where: ChallengeEligibilityReviewWhereUniqueInput
+  }
+
+  /**
+   * ChallengeEligibilityReview findFirst
+   */
+  export type ChallengeEligibilityReviewFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewInclude<ExtArgs> | null
+    /**
+     * Filter, which ChallengeEligibilityReview to fetch.
+     */
+    where?: ChallengeEligibilityReviewWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChallengeEligibilityReviews to fetch.
+     */
+    orderBy?: ChallengeEligibilityReviewOrderByWithRelationInput | ChallengeEligibilityReviewOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ChallengeEligibilityReviews.
+     */
+    cursor?: ChallengeEligibilityReviewWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChallengeEligibilityReviews from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChallengeEligibilityReviews.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ChallengeEligibilityReviews.
+     */
+    distinct?: ChallengeEligibilityReviewScalarFieldEnum | ChallengeEligibilityReviewScalarFieldEnum[]
+  }
+
+  /**
+   * ChallengeEligibilityReview findFirstOrThrow
+   */
+  export type ChallengeEligibilityReviewFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewInclude<ExtArgs> | null
+    /**
+     * Filter, which ChallengeEligibilityReview to fetch.
+     */
+    where?: ChallengeEligibilityReviewWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChallengeEligibilityReviews to fetch.
+     */
+    orderBy?: ChallengeEligibilityReviewOrderByWithRelationInput | ChallengeEligibilityReviewOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ChallengeEligibilityReviews.
+     */
+    cursor?: ChallengeEligibilityReviewWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChallengeEligibilityReviews from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChallengeEligibilityReviews.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ChallengeEligibilityReviews.
+     */
+    distinct?: ChallengeEligibilityReviewScalarFieldEnum | ChallengeEligibilityReviewScalarFieldEnum[]
+  }
+
+  /**
+   * ChallengeEligibilityReview findMany
+   */
+  export type ChallengeEligibilityReviewFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewInclude<ExtArgs> | null
+    /**
+     * Filter, which ChallengeEligibilityReviews to fetch.
+     */
+    where?: ChallengeEligibilityReviewWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ChallengeEligibilityReviews to fetch.
+     */
+    orderBy?: ChallengeEligibilityReviewOrderByWithRelationInput | ChallengeEligibilityReviewOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ChallengeEligibilityReviews.
+     */
+    cursor?: ChallengeEligibilityReviewWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ChallengeEligibilityReviews from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ChallengeEligibilityReviews.
+     */
+    skip?: number
+    distinct?: ChallengeEligibilityReviewScalarFieldEnum | ChallengeEligibilityReviewScalarFieldEnum[]
+  }
+
+  /**
+   * ChallengeEligibilityReview create
+   */
+  export type ChallengeEligibilityReviewCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ChallengeEligibilityReview.
+     */
+    data: XOR<ChallengeEligibilityReviewCreateInput, ChallengeEligibilityReviewUncheckedCreateInput>
+  }
+
+  /**
+   * ChallengeEligibilityReview createMany
+   */
+  export type ChallengeEligibilityReviewCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ChallengeEligibilityReviews.
+     */
+    data: ChallengeEligibilityReviewCreateManyInput | ChallengeEligibilityReviewCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ChallengeEligibilityReview createManyAndReturn
+   */
+  export type ChallengeEligibilityReviewCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * The data used to create many ChallengeEligibilityReviews.
+     */
+    data: ChallengeEligibilityReviewCreateManyInput | ChallengeEligibilityReviewCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ChallengeEligibilityReview update
+   */
+  export type ChallengeEligibilityReviewUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ChallengeEligibilityReview.
+     */
+    data: XOR<ChallengeEligibilityReviewUpdateInput, ChallengeEligibilityReviewUncheckedUpdateInput>
+    /**
+     * Choose, which ChallengeEligibilityReview to update.
+     */
+    where: ChallengeEligibilityReviewWhereUniqueInput
+  }
+
+  /**
+   * ChallengeEligibilityReview updateMany
+   */
+  export type ChallengeEligibilityReviewUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ChallengeEligibilityReviews.
+     */
+    data: XOR<ChallengeEligibilityReviewUpdateManyMutationInput, ChallengeEligibilityReviewUncheckedUpdateManyInput>
+    /**
+     * Filter which ChallengeEligibilityReviews to update
+     */
+    where?: ChallengeEligibilityReviewWhereInput
+    /**
+     * Limit how many ChallengeEligibilityReviews to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ChallengeEligibilityReview updateManyAndReturn
+   */
+  export type ChallengeEligibilityReviewUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * The data used to update ChallengeEligibilityReviews.
+     */
+    data: XOR<ChallengeEligibilityReviewUpdateManyMutationInput, ChallengeEligibilityReviewUncheckedUpdateManyInput>
+    /**
+     * Filter which ChallengeEligibilityReviews to update
+     */
+    where?: ChallengeEligibilityReviewWhereInput
+    /**
+     * Limit how many ChallengeEligibilityReviews to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ChallengeEligibilityReview upsert
+   */
+  export type ChallengeEligibilityReviewUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ChallengeEligibilityReview to update in case it exists.
+     */
+    where: ChallengeEligibilityReviewWhereUniqueInput
+    /**
+     * In case the ChallengeEligibilityReview found by the `where` argument doesn't exist, create a new ChallengeEligibilityReview with this data.
+     */
+    create: XOR<ChallengeEligibilityReviewCreateInput, ChallengeEligibilityReviewUncheckedCreateInput>
+    /**
+     * In case the ChallengeEligibilityReview was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ChallengeEligibilityReviewUpdateInput, ChallengeEligibilityReviewUncheckedUpdateInput>
+  }
+
+  /**
+   * ChallengeEligibilityReview delete
+   */
+  export type ChallengeEligibilityReviewDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewInclude<ExtArgs> | null
+    /**
+     * Filter which ChallengeEligibilityReview to delete.
+     */
+    where: ChallengeEligibilityReviewWhereUniqueInput
+  }
+
+  /**
+   * ChallengeEligibilityReview deleteMany
+   */
+  export type ChallengeEligibilityReviewDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ChallengeEligibilityReviews to delete
+     */
+    where?: ChallengeEligibilityReviewWhereInput
+    /**
+     * Limit how many ChallengeEligibilityReviews to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ChallengeEligibilityReview without action
+   */
+  export type ChallengeEligibilityReviewDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ChallengeEligibilityReview
+     */
+    select?: ChallengeEligibilityReviewSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ChallengeEligibilityReview
+     */
+    omit?: ChallengeEligibilityReviewOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ChallengeEligibilityReviewInclude<ExtArgs> | null
   }
 
 
@@ -50360,11 +51739,36 @@ export namespace Prisma {
     ip_ownership: 'ip_ownership',
     licensing_terms: 'licensing_terms',
     confidentiality_terms: 'confidentiality_terms',
+    current_process: 'current_process',
+    pilot_location: 'pilot_location',
+    pilot_start_date: 'pilot_start_date',
+    pilot_end_date: 'pilot_end_date',
+    startup_requirements: 'startup_requirements',
+    kpis: 'kpis',
+    milestones: 'milestones',
+    eligibility_requirements: 'eligibility_requirements',
+    required_documents: 'required_documents',
+    cybersecurity_requirements: 'cybersecurity_requirements',
+    data_compliance: 'data_compliance',
     created_at: 'created_at',
     updated_at: 'updated_at'
   };
 
   export type ChallengeScalarFieldEnum = (typeof ChallengeScalarFieldEnum)[keyof typeof ChallengeScalarFieldEnum]
+
+
+  export const ChallengeEligibilityReviewScalarFieldEnum: {
+    id: 'id',
+    challenge_id: 'challenge_id',
+    reviewed_by: 'reviewed_by',
+    decision: 'decision',
+    remarks: 'remarks',
+    checks: 'checks',
+    reviewed_at: 'reviewed_at',
+    updated_at: 'updated_at'
+  };
+
+  export type ChallengeEligibilityReviewScalarFieldEnum = (typeof ChallengeEligibilityReviewScalarFieldEnum)[keyof typeof ChallengeEligibilityReviewScalarFieldEnum]
 
 
   export const MatchScoreScalarFieldEnum: {
@@ -51160,6 +52564,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+  /**
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -51212,20 +52630,6 @@ export namespace Prisma {
    * Reference to a field of type 'ApplicationStatus[]'
    */
   export type ListEnumApplicationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ApplicationStatus[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Json'
-   */
-  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
-    
-
-
-  /**
-   * Reference to a field of type 'QueryMode'
-   */
-  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
 
 
@@ -51454,6 +52858,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolListRelationFilter
     added_evaluator_pools?: ChallengeEvaluatorPoolListRelationFilter
     evaluator_match_scores?: EvaluatorMatchScoreListRelationFilter
+    eligibility_reviews?: ChallengeEligibilityReviewListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -51507,6 +52912,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolOrderByRelationAggregateInput
     added_evaluator_pools?: ChallengeEvaluatorPoolOrderByRelationAggregateInput
     evaluator_match_scores?: EvaluatorMatchScoreOrderByRelationAggregateInput
+    eligibility_reviews?: ChallengeEligibilityReviewOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -51563,6 +52969,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolListRelationFilter
     added_evaluator_pools?: ChallengeEvaluatorPoolListRelationFilter
     evaluator_match_scores?: EvaluatorMatchScoreListRelationFilter
+    eligibility_reviews?: ChallengeEligibilityReviewListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -51746,6 +53153,17 @@ export namespace Prisma {
     ip_ownership?: StringNullableFilter<"Challenge"> | string | null
     licensing_terms?: StringNullableFilter<"Challenge"> | string | null
     confidentiality_terms?: StringNullableFilter<"Challenge"> | string | null
+    current_process?: StringNullableFilter<"Challenge"> | string | null
+    pilot_location?: StringNullableFilter<"Challenge"> | string | null
+    pilot_start_date?: DateTimeNullableFilter<"Challenge"> | Date | string | null
+    pilot_end_date?: DateTimeNullableFilter<"Challenge"> | Date | string | null
+    startup_requirements?: StringNullableFilter<"Challenge"> | string | null
+    kpis?: JsonNullableFilter<"Challenge">
+    milestones?: JsonNullableFilter<"Challenge">
+    eligibility_requirements?: JsonNullableFilter<"Challenge">
+    required_documents?: JsonNullableFilter<"Challenge">
+    cybersecurity_requirements?: StringNullableFilter<"Challenge"> | string | null
+    data_compliance?: StringNullableFilter<"Challenge"> | string | null
     created_at?: DateTimeFilter<"Challenge"> | Date | string
     updated_at?: DateTimeFilter<"Challenge"> | Date | string
     applications?: ApplicationListRelationFilter
@@ -51757,6 +53175,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationListRelationFilter
     evaluator_pools?: ChallengeEvaluatorPoolListRelationFilter
     evaluator_match_scores?: EvaluatorMatchScoreListRelationFilter
+    eligibility_review?: XOR<ChallengeEligibilityReviewNullableScalarRelationFilter, ChallengeEligibilityReviewWhereInput> | null
   }
 
   export type ChallengeOrderByWithRelationInput = {
@@ -51782,6 +53201,17 @@ export namespace Prisma {
     ip_ownership?: SortOrderInput | SortOrder
     licensing_terms?: SortOrderInput | SortOrder
     confidentiality_terms?: SortOrderInput | SortOrder
+    current_process?: SortOrderInput | SortOrder
+    pilot_location?: SortOrderInput | SortOrder
+    pilot_start_date?: SortOrderInput | SortOrder
+    pilot_end_date?: SortOrderInput | SortOrder
+    startup_requirements?: SortOrderInput | SortOrder
+    kpis?: SortOrderInput | SortOrder
+    milestones?: SortOrderInput | SortOrder
+    eligibility_requirements?: SortOrderInput | SortOrder
+    required_documents?: SortOrderInput | SortOrder
+    cybersecurity_requirements?: SortOrderInput | SortOrder
+    data_compliance?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     applications?: ApplicationOrderByRelationAggregateInput
@@ -51793,6 +53223,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationOrderByRelationAggregateInput
     evaluator_pools?: ChallengeEvaluatorPoolOrderByRelationAggregateInput
     evaluator_match_scores?: EvaluatorMatchScoreOrderByRelationAggregateInput
+    eligibility_review?: ChallengeEligibilityReviewOrderByWithRelationInput
   }
 
   export type ChallengeWhereUniqueInput = Prisma.AtLeast<{
@@ -51821,6 +53252,17 @@ export namespace Prisma {
     ip_ownership?: StringNullableFilter<"Challenge"> | string | null
     licensing_terms?: StringNullableFilter<"Challenge"> | string | null
     confidentiality_terms?: StringNullableFilter<"Challenge"> | string | null
+    current_process?: StringNullableFilter<"Challenge"> | string | null
+    pilot_location?: StringNullableFilter<"Challenge"> | string | null
+    pilot_start_date?: DateTimeNullableFilter<"Challenge"> | Date | string | null
+    pilot_end_date?: DateTimeNullableFilter<"Challenge"> | Date | string | null
+    startup_requirements?: StringNullableFilter<"Challenge"> | string | null
+    kpis?: JsonNullableFilter<"Challenge">
+    milestones?: JsonNullableFilter<"Challenge">
+    eligibility_requirements?: JsonNullableFilter<"Challenge">
+    required_documents?: JsonNullableFilter<"Challenge">
+    cybersecurity_requirements?: StringNullableFilter<"Challenge"> | string | null
+    data_compliance?: StringNullableFilter<"Challenge"> | string | null
     created_at?: DateTimeFilter<"Challenge"> | Date | string
     updated_at?: DateTimeFilter<"Challenge"> | Date | string
     applications?: ApplicationListRelationFilter
@@ -51832,6 +53274,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationListRelationFilter
     evaluator_pools?: ChallengeEvaluatorPoolListRelationFilter
     evaluator_match_scores?: EvaluatorMatchScoreListRelationFilter
+    eligibility_review?: XOR<ChallengeEligibilityReviewNullableScalarRelationFilter, ChallengeEligibilityReviewWhereInput> | null
   }, "id">
 
   export type ChallengeOrderByWithAggregationInput = {
@@ -51857,6 +53300,17 @@ export namespace Prisma {
     ip_ownership?: SortOrderInput | SortOrder
     licensing_terms?: SortOrderInput | SortOrder
     confidentiality_terms?: SortOrderInput | SortOrder
+    current_process?: SortOrderInput | SortOrder
+    pilot_location?: SortOrderInput | SortOrder
+    pilot_start_date?: SortOrderInput | SortOrder
+    pilot_end_date?: SortOrderInput | SortOrder
+    startup_requirements?: SortOrderInput | SortOrder
+    kpis?: SortOrderInput | SortOrder
+    milestones?: SortOrderInput | SortOrder
+    eligibility_requirements?: SortOrderInput | SortOrder
+    required_documents?: SortOrderInput | SortOrder
+    cybersecurity_requirements?: SortOrderInput | SortOrder
+    data_compliance?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     _count?: ChallengeCountOrderByAggregateInput
@@ -51892,8 +53346,92 @@ export namespace Prisma {
     ip_ownership?: StringNullableWithAggregatesFilter<"Challenge"> | string | null
     licensing_terms?: StringNullableWithAggregatesFilter<"Challenge"> | string | null
     confidentiality_terms?: StringNullableWithAggregatesFilter<"Challenge"> | string | null
+    current_process?: StringNullableWithAggregatesFilter<"Challenge"> | string | null
+    pilot_location?: StringNullableWithAggregatesFilter<"Challenge"> | string | null
+    pilot_start_date?: DateTimeNullableWithAggregatesFilter<"Challenge"> | Date | string | null
+    pilot_end_date?: DateTimeNullableWithAggregatesFilter<"Challenge"> | Date | string | null
+    startup_requirements?: StringNullableWithAggregatesFilter<"Challenge"> | string | null
+    kpis?: JsonNullableWithAggregatesFilter<"Challenge">
+    milestones?: JsonNullableWithAggregatesFilter<"Challenge">
+    eligibility_requirements?: JsonNullableWithAggregatesFilter<"Challenge">
+    required_documents?: JsonNullableWithAggregatesFilter<"Challenge">
+    cybersecurity_requirements?: StringNullableWithAggregatesFilter<"Challenge"> | string | null
+    data_compliance?: StringNullableWithAggregatesFilter<"Challenge"> | string | null
     created_at?: DateTimeWithAggregatesFilter<"Challenge"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"Challenge"> | Date | string
+  }
+
+  export type ChallengeEligibilityReviewWhereInput = {
+    AND?: ChallengeEligibilityReviewWhereInput | ChallengeEligibilityReviewWhereInput[]
+    OR?: ChallengeEligibilityReviewWhereInput[]
+    NOT?: ChallengeEligibilityReviewWhereInput | ChallengeEligibilityReviewWhereInput[]
+    id?: StringFilter<"ChallengeEligibilityReview"> | string
+    challenge_id?: StringFilter<"ChallengeEligibilityReview"> | string
+    reviewed_by?: StringFilter<"ChallengeEligibilityReview"> | string
+    decision?: StringFilter<"ChallengeEligibilityReview"> | string
+    remarks?: StringNullableFilter<"ChallengeEligibilityReview"> | string | null
+    checks?: JsonFilter<"ChallengeEligibilityReview">
+    reviewed_at?: DateTimeFilter<"ChallengeEligibilityReview"> | Date | string
+    updated_at?: DateTimeFilter<"ChallengeEligibilityReview"> | Date | string
+    challenge?: XOR<ChallengeScalarRelationFilter, ChallengeWhereInput>
+    reviewer?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type ChallengeEligibilityReviewOrderByWithRelationInput = {
+    id?: SortOrder
+    challenge_id?: SortOrder
+    reviewed_by?: SortOrder
+    decision?: SortOrder
+    remarks?: SortOrderInput | SortOrder
+    checks?: SortOrder
+    reviewed_at?: SortOrder
+    updated_at?: SortOrder
+    challenge?: ChallengeOrderByWithRelationInput
+    reviewer?: UserOrderByWithRelationInput
+  }
+
+  export type ChallengeEligibilityReviewWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    challenge_id?: string
+    AND?: ChallengeEligibilityReviewWhereInput | ChallengeEligibilityReviewWhereInput[]
+    OR?: ChallengeEligibilityReviewWhereInput[]
+    NOT?: ChallengeEligibilityReviewWhereInput | ChallengeEligibilityReviewWhereInput[]
+    reviewed_by?: StringFilter<"ChallengeEligibilityReview"> | string
+    decision?: StringFilter<"ChallengeEligibilityReview"> | string
+    remarks?: StringNullableFilter<"ChallengeEligibilityReview"> | string | null
+    checks?: JsonFilter<"ChallengeEligibilityReview">
+    reviewed_at?: DateTimeFilter<"ChallengeEligibilityReview"> | Date | string
+    updated_at?: DateTimeFilter<"ChallengeEligibilityReview"> | Date | string
+    challenge?: XOR<ChallengeScalarRelationFilter, ChallengeWhereInput>
+    reviewer?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "challenge_id">
+
+  export type ChallengeEligibilityReviewOrderByWithAggregationInput = {
+    id?: SortOrder
+    challenge_id?: SortOrder
+    reviewed_by?: SortOrder
+    decision?: SortOrder
+    remarks?: SortOrderInput | SortOrder
+    checks?: SortOrder
+    reviewed_at?: SortOrder
+    updated_at?: SortOrder
+    _count?: ChallengeEligibilityReviewCountOrderByAggregateInput
+    _max?: ChallengeEligibilityReviewMaxOrderByAggregateInput
+    _min?: ChallengeEligibilityReviewMinOrderByAggregateInput
+  }
+
+  export type ChallengeEligibilityReviewScalarWhereWithAggregatesInput = {
+    AND?: ChallengeEligibilityReviewScalarWhereWithAggregatesInput | ChallengeEligibilityReviewScalarWhereWithAggregatesInput[]
+    OR?: ChallengeEligibilityReviewScalarWhereWithAggregatesInput[]
+    NOT?: ChallengeEligibilityReviewScalarWhereWithAggregatesInput | ChallengeEligibilityReviewScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ChallengeEligibilityReview"> | string
+    challenge_id?: StringWithAggregatesFilter<"ChallengeEligibilityReview"> | string
+    reviewed_by?: StringWithAggregatesFilter<"ChallengeEligibilityReview"> | string
+    decision?: StringWithAggregatesFilter<"ChallengeEligibilityReview"> | string
+    remarks?: StringNullableWithAggregatesFilter<"ChallengeEligibilityReview"> | string | null
+    checks?: JsonWithAggregatesFilter<"ChallengeEligibilityReview">
+    reviewed_at?: DateTimeWithAggregatesFilter<"ChallengeEligibilityReview"> | Date | string
+    updated_at?: DateTimeWithAggregatesFilter<"ChallengeEligibilityReview"> | Date | string
   }
 
   export type MatchScoreWhereInput = {
@@ -55335,6 +56873,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -55387,6 +56926,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUpdateInput = {
@@ -55439,6 +56979,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -55491,6 +57032,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -55706,6 +57248,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -55717,6 +57270,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeUncheckedCreateInput = {
@@ -55742,6 +57296,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -55751,6 +57316,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeUpdateInput = {
@@ -55774,6 +57340,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -55785,6 +57362,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUpdateOneWithoutChallengeNestedInput
   }
 
   export type ChallengeUncheckedUpdateInput = {
@@ -55810,6 +57388,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -55819,6 +57408,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedUpdateOneWithoutChallengeNestedInput
   }
 
   export type ChallengeCreateManyInput = {
@@ -55844,6 +57434,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -55869,6 +57470,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -55896,7 +57508,93 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ChallengeEligibilityReviewCreateInput = {
+    id?: string
+    decision?: string
+    remarks?: string | null
+    checks: JsonNullValueInput | InputJsonValue
+    reviewed_at?: Date | string
+    updated_at?: Date | string
+    challenge: ChallengeCreateNestedOneWithoutEligibility_reviewInput
+    reviewer: UserCreateNestedOneWithoutEligibility_reviewsInput
+  }
+
+  export type ChallengeEligibilityReviewUncheckedCreateInput = {
+    id?: string
+    challenge_id: string
+    reviewed_by: string
+    decision?: string
+    remarks?: string | null
+    checks: JsonNullValueInput | InputJsonValue
+    reviewed_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type ChallengeEligibilityReviewUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    decision?: StringFieldUpdateOperationsInput | string
+    remarks?: NullableStringFieldUpdateOperationsInput | string | null
+    checks?: JsonNullValueInput | InputJsonValue
+    reviewed_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    challenge?: ChallengeUpdateOneRequiredWithoutEligibility_reviewNestedInput
+    reviewer?: UserUpdateOneRequiredWithoutEligibility_reviewsNestedInput
+  }
+
+  export type ChallengeEligibilityReviewUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    challenge_id?: StringFieldUpdateOperationsInput | string
+    reviewed_by?: StringFieldUpdateOperationsInput | string
+    decision?: StringFieldUpdateOperationsInput | string
+    remarks?: NullableStringFieldUpdateOperationsInput | string | null
+    checks?: JsonNullValueInput | InputJsonValue
+    reviewed_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ChallengeEligibilityReviewCreateManyInput = {
+    id?: string
+    challenge_id: string
+    reviewed_by: string
+    decision?: string
+    remarks?: string | null
+    checks: JsonNullValueInput | InputJsonValue
+    reviewed_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type ChallengeEligibilityReviewUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    decision?: StringFieldUpdateOperationsInput | string
+    remarks?: NullableStringFieldUpdateOperationsInput | string | null
+    checks?: JsonNullValueInput | InputJsonValue
+    reviewed_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ChallengeEligibilityReviewUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    challenge_id?: StringFieldUpdateOperationsInput | string
+    reviewed_by?: StringFieldUpdateOperationsInput | string
+    decision?: StringFieldUpdateOperationsInput | string
+    remarks?: NullableStringFieldUpdateOperationsInput | string | null
+    checks?: JsonNullValueInput | InputJsonValue
+    reviewed_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -59889,6 +61587,12 @@ export namespace Prisma {
     none?: EvaluatorMatchScoreWhereInput
   }
 
+  export type ChallengeEligibilityReviewListRelationFilter = {
+    every?: ChallengeEligibilityReviewWhereInput
+    some?: ChallengeEligibilityReviewWhereInput
+    none?: ChallengeEligibilityReviewWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -59967,6 +61671,10 @@ export namespace Prisma {
   }
 
   export type EvaluatorMatchScoreOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ChallengeEligibilityReviewOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -60245,6 +61953,29 @@ export namespace Prisma {
     notIn?: $Enums.ChallengeStatus[] | ListEnumChallengeStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumChallengeStatusFilter<$PrismaModel> | $Enums.ChallengeStatus
   }
+  export type JsonNullableFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type ApplicationListRelationFilter = {
     every?: ApplicationWhereInput
@@ -60272,6 +62003,11 @@ export namespace Prisma {
     every?: PilotWhereInput
     some?: PilotWhereInput
     none?: PilotWhereInput
+  }
+
+  export type ChallengeEligibilityReviewNullableScalarRelationFilter = {
+    is?: ChallengeEligibilityReviewWhereInput | null
+    isNot?: ChallengeEligibilityReviewWhereInput | null
   }
 
   export type ApplicationOrderByRelationAggregateInput = {
@@ -60309,6 +62045,17 @@ export namespace Prisma {
     ip_ownership?: SortOrder
     licensing_terms?: SortOrder
     confidentiality_terms?: SortOrder
+    current_process?: SortOrder
+    pilot_location?: SortOrder
+    pilot_start_date?: SortOrder
+    pilot_end_date?: SortOrder
+    startup_requirements?: SortOrder
+    kpis?: SortOrder
+    milestones?: SortOrder
+    eligibility_requirements?: SortOrder
+    required_documents?: SortOrder
+    cybersecurity_requirements?: SortOrder
+    data_compliance?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -60341,6 +62088,13 @@ export namespace Prisma {
     ip_ownership?: SortOrder
     licensing_terms?: SortOrder
     confidentiality_terms?: SortOrder
+    current_process?: SortOrder
+    pilot_location?: SortOrder
+    pilot_start_date?: SortOrder
+    pilot_end_date?: SortOrder
+    startup_requirements?: SortOrder
+    cybersecurity_requirements?: SortOrder
+    data_compliance?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -60367,6 +62121,13 @@ export namespace Prisma {
     ip_ownership?: SortOrder
     licensing_terms?: SortOrder
     confidentiality_terms?: SortOrder
+    current_process?: SortOrder
+    pilot_location?: SortOrder
+    pilot_start_date?: SortOrder
+    pilot_end_date?: SortOrder
+    startup_requirements?: SortOrder
+    cybersecurity_requirements?: SortOrder
+    data_compliance?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -60402,6 +62163,117 @@ export namespace Prisma {
     _min?: NestedEnumChallengeStatusFilter<$PrismaModel>
     _max?: NestedEnumChallengeStatusFilter<$PrismaModel>
   }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+  export type JsonFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type ChallengeScalarRelationFilter = {
+    is?: ChallengeWhereInput
+    isNot?: ChallengeWhereInput
+  }
+
+  export type ChallengeEligibilityReviewCountOrderByAggregateInput = {
+    id?: SortOrder
+    challenge_id?: SortOrder
+    reviewed_by?: SortOrder
+    decision?: SortOrder
+    remarks?: SortOrder
+    checks?: SortOrder
+    reviewed_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type ChallengeEligibilityReviewMaxOrderByAggregateInput = {
+    id?: SortOrder
+    challenge_id?: SortOrder
+    reviewed_by?: SortOrder
+    decision?: SortOrder
+    remarks?: SortOrder
+    reviewed_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type ChallengeEligibilityReviewMinOrderByAggregateInput = {
+    id?: SortOrder
+    challenge_id?: SortOrder
+    reviewed_by?: SortOrder
+    decision?: SortOrder
+    remarks?: SortOrder
+    reviewed_at?: SortOrder
+    updated_at?: SortOrder
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
+  }
 
   export type FloatFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
@@ -60412,11 +62284,6 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
-  }
-
-  export type ChallengeScalarRelationFilter = {
-    is?: ChallengeWhereInput
-    isNot?: ChallengeWhereInput
   }
 
   export type StartupScalarRelationFilter = {
@@ -61116,29 +62983,6 @@ export namespace Prisma {
   export type ApplicationDocumentSumOrderByAggregateInput = {
     file_size?: SortOrder
   }
-  export type JsonNullableFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonNullableFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonNullableFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
 
   export type ApplicationProposalAnalysisCountOrderByAggregateInput = {
     id?: SortOrder
@@ -61186,32 +63030,6 @@ export namespace Prisma {
     cost_effectiveness?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
-  }
-  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedJsonNullableFilter<$PrismaModel>
-    _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
   export type EvaluatorMatchScoreChallenge_idEvaluator_idCompoundUniqueInput = {
@@ -62667,29 +64485,6 @@ export namespace Prisma {
     _min?: NestedEnumAcceptanceStatusFilter<$PrismaModel>
     _max?: NestedEnumAcceptanceStatusFilter<$PrismaModel>
   }
-  export type JsonFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
 
   export type SystemSettingCountOrderByAggregateInput = {
     id?: SortOrder
@@ -62714,32 +64509,6 @@ export namespace Prisma {
     updated_by?: SortOrder
     updated_at?: SortOrder
     created_at?: SortOrder
-  }
-  export type JsonWithAggregatesFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
-        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
-
-  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedJsonFilter<$PrismaModel>
-    _max?: NestedJsonFilter<$PrismaModel>
   }
 
   export type EvaluationCriterionCountOrderByAggregateInput = {
@@ -63023,6 +64792,13 @@ export namespace Prisma {
     connect?: EvaluatorMatchScoreWhereUniqueInput | EvaluatorMatchScoreWhereUniqueInput[]
   }
 
+  export type ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput = {
+    create?: XOR<ChallengeEligibilityReviewCreateWithoutReviewerInput, ChallengeEligibilityReviewUncheckedCreateWithoutReviewerInput> | ChallengeEligibilityReviewCreateWithoutReviewerInput[] | ChallengeEligibilityReviewUncheckedCreateWithoutReviewerInput[]
+    connectOrCreate?: ChallengeEligibilityReviewCreateOrConnectWithoutReviewerInput | ChallengeEligibilityReviewCreateOrConnectWithoutReviewerInput[]
+    createMany?: ChallengeEligibilityReviewCreateManyReviewerInputEnvelope
+    connect?: ChallengeEligibilityReviewWhereUniqueInput | ChallengeEligibilityReviewWhereUniqueInput[]
+  }
+
   export type AuditLogUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<AuditLogCreateWithoutUserInput, AuditLogUncheckedCreateWithoutUserInput> | AuditLogCreateWithoutUserInput[] | AuditLogUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AuditLogCreateOrConnectWithoutUserInput | AuditLogCreateOrConnectWithoutUserInput[]
@@ -63216,6 +64992,13 @@ export namespace Prisma {
     connectOrCreate?: EvaluatorMatchScoreCreateOrConnectWithoutEvaluatorInput | EvaluatorMatchScoreCreateOrConnectWithoutEvaluatorInput[]
     createMany?: EvaluatorMatchScoreCreateManyEvaluatorInputEnvelope
     connect?: EvaluatorMatchScoreWhereUniqueInput | EvaluatorMatchScoreWhereUniqueInput[]
+  }
+
+  export type ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput = {
+    create?: XOR<ChallengeEligibilityReviewCreateWithoutReviewerInput, ChallengeEligibilityReviewUncheckedCreateWithoutReviewerInput> | ChallengeEligibilityReviewCreateWithoutReviewerInput[] | ChallengeEligibilityReviewUncheckedCreateWithoutReviewerInput[]
+    connectOrCreate?: ChallengeEligibilityReviewCreateOrConnectWithoutReviewerInput | ChallengeEligibilityReviewCreateOrConnectWithoutReviewerInput[]
+    createMany?: ChallengeEligibilityReviewCreateManyReviewerInputEnvelope
+    connect?: ChallengeEligibilityReviewWhereUniqueInput | ChallengeEligibilityReviewWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -63648,6 +65431,20 @@ export namespace Prisma {
     deleteMany?: EvaluatorMatchScoreScalarWhereInput | EvaluatorMatchScoreScalarWhereInput[]
   }
 
+  export type ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput = {
+    create?: XOR<ChallengeEligibilityReviewCreateWithoutReviewerInput, ChallengeEligibilityReviewUncheckedCreateWithoutReviewerInput> | ChallengeEligibilityReviewCreateWithoutReviewerInput[] | ChallengeEligibilityReviewUncheckedCreateWithoutReviewerInput[]
+    connectOrCreate?: ChallengeEligibilityReviewCreateOrConnectWithoutReviewerInput | ChallengeEligibilityReviewCreateOrConnectWithoutReviewerInput[]
+    upsert?: ChallengeEligibilityReviewUpsertWithWhereUniqueWithoutReviewerInput | ChallengeEligibilityReviewUpsertWithWhereUniqueWithoutReviewerInput[]
+    createMany?: ChallengeEligibilityReviewCreateManyReviewerInputEnvelope
+    set?: ChallengeEligibilityReviewWhereUniqueInput | ChallengeEligibilityReviewWhereUniqueInput[]
+    disconnect?: ChallengeEligibilityReviewWhereUniqueInput | ChallengeEligibilityReviewWhereUniqueInput[]
+    delete?: ChallengeEligibilityReviewWhereUniqueInput | ChallengeEligibilityReviewWhereUniqueInput[]
+    connect?: ChallengeEligibilityReviewWhereUniqueInput | ChallengeEligibilityReviewWhereUniqueInput[]
+    update?: ChallengeEligibilityReviewUpdateWithWhereUniqueWithoutReviewerInput | ChallengeEligibilityReviewUpdateWithWhereUniqueWithoutReviewerInput[]
+    updateMany?: ChallengeEligibilityReviewUpdateManyWithWhereWithoutReviewerInput | ChallengeEligibilityReviewUpdateManyWithWhereWithoutReviewerInput[]
+    deleteMany?: ChallengeEligibilityReviewScalarWhereInput | ChallengeEligibilityReviewScalarWhereInput[]
+  }
+
   export type AuditLogUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<AuditLogCreateWithoutUserInput, AuditLogUncheckedCreateWithoutUserInput> | AuditLogCreateWithoutUserInput[] | AuditLogUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AuditLogCreateOrConnectWithoutUserInput | AuditLogCreateOrConnectWithoutUserInput[]
@@ -64036,6 +65833,20 @@ export namespace Prisma {
     deleteMany?: EvaluatorMatchScoreScalarWhereInput | EvaluatorMatchScoreScalarWhereInput[]
   }
 
+  export type ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput = {
+    create?: XOR<ChallengeEligibilityReviewCreateWithoutReviewerInput, ChallengeEligibilityReviewUncheckedCreateWithoutReviewerInput> | ChallengeEligibilityReviewCreateWithoutReviewerInput[] | ChallengeEligibilityReviewUncheckedCreateWithoutReviewerInput[]
+    connectOrCreate?: ChallengeEligibilityReviewCreateOrConnectWithoutReviewerInput | ChallengeEligibilityReviewCreateOrConnectWithoutReviewerInput[]
+    upsert?: ChallengeEligibilityReviewUpsertWithWhereUniqueWithoutReviewerInput | ChallengeEligibilityReviewUpsertWithWhereUniqueWithoutReviewerInput[]
+    createMany?: ChallengeEligibilityReviewCreateManyReviewerInputEnvelope
+    set?: ChallengeEligibilityReviewWhereUniqueInput | ChallengeEligibilityReviewWhereUniqueInput[]
+    disconnect?: ChallengeEligibilityReviewWhereUniqueInput | ChallengeEligibilityReviewWhereUniqueInput[]
+    delete?: ChallengeEligibilityReviewWhereUniqueInput | ChallengeEligibilityReviewWhereUniqueInput[]
+    connect?: ChallengeEligibilityReviewWhereUniqueInput | ChallengeEligibilityReviewWhereUniqueInput[]
+    update?: ChallengeEligibilityReviewUpdateWithWhereUniqueWithoutReviewerInput | ChallengeEligibilityReviewUpdateWithWhereUniqueWithoutReviewerInput[]
+    updateMany?: ChallengeEligibilityReviewUpdateManyWithWhereWithoutReviewerInput | ChallengeEligibilityReviewUpdateManyWithWhereWithoutReviewerInput[]
+    deleteMany?: ChallengeEligibilityReviewScalarWhereInput | ChallengeEligibilityReviewScalarWhereInput[]
+  }
+
   export type ChallengeCreateNestedManyWithoutDepartmentInput = {
     create?: XOR<ChallengeCreateWithoutDepartmentInput, ChallengeUncheckedCreateWithoutDepartmentInput> | ChallengeCreateWithoutDepartmentInput[] | ChallengeUncheckedCreateWithoutDepartmentInput[]
     connectOrCreate?: ChallengeCreateOrConnectWithoutDepartmentInput | ChallengeCreateOrConnectWithoutDepartmentInput[]
@@ -64273,6 +66084,12 @@ export namespace Prisma {
     connect?: EvaluatorMatchScoreWhereUniqueInput | EvaluatorMatchScoreWhereUniqueInput[]
   }
 
+  export type ChallengeEligibilityReviewCreateNestedOneWithoutChallengeInput = {
+    create?: XOR<ChallengeEligibilityReviewCreateWithoutChallengeInput, ChallengeEligibilityReviewUncheckedCreateWithoutChallengeInput>
+    connectOrCreate?: ChallengeEligibilityReviewCreateOrConnectWithoutChallengeInput
+    connect?: ChallengeEligibilityReviewWhereUniqueInput
+  }
+
   export type ApplicationUncheckedCreateNestedManyWithoutChallengeInput = {
     create?: XOR<ApplicationCreateWithoutChallengeInput, ApplicationUncheckedCreateWithoutChallengeInput> | ApplicationCreateWithoutChallengeInput[] | ApplicationUncheckedCreateWithoutChallengeInput[]
     connectOrCreate?: ApplicationCreateOrConnectWithoutChallengeInput | ApplicationCreateOrConnectWithoutChallengeInput[]
@@ -64320,6 +66137,12 @@ export namespace Prisma {
     connectOrCreate?: EvaluatorMatchScoreCreateOrConnectWithoutChallengeInput | EvaluatorMatchScoreCreateOrConnectWithoutChallengeInput[]
     createMany?: EvaluatorMatchScoreCreateManyChallengeInputEnvelope
     connect?: EvaluatorMatchScoreWhereUniqueInput | EvaluatorMatchScoreWhereUniqueInput[]
+  }
+
+  export type ChallengeEligibilityReviewUncheckedCreateNestedOneWithoutChallengeInput = {
+    create?: XOR<ChallengeEligibilityReviewCreateWithoutChallengeInput, ChallengeEligibilityReviewUncheckedCreateWithoutChallengeInput>
+    connectOrCreate?: ChallengeEligibilityReviewCreateOrConnectWithoutChallengeInput
+    connect?: ChallengeEligibilityReviewWhereUniqueInput
   }
 
   export type DecimalFieldUpdateOperationsInput = {
@@ -64453,6 +66276,16 @@ export namespace Prisma {
     deleteMany?: EvaluatorMatchScoreScalarWhereInput | EvaluatorMatchScoreScalarWhereInput[]
   }
 
+  export type ChallengeEligibilityReviewUpdateOneWithoutChallengeNestedInput = {
+    create?: XOR<ChallengeEligibilityReviewCreateWithoutChallengeInput, ChallengeEligibilityReviewUncheckedCreateWithoutChallengeInput>
+    connectOrCreate?: ChallengeEligibilityReviewCreateOrConnectWithoutChallengeInput
+    upsert?: ChallengeEligibilityReviewUpsertWithoutChallengeInput
+    disconnect?: ChallengeEligibilityReviewWhereInput | boolean
+    delete?: ChallengeEligibilityReviewWhereInput | boolean
+    connect?: ChallengeEligibilityReviewWhereUniqueInput
+    update?: XOR<XOR<ChallengeEligibilityReviewUpdateToOneWithWhereWithoutChallengeInput, ChallengeEligibilityReviewUpdateWithoutChallengeInput>, ChallengeEligibilityReviewUncheckedUpdateWithoutChallengeInput>
+  }
+
   export type ApplicationUncheckedUpdateManyWithoutChallengeNestedInput = {
     create?: XOR<ApplicationCreateWithoutChallengeInput, ApplicationUncheckedCreateWithoutChallengeInput> | ApplicationCreateWithoutChallengeInput[] | ApplicationUncheckedCreateWithoutChallengeInput[]
     connectOrCreate?: ApplicationCreateOrConnectWithoutChallengeInput | ApplicationCreateOrConnectWithoutChallengeInput[]
@@ -64549,6 +66382,44 @@ export namespace Prisma {
     update?: EvaluatorMatchScoreUpdateWithWhereUniqueWithoutChallengeInput | EvaluatorMatchScoreUpdateWithWhereUniqueWithoutChallengeInput[]
     updateMany?: EvaluatorMatchScoreUpdateManyWithWhereWithoutChallengeInput | EvaluatorMatchScoreUpdateManyWithWhereWithoutChallengeInput[]
     deleteMany?: EvaluatorMatchScoreScalarWhereInput | EvaluatorMatchScoreScalarWhereInput[]
+  }
+
+  export type ChallengeEligibilityReviewUncheckedUpdateOneWithoutChallengeNestedInput = {
+    create?: XOR<ChallengeEligibilityReviewCreateWithoutChallengeInput, ChallengeEligibilityReviewUncheckedCreateWithoutChallengeInput>
+    connectOrCreate?: ChallengeEligibilityReviewCreateOrConnectWithoutChallengeInput
+    upsert?: ChallengeEligibilityReviewUpsertWithoutChallengeInput
+    disconnect?: ChallengeEligibilityReviewWhereInput | boolean
+    delete?: ChallengeEligibilityReviewWhereInput | boolean
+    connect?: ChallengeEligibilityReviewWhereUniqueInput
+    update?: XOR<XOR<ChallengeEligibilityReviewUpdateToOneWithWhereWithoutChallengeInput, ChallengeEligibilityReviewUpdateWithoutChallengeInput>, ChallengeEligibilityReviewUncheckedUpdateWithoutChallengeInput>
+  }
+
+  export type ChallengeCreateNestedOneWithoutEligibility_reviewInput = {
+    create?: XOR<ChallengeCreateWithoutEligibility_reviewInput, ChallengeUncheckedCreateWithoutEligibility_reviewInput>
+    connectOrCreate?: ChallengeCreateOrConnectWithoutEligibility_reviewInput
+    connect?: ChallengeWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutEligibility_reviewsInput = {
+    create?: XOR<UserCreateWithoutEligibility_reviewsInput, UserUncheckedCreateWithoutEligibility_reviewsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutEligibility_reviewsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type ChallengeUpdateOneRequiredWithoutEligibility_reviewNestedInput = {
+    create?: XOR<ChallengeCreateWithoutEligibility_reviewInput, ChallengeUncheckedCreateWithoutEligibility_reviewInput>
+    connectOrCreate?: ChallengeCreateOrConnectWithoutEligibility_reviewInput
+    upsert?: ChallengeUpsertWithoutEligibility_reviewInput
+    connect?: ChallengeWhereUniqueInput
+    update?: XOR<XOR<ChallengeUpdateToOneWithWhereWithoutEligibility_reviewInput, ChallengeUpdateWithoutEligibility_reviewInput>, ChallengeUncheckedUpdateWithoutEligibility_reviewInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutEligibility_reviewsNestedInput = {
+    create?: XOR<UserCreateWithoutEligibility_reviewsInput, UserUncheckedCreateWithoutEligibility_reviewsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutEligibility_reviewsInput
+    upsert?: UserUpsertWithoutEligibility_reviewsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutEligibility_reviewsInput, UserUpdateWithoutEligibility_reviewsInput>, UserUncheckedUpdateWithoutEligibility_reviewsInput>
   }
 
   export type ChallengeCreateNestedOneWithoutMatch_scoresInput = {
@@ -67001,6 +68872,52 @@ export namespace Prisma {
     _min?: NestedEnumChallengeStatusFilter<$PrismaModel>
     _max?: NestedEnumChallengeStatusFilter<$PrismaModel>
   }
+  export type NestedJsonNullableFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+  export type NestedJsonFilter<$PrismaModel = never> = 
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
 
   export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
@@ -67094,29 +69011,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumApplicationStatusFilter<$PrismaModel>
     _max?: NestedEnumApplicationStatusFilter<$PrismaModel>
-  }
-  export type NestedJsonNullableFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
-        Required<NestedJsonNullableFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
-
-  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
   export type NestedEnumPilotStatusFilter<$PrismaModel = never> = {
@@ -67365,29 +69259,6 @@ export namespace Prisma {
     _min?: NestedEnumAcceptanceStatusFilter<$PrismaModel>
     _max?: NestedEnumAcceptanceStatusFilter<$PrismaModel>
   }
-  export type NestedJsonFilter<$PrismaModel = never> = 
-    | PatchUndefined<
-        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
-        Required<NestedJsonFilterBase<$PrismaModel>>
-      >
-    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
-
-  export type NestedJsonFilterBase<$PrismaModel = never> = {
-    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-    path?: string[]
-    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
-    string_contains?: string | StringFieldRefInput<$PrismaModel>
-    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
-    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
-    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
-    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
-    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
 
   export type AuditLogCreateWithoutUserInput = {
     id?: string
@@ -67440,6 +69311,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -67450,6 +69332,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeUncheckedCreateWithoutCreatorInput = {
@@ -67474,6 +69357,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -67483,6 +69377,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeCreateOrConnectWithoutCreatorInput = {
@@ -68931,6 +70826,36 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type ChallengeEligibilityReviewCreateWithoutReviewerInput = {
+    id?: string
+    decision?: string
+    remarks?: string | null
+    checks: JsonNullValueInput | InputJsonValue
+    reviewed_at?: Date | string
+    updated_at?: Date | string
+    challenge: ChallengeCreateNestedOneWithoutEligibility_reviewInput
+  }
+
+  export type ChallengeEligibilityReviewUncheckedCreateWithoutReviewerInput = {
+    id?: string
+    challenge_id: string
+    decision?: string
+    remarks?: string | null
+    checks: JsonNullValueInput | InputJsonValue
+    reviewed_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type ChallengeEligibilityReviewCreateOrConnectWithoutReviewerInput = {
+    where: ChallengeEligibilityReviewWhereUniqueInput
+    create: XOR<ChallengeEligibilityReviewCreateWithoutReviewerInput, ChallengeEligibilityReviewUncheckedCreateWithoutReviewerInput>
+  }
+
+  export type ChallengeEligibilityReviewCreateManyReviewerInputEnvelope = {
+    data: ChallengeEligibilityReviewCreateManyReviewerInput | ChallengeEligibilityReviewCreateManyReviewerInput[]
+    skipDuplicates?: boolean
+  }
+
   export type AuditLogUpsertWithWhereUniqueWithoutUserInput = {
     where: AuditLogWhereUniqueInput
     update: XOR<AuditLogUpdateWithoutUserInput, AuditLogUncheckedUpdateWithoutUserInput>
@@ -69003,6 +70928,17 @@ export namespace Prisma {
     ip_ownership?: StringNullableFilter<"Challenge"> | string | null
     licensing_terms?: StringNullableFilter<"Challenge"> | string | null
     confidentiality_terms?: StringNullableFilter<"Challenge"> | string | null
+    current_process?: StringNullableFilter<"Challenge"> | string | null
+    pilot_location?: StringNullableFilter<"Challenge"> | string | null
+    pilot_start_date?: DateTimeNullableFilter<"Challenge"> | Date | string | null
+    pilot_end_date?: DateTimeNullableFilter<"Challenge"> | Date | string | null
+    startup_requirements?: StringNullableFilter<"Challenge"> | string | null
+    kpis?: JsonNullableFilter<"Challenge">
+    milestones?: JsonNullableFilter<"Challenge">
+    eligibility_requirements?: JsonNullableFilter<"Challenge">
+    required_documents?: JsonNullableFilter<"Challenge">
+    cybersecurity_requirements?: StringNullableFilter<"Challenge"> | string | null
+    data_compliance?: StringNullableFilter<"Challenge"> | string | null
     created_at?: DateTimeFilter<"Challenge"> | Date | string
     updated_at?: DateTimeFilter<"Challenge"> | Date | string
   }
@@ -69859,6 +71795,36 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<"EvaluatorMatchScore"> | Date | string
   }
 
+  export type ChallengeEligibilityReviewUpsertWithWhereUniqueWithoutReviewerInput = {
+    where: ChallengeEligibilityReviewWhereUniqueInput
+    update: XOR<ChallengeEligibilityReviewUpdateWithoutReviewerInput, ChallengeEligibilityReviewUncheckedUpdateWithoutReviewerInput>
+    create: XOR<ChallengeEligibilityReviewCreateWithoutReviewerInput, ChallengeEligibilityReviewUncheckedCreateWithoutReviewerInput>
+  }
+
+  export type ChallengeEligibilityReviewUpdateWithWhereUniqueWithoutReviewerInput = {
+    where: ChallengeEligibilityReviewWhereUniqueInput
+    data: XOR<ChallengeEligibilityReviewUpdateWithoutReviewerInput, ChallengeEligibilityReviewUncheckedUpdateWithoutReviewerInput>
+  }
+
+  export type ChallengeEligibilityReviewUpdateManyWithWhereWithoutReviewerInput = {
+    where: ChallengeEligibilityReviewScalarWhereInput
+    data: XOR<ChallengeEligibilityReviewUpdateManyMutationInput, ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerInput>
+  }
+
+  export type ChallengeEligibilityReviewScalarWhereInput = {
+    AND?: ChallengeEligibilityReviewScalarWhereInput | ChallengeEligibilityReviewScalarWhereInput[]
+    OR?: ChallengeEligibilityReviewScalarWhereInput[]
+    NOT?: ChallengeEligibilityReviewScalarWhereInput | ChallengeEligibilityReviewScalarWhereInput[]
+    id?: StringFilter<"ChallengeEligibilityReview"> | string
+    challenge_id?: StringFilter<"ChallengeEligibilityReview"> | string
+    reviewed_by?: StringFilter<"ChallengeEligibilityReview"> | string
+    decision?: StringFilter<"ChallengeEligibilityReview"> | string
+    remarks?: StringNullableFilter<"ChallengeEligibilityReview"> | string | null
+    checks?: JsonFilter<"ChallengeEligibilityReview">
+    reviewed_at?: DateTimeFilter<"ChallengeEligibilityReview"> | Date | string
+    updated_at?: DateTimeFilter<"ChallengeEligibilityReview"> | Date | string
+  }
+
   export type ChallengeCreateWithoutDepartmentInput = {
     id?: string
     title: string
@@ -69880,6 +71846,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -69890,6 +71867,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeUncheckedCreateWithoutDepartmentInput = {
@@ -69914,6 +71892,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -69923,6 +71912,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeCreateOrConnectWithoutDepartmentInput = {
@@ -69984,6 +71974,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutDepartmentInput = {
@@ -70035,6 +72026,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutDepartmentInput = {
@@ -70401,6 +72393,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutCreated_challengesInput = {
@@ -70452,6 +72445,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutCreated_challengesInput = {
@@ -70812,6 +72806,31 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type ChallengeEligibilityReviewCreateWithoutChallengeInput = {
+    id?: string
+    decision?: string
+    remarks?: string | null
+    checks: JsonNullValueInput | InputJsonValue
+    reviewed_at?: Date | string
+    updated_at?: Date | string
+    reviewer: UserCreateNestedOneWithoutEligibility_reviewsInput
+  }
+
+  export type ChallengeEligibilityReviewUncheckedCreateWithoutChallengeInput = {
+    id?: string
+    reviewed_by: string
+    decision?: string
+    remarks?: string | null
+    checks: JsonNullValueInput | InputJsonValue
+    reviewed_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type ChallengeEligibilityReviewCreateOrConnectWithoutChallengeInput = {
+    where: ChallengeEligibilityReviewWhereUniqueInput
+    create: XOR<ChallengeEligibilityReviewCreateWithoutChallengeInput, ChallengeEligibilityReviewUncheckedCreateWithoutChallengeInput>
+  }
+
   export type ApplicationUpsertWithWhereUniqueWithoutChallengeInput = {
     where: ApplicationWhereUniqueInput
     update: XOR<ApplicationUpdateWithoutChallengeInput, ApplicationUncheckedUpdateWithoutChallengeInput>
@@ -70906,6 +72925,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreated_challengesInput = {
@@ -70957,6 +72977,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type DepartmentUpsertWithoutChallengesInput = {
@@ -71143,6 +73164,457 @@ export namespace Prisma {
     data: XOR<EvaluatorMatchScoreUpdateManyMutationInput, EvaluatorMatchScoreUncheckedUpdateManyWithoutChallengeInput>
   }
 
+  export type ChallengeEligibilityReviewUpsertWithoutChallengeInput = {
+    update: XOR<ChallengeEligibilityReviewUpdateWithoutChallengeInput, ChallengeEligibilityReviewUncheckedUpdateWithoutChallengeInput>
+    create: XOR<ChallengeEligibilityReviewCreateWithoutChallengeInput, ChallengeEligibilityReviewUncheckedCreateWithoutChallengeInput>
+    where?: ChallengeEligibilityReviewWhereInput
+  }
+
+  export type ChallengeEligibilityReviewUpdateToOneWithWhereWithoutChallengeInput = {
+    where?: ChallengeEligibilityReviewWhereInput
+    data: XOR<ChallengeEligibilityReviewUpdateWithoutChallengeInput, ChallengeEligibilityReviewUncheckedUpdateWithoutChallengeInput>
+  }
+
+  export type ChallengeEligibilityReviewUpdateWithoutChallengeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    decision?: StringFieldUpdateOperationsInput | string
+    remarks?: NullableStringFieldUpdateOperationsInput | string | null
+    checks?: JsonNullValueInput | InputJsonValue
+    reviewed_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    reviewer?: UserUpdateOneRequiredWithoutEligibility_reviewsNestedInput
+  }
+
+  export type ChallengeEligibilityReviewUncheckedUpdateWithoutChallengeInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reviewed_by?: StringFieldUpdateOperationsInput | string
+    decision?: StringFieldUpdateOperationsInput | string
+    remarks?: NullableStringFieldUpdateOperationsInput | string | null
+    checks?: JsonNullValueInput | InputJsonValue
+    reviewed_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ChallengeCreateWithoutEligibility_reviewInput = {
+    id?: string
+    title: string
+    problem_description: string
+    current_baseline: string
+    desired_outcome: string
+    location: string
+    budget_min: Decimal | DecimalJsLike | number | string
+    budget_max: Decimal | DecimalJsLike | number | string
+    pilot_duration_days: number
+    required_technologies?: ChallengeCreaterequired_technologiesInput | string[]
+    application_deadline?: Date | string | null
+    finalist_submission_start?: Date | string | null
+    finalist_submission_deadline?: Date | string | null
+    status?: $Enums.ChallengeStatus
+    data_classification?: string | null
+    data_access_requirements?: string | null
+    data_retention_period?: string | null
+    ip_ownership?: string | null
+    licensing_terms?: string | null
+    confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    applications?: ApplicationCreateNestedManyWithoutChallengeInput
+    creator: UserCreateNestedOneWithoutCreated_challengesInput
+    department: DepartmentCreateNestedOneWithoutChallengesInput
+    match_scores?: MatchScoreCreateNestedManyWithoutChallengeInput
+    pilots?: PilotCreateNestedManyWithoutChallengeInput
+    procurements?: ProcurementRecordCreateNestedManyWithoutChallengeInput
+    evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutChallengeInput
+    evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutChallengeInput
+    evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutChallengeInput
+  }
+
+  export type ChallengeUncheckedCreateWithoutEligibility_reviewInput = {
+    id?: string
+    department_id: string
+    title: string
+    problem_description: string
+    current_baseline: string
+    desired_outcome: string
+    location: string
+    budget_min: Decimal | DecimalJsLike | number | string
+    budget_max: Decimal | DecimalJsLike | number | string
+    pilot_duration_days: number
+    required_technologies?: ChallengeCreaterequired_technologiesInput | string[]
+    application_deadline?: Date | string | null
+    finalist_submission_start?: Date | string | null
+    finalist_submission_deadline?: Date | string | null
+    status?: $Enums.ChallengeStatus
+    created_by: string
+    data_classification?: string | null
+    data_access_requirements?: string | null
+    data_retention_period?: string | null
+    ip_ownership?: string | null
+    licensing_terms?: string | null
+    confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
+    match_scores?: MatchScoreUncheckedCreateNestedManyWithoutChallengeInput
+    pilots?: PilotUncheckedCreateNestedManyWithoutChallengeInput
+    procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutChallengeInput
+    evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutChallengeInput
+    evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutChallengeInput
+    evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutChallengeInput
+  }
+
+  export type ChallengeCreateOrConnectWithoutEligibility_reviewInput = {
+    where: ChallengeWhereUniqueInput
+    create: XOR<ChallengeCreateWithoutEligibility_reviewInput, ChallengeUncheckedCreateWithoutEligibility_reviewInput>
+  }
+
+  export type UserCreateWithoutEligibility_reviewsInput = {
+    id?: string
+    name: string
+    email: string
+    password_hash: string
+    role: $Enums.UserRole
+    is_active?: boolean
+    is_verified?: boolean
+    designation?: string | null
+    phone?: string | null
+    invitation_token_hash?: string | null
+    invitation_expires_at?: Date | string | null
+    invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
+    audit_logs?: AuditLogCreateNestedManyWithoutUserInput
+    created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
+    evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
+    uploaded_evidence?: EvidenceCreateNestedManyWithoutUploaderInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    approved_decisions?: ScaleDecisionCreateNestedManyWithoutApproverInput
+    verified_documents?: StartupDocumentCreateNestedManyWithoutVerifierInput
+    startups?: StartupCreateNestedManyWithoutUserInput
+    department?: DepartmentCreateNestedOneWithoutUsersInput
+    validations?: ValidationCreateNestedManyWithoutValidatorInput
+    evaluator_profile?: EvaluatorProfileCreateNestedOneWithoutUserInput
+    conflict_declarations?: ConflictDeclarationCreateNestedManyWithoutEvaluatorInput
+    verified_startups?: StartupCreateNestedManyWithoutVerifierInput
+    verified_evaluators?: EvaluatorProfileCreateNestedManyWithoutVerifierInput
+    verified_compliance?: ComplianceItemCreateNestedManyWithoutVerifierInput
+    reviewed_access_requests?: AccessRequestCreateNestedManyWithoutReviewerInput
+    nominated_access_requests?: AccessRequestCreateNestedManyWithoutNominatorInput
+    evaluator_assignments?: EvaluatorAssignmentCreateNestedManyWithoutEvaluatorInput
+    created_evaluator_assignments?: EvaluatorAssignmentCreateNestedManyWithoutAssignerInput
+    initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
+    approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
+    accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
+    application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
+    evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
+    reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
+    evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
+    added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
+    evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+  }
+
+  export type UserUncheckedCreateWithoutEligibility_reviewsInput = {
+    id?: string
+    name: string
+    email: string
+    password_hash: string
+    role: $Enums.UserRole
+    department_id?: string | null
+    is_active?: boolean
+    is_verified?: boolean
+    designation?: string | null
+    phone?: string | null
+    invitation_token_hash?: string | null
+    invitation_expires_at?: Date | string | null
+    invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
+    audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
+    evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
+    uploaded_evidence?: EvidenceUncheckedCreateNestedManyWithoutUploaderInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    approved_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutApproverInput
+    verified_documents?: StartupDocumentUncheckedCreateNestedManyWithoutVerifierInput
+    startups?: StartupUncheckedCreateNestedManyWithoutUserInput
+    validations?: ValidationUncheckedCreateNestedManyWithoutValidatorInput
+    evaluator_profile?: EvaluatorProfileUncheckedCreateNestedOneWithoutUserInput
+    conflict_declarations?: ConflictDeclarationUncheckedCreateNestedManyWithoutEvaluatorInput
+    verified_startups?: StartupUncheckedCreateNestedManyWithoutVerifierInput
+    verified_evaluators?: EvaluatorProfileUncheckedCreateNestedManyWithoutVerifierInput
+    verified_compliance?: ComplianceItemUncheckedCreateNestedManyWithoutVerifierInput
+    reviewed_access_requests?: AccessRequestUncheckedCreateNestedManyWithoutReviewerInput
+    nominated_access_requests?: AccessRequestUncheckedCreateNestedManyWithoutNominatorInput
+    evaluator_assignments?: EvaluatorAssignmentUncheckedCreateNestedManyWithoutEvaluatorInput
+    created_evaluator_assignments?: EvaluatorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+    initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
+    approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
+    accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
+    application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
+    reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
+    evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
+    added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
+    evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+  }
+
+  export type UserCreateOrConnectWithoutEligibility_reviewsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutEligibility_reviewsInput, UserUncheckedCreateWithoutEligibility_reviewsInput>
+  }
+
+  export type ChallengeUpsertWithoutEligibility_reviewInput = {
+    update: XOR<ChallengeUpdateWithoutEligibility_reviewInput, ChallengeUncheckedUpdateWithoutEligibility_reviewInput>
+    create: XOR<ChallengeCreateWithoutEligibility_reviewInput, ChallengeUncheckedCreateWithoutEligibility_reviewInput>
+    where?: ChallengeWhereInput
+  }
+
+  export type ChallengeUpdateToOneWithWhereWithoutEligibility_reviewInput = {
+    where?: ChallengeWhereInput
+    data: XOR<ChallengeUpdateWithoutEligibility_reviewInput, ChallengeUncheckedUpdateWithoutEligibility_reviewInput>
+  }
+
+  export type ChallengeUpdateWithoutEligibility_reviewInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    problem_description?: StringFieldUpdateOperationsInput | string
+    current_baseline?: StringFieldUpdateOperationsInput | string
+    desired_outcome?: StringFieldUpdateOperationsInput | string
+    location?: StringFieldUpdateOperationsInput | string
+    budget_min?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    budget_max?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    pilot_duration_days?: IntFieldUpdateOperationsInput | number
+    required_technologies?: ChallengeUpdaterequired_technologiesInput | string[]
+    application_deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    finalist_submission_start?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    finalist_submission_deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: EnumChallengeStatusFieldUpdateOperationsInput | $Enums.ChallengeStatus
+    data_classification?: NullableStringFieldUpdateOperationsInput | string | null
+    data_access_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_retention_period?: NullableStringFieldUpdateOperationsInput | string | null
+    ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
+    licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    applications?: ApplicationUpdateManyWithoutChallengeNestedInput
+    creator?: UserUpdateOneRequiredWithoutCreated_challengesNestedInput
+    department?: DepartmentUpdateOneRequiredWithoutChallengesNestedInput
+    match_scores?: MatchScoreUpdateManyWithoutChallengeNestedInput
+    pilots?: PilotUpdateManyWithoutChallengeNestedInput
+    procurements?: ProcurementRecordUpdateManyWithoutChallengeNestedInput
+    evaluator_applications?: EvaluatorApplicationUpdateManyWithoutChallengeNestedInput
+    evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutChallengeNestedInput
+    evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutChallengeNestedInput
+  }
+
+  export type ChallengeUncheckedUpdateWithoutEligibility_reviewInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    department_id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    problem_description?: StringFieldUpdateOperationsInput | string
+    current_baseline?: StringFieldUpdateOperationsInput | string
+    desired_outcome?: StringFieldUpdateOperationsInput | string
+    location?: StringFieldUpdateOperationsInput | string
+    budget_min?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    budget_max?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    pilot_duration_days?: IntFieldUpdateOperationsInput | number
+    required_technologies?: ChallengeUpdaterequired_technologiesInput | string[]
+    application_deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    finalist_submission_start?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    finalist_submission_deadline?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: EnumChallengeStatusFieldUpdateOperationsInput | $Enums.ChallengeStatus
+    created_by?: StringFieldUpdateOperationsInput | string
+    data_classification?: NullableStringFieldUpdateOperationsInput | string | null
+    data_access_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_retention_period?: NullableStringFieldUpdateOperationsInput | string | null
+    ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
+    licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
+    match_scores?: MatchScoreUncheckedUpdateManyWithoutChallengeNestedInput
+    pilots?: PilotUncheckedUpdateManyWithoutChallengeNestedInput
+    procurements?: ProcurementRecordUncheckedUpdateManyWithoutChallengeNestedInput
+    evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutChallengeNestedInput
+    evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutChallengeNestedInput
+    evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutChallengeNestedInput
+  }
+
+  export type UserUpsertWithoutEligibility_reviewsInput = {
+    update: XOR<UserUpdateWithoutEligibility_reviewsInput, UserUncheckedUpdateWithoutEligibility_reviewsInput>
+    create: XOR<UserCreateWithoutEligibility_reviewsInput, UserUncheckedCreateWithoutEligibility_reviewsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutEligibility_reviewsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutEligibility_reviewsInput, UserUncheckedUpdateWithoutEligibility_reviewsInput>
+  }
+
+  export type UserUpdateWithoutEligibility_reviewsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    is_verified?: BoolFieldUpdateOperationsInput | boolean
+    designation?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
+    created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
+    evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
+    uploaded_evidence?: EvidenceUpdateManyWithoutUploaderNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    approved_decisions?: ScaleDecisionUpdateManyWithoutApproverNestedInput
+    verified_documents?: StartupDocumentUpdateManyWithoutVerifierNestedInput
+    startups?: StartupUpdateManyWithoutUserNestedInput
+    department?: DepartmentUpdateOneWithoutUsersNestedInput
+    validations?: ValidationUpdateManyWithoutValidatorNestedInput
+    evaluator_profile?: EvaluatorProfileUpdateOneWithoutUserNestedInput
+    conflict_declarations?: ConflictDeclarationUpdateManyWithoutEvaluatorNestedInput
+    verified_startups?: StartupUpdateManyWithoutVerifierNestedInput
+    verified_evaluators?: EvaluatorProfileUpdateManyWithoutVerifierNestedInput
+    verified_compliance?: ComplianceItemUpdateManyWithoutVerifierNestedInput
+    reviewed_access_requests?: AccessRequestUpdateManyWithoutReviewerNestedInput
+    nominated_access_requests?: AccessRequestUpdateManyWithoutNominatorNestedInput
+    evaluator_assignments?: EvaluatorAssignmentUpdateManyWithoutEvaluatorNestedInput
+    created_evaluator_assignments?: EvaluatorAssignmentUpdateManyWithoutAssignerNestedInput
+    initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
+    approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
+    accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
+    application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
+    evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
+    reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
+    evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
+    added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
+    evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutEligibility_reviewsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    department_id?: NullableStringFieldUpdateOperationsInput | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    is_verified?: BoolFieldUpdateOperationsInput | boolean
+    designation?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
+    evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
+    uploaded_evidence?: EvidenceUncheckedUpdateManyWithoutUploaderNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    approved_decisions?: ScaleDecisionUncheckedUpdateManyWithoutApproverNestedInput
+    verified_documents?: StartupDocumentUncheckedUpdateManyWithoutVerifierNestedInput
+    startups?: StartupUncheckedUpdateManyWithoutUserNestedInput
+    validations?: ValidationUncheckedUpdateManyWithoutValidatorNestedInput
+    evaluator_profile?: EvaluatorProfileUncheckedUpdateOneWithoutUserNestedInput
+    conflict_declarations?: ConflictDeclarationUncheckedUpdateManyWithoutEvaluatorNestedInput
+    verified_startups?: StartupUncheckedUpdateManyWithoutVerifierNestedInput
+    verified_evaluators?: EvaluatorProfileUncheckedUpdateManyWithoutVerifierNestedInput
+    verified_compliance?: ComplianceItemUncheckedUpdateManyWithoutVerifierNestedInput
+    reviewed_access_requests?: AccessRequestUncheckedUpdateManyWithoutReviewerNestedInput
+    nominated_access_requests?: AccessRequestUncheckedUpdateManyWithoutNominatorNestedInput
+    evaluator_assignments?: EvaluatorAssignmentUncheckedUpdateManyWithoutEvaluatorNestedInput
+    created_evaluator_assignments?: EvaluatorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+    initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
+    approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
+    accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
+    application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
+    reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
+    evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
+    added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
+    evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+  }
+
   export type ChallengeCreateWithoutMatch_scoresInput = {
     id?: string
     title: string
@@ -71164,6 +73636,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -71174,6 +73657,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeUncheckedCreateWithoutMatch_scoresInput = {
@@ -71199,6 +73683,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -71207,6 +73702,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeCreateOrConnectWithoutMatch_scoresInput = {
@@ -71351,6 +73847,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -71361,6 +73868,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUpdateOneWithoutChallengeNestedInput
   }
 
   export type ChallengeUncheckedUpdateWithoutMatch_scoresInput = {
@@ -71386,6 +73894,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -71394,6 +73913,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedUpdateOneWithoutChallengeNestedInput
   }
 
   export type StartupUpsertWithoutMatch_scoresInput = {
@@ -71881,6 +74401,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutStartupsInput = {
@@ -71932,6 +74453,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutStartupsInput = {
@@ -71988,6 +74510,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutVerified_startupsInput = {
@@ -72039,6 +74562,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutVerified_startupsInput = {
@@ -72095,6 +74619,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutReviewed_startupsInput = {
@@ -72146,6 +74671,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutReviewed_startupsInput = {
@@ -72328,6 +74854,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutStartupsInput = {
@@ -72379,6 +74906,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUpsertWithoutVerified_startupsInput = {
@@ -72441,6 +74969,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutVerified_startupsInput = {
@@ -72492,6 +75021,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUpsertWithoutReviewed_startupsInput = {
@@ -72554,6 +75084,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReviewed_startupsInput = {
@@ -72605,6 +75136,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type StartupCreateWithoutBank_detailsInput = {
@@ -72977,6 +75509,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutVerified_documentsInput = {
@@ -73028,6 +75561,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutVerified_documentsInput = {
@@ -73206,6 +75740,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutVerified_documentsInput = {
@@ -73257,6 +75792,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type ChallengeCreateWithoutApplicationsInput = {
@@ -73280,6 +75816,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     creator: UserCreateNestedOneWithoutCreated_challengesInput
@@ -73290,6 +75837,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeUncheckedCreateWithoutApplicationsInput = {
@@ -73315,6 +75863,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     match_scores?: MatchScoreUncheckedCreateNestedManyWithoutChallengeInput
@@ -73323,6 +75882,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeCreateOrConnectWithoutApplicationsInput = {
@@ -73654,6 +76214,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     creator?: UserUpdateOneRequiredWithoutCreated_challengesNestedInput
@@ -73664,6 +76235,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUpdateOneWithoutChallengeNestedInput
   }
 
   export type ChallengeUncheckedUpdateWithoutApplicationsInput = {
@@ -73689,6 +76261,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     match_scores?: MatchScoreUncheckedUpdateManyWithoutChallengeNestedInput
@@ -73697,6 +76280,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedUpdateOneWithoutChallengeNestedInput
   }
 
   export type StartupUpsertWithoutApplicationsInput = {
@@ -73972,6 +76556,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutEvaluator_profileInput = {
@@ -74023,6 +76608,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutEvaluator_profileInput = {
@@ -74079,6 +76665,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutVerified_evaluatorsInput = {
@@ -74130,6 +76717,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutVerified_evaluatorsInput = {
@@ -74197,6 +76785,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEvaluator_profileInput = {
@@ -74248,6 +76837,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUpsertWithoutVerified_evaluatorsInput = {
@@ -74310,6 +76900,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutVerified_evaluatorsInput = {
@@ -74361,6 +76952,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type ApplicationCreateWithoutConflict_declarationsInput = {
@@ -74455,6 +77047,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutConflict_declarationsInput = {
@@ -74506,6 +77099,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutConflict_declarationsInput = {
@@ -74622,6 +77216,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutConflict_declarationsInput = {
@@ -74673,6 +77268,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type ApplicationCreateWithoutEvaluationsInput = {
@@ -74767,6 +77363,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutEvaluationsInput = {
@@ -74818,6 +77415,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutEvaluationsInput = {
@@ -74934,6 +77532,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEvaluationsInput = {
@@ -74985,6 +77584,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type ApplicationCreateWithoutDocumentsInput = {
@@ -75079,6 +77679,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutApplication_documentsInput = {
@@ -75130,6 +77731,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutApplication_documentsInput = {
@@ -75246,6 +77848,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutApplication_documentsInput = {
@@ -75297,6 +77900,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type ApplicationCreateWithoutProposal_analysisInput = {
@@ -75412,6 +78016,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -75422,6 +78037,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordCreateNestedManyWithoutChallengeInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeUncheckedCreateWithoutEvaluator_match_scoresInput = {
@@ -75447,6 +78063,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -75455,6 +78082,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeCreateOrConnectWithoutEvaluator_match_scoresInput = {
@@ -75511,6 +78139,7 @@ export namespace Prisma {
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutEvaluator_match_scoresInput = {
@@ -75562,6 +78191,7 @@ export namespace Prisma {
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutEvaluator_match_scoresInput = {
@@ -75601,6 +78231,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -75611,6 +78252,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUpdateManyWithoutChallengeNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUpdateOneWithoutChallengeNestedInput
   }
 
   export type ChallengeUncheckedUpdateWithoutEvaluator_match_scoresInput = {
@@ -75636,6 +78278,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -75644,6 +78297,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedUpdateOneWithoutChallengeNestedInput
   }
 
   export type UserUpsertWithoutEvaluator_match_scoresInput = {
@@ -75706,6 +78360,7 @@ export namespace Prisma {
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEvaluator_match_scoresInput = {
@@ -75757,6 +78412,7 @@ export namespace Prisma {
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type ChallengeCreateWithoutEvaluator_applicationsInput = {
@@ -75780,6 +78436,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -75790,6 +78457,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeUncheckedCreateWithoutEvaluator_applicationsInput = {
@@ -75815,6 +78483,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -75823,6 +78502,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeCreateOrConnectWithoutEvaluator_applicationsInput = {
@@ -75879,6 +78559,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutEvaluator_applicationsInput = {
@@ -75930,6 +78611,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutEvaluator_applicationsInput = {
@@ -75986,6 +78668,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutReviewed_evaluator_appsInput = {
@@ -76037,6 +78720,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutReviewed_evaluator_appsInput = {
@@ -76076,6 +78760,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -76086,6 +78781,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUpdateOneWithoutChallengeNestedInput
   }
 
   export type ChallengeUncheckedUpdateWithoutEvaluator_applicationsInput = {
@@ -76111,6 +78807,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -76119,6 +78826,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedUpdateOneWithoutChallengeNestedInput
   }
 
   export type UserUpsertWithoutEvaluator_applicationsInput = {
@@ -76181,6 +78889,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEvaluator_applicationsInput = {
@@ -76232,6 +78941,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUpsertWithoutReviewed_evaluator_appsInput = {
@@ -76294,6 +79004,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReviewed_evaluator_appsInput = {
@@ -76345,6 +79056,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type ChallengeCreateWithoutEvaluator_poolsInput = {
@@ -76368,6 +79080,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -76378,6 +79101,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordCreateNestedManyWithoutChallengeInput
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeUncheckedCreateWithoutEvaluator_poolsInput = {
@@ -76403,6 +79127,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -76411,6 +79146,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeCreateOrConnectWithoutEvaluator_poolsInput = {
@@ -76467,6 +79203,7 @@ export namespace Prisma {
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutEvaluator_pool_membershipsInput = {
@@ -76518,6 +79255,7 @@ export namespace Prisma {
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutEvaluator_pool_membershipsInput = {
@@ -76574,6 +79312,7 @@ export namespace Prisma {
     reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutAdded_evaluator_poolsInput = {
@@ -76625,6 +79364,7 @@ export namespace Prisma {
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutAdded_evaluator_poolsInput = {
@@ -76664,6 +79404,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -76674,6 +79425,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUpdateManyWithoutChallengeNestedInput
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUpdateOneWithoutChallengeNestedInput
   }
 
   export type ChallengeUncheckedUpdateWithoutEvaluator_poolsInput = {
@@ -76699,6 +79451,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -76707,6 +79470,7 @@ export namespace Prisma {
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedUpdateOneWithoutChallengeNestedInput
   }
 
   export type UserUpsertWithoutEvaluator_pool_membershipsInput = {
@@ -76769,6 +79533,7 @@ export namespace Prisma {
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEvaluator_pool_membershipsInput = {
@@ -76820,6 +79585,7 @@ export namespace Prisma {
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUpsertWithoutAdded_evaluator_poolsInput = {
@@ -76882,6 +79648,7 @@ export namespace Prisma {
     reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAdded_evaluator_poolsInput = {
@@ -76933,6 +79700,7 @@ export namespace Prisma {
     reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type EvidenceCreateWithoutPilotInput = {
@@ -77208,6 +79976,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -77218,6 +79997,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeUncheckedCreateWithoutPilotsInput = {
@@ -77243,6 +80023,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -77251,6 +80042,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeCreateOrConnectWithoutPilotsInput = {
@@ -77833,6 +80625,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -77843,6 +80646,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUpdateOneWithoutChallengeNestedInput
   }
 
   export type ChallengeUncheckedUpdateWithoutPilotsInput = {
@@ -77868,6 +80672,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -77876,6 +80691,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedUpdateOneWithoutChallengeNestedInput
   }
 
   export type StartupUpsertWithoutPilotsInput = {
@@ -78926,6 +81742,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutUploaded_evidenceInput = {
@@ -78977,6 +81794,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutUploaded_evidenceInput = {
@@ -79162,6 +81980,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutUploaded_evidenceInput = {
@@ -79213,6 +82032,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type PilotCreateWithoutRisksInput = {
@@ -79621,6 +82441,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutValidationsInput = {
@@ -79672,6 +82493,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutValidationsInput = {
@@ -79814,6 +82636,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutValidationsInput = {
@@ -79865,6 +82688,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type MilestoneCreateWithoutPaymentsInput = {
@@ -80324,6 +83148,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutApproved_decisionsInput = {
@@ -80375,6 +83200,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutApproved_decisionsInput = {
@@ -80511,6 +83337,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutApproved_decisionsInput = {
@@ -80562,6 +83389,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type PilotUpsertWithoutScale_decisionsInput = {
@@ -80757,6 +83585,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutVerified_complianceInput = {
@@ -80808,6 +83637,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutVerified_complianceInput = {
@@ -80950,6 +83780,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutVerified_complianceInput = {
@@ -81001,6 +83832,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type PilotCreateWithoutFeedbackInput = {
@@ -81196,6 +84028,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -81247,6 +84080,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -81314,6 +84148,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -81365,6 +84200,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserCreateWithoutAudit_logsInput = {
@@ -81416,6 +84252,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutAudit_logsInput = {
@@ -81467,6 +84304,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutAudit_logsInput = {
@@ -81534,6 +84372,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAudit_logsInput = {
@@ -81585,6 +84424,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type DepartmentCreateWithoutAccess_requestsInput = {
@@ -81677,6 +84517,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutReviewed_access_requestsInput = {
@@ -81728,6 +84569,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutReviewed_access_requestsInput = {
@@ -81784,6 +84626,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutNominated_access_requestsInput = {
@@ -81835,6 +84678,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutNominated_access_requestsInput = {
@@ -81949,6 +84793,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReviewed_access_requestsInput = {
@@ -82000,6 +84845,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUpsertWithoutNominated_access_requestsInput = {
@@ -82062,6 +84908,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutNominated_access_requestsInput = {
@@ -82113,6 +84960,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type ApplicationCreateWithoutEvaluator_assignmentsInput = {
@@ -82207,6 +85055,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutEvaluator_assignmentsInput = {
@@ -82258,6 +85107,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutEvaluator_assignmentsInput = {
@@ -82314,6 +85164,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutCreated_evaluator_assignmentsInput = {
@@ -82365,6 +85216,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutCreated_evaluator_assignmentsInput = {
@@ -82481,6 +85333,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEvaluator_assignmentsInput = {
@@ -82532,6 +85385,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUpsertWithoutCreated_evaluator_assignmentsInput = {
@@ -82594,6 +85448,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreated_evaluator_assignmentsInput = {
@@ -82645,6 +85500,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type PilotCreateWithoutProcurementsInput = {
@@ -82737,6 +85593,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -82747,6 +85614,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeUncheckedCreateWithoutProcurementsInput = {
@@ -82772,6 +85640,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -82780,6 +85659,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutChallengeInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutChallengeInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedCreateNestedOneWithoutChallengeInput
   }
 
   export type ChallengeCreateOrConnectWithoutProcurementsInput = {
@@ -82982,6 +85862,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutInitiated_procurementsInput = {
@@ -83033,6 +85914,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutInitiated_procurementsInput = {
@@ -83089,6 +85971,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutApproved_procurementsInput = {
@@ -83140,6 +86023,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutApproved_procurementsInput = {
@@ -83196,6 +86080,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
   }
 
   export type UserUncheckedCreateWithoutAccepted_deliveriesInput = {
@@ -83247,6 +86132,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
   }
 
   export type UserCreateOrConnectWithoutAccepted_deliveriesInput = {
@@ -83401,6 +86287,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -83411,6 +86308,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUpdateOneWithoutChallengeNestedInput
   }
 
   export type ChallengeUncheckedUpdateWithoutProcurementsInput = {
@@ -83436,6 +86334,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -83444,6 +86353,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedUpdateOneWithoutChallengeNestedInput
   }
 
   export type StartupUpsertWithoutProcurementsInput = {
@@ -83664,6 +86574,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInitiated_procurementsInput = {
@@ -83715,6 +86626,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUpsertWithoutApproved_procurementsInput = {
@@ -83777,6 +86689,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutApproved_procurementsInput = {
@@ -83828,6 +86741,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUpsertWithoutAccepted_deliveriesInput = {
@@ -83890,6 +86804,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAccepted_deliveriesInput = {
@@ -83941,6 +86856,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type PaymentUpsertWithWhereUniqueWithoutProcurementInput = {
@@ -83991,6 +86907,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -84529,6 +87456,16 @@ export namespace Prisma {
     updated_at?: Date | string
   }
 
+  export type ChallengeEligibilityReviewCreateManyReviewerInput = {
+    id?: string
+    challenge_id: string
+    decision?: string
+    remarks?: string | null
+    checks: JsonNullValueInput | InputJsonValue
+    reviewed_at?: Date | string
+    updated_at?: Date | string
+  }
+
   export type AuditLogUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     action?: StringFieldUpdateOperationsInput | string
@@ -84580,6 +87517,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -84590,6 +87538,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUpdateOneWithoutChallengeNestedInput
   }
 
   export type ChallengeUncheckedUpdateWithoutCreatorInput = {
@@ -84614,6 +87563,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -84623,6 +87583,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedUpdateOneWithoutChallengeNestedInput
   }
 
   export type ChallengeUncheckedUpdateManyWithoutCreatorInput = {
@@ -84647,6 +87608,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -86295,6 +89267,36 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ChallengeEligibilityReviewUpdateWithoutReviewerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    decision?: StringFieldUpdateOperationsInput | string
+    remarks?: NullableStringFieldUpdateOperationsInput | string | null
+    checks?: JsonNullValueInput | InputJsonValue
+    reviewed_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    challenge?: ChallengeUpdateOneRequiredWithoutEligibility_reviewNestedInput
+  }
+
+  export type ChallengeEligibilityReviewUncheckedUpdateWithoutReviewerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    challenge_id?: StringFieldUpdateOperationsInput | string
+    decision?: StringFieldUpdateOperationsInput | string
+    remarks?: NullableStringFieldUpdateOperationsInput | string | null
+    checks?: JsonNullValueInput | InputJsonValue
+    reviewed_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    challenge_id?: StringFieldUpdateOperationsInput | string
+    decision?: StringFieldUpdateOperationsInput | string
+    remarks?: NullableStringFieldUpdateOperationsInput | string | null
+    checks?: JsonNullValueInput | InputJsonValue
+    reviewed_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ChallengeCreateManyDepartmentInput = {
     id?: string
     title: string
@@ -86317,6 +89319,17 @@ export namespace Prisma {
     ip_ownership?: string | null
     licensing_terms?: string | null
     confidentiality_terms?: string | null
+    current_process?: string | null
+    pilot_location?: string | null
+    pilot_start_date?: Date | string | null
+    pilot_end_date?: Date | string | null
+    startup_requirements?: string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: string | null
+    data_compliance?: string | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -86437,6 +89450,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -86447,6 +89471,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUpdateOneWithoutChallengeNestedInput
   }
 
   export type ChallengeUncheckedUpdateWithoutDepartmentInput = {
@@ -86471,6 +89496,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -86480,6 +89516,7 @@ export namespace Prisma {
     evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutChallengeNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutChallengeNestedInput
+    eligibility_review?: ChallengeEligibilityReviewUncheckedUpdateOneWithoutChallengeNestedInput
   }
 
   export type ChallengeUncheckedUpdateManyWithoutDepartmentInput = {
@@ -86504,6 +89541,17 @@ export namespace Prisma {
     ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
     licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
     confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    current_process?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_location?: NullableStringFieldUpdateOperationsInput | string | null
+    pilot_start_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pilot_end_date?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    startup_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    kpis?: NullableJsonNullValueInput | InputJsonValue
+    milestones?: NullableJsonNullValueInput | InputJsonValue
+    eligibility_requirements?: NullableJsonNullValueInput | InputJsonValue
+    required_documents?: NullableJsonNullValueInput | InputJsonValue
+    cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -86557,6 +89605,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutDepartmentInput = {
@@ -86608,6 +89657,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutDepartmentInput = {

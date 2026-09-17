@@ -25,22 +25,22 @@ function StatCard({ title, value, description, icon: Icon, iconClass, delay = 0 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay }}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-4.5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
     >
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             {title}
           </p>
-          <h3 className="mt-2 text-3xl font-bold text-slate-900 dark:text-white">
+          <h3 className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">
             {value}
           </h3>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
             {description}
           </p>
         </div>
-        <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconClass}`}>
-          <Icon className="h-5 w-5" />
+        <div className={`flex h-8.5 w-8.5 items-center justify-center rounded-lg ${iconClass}`}>
+          <Icon className="h-4 w-4" />
         </div>
       </div>
     </motion.div>
@@ -113,31 +113,31 @@ function EvaluatorDashboard() {
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="space-y-6"
+      className="space-y-5"
     >
       {/* PAGE HEADER */}
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <section className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400">
-              <ClipboardCheck className="h-5 w-5" />
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400">
+              <ClipboardCheck className="h-4.5 w-4.5" />
             </span>
-            <p className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+            <p className="text-xs sm:text-sm font-semibold text-purple-600 dark:text-purple-400">
               Evaluator Workspace
             </p>
           </div>
 
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+          <h1 className="mt-2 text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
             Welcome to Evaluation Dashboard
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             Review assigned innovation proposals, certify conflict declarations, and score solutions.
           </p>
         </div>
 
         <button
           onClick={fetchAssignments}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
           Refresh
@@ -181,8 +181,8 @@ function EvaluatorDashboard() {
       </div>
 
       {/* RECENT ASSIGNMENTS SECTION */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">
               Assigned Evaluations
@@ -268,7 +268,7 @@ function EvaluatorDashboard() {
                     <td className="py-3.5 px-4 text-slate-400">
                       {a.assigned_at ? new Date(a.assigned_at).toLocaleDateString() : "—"}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-2.5 px-3.5">
                       {a.status === "COMPLETED" || a.is_evaluated ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
                           <CheckCircle2 className="h-3 w-3" /> Completed
@@ -287,10 +287,10 @@ function EvaluatorDashboard() {
                         </span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 font-semibold">
+                    <td className="py-2.5 px-3.5 font-semibold">
                       {a.evaluation_total_score ? `${a.evaluation_total_score}%` : "—"}
                     </td>
-                    <td className="py-3.5 px-4 text-right space-x-2">
+                    <td className="py-2.5 px-3.5 text-right space-x-2">
                       {a.status === "PENDING" ? (
                         <button
                           onClick={() => handleQuickAccept(a.id)}

@@ -134,6 +134,27 @@ export const generateChallengeBrain1 = async (req, res, next) => {
   }
 };
 
+export const getChallengeEligibility = async (req, res, next) => {
+  try {
+    const challengeId = req.params.challenge_id || req.params.id;
+    const result = await challengeService.getChallengeEligibility(challengeId, req.user);
+    return successResponse(res, result, 'Challenge eligibility data retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const saveChallengeEligibility = async (req, res, next) => {
+  try {
+    const challengeId = req.params.challenge_id || req.params.id;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const review = await challengeService.saveChallengeEligibility(challengeId, req.body, req.user, ip_address);
+    return successResponse(res, { review }, 'Challenge eligibility review saved successfully to database', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   createChallenge,
   getChallenges,
@@ -146,5 +167,7 @@ export default {
   getChallengeApplications,
   getChallengeMatches,
   getChallengePilot,
-  generateChallengeBrain1
+  generateChallengeBrain1,
+  getChallengeEligibility,
+  saveChallengeEligibility
 };

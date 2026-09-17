@@ -1,4 +1,3 @@
-
 import { AlertCircle } from "lucide-react";
 
 function FormField({
@@ -11,11 +10,11 @@ function FormField({
   required = false,
   error,
   disabled = false,
-  rows = 5,
+  rows = 4,
   helperText,
 }) {
   const baseClasses =
-    "w-full rounded-xl border bg-white px-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-950 dark:text-white";
+    "w-full rounded-xl border bg-white px-3.5 text-xs sm:text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-950 dark:text-white";
 
   const stateClasses = error
     ? "border-red-400 focus:border-red-500 focus:ring-red-500/10 dark:border-red-500/60"
@@ -33,10 +32,10 @@ function FormField({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <label
         htmlFor={name}
-        className="block text-sm font-semibold text-slate-700 dark:text-slate-200"
+        className="block text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200"
       >
         {label}
 
@@ -49,13 +48,13 @@ function FormField({
         <textarea
           {...commonProps}
           rows={rows}
-          className={`${commonProps.className} resize-none py-3.5`}
+          className={`${commonProps.className} resize-none py-2.5`}
         />
       ) : (
         <input
           {...commonProps}
           type={type}
-          className={`${commonProps.className} h-12`}
+          className={`${commonProps.className} h-9.5 sm:h-10`}
         />
       )}
 
@@ -76,4 +75,3 @@ function FormField({
 }
 
 export default FormField;
-

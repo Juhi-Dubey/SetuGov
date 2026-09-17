@@ -67,6 +67,17 @@ export const acceptDelivery = async (req, res, next) => {
   }
 };
 
+export const completeProcurement = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await procurementService.completeProcurement(id, req.body, req.user, ip_address);
+    return successResponse(res, result, 'Procurement process completed successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createPayment = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -104,6 +115,7 @@ export default {
   issueContract,
   submitDelivery,
   acceptDelivery,
+  completeProcurement,
   createPayment,
   listProcurements,
   getProcurement

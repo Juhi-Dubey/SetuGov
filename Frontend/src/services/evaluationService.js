@@ -47,12 +47,8 @@ export const getEvaluationById = async (id) => {
 };
 
 export const saveEvaluationDraft = async (id, evaluationData) => {
-  try {
-    localStorage.setItem(`evaluation_draft_${id}`, JSON.stringify(evaluationData));
-    return { success: true, message: "Evaluation draft saved to local workspace" };
-  } catch (e) {
-    return { success: false, message: "Failed to persist draft locally" };
-  }
+  // Evaluations in SetuGov are officially submitted via submitEvaluation (POST /applications/:id/evaluations)
+  return { success: true, message: "Draft handling is managed by active session state." };
 };
 
 export const declareConflictOfInterest = async (applicationId, data) => {

@@ -282,7 +282,7 @@ function StartupApplication() {
         <p className="mt-1 text-xs text-red-600 dark:text-red-300">{challengeError || "The requested procurement challenge does not exist."}</p>
         <button
           onClick={() => navigate('/startup/challenges')}
-          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+          className="btn-primary mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-900 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
         >
           <ArrowLeft className="h-4 w-4" /> Browse Active Challenges
         </button>
@@ -403,13 +403,13 @@ function StartupApplication() {
           onClick={() =>
             navigate("/startup/challenges")
           }
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+          className="back-nav"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Challenges
         </button>
 
-        <div className="mt-6 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="mt-2 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
+import Pagination from "../../components/common/Pagination";
 import {
   getChallenges,
   getChallengeById,
@@ -66,12 +67,25 @@ export { VERIFICATION_STATUS_LABELS };
 
 function ChallengeApplications() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { id: paramId, challengeId } = useParams();
-  const [activeChallengeId, setActiveChallengeId] = useState(paramId || challengeId || null);
-  const id = paramId || challengeId || activeChallengeId;
 
-  const [activeTab, setActiveTab] = useState("ai-matches"); // 'ai-matches' | 'applications'
+  const tabFromQuery = searchParams.get("tab");
+  const isDedicatedApplicationsRoute = location.pathname === "/government/applications";
+  const defaultTab = tabFromQuery || (isDedicatedApplicationsRoute ? "applications" : "ai-matches");
+
+  const [activeChallengeId, setActiveChallengeId] = useState(
+    (paramId && paramId !== "1") ? paramId : ((challengeId && challengeId !== "1") ? challengeId : null)
+  );
+  const [activeTab, setActiveTab] = useState(defaultTab); // 'ai-matches' | 'applications' | 'shortlisted' | 'evaluator-pool'
   const [challengeDetails, setChallengeDetails] = useState(null);
+
+  const id = (challengeDetails?.id && challengeDetails.id !== "1")
+    ? challengeDetails.id
+    : ((activeChallengeId && activeChallengeId !== "1")
+        ? activeChallengeId
+        : ((paramId && paramId !== "1") ? paramId : (challengeId && challengeId !== "1" ? challengeId : null)));
   const [applications, setApplications] = useState([]);
   const [matches, setMatches] = useState([]);
   const [eligibleMatches, setEligibleMatches] = useState([]);
@@ -107,6 +121,12 @@ function ChallengeApplications() {
   // Separate Filter State: Shortlisted Startups (Tab 3)
   const [shortlistedSearch, setShortlistedSearch] = useState("");
 
+  // Pagination State
+  const [proposalsPage, setProposalsPage] = useState(1);
+  const [proposalsPageSize, setProposalsPageSize] = useState(10);
+  const [shortlistedPage, setShortlistedPage] = useState(1);
+  const [shortlistedPageSize, setShortlistedPageSize] = useState(6);
+
   // Auto-dismiss shortlist / action success notification after 4.5 seconds
   useEffect(() => {
     if (!actionMessage) return;
@@ -115,6 +135,15 @@ function ChallengeApplications() {
     }, 4500);
     return () => clearTimeout(timer);
   }, [actionMessage]);
+
+  useEffect(() => {
+    const currentTab = searchParams.get("tab");
+    if (currentTab) {
+      setActiveTab(currentTab);
+    } else if (location.pathname === "/government/applications") {
+      setActiveTab("applications");
+    }
+  }, [location.pathname, searchParams]);
 
   // Shortlist Modal State
   const [shortlistModalOpen, setShortlistModalOpen] = useState(false);
@@ -170,7 +199,7 @@ function ChallengeApplications() {
   const loadData = async () => {
     try {
       setLoading(true);
-      let targetId = paramId || challengeId || activeChallengeId;
+      let targetId = (paramId && paramId !== "1") ? paramId : ((challengeId && challengeId !== "1") ? challengeId : activeChallengeId);
       if (!targetId || targetId === "1") {
         const allChallengesRes = await getChallenges().catch(() => ({ data: { challenges: [] } }));
         const list = allChallengesRes?.data?.challenges || allChallengesRes?.challenges || [];
@@ -178,6 +207,9 @@ function ChallengeApplications() {
         if (found?.id) {
           targetId = found.id;
           setActiveChallengeId(found.id);
+          if (paramId === "1") {
+            navigate(`/government/challenges/${found.id}/applications`, { replace: true });
+          }
         }
       }
 
@@ -416,7 +448,17 @@ function ChallengeApplications() {
     e.preventDefault();
     if (!selectedCandidateForShortlist) return;
 
-    const challengeIdToUse = id || activeChallengeId || challengeDetails?.id;
+    const challengeIdToUse =
+      (challengeDetails?.id && challengeDetails.id !== "1")
+        ? challengeDetails.id
+        : ((activeChallengeId && activeChallengeId !== "1")
+            ? activeChallengeId
+            : ((id && id !== "1") ? id : selectedCandidateForShortlist?.challenge_id));
+
+    if (!challengeIdToUse || challengeIdToUse === "1") {
+      alert("Unable to determine valid challenge ID for shortlisting. Please refresh the page.");
+      return;
+    }
 
     try {
       setShortlistLoading(true);
@@ -705,6 +747,15 @@ function ChallengeApplications() {
     return applications.filter(filterApplication);
   }, [applications, decisions, proposalsSearch, proposalStatusFilter, proposalEvaluationFilter, proposalDateFilter]);
 
+  useEffect(() => {
+    setProposalsPage(1);
+  }, [proposalsSearch, proposalStatusFilter, proposalEvaluationFilter, proposalDateFilter]);
+
+  const paginatedApplications = useMemo(() => {
+    const start = (proposalsPage - 1) * proposalsPageSize;
+    return filteredApplications.slice(start, start + proposalsPageSize);
+  }, [filteredApplications, proposalsPage, proposalsPageSize]);
+
   const isProposalsFiltered = Boolean(
     proposalsSearch.trim() ||
     proposalStatusFilter !== "all" ||
@@ -797,6 +848,15 @@ function ChallengeApplications() {
       return name.includes(q) || domain.includes(q);
     });
   }, [shortlistedList, shortlistedSearch]);
+
+  useEffect(() => {
+    setShortlistedPage(1);
+  }, [shortlistedSearch]);
+
+  const paginatedShortlisted = useMemo(() => {
+    const start = (shortlistedPage - 1) * shortlistedPageSize;
+    return filteredShortlisted.slice(start, start + shortlistedPageSize);
+  }, [filteredShortlisted, shortlistedPage, shortlistedPageSize]);
 
   const renderShortlistedCard = (item, idx) => {
     const isApplied = item.has_applied || Boolean(item.application_id);
@@ -1271,7 +1331,7 @@ function ChallengeApplications() {
                 navigate("/government/challenges");
               }
             }}
-            className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            className="back-nav"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Challenge Overview
@@ -1826,7 +1886,7 @@ function ChallengeApplications() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                      {filteredApplications.map((app) => {
+                      {paginatedApplications.map((app) => {
                         const assignments = app.evaluator_assignments || [];
                         const hasRecused = assignments.some((a) => a.status === "RECUSED");
                         const dec = decisions[app.id];
@@ -1949,6 +2009,17 @@ function ChallengeApplications() {
                     </tbody>
                   </table>
                 </div>
+
+                <Pagination
+                  currentPage={proposalsPage}
+                  totalItems={filteredApplications.length}
+                  pageSize={proposalsPageSize}
+                  pageSizeOptions={[5, 10, 20, 50]}
+                  onPageChange={setProposalsPage}
+                  onPageSizeChange={setProposalsPageSize}
+                  itemName="proposals"
+                  className="border-t border-slate-100 dark:border-slate-800 rounded-none border-x-0 border-b-0"
+                />
               </div>
             )}
           </div>
@@ -2027,8 +2098,20 @@ function ChallengeApplications() {
                 </button>
               </div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {filteredShortlisted.map((item, idx) => renderShortlistedCard(item, idx))}
+              <div className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  {paginatedShortlisted.map((item, idx) => renderShortlistedCard(item, idx))}
+                </div>
+
+                <Pagination
+                  currentPage={shortlistedPage}
+                  totalItems={filteredShortlisted.length}
+                  pageSize={shortlistedPageSize}
+                  pageSizeOptions={[6, 12, 24]}
+                  onPageChange={setShortlistedPage}
+                  onPageSizeChange={setShortlistedPageSize}
+                  itemName="shortlisted startups"
+                />
               </div>
             )}
           </div>

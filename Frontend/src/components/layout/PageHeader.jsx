@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 
 function PageHeader({
@@ -13,15 +12,15 @@ function PageHeader({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+      className="mb-4 sm:mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
     >
       <div>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
           {title}
         </h1>
 
         {description && (
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+          <p className="mt-1 max-w-2xl text-xs sm:text-sm leading-5 text-slate-500 dark:text-slate-400">
             {description}
           </p>
         )}
@@ -31,7 +30,7 @@ function PageHeader({
         <button
           type="button"
           onClick={onAction}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-900 px-5 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+          className="btn-primary inline-flex h-9.5 items-center justify-center gap-2 rounded-xl bg-blue-900 px-4 text-xs sm:text-sm font-semibold text-white shadow-md shadow-blue-900/15 transition-all hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
         >
           {ActionIcon && <ActionIcon className="h-4 w-4" />}
           {action}
@@ -42,4 +41,3 @@ function PageHeader({
 }
 
 export default PageHeader;
-

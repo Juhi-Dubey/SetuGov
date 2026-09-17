@@ -20,6 +20,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getChallenges } from "../../services/challengeService";
 import { getStartupApplications, getStartupPilots, getStartupPerformance } from "../../services/startupService";
+import Pagination from "../../components/common/Pagination";
+import { formatApplicationStatus } from "../../utils/filterUtils";
 
 function StartupDashboard() {
   const navigate = useNavigate();
@@ -30,6 +32,12 @@ function StartupDashboard() {
   const [pilots, setPilots] = useState([]);
   const [performance, setPerformance] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Pagination states
+  const [challengesPage, setChallengesPage] = useState(1);
+  const [challengesPageSize, setChallengesPageSize] = useState(4);
+  const [applicationsPage, setApplicationsPage] = useState(1);
+  const [applicationsPageSize, setApplicationsPageSize] = useState(4);
 
   const startupId = user?.startups?.[0]?.id || user?.id;
   const startupName = user?.startups?.[0]?.name || user?.name || "Startup Portal";
@@ -98,35 +106,35 @@ function StartupDashboard() {
   }, [applications, pilots]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-6">
       {/* WELCOME BANNER */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-8 text-white shadow-xl dark:border-slate-800"
+        className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
       >
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="max-w-2xl space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3.5 py-1 text-xs font-semibold backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-2xl space-y-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-0.5 text-xs font-semibold text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300">
+              <Sparkles className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
               Startup Innovation Workspace
             </div>
 
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
               Welcome back, {startupName}
             </h1>
 
-            <p className="text-sm leading-6 text-slate-300">
+            <p className="text-xs sm:text-sm leading-5 text-slate-500 dark:text-slate-400">
               Discover verified state government challenges, submit AI-assisted proposals, and track milestone validation pilots.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-col items-end gap-2.5">
             <button
               type="button"
               onClick={() => navigate("/startup/challenges")}
-              className="inline-flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-slate-900 shadow-md transition-all hover:bg-slate-100"
+              className="btn-primary inline-flex h-9.5 items-center gap-2 rounded-xl bg-blue-900 px-4 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
             >
               Browse Challenges
               <ArrowRight className="h-4 w-4" />
@@ -134,9 +142,9 @@ function StartupDashboard() {
             <button
               type="button"
               onClick={() => navigate("/startup/pilot")}
-              className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 text-sm font-semibold text-white backdrop-blur transition-all hover:bg-white/10"
+              className="inline-flex h-9.5 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white"
             >
-              <Rocket className="h-4 w-4" />
+              <Rocket className="h-4 w-4 text-slate-500 dark:text-slate-400" />
               Pilot Sandboxes
             </button>
           </div>
@@ -153,121 +161,159 @@ function StartupDashboard() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: index * 0.08 }}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+              className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-4.5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-slate-400">{item.title}</span>
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <div className="flex h-8.5 w-8.5 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                   <Icon className="h-4 w-4" />
                 </div>
               </div>
-              <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+              <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                 {item.value}
               </p>
-              <p className="mt-1 text-xs text-slate-400">{item.description}</p>
+              <p className="mt-0.5 text-xs text-slate-400">{item.description}</p>
             </motion.div>
           );
         })}
       </div>
 
       {/* MAIN TWO-COLUMN SECTION */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-5 lg:grid-cols-2">
         {/* RECOMMENDED CHALLENGES */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
-            <div>
-              <h2 className="text-base font-bold">Open Government Challenges</h2>
-              <p className="text-xs text-slate-400">Problem statements accepting innovation proposals</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate("/startup/challenges")}
-              className="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
-            >
-              View All
-            </button>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            {challenges.slice(0, 4).map((ch) => (
-              <div
-                key={ch.id}
-                className="flex items-center justify-between rounded-xl border border-slate-100 p-4 transition-all hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
-              >
-                <div className="min-w-0 flex-1 pr-3">
-                  <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
-                    {ch.department?.name || "State Department"}
-                  </span>
-                  <h3 className="mt-1 text-sm font-semibold truncate">{ch.title}</h3>
-                  <p className="text-xs text-slate-400">
-                    Budget: ₹{ch.budget_max ? Number(ch.budget_max).toLocaleString("en-IN") : "25,00,000"} · {ch.location || "Maharashtra"}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => navigate(`/startup/application/${ch.id}`)}
-                  className="shrink-0 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
-                >
-                  Apply
-                </button>
+        <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+              <div>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Open Government Challenges</h2>
+                <p className="text-xs text-slate-400">Problem statements accepting innovation proposals</p>
               </div>
-            ))}
+              <button
+                type="button"
+                onClick={() => navigate("/startup/challenges")}
+                className="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+              >
+                View All
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {challenges.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-xs text-slate-400">
+                  No active challenges open for application at this moment.
+                </div>
+              ) : (
+                challenges
+                  .slice((challengesPage - 1) * challengesPageSize, challengesPage * challengesPageSize)
+                  .map((ch) => (
+                    <div
+                      key={ch.id}
+                      className="flex items-center justify-between rounded-xl border border-slate-100 p-4 transition-all hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+                    >
+                      <div className="min-w-0 flex-1 pr-3">
+                        <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                          {ch.department?.name || "State Department"}
+                        </span>
+                        <h3 className="mt-1 text-sm font-semibold truncate">{ch.title}</h3>
+                        <p className="text-xs text-slate-400">
+                          Budget: ₹{ch.budget_max ? Number(ch.budget_max).toLocaleString("en-IN") : "25,00,000"} · {ch.location || "Maharashtra"}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/startup/application/${ch.id}`)}
+                        className="btn-primary shrink-0 rounded-xl bg-blue-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  ))
+              )}
+            </div>
           </div>
+
+          <Pagination
+            currentPage={challengesPage}
+            totalItems={challenges.length}
+            pageSize={challengesPageSize}
+            pageSizeOptions={[2, 4, 8, 12]}
+            onPageChange={setChallengesPage}
+            onPageSizeChange={setChallengesPageSize}
+            itemName="challenges"
+            className="mt-4 border-t-0 p-2 sm:p-3"
+          />
         </div>
 
         {/* ACTIVE PROPOSALS & PILOTS */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
-            <div>
-              <h2 className="text-base font-bold">Your Applications & Status</h2>
-              <p className="text-xs text-slate-400">Real-time status in procurement evaluation lifecycle</p>
+        <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+              <div>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Your Applications & Status</h2>
+                <p className="text-xs text-slate-400">Real-time status in procurement evaluation lifecycle</p>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {(applications.length > 0 ? applications : [
+                {
+                  id: "1",
+                  challenge: { title: "AI-Based Citizen Grievance Management" },
+                  status: "UNDER_REVIEW",
+                  created_at: new Date().toISOString(),
+                },
+                {
+                  id: "2",
+                  challenge: { title: "Smart Waste Collection System" },
+                  status: "SELECTED",
+                  created_at: new Date().toISOString(),
+                },
+              ])
+                .slice((applicationsPage - 1) * applicationsPageSize, applicationsPage * applicationsPageSize)
+                .map((app, idx) => (
+                  <div
+                    key={app.id || idx}
+                    className="flex items-center justify-between rounded-xl border border-slate-100 p-4 dark:border-slate-800"
+                  >
+                    <div>
+                      <h3 className="text-sm font-semibold">
+                        {app.challenge?.title || "Department Innovation Pilot"}
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        Submitted: {app.created_at ? new Date(app.created_at).toLocaleDateString() : "Recent"}
+                      </p>
+                    </div>
+
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                      app.status === "SELECTED"
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                        : app.status === "REJECTED"
+                        ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
+                        : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    }`}>
+                      {formatApplicationStatus(app.status)}
+                    </span>
+                  </div>
+                ))}
             </div>
           </div>
 
-          <div className="mt-4 space-y-3">
-            {(applications.length > 0 ? applications : [
-              {
-                id: "1",
-                challenge: { title: "AI-Based Citizen Grievance Management" },
-                status: "UNDER_REVIEW",
-                created_at: new Date().toISOString(),
-              },
-              {
-                id: "2",
-                challenge: { title: "Smart Waste Collection System" },
-                status: "SELECTED",
-                created_at: new Date().toISOString(),
-              },
-            ]).map((app, idx) => (
-              <div
-                key={app.id || idx}
-                className="flex items-center justify-between rounded-xl border border-slate-100 p-4 dark:border-slate-800"
-              >
-                <div>
-                  <h3 className="text-sm font-semibold">
-                    {app.challenge?.title || "Department Innovation Pilot"}
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Submitted: {app.created_at ? new Date(app.created_at).toLocaleDateString() : "Recent"}
-                  </p>
-                </div>
-
-                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                  app.status === "SELECTED"
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                    : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                }`}>
-                  {app.status || "UNDER_REVIEW"}
-                </span>
-              </div>
-            ))}
-          </div>
+          <Pagination
+            currentPage={applicationsPage}
+            totalItems={(applications.length > 0 ? applications : [1, 2]).length}
+            pageSize={applicationsPageSize}
+            pageSizeOptions={[2, 4, 8, 12]}
+            onPageChange={setApplicationsPage}
+            onPageSizeChange={setApplicationsPageSize}
+            itemName="applications"
+            className="mt-4 border-t-0 p-2 sm:p-3"
+          />
         </div>
       </div>
 
       {/* STARTUP PROCUREMENT TRACK RECORD & CREDENTIALS */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
           <div>
             <div className="flex items-center gap-2">

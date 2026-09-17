@@ -1,14 +1,12 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
-  Calendar,
+  ArrowRight,
   CheckCircle2,
-  IndianRupee,
   MapPin,
   Plus,
-  Save,
   Trash2,
   Users,
   AlertCircle,
@@ -30,9 +28,16 @@ import {
   LayoutDashboard,
   BarChart2,
   Flag,
+  RefreshCw,
+  Clock3,
+  Building2,
+  DollarSign,
+  FileText,
+  Info
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
+import Pagination from "../../components/common/Pagination";
 import {
   getPilots,
   getPilotById,
@@ -42,7 +47,6 @@ import {
   completePilot,
   createMilestone,
   createKpi,
-  createMeasurement,
   createScaleDecision,
   getComplianceChecklist,
   updateComplianceItem,
@@ -51,24 +55,91 @@ import {
   getPilotIssues,
   updatePilotIssue,
 } from "../../services/pilotService";
+import { getChallengeById, getChallengePilot, getChallengeApplications } from "../../services/challengeService";
 import { analyzePilotWithAI, getScaleRecommendationWithAI } from "../../services/aiService";
+import { formatPilotStatus } from "../../utils/filterUtils";
+
+const pilotStatusTabs = [
+  { id: "ALL", label: "All Pilots" },
+  { id: "AT_RISK", label: "At Risk" },
+  { id: "RUNNING", label: "Running" },
+  { id: "PLANNED", label: "Planned" },
+  { id: "VALIDATION", label: "In Validation" },
+  { id: "COMPLETED", label: "Completed" },
+  { id: "SCALED", label: "Scaled" },
+  { id: "STOPPED", label: "Stopped" },
+];
 
 function ChallengePilot() {
   const navigate = useNavigate();
   const location = useLocation();
   const { id: paramId, challengeId } = useParams();
-  const id = paramId || challengeId;
+  const routeId = paramId || challengeId;
 
   const [pilot, setPilot] = useState(null);
+  const [challenge, setChallenge] = useState(null);
+  const [selectedApp, setSelectedApp] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [actionSuccess, setActionSuccess] = useState("");
+
+  const [pilotsList, setPilotsList] = useState([]);
+  const [activeSelectedPilotId, setActiveSelectedPilotId] = useState(null);
+
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const statusParam = searchParams.get("status");
+  const isChallengeRoute = location.pathname.includes("/challenges/");
+  const isDirectPilotRoute = !isChallengeRoute && routeId && routeId !== "pilots" && routeId !== "pilot";
+  const isPilotsListRoute = !isChallengeRoute && !isDirectPilotRoute;
+
+  const displayedPilots = useMemo(() => {
+    if (!statusParam || statusParam === "ALL") {
+      return pilotsList;
+    }
+    return pilotsList.filter((p) => p.status === statusParam);
+  }, [pilotsList, statusParam]);
+
+  const handleStatusFilterChange = (statusKey) => {
+    if (statusKey === "ALL") {
+      navigate("/government/pilots");
+    } else {
+      navigate(`/government/pilots?status=${statusKey}`);
+    }
+  };
+
+  const handleSelectPilotFromList = (pilotId) => {
+    setActiveSelectedPilotId(pilotId);
+  };
+
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [scaleRecommendation, setScaleRecommendation] = useState(null);
+
   const [complianceList, setComplianceList] = useState([]);
   const [feedbackList, setFeedbackList] = useState([]);
   const [issuesList, setIssuesList] = useState([]);
   const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'kpis' | 'milestones' | 'compliance' | 'issues' | 'feedback' | 'ai-intelligence'
+
+  // Pagination states
+  const [compliancePage, setCompliancePage] = useState(1);
+  const [compliancePageSize, setCompliancePageSize] = useState(6);
+
+  const [issuesPage, setIssuesPage] = useState(1);
+  const [issuesPageSize, setIssuesPageSize] = useState(5);
+
+  const [feedbackPage, setFeedbackPage] = useState(1);
+  const [feedbackPageSize, setFeedbackPageSize] = useState(4);
+
+  // Pilot Creation Form Modal
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    location: "",
+    start_date: new Date().toISOString().split("T")[0],
+    end_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    budget: "",
+  });
 
   // Readiness Override State
   const [showOverrideModal, setShowOverrideModal] = useState(false);
@@ -83,8 +154,7 @@ function ChallengePilot() {
     assigned_to: "",
   });
 
-  // Scale Decision Form State (Official Government Decision)
-  // All fields start empty to force the user to make explicit choices
+  // Scale Decision Form State
   const [govDecision, setGovDecision] = useState({
     decision: "",
     justification: "",
@@ -92,8 +162,6 @@ function ChallengePilot() {
     budget_allocated: "",
   });
   const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
-
-  // Per-field validation errors for the Official Scaling Decision form
   const [decisionErrors, setDecisionErrors] = useState({
     decision: "",
     scaling_scope: "",
@@ -101,155 +169,434 @@ function ChallengePilot() {
     justification: "",
   });
 
-  // New KPI Form State
+  // New KPI Form State (matching backend schema: baseline_value, target_value)
   const [newKpi, setNewKpi] = useState({
     name: "",
     unit: "%",
-    baseline: "",
-    target: "",
+    baseline_value: "",
+    target_value: "",
+    description: "",
+    weight: "1.0",
   });
 
-  // New Milestone Form State
+  // New Milestone Form State (matching backend schema: name, description, due_date, payment_percentage)
   const [newMilestone, setNewMilestone] = useState({
-    title: "",
+    name: "",
     description: "",
     due_date: "",
-    deliverables: "",
+    payment_percentage: "",
   });
 
-  useEffect(() => {
-    loadPilot();
-  }, [id, location.search]);
+  const normalizePilot = (raw) => {
+    if (!raw) return null;
+    const data = raw.data || raw;
+    if (!data) return null;
+    if (data.pilot && typeof data.pilot === "object") {
+      return {
+        ...data.pilot,
+        ...data,
+        id: data.pilot.id,
+        status: data.pilot.status,
+        budget: data.pilot.budget,
+        location: data.pilot.location,
+        start_date: data.pilot.start_date,
+        end_date: data.pilot.end_date,
+        overall_score: data.pilot.overall_score,
+        final_recommendation: data.pilot.final_recommendation,
+        kpis: data.kpis || data.pilot.kpis || [],
+        milestones: data.milestones || data.pilot.milestones || [],
+        startup: data.startup || data.pilot.startup,
+        challenge: data.challenge || data.pilot.challenge,
+      };
+    }
+    return data;
+  };
 
-  const loadPilot = async () => {
+  const loadPilotData = useCallback(async () => {
     try {
       setLoading(true);
-      const queryStatus = new URLSearchParams(location.search).get("status");
-      let targetPilot = null;
-      if (id) {
-        // Try getting pilot by ID or find first pilot for challenge
-        const res = await getPilotById(id).catch(async () => {
-          const all = await getPilots();
-          const list = all?.data?.pilots || all?.data || [];
-          return { data: (queryStatus && list.find((p) => p.status === queryStatus)) || list[0] };
-        });
-        if (res?.data) {
-          targetPilot = res.data;
-          setPilot(res.data);
+      setFetchError(null);
+      setActionError("");
+      setActionSuccess("");
+
+      let resolvedPilot = null;
+      let parentChallenge = null;
+
+      const isChallengeRoute = location.pathname.includes("/challenges/");
+      const isDirectPilotRoute = !isChallengeRoute && routeId && routeId !== "pilots" && routeId !== "pilot";
+      const isPilotsListRoute = !isChallengeRoute && !isDirectPilotRoute;
+
+      const searchParams = new URLSearchParams(location.search);
+      const statusParam = searchParams.get("status");
+
+      if (isChallengeRoute && routeId) {
+        // Scoped strictly to challenge
+        const [pilotRes, chalRes, appsRes] = await Promise.allSettled([
+          getChallengePilot(routeId),
+          getChallengeById(routeId),
+          getChallengeApplications(routeId),
+        ]);
+
+        if (chalRes.status === "fulfilled") {
+          parentChallenge = chalRes.value?.data || chalRes.value;
+          setChallenge(parentChallenge);
         }
-      } else {
-        const all = await getPilots();
-        const list = all?.data?.pilots || all?.data || [];
-        if (list.length > 0) {
-          targetPilot = (queryStatus && list.find((p) => p.status === queryStatus)) || list[0];
-          setPilot(targetPilot);
+
+        if (appsRes.status === "fulfilled") {
+          const apps = appsRes.value?.data || appsRes.value || [];
+          const selected = Array.isArray(apps) ? apps.find((a) => a.status === "SELECTED") : null;
+          setSelectedApp(selected || null);
+
+          // Populate default create form values from challenge / application
+          if (parentChallenge && selected) {
+            setCreateForm({
+              location: parentChallenge.pilot_location || parentChallenge.location || "",
+              start_date: parentChallenge.pilot_start_date
+                ? new Date(parentChallenge.pilot_start_date).toISOString().split("T")[0]
+                : new Date().toISOString().split("T")[0],
+              end_date: parentChallenge.pilot_end_date
+                ? new Date(parentChallenge.pilot_end_date).toISOString().split("T")[0]
+                : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+              budget: selected.estimated_cost
+                ? String(selected.estimated_cost)
+                : parentChallenge.budget_max
+                ? String(parentChallenge.budget_max)
+                : "",
+            });
+          }
+        }
+
+        if (pilotRes.status === "fulfilled" && pilotRes.value) {
+          const rawPilotData =
+            pilotRes.value?.data?.pilot !== undefined
+              ? pilotRes.value.data.pilot
+              : pilotRes.value?.data || pilotRes.value;
+
+          if (rawPilotData?.id) {
+            // Load full dashboard
+            const dashRes = await getPilotDashboard(rawPilotData.id).catch(() => null);
+            resolvedPilot = dashRes ? normalizePilot(dashRes) : normalizePilot(rawPilotData);
+          }
+        }
+      } else if (isDirectPilotRoute) {
+        // Direct pilot UUID lookup
+        const dashRes = await getPilotDashboard(routeId).catch(() => null);
+        if (dashRes) {
+          resolvedPilot = normalizePilot(dashRes);
+        } else {
+          const singleRes = await getPilotById(routeId).catch(() => null);
+          if (singleRes) resolvedPilot = normalizePilot(singleRes);
+        }
+        if (resolvedPilot?.challenge) {
+          parentChallenge = resolvedPilot.challenge;
+          setChallenge(parentChallenge);
+        }
+      } else if (isPilotsListRoute) {
+        // Direct Government Pilots route /government/pilots (with canonical ?status=AT_RISK filtering)
+        const pilotsRes = await getPilots().catch(() => ({ data: { pilots: [] } }));
+        const rawPilots =
+          pilotsRes?.data?.pilots ||
+          pilotsRes?.pilots ||
+          (Array.isArray(pilotsRes?.data) ? pilotsRes.data : []) ||
+          [];
+
+        setPilotsList(rawPilots);
+
+        const filtered = statusParam && statusParam !== "ALL"
+          ? rawPilots.filter((p) => p.status === statusParam)
+          : rawPilots;
+
+        if (filtered.length > 0) {
+          const targetPilot =
+            (activeSelectedPilotId && filtered.find((p) => p.id === activeSelectedPilotId)) ||
+            filtered[0];
+
+          if (targetPilot?.id) {
+            if (targetPilot.id !== activeSelectedPilotId) {
+              setActiveSelectedPilotId(targetPilot.id);
+            }
+            const dashRes = await getPilotDashboard(targetPilot.id).catch(() => null);
+            resolvedPilot = dashRes ? normalizePilot(dashRes) : normalizePilot(targetPilot);
+            parentChallenge = resolvedPilot?.challenge || targetPilot.challenge || null;
+            if (parentChallenge) setChallenge(parentChallenge);
+          }
+        } else {
+          resolvedPilot = null;
         }
       }
 
-      if (targetPilot?.id) {
-        const [compRes, fbRes, issuesRes] = await Promise.all([
-          getComplianceChecklist(targetPilot.id).catch(() => ({ data: { compliance_items: [] } })),
-          getPilotFeedbacks(targetPilot.id).catch(() => ({ data: { feedback: [] } })),
-          getPilotIssues(targetPilot.id).catch(() => ({ data: { issues: [] } })),
+      setPilot(resolvedPilot);
+
+      // Load sub-resources if pilot is active
+      if (resolvedPilot?.id) {
+        const [compRes, fbRes, issuesRes] = await Promise.allSettled([
+          getComplianceChecklist(resolvedPilot.id),
+          getPilotFeedbacks(resolvedPilot.id),
+          getPilotIssues(resolvedPilot.id),
         ]);
-        if (compRes?.data?.compliance_items) setComplianceList(compRes.data.compliance_items);
-        if (fbRes?.data?.feedback) setFeedbackList(fbRes.data.feedback);
-        if (issuesRes?.data?.issues) setIssuesList(issuesRes.data.issues);
+
+        if (compRes.status === "fulfilled") {
+          const rawItems = compRes.value?.data?.items || compRes.value?.items || compRes.value?.data || [];
+          setComplianceList(Array.isArray(rawItems) ? rawItems : []);
+        }
+
+        if (fbRes.status === "fulfilled") {
+          const rawFb = fbRes.value?.data || fbRes.value || [];
+          setFeedbackList(Array.isArray(rawFb) ? rawFb : []);
+        }
+
+        if (issuesRes.status === "fulfilled") {
+          const rawIssues = issuesRes.value?.data?.issues || issuesRes.value?.issues || issuesRes.value?.data || [];
+          setIssuesList(Array.isArray(rawIssues) ? rawIssues : []);
+        }
       }
     } catch (err) {
-      console.warn("Pilot fetch fallback:", err);
+      console.error("Failed to load pilot data:", err);
+      setFetchError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to load pilot project details from PostgreSQL."
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, [routeId, location.pathname, location.search, activeSelectedPilotId]);
 
-  const handleUpdateComplianceStatus = async (item, status) => {
-    if (!pilot?.id || !item?.id) return;
-    try {
-      await updateComplianceItem(pilot.id, item.id, {
-        status,
-        evidence_note: `Reviewed by government officer on ${new Date().toLocaleDateString()}`,
-      });
-      setComplianceList((prev) =>
-        prev.map((c) => (c.id === item.id ? { ...c, status } : c))
-      );
-    } catch (err) {
-      alert(`Failed to update compliance item: ${err.message}`);
-    }
-  };
+  useEffect(() => {
+    loadPilotData();
+  }, [loadPilotData]);
 
-  const handleStartPilot = async () => {
-    if (!pilot?.id) return;
-    
-    // Check if mandatory compliance items are unsatisfied
-    const unsatisfiedItems = complianceList.filter((c) => c.status !== "SATISFIED");
-    if (unsatisfiedItems.length > 0 && !showOverrideModal) {
-      setShowOverrideModal(true);
+  // Handle Create Pilot Project
+  const handleCreatePilot = async (e) => {
+    e.preventDefault();
+    if (!challenge?.id || !selectedApp?.startup_id) {
+      setActionError("Cannot create pilot: Missing selected startup application.");
       return;
     }
 
     try {
       setIsSaving(true);
-      await startPilot(pilot.id, {
-        readiness_override: true,
-        override_reason: overrideReason || "Authorized by Department Officer during pilot sandbox onboarding.",
-      });
-      setShowOverrideModal(false);
-      setOverrideReason("");
-      loadPilot();
+      setActionError("");
+      setActionSuccess("");
+
+      const payload = {
+        challenge_id: challenge.id,
+        startup_id: selectedApp.startup_id,
+        location: createForm.location.trim(),
+        start_date: new Date(createForm.start_date).toISOString(),
+        end_date: new Date(createForm.end_date).toISOString(),
+        budget: Number(createForm.budget),
+      };
+
+      const res = await createPilot(payload);
+      setActionSuccess("Pilot sandbox created successfully and registered in PostgreSQL.");
+      setShowCreateModal(false);
+      await loadPilotData();
     } catch (err) {
-      alert(`Error starting pilot: ${err.message}`);
+      console.error("Create pilot error:", err);
+      setActionError(
+        err?.response?.data?.message || err?.message || "Failed to create pilot."
+      );
     } finally {
       setIsSaving(false);
     }
   };
 
+  // Normal Start Pilot (Readiness check enforced)
+  const handleStartPilot = async () => {
+    if (!pilot?.id) return;
+    setActionError("");
+    setActionSuccess("");
+
+    const uncompliedItems = complianceList.filter((c) => c.status !== "COMPLIED");
+    if (uncompliedItems.length > 0) {
+      setActionError(
+        `Readiness check blocked: ${uncompliedItems.length} compliance item(s) are not verified. Complete compliance items or authorize an administrative override.`
+      );
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      await startPilot(pilot.id, { readiness_override: false });
+      setActionSuccess("Pilot project successfully transitioned to RUNNING status.");
+      await loadPilotData();
+    } catch (err) {
+      console.error("Error starting pilot:", err);
+      setActionError(err?.response?.data?.message || err?.message || "Failed to start pilot.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Explicit Override Start Pilot
   const handleConfirmStartWithOverride = async () => {
+    if (!pilot?.id) return;
+    if (!overrideReason.trim()) {
+      setActionError("Override justification is required to start pilot with unverified compliance.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setActionError("");
+      setActionSuccess("");
+
+      await startPilot(pilot.id, {
+        readiness_override: true,
+        override_reason: overrideReason.trim(),
+      });
+
+      setShowOverrideModal(false);
+      setOverrideReason("");
+      setActionSuccess("Pilot started with administrative readiness override.");
+      await loadPilotData();
+    } catch (err) {
+      console.error("Error starting pilot with override:", err);
+      setActionError(err?.response?.data?.message || err?.message || "Failed to start pilot with override.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Conclude & Complete Pilot
+  const handleCompletePilot = async () => {
     if (!pilot?.id) return;
     try {
       setIsSaving(true);
-      await startPilot(pilot.id, {
-        readiness_override: true,
-        override_reason: overrideReason || "Sanctioned officer override for non-blocking compliance checkpoints.",
-      });
-      setShowOverrideModal(false);
-      setOverrideReason("");
-      loadPilot();
+      setActionError("");
+      setActionSuccess("");
+      await completePilot(pilot.id);
+      setActionSuccess("Pilot concluded successfully and transitioned to COMPLETED status.");
+      await loadPilotData();
     } catch (err) {
-      alert(`Error starting pilot with override: ${err.message}`);
+      console.error("Error completing pilot:", err);
+      setActionError(err?.response?.data?.message || err?.message || "Failed to complete pilot.");
     } finally {
       setIsSaving(false);
     }
   };
 
+  // Update Compliance Item (Canonical statuses: COMPLIED, PENDING, NON_COMPLIANT)
+  const handleUpdateComplianceStatus = async (item, status) => {
+    if (!pilot?.id || !item?.id) return;
+    try {
+      setActionError("");
+      const res = await updateComplianceItem(pilot.id, item.id, {
+        status,
+        notes: `Updated by government officer on ${new Date().toLocaleDateString()}`,
+      });
+      const updatedItem = res?.data?.item || res?.item || { ...item, status };
+      setComplianceList((prev) =>
+        prev.map((c) => (c.id === item.id ? { ...c, ...updatedItem } : c))
+      );
+    } catch (err) {
+      console.error("Failed to update compliance item:", err);
+      setActionError(err?.response?.data?.message || err?.message || "Failed to update compliance item.");
+    }
+  };
+
+  // Add KPI (matching backend baseline_value, target_value)
+  const handleAddKpi = async (e) => {
+    e.preventDefault();
+    if (!pilot?.id || !newKpi.name.trim()) return;
+
+    try {
+      setIsSaving(true);
+      setActionError("");
+      setActionSuccess("");
+
+      const payload = {
+        name: newKpi.name.trim(),
+        unit: newKpi.unit.trim(),
+        baseline_value: Number(newKpi.baseline_value),
+        target_value: Number(newKpi.target_value),
+        description: newKpi.description ? newKpi.description.trim() : undefined,
+        weight: Number(newKpi.weight) || 1.0,
+      };
+
+      await createKpi(pilot.id, payload);
+      setNewKpi({
+        name: "",
+        unit: "%",
+        baseline_value: "",
+        target_value: "",
+        description: "",
+        weight: "1.0",
+      });
+      setActionSuccess("Custom KPI registered and persisted to PostgreSQL.");
+      await loadPilotData();
+    } catch (err) {
+      console.error("Error adding KPI:", err);
+      setActionError(err?.response?.data?.message || err?.message || "Failed to create KPI.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Add Milestone (matching backend name, due_date, payment_percentage)
+  const handleAddMilestone = async (e) => {
+    e.preventDefault();
+    if (!pilot?.id || !newMilestone.name.trim()) return;
+
+    try {
+      setIsSaving(true);
+      setActionError("");
+      setActionSuccess("");
+
+      const payload = {
+        name: newMilestone.name.trim(),
+        description: newMilestone.description ? newMilestone.description.trim() : undefined,
+        due_date: newMilestone.due_date
+          ? new Date(newMilestone.due_date).toISOString()
+          : new Date().toISOString(),
+        payment_percentage: Number(newMilestone.payment_percentage) || 0,
+        completion_percentage: 0,
+      };
+
+      await createMilestone(pilot.id, payload);
+      setNewMilestone({ name: "", description: "", due_date: "", payment_percentage: "" });
+      setActionSuccess("Pilot milestone registered and persisted to PostgreSQL.");
+      await loadPilotData();
+    } catch (err) {
+      console.error("Error adding milestone:", err);
+      setActionError(err?.response?.data?.message || err?.message || "Failed to create milestone.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Create Pilot Issue
   const handleCreateIssue = async (e) => {
     e.preventDefault();
     if (!pilot?.id || !newIssue.title.trim()) return;
+
     try {
       setIsSaving(true);
-      const res = await createPilotIssue(pilot.id, {
+      setActionError("");
+      await createPilotIssue(pilot.id, {
         title: newIssue.title.trim(),
-        description: newIssue.description?.trim(),
+        description: newIssue.description ? newIssue.description.trim() : "",
         severity: newIssue.severity,
-        assigned_to: newIssue.assigned_to?.trim() || "Department Project Lead",
+        assigned_to: newIssue.assigned_to ? newIssue.assigned_to.trim() : undefined,
       });
-      if (res?.data?.issue) {
-        setIssuesList((prev) => [res.data.issue, ...prev]);
-      } else {
-        loadPilot();
-      }
       setNewIssue({ title: "", description: "", severity: "MEDIUM", assigned_to: "" });
       setShowNewIssueForm(false);
+      setActionSuccess("Incident recorded in PostgreSQL.");
+      await loadPilotData();
     } catch (err) {
-      alert(`Failed to record pilot issue: ${err.message}`);
+      console.error("Error reporting issue:", err);
+      setActionError(err?.response?.data?.message || err?.message || "Failed to record issue.");
     } finally {
       setIsSaving(false);
     }
   };
 
+  // Update Pilot Issue Status
   const handleUpdateIssueStatus = async (issueId, status, resolution = "") => {
     if (!pilot?.id || !issueId) return;
     try {
+      setActionError("");
       await updatePilotIssue(pilot.id, issueId, {
         status,
         resolution: resolution || (status === "RESOLVED" ? "Resolved by Department Officer review" : undefined),
@@ -258,27 +605,17 @@ function ChallengePilot() {
         prev.map((i) => (i.id === issueId ? { ...i, status, resolution: resolution || i.resolution } : i))
       );
     } catch (err) {
-      alert(`Failed to update issue: ${err.message}`);
+      console.error("Failed to update issue:", err);
+      setActionError(err?.response?.data?.message || err?.message || "Failed to update issue.");
     }
   };
 
-  const handleCompletePilot = async () => {
-    if (!pilot?.id) return;
-    try {
-      setIsSaving(true);
-      await completePilot(pilot.id);
-      loadPilot();
-    } catch (err) {
-      alert(`Error completing pilot: ${err.message}`);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
+  // AI Scaling Intelligence
   const handleRunBrain4Analysis = async () => {
     if (!pilot?.id) return;
     try {
       setIsAnalyzing(true);
+      setActionError("");
       const [intelRes, scaleRes] = await Promise.allSettled([
         analyzePilotWithAI(pilot.id),
         getScaleRecommendationWithAI(pilot.id),
@@ -300,58 +637,18 @@ function ChallengePilot() {
 
       setActiveTab("ai-intelligence");
     } catch (err) {
-      console.warn("Brain 4 analysis fallback:", err);
+      console.warn("Brain 4 analysis error:", err);
       setActiveTab("ai-intelligence");
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  const handleAddKpi = async (e) => {
-    e.preventDefault();
-    if (!pilot?.id || !newKpi.name) return;
-    try {
-      setIsSaving(true);
-      await createKpi(pilot.id, {
-        name: newKpi.name,
-        unit: newKpi.unit,
-        baseline: Number(newKpi.baseline) || 0,
-        target: Number(newKpi.target) || 100,
-      });
-      setNewKpi({ name: "", unit: "%", baseline: "", target: "" });
-      loadPilot();
-    } catch (err) {
-      alert(`Error adding KPI: ${err.message}`);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleAddMilestone = async (e) => {
-    e.preventDefault();
-    if (!pilot?.id || !newMilestone.title) return;
-    try {
-      setIsSaving(true);
-      await createMilestone(pilot.id, {
-        title: newMilestone.title,
-        description: newMilestone.description,
-        due_date: newMilestone.due_date || new Date().toISOString(),
-        deliverables: [newMilestone.deliverables || "Completed module report"],
-      });
-      setNewMilestone({ title: "", description: "", due_date: "", deliverables: "" });
-      loadPilot();
-    } catch (err) {
-      alert(`Error adding milestone: ${err.message}`);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
+  // Record Scale Decision
   const handleRecordOfficialScaleDecision = async (e) => {
     e.preventDefault();
     if (!pilot?.id) return;
 
-    // ── Validate all four required fields ──────────────────────────────────
     const errors = { decision: "", scaling_scope: "", budget_allocated: "", justification: "" };
     let hasError = false;
 
@@ -374,25 +671,35 @@ function ChallengePilot() {
     }
 
     setDecisionErrors(errors);
-    if (hasError) return; // Block API call when validation fails
-    // ── End validation ────────────────────────────────────────────────────
+    if (hasError) return;
 
     try {
       setIsSubmittingDecision(true);
+      setActionError("");
+      const realScore =
+        pilot?.overall_score != null
+          ? Number(pilot.overall_score)
+          : pilot?.kpi_score != null
+          ? Number(pilot.kpi_score)
+          : undefined;
+
       await createScaleDecision(pilot.id, {
         decision: govDecision.decision,
-        justification: govDecision.justification.trim(),
-        scaling_scope: govDecision.scaling_scope.trim(),
-        budget_allocated: budgetNum,
+        reasoning: `${govDecision.justification.trim()} [Scope: ${govDecision.scaling_scope.trim()}, Allocated Budget: ₹${budgetNum}]`,
+        ...(realScore !== undefined && !isNaN(realScore) ? { score: realScore } : {}),
       });
-      alert("Official Government Scale Decision recorded and logged into Platform Audit Trail!");
-      loadPilot();
+      setActionSuccess("Official Scale Decision recorded in PostgreSQL and logged to Platform Audit Trail.");
+      await loadPilotData();
     } catch (err) {
-      alert(`Failed to record scale decision: ${err.message}`);
+      console.error("Failed to record scale decision:", err);
+      setActionError(err?.response?.data?.message || err?.message || "Failed to record scale decision.");
     } finally {
       setIsSubmittingDecision(false);
     }
   };
+
+  // Uncomplied items count for compliance badge and readiness check
+  const uncompliedCount = complianceList.filter((c) => c.status !== "COMPLIED").length;
 
   return (
     <AppLayout role="government">
@@ -404,14 +711,22 @@ function ChallengePilot() {
           transition={{ duration: 0.35 }}
           className="mb-8"
         >
-          <button
-            type="button"
-            onClick={() => navigate("/government/dashboard")}
-            className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </button>
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              type="button"
+              onClick={() => {
+                if (challenge?.id && location.pathname.includes("/challenges/")) {
+                  navigate(`/government/challenges/${challenge.id}/applications`);
+                } else {
+                  navigate("/government/dashboard");
+                }
+              }}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {challenge?.id && location.pathname.includes("/challenges/") ? "Back to Challenge Applications" : "Back to Dashboard"}
+            </button>
+          </div>
 
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -420,1032 +735,1290 @@ function ChallengePilot() {
                 Live Pilot Sandbox
               </div>
 
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                {pilot?.challenge?.title || "Operational Pilot Execution Workspace"}
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl text-slate-900 dark:text-white">
+                {pilot?.challenge?.title || challenge?.title || "Operational Pilot Execution Workspace"}
               </h1>
 
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Startup: <span className="font-semibold text-slate-900 dark:text-white">{pilot?.startup?.name || "MediQueue AI"}</span> · Location: {pilot?.location || "Pune Urban Center"}
-              </p>
+              {pilot ? (
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  Startup:{" "}
+                  <span className="font-semibold text-slate-900 dark:text-white">
+                    {pilot?.startup?.company_name || "Assigned Startup"}
+                  </span>{" "}
+                  · Location: {pilot?.location || "Not specified"}
+                </p>
+              ) : (
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  Challenge Pilot Lifecycle & Performance Management
+                </p>
+              )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              {pilot?.status === "PLANNED" && (
-                <button
-                  type="button"
-                  onClick={handleStartPilot}
-                  disabled={isSaving}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-semibold text-white shadow hover:bg-emerald-500"
-                >
-                  <Play className="h-3.5 w-3.5" /> Start Pilot Sandbox
-                </button>
-              )}
+            {pilot && (
+              <div className="flex flex-wrap items-center gap-2">
+                {pilot?.status === "PLANNED" && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleStartPilot}
+                      disabled={isSaving}
+                      className="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-semibold text-white shadow hover:bg-emerald-500 disabled:opacity-60"
+                    >
+                      <Play className="h-3.5 w-3.5" /> Start Pilot Sandbox
+                    </button>
 
-              {pilot?.status === "RUNNING" && (
-                <button
-                  type="button"
-                  onClick={handleCompletePilot}
-                  disabled={isSaving}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white shadow hover:bg-blue-500"
-                >
-                  <CheckCheck className="h-3.5 w-3.5" /> Conclude & Validate
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={handleRunBrain4Analysis}
-                disabled={isAnalyzing}
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-semibold text-white shadow hover:bg-indigo-500 disabled:opacity-60"
-              >
-                {isAnalyzing ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Sparkles className="h-3.5 w-3.5" />
+                    {uncompliedCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowOverrideModal(true)}
+                        className="inline-flex h-10 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 text-xs font-semibold text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                      >
+                        <ShieldAlert className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                        Authorize Override
+                      </button>
+                    )}
+                  </>
                 )}
-                Brain 4 Pilot Intelligence
-              </button>
-            </div>
+
+                {pilot?.status === "RUNNING" && (
+                  <button
+                    type="button"
+                    onClick={handleCompletePilot}
+                    disabled={isSaving}
+                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white shadow hover:bg-blue-500 disabled:opacity-60"
+                  >
+                    <CheckCheck className="h-3.5 w-3.5" /> Conclude & Validate
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleRunBrain4Analysis}
+                  disabled={isAnalyzing}
+                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-semibold text-white shadow hover:bg-indigo-500 disabled:opacity-60"
+                >
+                  {isAnalyzing ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  Brain 4 Pilot Intelligence
+                </button>
+              </div>
+            )}
           </div>
         </motion.div>
 
-        {/* METRIC HIGHLIGHTS */}
-        <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-xs text-slate-400">Pilot Status</p>
-            <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
-              {pilot?.status || "RUNNING"}
-            </p>
-            <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">
-              Active Milestone Sandbox
-            </p>
-          </div>
+        {/* PILOT STATUS FILTER & SELECTION TOOLBAR (Shown on /government/pilots) */}
+        {!isChallengeRoute && (
+          <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              {/* Status Filter Tabs */}
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                {pilotStatusTabs.map((tab) => {
+                  const isActive = (statusParam || "ALL") === tab.id;
+                  const count =
+                    tab.id === "ALL"
+                      ? pilotsList.length
+                      : pilotsList.filter((p) => p.status === tab.id).length;
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-xs text-slate-400">Allocated Budget</p>
-            <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
-              {pilot?.budget ? `₹${Number(pilot.budget).toLocaleString("en-IN")}` : "Not specified"}
-            </p>
-            <p className="mt-1 text-[11px] text-slate-400">Milestone-linked escrow</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-xs text-slate-400">Milestones Progress</p>
-            <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
-              {pilot?.milestones?.filter((m) => m.status === "COMPLETED").length || 0} / {pilot?.milestones?.length || 0}
-            </p>
-            <p className="mt-1 text-[11px] text-indigo-600 dark:text-indigo-400">
-              {pilot?.milestones?.length
-                ? `${Math.round(((pilot?.milestones?.filter((m) => m.status === "COMPLETED").length || 0) / pilot.milestones.length) * 100)}% Completed`
-                : "No milestones recorded"}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-xs text-slate-400">Tracked KPIs</p>
-            <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
-              {pilot?.kpis?.length || 0} Metrics
-            </p>
-            <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">
-              {pilot?.kpis?.length ? "Telemetry Active" : "No KPIs configured"}
-            </p>
-          </div>
-        </div>
-
-        {/* NAVIGATION TABS */}
-        <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800">
-          <button
-            type="button"
-            onClick={() => setActiveTab("overview")}
-            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-              activeTab === "overview"
-                ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
-                : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            <LayoutDashboard className="h-4 w-4 text-sky-500" />
-            Sandbox Overview
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("kpis")}
-            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-              activeTab === "kpis"
-                ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
-                : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            <BarChart2 className="h-4 w-4 text-cyan-500" />
-            KPIs & Measurements ({pilot?.kpis?.length || 0})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("milestones")}
-            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-              activeTab === "milestones"
-                ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
-                : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            <Flag className="h-4 w-4 text-violet-500" />
-            Milestones ({pilot?.milestones?.length || 0})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("compliance")}
-            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-              activeTab === "compliance"
-                ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
-                : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            <ShieldCheck className="h-4 w-4 text-emerald-500" />
-            Compliance & Security ({complianceList.length})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("issues")}
-            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-              activeTab === "issues"
-                ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
-                : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
-            Live Issues & Incidents ({issuesList.length})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("feedback")}
-            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-              activeTab === "feedback"
-                ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
-                : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            <Star className="h-4 w-4 text-amber-500" />
-            Beneficiary Feedback ({feedbackList.length})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("ai-intelligence")}
-            className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-              activeTab === "ai-intelligence"
-                ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
-                : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            }`}
-          >
-            <Sparkles className="h-4 w-4 text-indigo-500" />
-            Brain 4 Scaling Advisory
-          </button>
-        </div>
-
-        {/* TAB 1: OVERVIEW */}
-        {activeTab === "overview" && (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="text-base font-bold">Pilot Objectives & Scope</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-                {pilot?.challenge?.desired_outcome ||
-                  "Deployment and empirical validation of automated triage and queue scheduling algorithms within municipal hospital facilities."}
-              </p>
-
-              <div className="mt-6 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Execution Site</span>
-                  <span className="font-semibold">{pilot?.location || "Pune Civic Hospital"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Start Date</span>
-                  <span className="font-semibold">{pilot?.start_date ? new Date(pilot.start_date).toLocaleDateString() : "01 Oct 2026"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Target End Date</span>
-                  <span className="font-semibold">{pilot?.end_date ? new Date(pilot.end_date).toLocaleDateString() : "30 Nov 2026"}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center gap-2">
-                <Lock className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-                <h3 className="text-base font-bold">Data & IP Governance Terms</h3>
-              </div>
-              <p className="mt-2 text-xs text-slate-400">
-                Statutory procurement parameters and data rights binding this pilot sandbox deployment.
-              </p>
-
-              <div className="mt-5 space-y-3">
-                <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50">
-                  <span className="text-xs text-slate-500">Data Classification</span>
-                  <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-                    {pilot?.challenge?.data_classification || "RESTRICTED"}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50">
-                  <span className="text-xs text-slate-500">IP Ownership</span>
-                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                    {pilot?.challenge?.ip_ownership || "STARTUP_OWNED_GOV_LICENSE"}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50">
-                  <span className="text-xs text-slate-500">Data Retention Period</span>
-                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                    {pilot?.challenge?.data_retention_period || "3 Years Post-Pilot"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: KPIS */}
-        {activeTab === "kpis" && (
-          <div className="space-y-6">
-            <form onSubmit={handleAddKpi} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="text-sm font-bold mb-3">Add Custom Pilot KPI</h3>
-              <div className="grid gap-3 sm:grid-cols-4">
-                <input
-                  type="text"
-                  placeholder="Metric name (e.g., Wait time)"
-                  value={newKpi.name}
-                  onChange={(e) => setNewKpi({ ...newKpi, name: e.target.value })}
-                  className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Unit (e.g., %, mins)"
-                  value={newKpi.unit}
-                  onChange={(e) => setNewKpi({ ...newKpi, unit: e.target.value })}
-                  className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
-                />
-                <input
-                  type="number"
-                  placeholder="Baseline"
-                  value={newKpi.baseline}
-                  onChange={(e) => setNewKpi({ ...newKpi, baseline: e.target.value })}
-                  className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
-                />
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
-                >
-                  <Plus className="h-4 w-4" /> Save KPI
-                </button>
-              </div>
-            </form>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              {(pilot?.kpis || [
-                { id: "1", name: "Patient Queue Wait Time", unit: "mins", baseline: 45, target: 15 },
-                { id: "2", name: "Daily Throughput Capacity", unit: "patients", baseline: 120, target: 200 },
-              ]).map((kpi) => (
-                <div key={kpi.id} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold">{kpi.name}</h4>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold dark:bg-slate-800">
-                      Unit: {kpi.unit}
-                    </span>
-                  </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs">
-                    <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/50">
-                      <p className="text-slate-400">Baseline</p>
-                      <p className="font-bold">{kpi.baseline} {kpi.unit}</p>
-                    </div>
-                    <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/50">
-                      <p className="text-slate-400">Target</p>
-                      <p className="font-bold text-emerald-600 dark:text-emerald-400">{kpi.target} {kpi.unit}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: MILESTONES */}
-        {activeTab === "milestones" && (
-          <div className="space-y-6">
-            <form onSubmit={handleAddMilestone} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="text-sm font-bold mb-3">Add Pilot Milestone</h3>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <input
-                  type="text"
-                  placeholder="Milestone title"
-                  value={newMilestone.title}
-                  onChange={(e) => setNewMilestone({ ...newMilestone, title: e.target.value })}
-                  className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Deliverable output description"
-                  value={newMilestone.deliverables}
-                  onChange={(e) => setNewMilestone({ ...newMilestone, deliverables: e.target.value })}
-                  className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
-                />
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
-                >
-                  <Plus className="h-4 w-4" /> Add Milestone
-                </button>
-              </div>
-            </form>
-
-            <div className="space-y-3">
-              {(pilot?.milestones || [
-                { id: "1", title: "M1: Hardware Gateway Deployment & Onsite Testing", status: "COMPLETED", due_date: "15 Oct 2026" },
-                { id: "2", title: "M2: Live Queue Optimization & Doctor Workstation Sync", status: "IN_PROGRESS", due_date: "05 Nov 2026" },
-                { id: "3", title: "M3: 30-Day Empirical Validation Report", status: "PLANNED", due_date: "30 Nov 2026" },
-              ]).map((m, idx) => (
-                <div key={m.id || idx} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold dark:bg-slate-800">
-                      #{idx + 1}
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold">{m.title}</p>
-                      <p className="text-xs text-slate-400">Due: {m.due_date ? new Date(m.due_date).toLocaleDateString() : "30 Nov 2026"}</p>
-                    </div>
-                  </div>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                    m.status === "COMPLETED" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                  }`}>
-                    {m.status || "PLANNED"}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: COMPLIANCE & SECURITY */}
-        {activeTab === "compliance" && (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Security & Statutory Compliance Review</h3>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Department officers can review and audit mandatory cybersecurity and statutory compliance criteria.
-                  </p>
-                </div>
-                <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-                  {complianceList.filter((c) => c.status === "SATISFIED").length} / {complianceList.length} Satisfied
-                </span>
-              </div>
-
-              <div className="mt-5 space-y-3">
-                {complianceList.length === 0 ? (
-                  <p className="text-xs text-slate-400">Loading compliance checkpoints...</p>
-                ) : (
-                  complianceList.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-800/40"
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => handleStatusFilterChange(tab.id)}
+                      className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
+                        isActive
+                          ? tab.id === "AT_RISK"
+                            ? "bg-amber-600 text-white shadow-sm shadow-amber-600/20"
+                            : "bg-indigo-600 text-white shadow-sm shadow-indigo-600/20"
+                          : "bg-slate-50 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                      }`}
                     >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-bold text-slate-900 dark:text-white">{item.title}</h4>
-                          {item.is_mandatory && (
-                            <span className="rounded bg-red-100 px-1.5 py-0.5 text-[9px] font-bold text-red-700 dark:bg-red-950/60 dark:text-red-300">
-                              Mandatory
-                            </span>
-                          )}
-                        </div>
-                        <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{item.description}</p>
-                        {item.evidence_note && (
-                          <p className="mt-1.5 text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">
-                            Note: {item.evidence_note}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateComplianceStatus(item, "SATISFIED")}
-                          className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition ${
-                            item.status === "SATISFIED"
-                              ? "bg-emerald-600 text-white"
-                              : "border border-slate-200 bg-white text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-900"
-                          }`}
-                        >
-                          Satisfied
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateComplianceStatus(item, "IN_PROGRESS")}
-                          className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition ${
-                            item.status === "IN_PROGRESS"
-                              ? "bg-amber-500 text-white"
-                              : "border border-slate-200 bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-900"
-                          }`}
-                        >
-                          In Review
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateComplianceStatus(item, "FAILED")}
-                          className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition ${
-                            item.status === "FAILED"
-                              ? "bg-red-600 text-white"
-                              : "border border-slate-200 bg-white text-slate-600 hover:bg-red-50 hover:text-red-700 dark:border-slate-700 dark:bg-slate-900"
-                          }`}
-                        >
-                          Remediate
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
+                      {tab.id === "AT_RISK" && <AlertTriangle className="h-3.5 w-3.5" />}
+                      {tab.label}
+                      <span
+                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : "bg-slate-200/80 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
+
+              {/* Active Pilot Selector (when multiple pilots in current filter) */}
+              {displayedPilots.length > 1 && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                    Active Pilot:
+                  </span>
+                  <select
+                    value={pilot?.id || ""}
+                    onChange={(e) => handleSelectPilotFromList(e.target.value)}
+                    className="h-9 max-w-[280px] truncate rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white cursor-pointer"
+                  >
+                    {displayedPilots.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.startup?.company_name || p.startup?.name || "Startup"} — {p.challenge?.title || "Pilot"} ({formatPilotStatus(p.status)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* TAB 5: PILOT ISSUES & INCIDENT TRACKER */}
-        {activeTab === "issues" && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-amber-500" />
-                  Live Operational Issues & Sandbox Incident Log
+        {/* FEEDBACK BANNERS */}
+        {actionSuccess && (
+          <div className="mb-6 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>{actionSuccess}</span>
+            </div>
+            <button
+              onClick={() => setActionSuccess("")}
+              className="text-xs font-semibold underline text-emerald-700 hover:text-emerald-900"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {actionError && (
+          <div className="mb-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-300">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 shrink-0" />
+              <span>{actionError}</span>
+            </div>
+            <button
+              onClick={() => setActionError("")}
+              className="text-xs font-semibold underline text-red-700 hover:text-red-900"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {/* LOADING STATE */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-16 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <p className="mt-4 text-sm font-medium text-slate-600 dark:text-slate-300">
+              Loading pilot project data from PostgreSQL...
+            </p>
+          </div>
+        )}
+
+        {/* ERROR STATE */}
+        {!loading && fetchError && (
+          <div className="rounded-2xl border border-red-200 bg-red-50/50 p-8 text-center dark:border-red-900/40 dark:bg-red-950/20 mb-6">
+            <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
+            <h3 className="mt-3 text-lg font-bold text-red-900 dark:text-red-300">
+              Unable to Load Pilot Project
+            </h3>
+            <p className="mt-2 text-sm text-red-700 dark:text-red-400 max-w-md mx-auto">
+              {fetchError}
+            </p>
+            <button
+              type="button"
+              onClick={loadPilotData}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-700 transition"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {/* NO PILOT YET STATE / FILTERED EMPTY STATE */}
+        {!loading && !fetchError && !pilot && (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 mb-6">
+            {statusParam ? (
+              <>
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
+                  <AlertTriangle className="h-7 w-7" />
+                </div>
+                <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
+                  No {statusParam === "AT_RISK" ? "At-Risk" : formatPilotStatus(statusParam)} Pilots Found
                 </h3>
-                <p className="mt-1 text-xs text-slate-400">
-                  Track actual blockers, telemetry failures, and site deployment incidents during this pilot execution.
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                  There are currently no active sandbox pilots matching status filter{" "}
+                  <strong className="text-slate-700 dark:text-slate-200">
+                    {formatPilotStatus(statusParam)} ({statusParam})
+                  </strong>.
+                </p>
+                <div className="mt-6 flex justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/government/pilots")}
+                    className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500 transition"
+                  >
+                    <FlaskConical className="h-4 w-4" />
+                    View All Department Pilots
+                  </button>
+                </div>
+              </>
+            ) : selectedApp ? (
+              <>
+                <FlaskConical className="mx-auto h-14 w-14 text-indigo-400 dark:text-indigo-600" />
+                <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
+                  No Pilot Project Created Yet
+                </h3>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
+                  A startup application from{" "}
+                  <b className="text-slate-900 dark:text-white">
+                    {selectedApp.startup?.company_name || "Selected Startup"}
+                  </b>{" "}
+                  has been officially selected for this challenge. You can now instantiate the live pilot sandbox.
+                </p>
+
+                <div className="mt-6 flex justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(true)}
+                    className="btn-primary inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Pilot Project
+                  </button>
+
+                  <Link
+                    to={`/government/challenges/${challenge?.id || routeId}/applications`}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                  >
+                    <FileText className="h-4 w-4" />
+                    View Applications
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <>
+                <FlaskConical className="mx-auto h-14 w-14 text-indigo-400 dark:text-indigo-600" />
+                <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
+                  No Pilot Project Created Yet
+                </h3>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
+                  A pilot project can only be created once a startup application has been officially awarded the SELECTED status in the Pre-Award Decision stage.
+                </p>
+
+                <div className="mt-6 flex justify-center gap-3">
+                  <Link
+                    to={`/government/challenges/${challenge?.id || routeId || ""}/decision`}
+                    className="btn-primary inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition"
+                  >
+                    Go to Pre-Award Decision
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ACTIVE PILOT DASHBOARD */}
+        {!loading && !fetchError && pilot && (
+          <>
+            {/* METRIC HIGHLIGHTS */}
+            <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Pilot Status
+                </p>
+                <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
+                  {formatPilotStatus(pilot.status)}
+                </p>
+                <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  {pilot.status === "PLANNED"
+                    ? "Onboarding & Readiness Check"
+                    : pilot.status === "RUNNING"
+                    ? "Active Operational Sandbox"
+                    : pilot.status === "COMPLETED"
+                    ? "Successfully Concluded"
+                    : "Live Execution"}
                 </p>
               </div>
 
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Allocated Budget
+                </p>
+                <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
+                  {pilot.budget ? `₹${Number(pilot.budget).toLocaleString("en-IN")}` : "Not specified"}
+                </p>
+                <p className="mt-1 text-[11px] text-slate-400">Milestone-linked escrow</p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Milestones Progress
+                </p>
+                <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
+                  {pilot.milestones?.filter((m) => m.status === "COMPLETED" || m.completion_percentage === 100).length || 0} /{" "}
+                  {pilot.milestones?.length || 0}
+                </p>
+                <p className="mt-1 text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">
+                  {pilot.milestones?.length
+                    ? `${Math.round(
+                        ((pilot.milestones?.filter((m) => m.status === "COMPLETED" || m.completion_percentage === 100).length || 0) /
+                          pilot.milestones.length) *
+                          100
+                      )}% Completed`
+                    : "No milestones configured"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  Tracked KPIs
+                </p>
+                <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
+                  {pilot.kpis?.length || 0} Metrics
+                </p>
+                <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  {pilot.kpis?.length ? "Telemetry Active" : "No KPIs configured"}
+                </p>
+              </div>
+            </div>
+
+            {/* NAVIGATION TABS */}
+            <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800">
               <button
                 type="button"
-                onClick={() => setShowNewIssueForm((prev) => !prev)}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow hover:bg-indigo-700"
+                onClick={() => setActiveTab("overview")}
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+                  activeTab === "overview"
+                    ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                    : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                }`}
               >
-                <Plus className="h-4 w-4" />
-                {showNewIssueForm ? "Close Form" : "Report Issue"}
+                <LayoutDashboard className="h-4 w-4 text-sky-500" />
+                Sandbox Overview
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("kpis")}
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+                  activeTab === "kpis"
+                    ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                    : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                }`}
+              >
+                <BarChart2 className="h-4 w-4 text-cyan-500" />
+                KPIs & Measurements ({pilot?.kpis?.length || 0})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("milestones")}
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+                  activeTab === "milestones"
+                    ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                    : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                }`}
+              >
+                <Flag className="h-4 w-4 text-violet-500" />
+                Milestones ({pilot?.milestones?.length || 0})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("compliance")}
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+                  activeTab === "compliance"
+                    ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                    : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                }`}
+              >
+                <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                Compliance & Security ({complianceList.length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("issues")}
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+                  activeTab === "issues"
+                    ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                    : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                }`}
+              >
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                Live Issues & Incidents ({issuesList.length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("feedback")}
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+                  activeTab === "feedback"
+                    ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                    : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                }`}
+              >
+                <Star className="h-4 w-4 text-amber-500" />
+                Beneficiary Feedback ({feedbackList.length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab("ai-intelligence")}
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+                  activeTab === "ai-intelligence"
+                    ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                    : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                }`}
+              >
+                <Sparkles className="h-4 w-4 text-indigo-500" />
+                Brain 4 Scaling Advisory
               </button>
             </div>
 
-            {showNewIssueForm && (
-              <motion.form
-                onSubmit={handleCreateIssue}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl border border-amber-200 bg-amber-50/40 p-6 dark:border-amber-900/40 dark:bg-amber-950/20"
-              >
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Record Pilot Incident / Blocker</h4>
-                <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                  <div className="sm:col-span-2">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Issue Title *</label>
+            {/* TAB 1: OVERVIEW */}
+            {activeTab === "overview" && (
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Pilot Scope & Execution Site</h3>
+                  <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                    {pilot?.challenge?.desired_outcome ||
+                      "Operational deployment and empirical verification of startup solution in government facility sandbox."}
+                  </p>
+
+                  <div className="mt-6 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-800 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Execution Site</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {pilot?.location || "Not specified"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Start Date</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {pilot?.start_date ? new Date(pilot.start_date).toLocaleDateString() : "Not set"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Target End Date</span>
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        {pilot?.end_date ? new Date(pilot.end_date).toLocaleDateString() : "Not set"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Data & IP Governance Terms</h3>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-400">
+                    Statutory procurement parameters and data rights binding this pilot sandbox deployment.
+                  </p>
+
+                  <div className="mt-5 space-y-3">
+                    <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50">
+                      <span className="text-xs text-slate-500">Data Classification</span>
+                      <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                        {pilot?.data_classification || pilot?.challenge?.data_classification || "RESTRICTED"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50">
+                      <span className="text-xs text-slate-500">IP Ownership</span>
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        {pilot?.ip_ownership || pilot?.challenge?.ip_ownership || "STARTUP_OWNED"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50">
+                      <span className="text-xs text-slate-500">Data Retention Period</span>
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        {pilot?.data_retention_period || pilot?.challenge?.data_retention_period || "3 Years Post-Pilot"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: KPIS */}
+            {activeTab === "kpis" && (
+              <div className="space-y-6">
+                <form
+                  onSubmit={handleAddKpi}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm"
+                >
+                  <h3 className="text-sm font-bold mb-3 text-slate-900 dark:text-white">Add Custom Pilot KPI</h3>
+                  <div className="grid gap-3 sm:grid-cols-5">
                     <input
                       type="text"
-                      value={newIssue.title}
-                      onChange={(e) => setNewIssue({ ...newIssue, title: e.target.value })}
-                      placeholder="e.g., Sensor connectivity timeout in Ward 4 Gateway"
-                      className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950"
+                      placeholder="Metric name (e.g. Queue Wait Time)"
+                      value={newKpi.name}
+                      onChange={(e) => setNewKpi({ ...newKpi, name: e.target.value })}
+                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white sm:col-span-2"
+                      required
+                    />
+                    <input
+                      type="text"
+                      placeholder="Unit (e.g. %, mins, count)"
+                      value={newKpi.unit}
+                      onChange={(e) => setNewKpi({ ...newKpi, unit: e.target.value })}
+                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                      required
+                    />
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="Baseline Value"
+                      value={newKpi.baseline_value}
+                      onChange={(e) => setNewKpi({ ...newKpi, baseline_value: e.target.value })}
+                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                      required
+                    />
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="Target Value"
+                      value={newKpi.target_value}
+                      onChange={(e) => setNewKpi({ ...newKpi, target_value: e.target.value })}
+                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                      required
+                    />
+                  </div>
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={isSaving}
+                      className="btn-primary inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+                    >
+                      <Plus className="h-4 w-4" /> Save KPI to PostgreSQL
+                    </button>
+                  </div>
+                </form>
+
+                {(!pilot?.kpis || pilot.kpis.length === 0) ? (
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+                    <BarChart2 className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
+                    <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      No KPIs Configured for this Pilot
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Use the form above to add verifiable quantitative metrics.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {pilot.kpis.map((kpi) => (
+                      <div
+                        key={kpi.id}
+                        className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm"
+                      >
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-white">{kpi.name}</h4>
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold dark:bg-slate-800 dark:text-slate-300">
+                            Unit: {kpi.unit}
+                          </span>
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs">
+                          <div className="rounded-xl bg-slate-50 p-2.5 dark:bg-slate-800/50">
+                            <p className="text-slate-400">Baseline</p>
+                            <p className="font-bold text-slate-900 dark:text-white mt-0.5">
+                              {kpi.baseline_value} {kpi.unit}
+                            </p>
+                          </div>
+                          <div className="rounded-xl bg-slate-50 p-2.5 dark:bg-slate-800/50">
+                            <p className="text-slate-400">Target</p>
+                            <p className="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                              {kpi.target_value} {kpi.unit}
+                            </p>
+                          </div>
+                        </div>
+                        {kpi.actual_value != null && (
+                          <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs flex justify-between">
+                            <span className="text-slate-400">Actual Value Measured:</span>
+                            <span className="font-bold text-blue-600 dark:text-blue-400">
+                              {kpi.actual_value} {kpi.unit}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 3: MILESTONES */}
+            {activeTab === "milestones" && (
+              <div className="space-y-6">
+                <form
+                  onSubmit={handleAddMilestone}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm"
+                >
+                  <h3 className="text-sm font-bold mb-3 text-slate-900 dark:text-white">Add Pilot Milestone</h3>
+                  <div className="grid gap-3 sm:grid-cols-4">
+                    <input
+                      type="text"
+                      placeholder="Milestone name (e.g. M1: Onsite Gateway Setup)"
+                      value={newMilestone.name}
+                      onChange={(e) => setNewMilestone({ ...newMilestone, name: e.target.value })}
+                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white sm:col-span-2"
+                      required
+                    />
+                    <input
+                      type="date"
+                      value={newMilestone.due_date}
+                      onChange={(e) => setNewMilestone({ ...newMilestone, due_date: e.target.value })}
+                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                      required
+                    />
+                    <input
+                      type="number"
+                      placeholder="Payment % (e.g. 30)"
+                      value={newMilestone.payment_percentage}
+                      onChange={(e) => setNewMilestone({ ...newMilestone, payment_percentage: e.target.value })}
+                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                    />
+                  </div>
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={isSaving}
+                      className="btn-primary inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+                    >
+                      <Plus className="h-4 w-4" /> Add Milestone
+                    </button>
+                  </div>
+                </form>
+
+                {(!pilot?.milestones || pilot.milestones.length === 0) ? (
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+                    <Flag className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
+                    <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      No Milestones Configured for this Pilot
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Use the form above to add delivery checkpoints.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {pilot.milestones.map((m, idx) => (
+                      <div
+                        key={m.id || idx}
+                        className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 shadow-sm"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-xs font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                            #{idx + 1}
+                          </span>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900 dark:text-white">{m.name}</p>
+                            <p className="text-xs text-slate-400">
+                              Due: {m.due_date ? new Date(m.due_date).toLocaleDateString() : "Not set"}
+                              {m.payment_percentage > 0 ? ` • Payment: ${m.payment_percentage}%` : ""}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                            m.status === "COMPLETED" || m.completion_percentage === 100
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                              : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                          }`}
+                        >
+                          {m.status || (m.completion_percentage === 100 ? "COMPLETED" : "PLANNED")}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 4: COMPLIANCE & SECURITY */}
+            {activeTab === "compliance" && (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                        Security & Statutory Compliance Checklist
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Audit mandatory cybersecurity and statutory compliance criteria before sandbox activation.
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                      {complianceList.filter((c) => c.status === "COMPLIED").length} / {complianceList.length} Complied
+                    </span>
+                  </div>
+
+                  <div className="mt-5 space-y-3">
+                    {complianceList.length === 0 ? (
+                      <p className="text-xs text-slate-400">No compliance items registered.</p>
+                    ) : (
+                      complianceList
+                        .slice((compliancePage - 1) * compliancePageSize, compliancePage * compliancePageSize)
+                        .map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-800/40"
+                          >
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                                  {item.item_name}
+                                </h4>
+                                <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                                  {item.category || "Statutory"}
+                                </span>
+                              </div>
+                              {item.description && (
+                                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{item.description}</p>
+                              )}
+                              {item.notes && (
+                                <p className="mt-1.5 text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">
+                                  Note: {item.notes}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateComplianceStatus(item, "COMPLIED")}
+                                className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition ${
+                                  item.status === "COMPLIED"
+                                    ? "bg-emerald-600 text-white"
+                                    : "border border-slate-200 bg-white text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-900"
+                                }`}
+                              >
+                                Complied
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateComplianceStatus(item, "PENDING")}
+                                className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition ${
+                                  item.status === "PENDING"
+                                    ? "bg-amber-500 text-white"
+                                    : "border border-slate-200 bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-900"
+                                }`}
+                              >
+                                Pending
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateComplianceStatus(item, "NON_COMPLIANT")}
+                                className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition ${
+                                  item.status === "NON_COMPLIANT"
+                                    ? "bg-red-600 text-white"
+                                    : "border border-slate-200 bg-white text-slate-600 hover:bg-red-50 hover:text-red-700 dark:border-slate-700 dark:bg-slate-900"
+                                }`}
+                              >
+                                Non-Compliant
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                    )}
+                  </div>
+
+                  {complianceList.length > 0 && (
+                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <Pagination
+                        currentPage={compliancePage}
+                        totalItems={complianceList.length}
+                        pageSize={compliancePageSize}
+                        pageSizeOptions={[4, 6, 12, 20]}
+                        onPageChange={setCompliancePage}
+                        onPageSizeChange={(size) => {
+                          setCompliancePageSize(size);
+                          setCompliancePage(1);
+                        }}
+                        itemName="checkpoints"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: PILOT ISSUES */}
+            {activeTab === "issues" && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-amber-500" />
+                      Live Operational Issues & Incident Log
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Track blockers, site incidents, and telemetry issues during this pilot execution.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowNewIssueForm((prev) => !prev)}
+                    className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow hover:bg-indigo-700 transition"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {showNewIssueForm ? "Close Form" : "Report Issue"}
+                  </button>
+                </div>
+
+                {showNewIssueForm && (
+                  <motion.form
+                    onSubmit={handleCreateIssue}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-2xl border border-amber-200 bg-amber-50/40 p-6 dark:border-amber-900/40 dark:bg-amber-950/20"
+                  >
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">Record Pilot Incident / Blocker</h4>
+                    <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                      <div className="sm:col-span-2">
+                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Issue Title *</label>
+                        <input
+                          type="text"
+                          value={newIssue.title}
+                          onChange={(e) => setNewIssue({ ...newIssue, title: e.target.value })}
+                          placeholder="e.g. Gateway connectivity timeout"
+                          className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Severity</label>
+                        <select
+                          value={newIssue.severity}
+                          onChange={(e) => setNewIssue({ ...newIssue, severity: e.target.value })}
+                          className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                        >
+                          <option value="LOW">LOW (Informational)</option>
+                          <option value="MEDIUM">MEDIUM (Operational impact)</option>
+                          <option value="HIGH">HIGH (Milestone delay risk)</option>
+                          <option value="CRITICAL">CRITICAL (System blocker)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Assigned To</label>
+                        <input
+                          type="text"
+                          value={newIssue.assigned_to}
+                          onChange={(e) => setNewIssue({ ...newIssue, assigned_to: e.target.value })}
+                          placeholder="e.g. Startup Technical Lead"
+                          className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Description</label>
+                        <input
+                          type="text"
+                          value={newIssue.description}
+                          onChange={(e) => setNewIssue({ ...newIssue, description: e.target.value })}
+                          placeholder="Context and observed impact"
+                          className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowNewIssueForm(false)}
+                        className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSaving}
+                        className="btn-primary rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700"
+                      >
+                        Record Issue
+                      </button>
+                    </div>
+                  </motion.form>
+                )}
+
+                <div className="grid gap-4">
+                  {issuesList.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+                      <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-500" />
+                      <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">Zero Active Pilot Issues</p>
+                      <p className="mt-1 text-xs text-slate-400">All deployment systems operating normally.</p>
+                    </div>
+                  ) : (
+                    issuesList
+                      .slice((issuesPage - 1) * issuesPageSize, issuesPage * issuesPageSize)
+                      .map((issue) => (
+                        <div
+                          key={issue.id}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 shadow-sm"
+                        >
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-bold text-slate-900 dark:text-white">{issue.title}</h4>
+                              <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold dark:bg-slate-800">
+                                {issue.severity}
+                              </span>
+                            </div>
+                            {issue.description && (
+                              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{issue.description}</p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                                issue.status === "RESOLVED" || issue.status === "CLOSED"
+                                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                                  : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                              }`}
+                            >
+                              {issue.status}
+                            </span>
+
+                            {issue.status !== "RESOLVED" && (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateIssueStatus(issue.id, "RESOLVED")}
+                                className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500"
+                              >
+                                Mark Resolved
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 6: BENEFICIARY FEEDBACK */}
+            {activeTab === "feedback" && (
+              <div className="space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+                  <div className="border-b border-slate-100 pb-4 dark:border-slate-800">
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                      Field & Beneficiary Satisfaction Reviews
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Direct user ratings and qualitative feedback submitted from on-ground trials.
+                    </p>
+                  </div>
+
+                  {feedbackList.length === 0 ? (
+                    <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+                      <Star className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
+                      <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        No Beneficiary Feedback Recorded Yet
+                      </p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Feedbacks submitted by citizens and end-users during active trials will appear here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                      {feedbackList
+                        .slice((feedbackPage - 1) * feedbackPageSize, feedbackPage * feedbackPageSize)
+                        .map((fb) => (
+                          <div
+                            key={fb.id}
+                            className="rounded-xl border border-slate-100 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-800/40"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs">{"⭐".repeat(fb.rating || 5)}</span>
+                              <span className="text-[10px] text-slate-400">
+                                {fb.created_at ? new Date(fb.created_at).toLocaleDateString() : "Recent"}
+                              </span>
+                            </div>
+                            <p className="mt-2 text-xs leading-5 text-slate-700 dark:text-slate-300">
+                              "{fb.comments || fb.comment || "Beneficiary feedback recorded."}"
+                            </p>
+                            <p className="mt-2 text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                              — {fb.beneficiary_type || fb.citizen_name || "Beneficiary"}
+                            </p>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 7: AI INTELLIGENCE & SCALING */}
+            {activeTab === "ai-intelligence" && (
+              <div className="space-y-6">
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                      Brain 4 Empirical Scaling Intelligence
+                    </h3>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-400">
+                    AI analytical advisory synthesizing milestone achievements, KPI performance, and scale readiness.
+                  </p>
+
+                  {aiAnalysis && (
+                    <div className="mt-4 rounded-xl bg-slate-50 p-4 text-xs leading-5 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300">
+                      <p className="font-semibold text-slate-900 dark:text-white mb-1">Empirical Analysis:</p>
+                      <p>{aiAnalysis.summary || aiAnalysis.analysis || JSON.stringify(aiAnalysis)}</p>
+                    </div>
+                  )}
+
+                  {/* OFFICIAL SCALING DECISION FORM */}
+                  <form onSubmit={handleRecordOfficialScaleDecision} className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-800">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4">
+                      Record Official Government Scaling Decision
+                    </h4>
+
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div>
+                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Decision Outcome *</label>
+                        <select
+                          value={govDecision.decision}
+                          onChange={(e) => setGovDecision({ ...govDecision, decision: e.target.value })}
+                          className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                          required
+                        >
+                          <option value="">Select official decision</option>
+                          <option value="SCALE">SCALE (Full Department Rollout)</option>
+                          <option value="EXTEND">EXTEND (Further trial period)</option>
+                          <option value="STOP">STOP (Do not scale)</option>
+                        </select>
+                        {decisionErrors.decision && <p className="mt-1 text-[10px] text-red-500">{decisionErrors.decision}</p>}
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Scaling Scope *</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 5 District Municipal Hospitals"
+                          value={govDecision.scaling_scope}
+                          onChange={(e) => setGovDecision({ ...govDecision, scaling_scope: e.target.value })}
+                          className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                          required
+                        />
+                        {decisionErrors.scaling_scope && <p className="mt-1 text-[10px] text-red-500">{decisionErrors.scaling_scope}</p>}
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Allocated Budget (₹) *</label>
+                        <input
+                          type="number"
+                          placeholder="e.g. 5000000"
+                          value={govDecision.budget_allocated}
+                          onChange={(e) => setGovDecision({ ...govDecision, budget_allocated: e.target.value })}
+                          className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                          required
+                        />
+                        {decisionErrors.budget_allocated && <p className="mt-1 text-[10px] text-red-500">{decisionErrors.budget_allocated}</p>}
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Official Justification *</label>
+                      <textarea
+                        rows={3}
+                        value={govDecision.justification}
+                        onChange={(e) => setGovDecision({ ...govDecision, justification: e.target.value })}
+                        placeholder="Detail empirical findings, compliance verification, and rationale..."
+                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                        required
+                      />
+                      {decisionErrors.justification && <p className="mt-1 text-[10px] text-red-500">{decisionErrors.justification}</p>}
+                    </div>
+
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={isSubmittingDecision}
+                        className="btn-primary inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+                      >
+                        {isSubmittingDecision ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                        Record Scale Decision
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* MODAL: CREATE PILOT PROJECT */}
+        <AnimatePresence>
+          {showCreateModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+              >
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    Instantiate Live Pilot Sandbox
+                  </h3>
+                  <button
+                    onClick={() => setShowCreateModal(false)}
+                    className="text-xs font-semibold text-slate-400 hover:text-slate-600"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form onSubmit={handleCreatePilot} className="mt-4 space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Selected Startup</label>
+                    <input
+                      type="text"
+                      disabled
+                      value={selectedApp?.startup?.company_name || "Selected Startup"}
+                      className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Pilot Site Location *</label>
+                    <input
+                      type="text"
+                      value={createForm.location}
+                      onChange={(e) => setCreateForm({ ...createForm, location: e.target.value })}
+                      placeholder="e.g. Pune Urban Health Center"
+                      className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                       required
                     />
                   </div>
 
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Start Date *</label>
+                      <input
+                        type="date"
+                        value={createForm.start_date}
+                        onChange={(e) => setCreateForm({ ...createForm, start_date: e.target.value })}
+                        className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">End Date *</label>
+                      <input
+                        type="date"
+                        value={createForm.end_date}
+                        onChange={(e) => setCreateForm({ ...createForm, end_date: e.target.value })}
+                        className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                        required
+                      />
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Severity</label>
-                    <select
-                      value={newIssue.severity}
-                      onChange={(e) => setNewIssue({ ...newIssue, severity: e.target.value })}
-                      className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950"
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Pilot Budget (₹) *</label>
+                    <input
+                      type="number"
+                      value={createForm.budget}
+                      onChange={(e) => setCreateForm({ ...createForm, budget: e.target.value })}
+                      placeholder="e.g. 500000"
+                      className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                      required
+                    />
+                  </div>
+
+                  <div className="mt-6 flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateModal(false)}
+                      className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
                     >
-                      <option value="LOW">LOW (Informational / Minor)</option>
-                      <option value="MEDIUM">MEDIUM (Operational impact)</option>
-                      <option value="HIGH">HIGH (Milestone delay risk)</option>
-                      <option value="CRITICAL">CRITICAL (System blocker)</option>
-                    </select>
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSaving}
+                      className="btn-primary rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow hover:bg-blue-700 disabled:opacity-60"
+                    >
+                      {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm & Create Pilot"}
+                    </button>
                   </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* MODAL: READINESS OVERRIDE */}
+        <AnimatePresence>
+          {showOverrideModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="w-full max-w-md rounded-2xl border border-amber-200 bg-white p-6 shadow-2xl dark:border-amber-900/40 dark:bg-slate-900"
+              >
+                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-3">
+                  <ShieldAlert className="h-5 w-5" />
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    Administrative Readiness Override
+                  </h3>
                 </div>
 
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Assigned To</label>
-                    <input
-                      type="text"
-                      value={newIssue.assigned_to}
-                      onChange={(e) => setNewIssue({ ...newIssue, assigned_to: e.target.value })}
-                      placeholder="e.g. Startup Tech Lead / Municipal Liaison"
-                      className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950"
-                    />
-                  </div>
+                <p className="text-xs leading-5 text-slate-600 dark:text-slate-300">
+                  There are currently <b>{uncompliedCount}</b> unverified compliance checkpoints. Starting the pilot requires an explicit administrative sanction and justification recorded in the platform audit trail.
+                </p>
 
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Description</label>
-                    <input
-                      type="text"
-                      value={newIssue.description}
-                      onChange={(e) => setNewIssue({ ...newIssue, description: e.target.value })}
-                      placeholder="Context, symptoms, or observed impact"
-                      className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950"
-                    />
-                  </div>
+                <div className="mt-4">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Override Justification *
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={overrideReason}
+                    onChange={(e) => setOverrideReason(e.target.value)}
+                    placeholder="State reason for starting sandbox prior to full compliance sign-off..."
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white p-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                    required
+                  />
                 </div>
 
-                <div className="mt-4 flex justify-end gap-2">
+                <div className="mt-6 flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
                   <button
                     type="button"
-                    onClick={() => setShowNewIssueForm(false)}
+                    onClick={() => setShowOverrideModal(false)}
                     className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
                   >
                     Cancel
                   </button>
                   <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="rounded-xl bg-slate-900 px-5 py-2 text-xs font-bold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+                    type="button"
+                    onClick={handleConfirmStartWithOverride}
+                    disabled={isSaving || !overrideReason.trim()}
+                    className="rounded-xl bg-amber-600 px-5 py-2 text-xs font-bold text-white shadow hover:bg-amber-700 disabled:opacity-60"
                   >
-                    Record Issue
+                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm & Start Pilot"}
                   </button>
                 </div>
-              </motion.form>
-            )}
-
-            <div className="grid gap-4">
-              {issuesList.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
-                  <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-500" />
-                  <p className="mt-3 text-sm font-semibold">Zero Active Pilot Issues</p>
-                  <p className="mt-1 text-xs text-slate-400">All deployment systems operating within nominal operational parameters.</p>
-                </div>
-              ) : (
-                issuesList.map((issue) => (
-                  <div
-                    key={issue.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`rounded px-2 py-0.5 text-[10px] font-bold ${
-                            issue.severity === "CRITICAL"
-                              ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
-                              : issue.severity === "HIGH"
-                              ? "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300"
-                              : issue.severity === "MEDIUM"
-                              ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-                              : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                          }`}
-                        >
-                          {issue.severity}
-                        </span>
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">{issue.title}</h4>
-                      </div>
-                      {issue.description && (
-                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400">{issue.description}</p>
-                      )}
-                      <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
-                        <span>Assigned: <strong className="text-slate-700 dark:text-slate-300">{issue.assigned_to || "Unassigned"}</strong></span>
-                        <span>Reported: {new Date(issue.reported_at || issue.created_at).toLocaleDateString()}</span>
-                        {issue.resolution && (
-                          <span className="text-emerald-600 dark:text-emerald-400">Resolution: {issue.resolution}</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                          issue.status === "RESOLVED" || issue.status === "CLOSED"
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                            : issue.status === "IN_PROGRESS"
-                            ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-                            : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-                        }`}
-                      >
-                        {issue.status}
-                      </span>
-
-                      {issue.status !== "RESOLVED" && (
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateIssueStatus(issue.id, "RESOLVED")}
-                          className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500"
-                        >
-                          Mark Resolved
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
+              </motion.div>
             </div>
-          </div>
-        )}
-
-        {/* TAB 6: BENEFICIARY FEEDBACK */}
-        {activeTab === "feedback" && (
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-              <div className="border-b border-slate-100 pb-4 dark:border-slate-800">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Field & Beneficiary Satisfaction Reviews</h3>
-                <p className="mt-1 text-xs text-slate-400">
-                  Direct user ratings, qualitative comments, and deployment testimonials recorded from on-ground trials.
-                </p>
-              </div>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                {(feedbackList.length > 0 ? feedbackList : [
-                  { id: "1", rating: 5, comment: "Queue triage accuracy reached 96% within the first 14 days of operational deployment.", respondent_role: "Medical Superintendent", created_at: new Date().toISOString() },
-                  { id: "2", rating: 4, comment: "Ground staff found the Android telemetry interface simple to navigate with minimal training required.", respondent_role: "Field Supervisor", created_at: new Date().toISOString() }
-                ]).map((fb) => (
-                  <div key={fb.id} className="rounded-xl border border-slate-100 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-800/40">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs">{"⭐".repeat(fb.rating || 5)}</span>
-                      <span className="text-[10px] text-slate-400">
-                        {fb.created_at ? new Date(fb.created_at).toLocaleDateString() : "Recent"}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-xs leading-5 text-slate-700 dark:text-slate-300">"{fb.comment}"</p>
-                    <p className="mt-2 text-[10px] font-bold text-indigo-600 dark:text-indigo-400">— {fb.respondent_role || "Beneficiary"}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 6: BRAIN 4 ADVISORY */}
-        {activeTab === "ai-intelligence" && (
-          <div className="space-y-6">
-            {/* AI TRANSPARENCY NOTICE */}
-            <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                <span>
-                  <strong>AI Advisory Notice:</strong> All evaluations and scale recommendations are purely advisory and generated by SetuGov Brain 4. Final procurement authority, extension sanctions, and budgetary commitments remain with authorized government officials.
-                </span>
-              </div>
-              <span className="shrink-0 rounded bg-amber-200/60 px-2 py-0.5 text-[10px] font-bold text-amber-900 dark:bg-amber-900 dark:text-amber-200">
-                Advisory Only
-              </span>
-            </div>
-
-            {/* SCALE RECOMMENDATION CARD */}
-            <div className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50/70 to-purple-50/30 p-6 dark:border-indigo-900/50 dark:from-indigo-950/30 dark:to-slate-900">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-600 px-3 py-1 text-xs font-bold text-white shadow-sm">
-                      <Sparkles className="h-3.5 w-3.5" /> Brain 4 · Scaling Advisory Engine
-                    </span>
-                    <span className="rounded-full bg-slate-200 px-2.5 py-0.5 text-[10px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                      Advisory Status: Active
-                    </span>
-                  </div>
-
-                  <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                    Recommendation:{" "}
-                    <span
-                      className={
-                        (scaleRecommendation?.recommendation || aiAnalysis?.recommendation || "SCALE") === "SCALE"
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : (scaleRecommendation?.recommendation || aiAnalysis?.recommendation) === "EXTEND"
-                          ? "text-amber-600 dark:text-amber-400"
-                          : "text-red-600 dark:text-red-400"
-                      }
-                    >
-                      {scaleRecommendation?.recommendation || aiAnalysis?.recommendation || "PENDING"}
-                    </span>
-                  </h3>
-
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    Confidence Level: <strong className="text-slate-800 dark:text-slate-200">{scaleRecommendation?.confidence_score != null ? `${Math.round(scaleRecommendation.confidence_score)}%` : aiAnalysis?.confidence_score != null ? `${Math.round(aiAnalysis.confidence_score)}%` : "Pending"}</strong> · Based on empirical telemetry & milestone verification
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:items-end gap-1 shrink-0">
-                  <span className="text-[11px] font-medium text-slate-400">Estimated Scaling Budget</span>
-                  <span className="text-lg font-bold text-slate-900 dark:text-white">
-                    {scaleRecommendation?.scaling_plan?.estimated_scaling_budget || (pilot?.budget ? `₹${Number(pilot.budget).toLocaleString("en-IN")}` : "Not estimated")}
-                  </span>
-                </div>
-              </div>
-
-              {/* PRIMARY REASONS & CONDITIONS */}
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-xl border border-indigo-100 bg-white/80 p-4 dark:border-indigo-900/40 dark:bg-slate-900/80">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                    Key Decision Drivers
-                  </h4>
-                  <ul className="mt-2.5 space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
-                    {(scaleRecommendation?.primary_reasons || [
-                      "Empirical milestones successfully validated with zero critical incidents.",
-                      "Beneficiary satisfaction rating exceeds statutory target (4.6/5.0).",
-                      "Operational unit economics demonstrated at current sandbox facility."
-                    ]).map((r, i) => (
-                      <li key={i} className="flex items-start gap-1.5">
-                        <span className="text-indigo-500 mt-0.5">•</span>
-                        <span>{r}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="rounded-xl border border-indigo-100 bg-white/80 p-4 dark:border-indigo-900/40 dark:bg-slate-900/80">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />
-                    Conditions for Scaling & Safeguards
-                  </h4>
-                  <ul className="mt-2.5 space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
-                    {(scaleRecommendation?.conditions_for_scaling || [
-                      "Completion of statutory cybersecurity data governance audit.",
-                      "Establishment of regional Tier-2 cloud infrastructure failover.",
-                      "Formal SLA sign-off with municipal district administrators."
-                    ]).map((c, i) => (
-                      <li key={i} className="flex items-start gap-1.5">
-                        <span className="text-amber-500 mt-0.5">✓</span>
-                        <span>{c}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* PILOT INTELLIGENCE HEALTH & KPI BREAKDOWN */}
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* HEALTH & PERFORMANCE */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-indigo-500" />
-                    Pilot Health & Telemetry
-                  </h4>
-                  <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                    {aiAnalysis?.overall_pilot_health || "HEALTHY"}
-                  </span>
-                </div>
-
-                <p className="mt-3 text-xs leading-5 text-slate-600 dark:text-slate-300">
-                  {aiAnalysis?.kpi_performance_summary ||
-                    "Telemetry analysis indicates stable performance improvement. The startup achieved a 42% reduction in processing bottlenecks with zero severe incidents recorded during the sandbox trial."}
-                </p>
-
-                <div className="mt-4 space-y-2">
-                  <h5 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Areas Performing Well</h5>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(aiAnalysis?.areas_performing_well || ["Queue Throughput (+42%)", "Uptime SLA (99.8%)", "Beneficiary Ratings"]).map((item, i) => (
-                      <span key={i} className="rounded-md bg-emerald-50 px-2 py-1 text-[11px] font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                        ✓ {item}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {(aiAnalysis?.underperforming_kpis?.length > 0 || aiAnalysis?.budget_timeline_concerns) && (
-                  <div className="mt-4 space-y-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-                    <h5 className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Risk & Timeline Watch</h5>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {aiAnalysis?.budget_timeline_concerns || "Milestone 3 deployment schedule tight due to integration with legacy municipal databases."}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* RECOMMENDED ACTIONS */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
-                  <TrendingUp className="h-4 w-4 text-emerald-500" />
-                  Suggested Concrete Actions
-                </h4>
-
-                <div className="mt-4 space-y-3">
-                  {(aiAnalysis?.suggested_actions || [
-                    "Sanction Phase 2 scale procurement for 36 municipal districts.",
-                    "Execute state-wide master service agreement (MSA) with startup.",
-                    "Transition pilot sandbox telemetry into permanent operational monitoring dashboard."
-                  ]).map((act, i) => (
-                    <div key={i} className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-3 text-xs dark:bg-slate-800/50">
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
-                        {i + 1}
-                      </span>
-                      <span className="text-slate-700 dark:text-slate-300">{act}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* SEPARATE OFFICIAL GOVERNMENT SCALE DECISION ACTION */}
-            <form onSubmit={handleRecordOfficialScaleDecision} className="rounded-2xl border border-slate-300 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="border-b border-slate-100 pb-4 dark:border-slate-800">
-                <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Award className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                  Official Government Scaling Decision Form
-                </h4>
-                <p className="mt-1 text-xs text-slate-400">
-                  Statutory scaling decision recorded on the immutable platform procurement log. This action requires department officer authorization.
-                </p>
-              </div>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                {/* Field 1: Official Decision */}
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Official Decision{" "}
-                    <span className="text-red-500" aria-hidden="true">*</span>
-                  </label>
-                  <select
-                    value={govDecision.decision}
-                    onChange={(e) => {
-                      setGovDecision({ ...govDecision, decision: e.target.value });
-                      if (e.target.value) setDecisionErrors((prev) => ({ ...prev, decision: "" }));
-                    }}
-                    className={`mt-1.5 h-10 w-full rounded-xl border bg-white px-3 text-xs outline-none focus:border-indigo-500 dark:bg-slate-950 ${
-                      decisionErrors.decision
-                        ? "border-red-400 dark:border-red-600"
-                        : "border-slate-200 dark:border-slate-800"
-                    }`}
-                  >
-                    <option value="">— Select a decision —</option>
-                    <option value="SCALE">SCALE (Procure &amp; Deploy State-wide)</option>
-                    <option value="EXTEND">EXTEND (Expand Sandbox Trial)</option>
-                    <option value="STOP">STOP (Conclude Pilot Without Procurement)</option>
-                  </select>
-                  {decisionErrors.decision && (
-                    <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
-                      <AlertCircle className="h-3 w-3 shrink-0" />
-                      {decisionErrors.decision}
-                    </p>
-                  )}
-                </div>
-
-                {/* Field 2: Scaling Scope */}
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Scaling Scope{" "}
-                    <span className="text-red-500" aria-hidden="true">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={govDecision.scaling_scope}
-                    onChange={(e) => {
-                      setGovDecision({ ...govDecision, scaling_scope: e.target.value });
-                      if (e.target.value.trim()) setDecisionErrors((prev) => ({ ...prev, scaling_scope: "" }));
-                    }}
-                    className={`mt-1.5 h-10 w-full rounded-xl border px-3 text-xs outline-none focus:border-indigo-500 dark:bg-slate-950 ${
-                      decisionErrors.scaling_scope
-                        ? "border-red-400 dark:border-red-600"
-                        : "border-slate-200 dark:border-slate-800"
-                    }`}
-                    placeholder="e.g., Statewide expansion across 36 municipal districts"
-                  />
-                  {decisionErrors.scaling_scope && (
-                    <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
-                      <AlertCircle className="h-3 w-3 shrink-0" />
-                      {decisionErrors.scaling_scope}
-                    </p>
-                  )}
-                </div>
-
-                {/* Field 3: Sanctioned Budget */}
-                <div>
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Sanctioned Budget (INR){" "}
-                    <span className="text-red-500" aria-hidden="true">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={govDecision.budget_allocated}
-                    onChange={(e) => {
-                      setGovDecision({ ...govDecision, budget_allocated: e.target.value });
-                      const v = Number(e.target.value);
-                      if (e.target.value && !isNaN(v) && v > 0)
-                        setDecisionErrors((prev) => ({ ...prev, budget_allocated: "" }));
-                    }}
-                    className={`mt-1.5 h-10 w-full rounded-xl border px-3 text-xs outline-none focus:border-indigo-500 dark:bg-slate-950 ${
-                      decisionErrors.budget_allocated
-                        ? "border-red-400 dark:border-red-600"
-                        : "border-slate-200 dark:border-slate-800"
-                    }`}
-                    placeholder="e.g., 12000000"
-                  />
-                  {decisionErrors.budget_allocated && (
-                    <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
-                      <AlertCircle className="h-3 w-3 shrink-0" />
-                      {decisionErrors.budget_allocated}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Field 4: Official Sanction Justification */}
-              <div className="mt-4">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Official Sanction Justification{" "}
-                  <span className="text-red-500" aria-hidden="true">*</span>
-                </label>
-                <textarea
-                  rows={2}
-                  value={govDecision.justification}
-                  onChange={(e) => {
-                    setGovDecision({ ...govDecision, justification: e.target.value });
-                    if (e.target.value.trim()) setDecisionErrors((prev) => ({ ...prev, justification: "" }));
-                  }}
-                  className={`mt-1.5 w-full rounded-xl border p-3 text-xs outline-none focus:border-indigo-500 dark:bg-slate-950 ${
-                    decisionErrors.justification
-                      ? "border-red-400 dark:border-red-600"
-                      : "border-slate-200 dark:border-slate-800"
-                  }`}
-                  placeholder="State the statutory justification and empirical basis for this scaling decision..."
-                />
-                {decisionErrors.justification && (
-                  <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
-                    <AlertCircle className="h-3 w-3 shrink-0" />
-                    {decisionErrors.justification}
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-4 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isSubmittingDecision}
-                  className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 disabled:opacity-50"
-                >
-                  {isSubmittingDecision ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  Submit Official Scaling Sanction
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* COMPLIANCE READINESS OVERRIDE MODAL */}
-        {showOverrideModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="w-full max-w-lg rounded-2xl border border-amber-200 bg-white p-6 shadow-2xl dark:border-amber-900/50 dark:bg-slate-900"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-                  <ShieldAlert className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Compliance Checkpoint Warning</h3>
-                  <p className="text-xs text-slate-500">Unsatisfied compliance items remain</p>
-                </div>
-              </div>
-
-              <div className="mt-4 rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
-                Some statutory or cybersecurity checkpoints have not been marked as SATISFIED. Starting this sandbox requires an authorized Officer Readiness Override and will be recorded in the audit log.
-              </div>
-
-              <div className="mt-4">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Sanction / Override Justification *</label>
-                <textarea
-                  rows={3}
-                  value={overrideReason}
-                  onChange={(e) => setOverrideReason(e.target.value)}
-                  placeholder="e.g., Authorized conditional pilot sandbox launch pending Phase 2 telemetry audit..."
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 p-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
-                  required
-                />
-              </div>
-
-              <div className="mt-6 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowOverrideModal(false)}
-                  className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmStartWithOverride}
-                  disabled={isSaving || !overrideReason.trim()}
-                  className="rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-500 disabled:opacity-50"
-                >
-                  {isSaving ? "Starting..." : "Authorize & Launch Sandbox"}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
       </div>
     </AppLayout>
   );

@@ -128,7 +128,7 @@ export default function InviteAccept() {
             </button>
             <Link
               to="/login"
-              className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+              className="back-nav"
             >
               Back to Sign In
             </Link>
@@ -166,7 +166,7 @@ export default function InviteAccept() {
             <div className="mt-6">
               <Link
                 to="/login"
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                className="btn-primary inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-900 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
               >
                 Sign In to Dashboard
                 <ArrowRight className="h-4 w-4" />
@@ -197,7 +197,7 @@ export default function InviteAccept() {
             <div className="mt-6 flex flex-col gap-2">
               <Link
                 to="/login"
-                className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-slate-900 px-4 text-xs font-semibold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                className="btn-primary inline-flex h-10 w-full items-center justify-center rounded-xl bg-blue-900 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
               >
                 Return to Sign In
               </Link>
@@ -317,7 +317,7 @@ export default function InviteAccept() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-xs font-semibold text-white shadow-lg transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                className="btn-primary mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-900 px-5 text-xs font-semibold text-white shadow-lg shadow-blue-900/15 transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
               >
                 {isSubmitting ? (
                   <>

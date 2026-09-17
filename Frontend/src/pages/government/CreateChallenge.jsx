@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -8,6 +8,7 @@ import {
   Sparkles,
   CheckCircle2,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
@@ -19,7 +20,9 @@ import RequirementsForm from "../../components/challenge/RequirementsForm";
 import ChallengeReview from "../../components/challenge/ChallengeReview";
 import AIChallengeCopilot from "../../components/challenge/AIChallengeCopilot";
 import {
+  getChallengeById,
   createChallenge,
+  updateChallenge,
   publishChallenge,
   normalizeChallengePayload,
 } from "../../services/challengeService";
@@ -59,12 +62,105 @@ const initialFormData = {
 
 function CreateChallenge() {
   const navigate = useNavigate();
+  const { id: paramId } = useParams();
+  const [searchParams] = useSearchParams();
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [draftId, setDraftId] = useState(paramId || searchParams.get("draftId") || null);
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState("");
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingDraft, setIsLoadingDraft] = useState(false);
+
+  useEffect(() => {
+    const idToLoad = paramId || searchParams.get("draftId");
+    if (idToLoad) {
+      setDraftId(idToLoad);
+      loadExistingDraft(idToLoad);
+    }
+  }, [paramId, searchParams]);
+
+  const loadExistingDraft = async (id) => {
+    try {
+      setIsLoadingDraft(true);
+      setSubmitError("");
+      const res = await getChallengeById(id);
+      const ch = res?.data?.challenge || res?.challenge || res?.data || res;
+      if (ch) {
+        setFormData({
+          title: ch.title || "",
+          department: ch.department?.name || ch.department_id || "",
+          problemDescription: ch.problem_description || "",
+          currentProcess: ch.current_process || "",
+          currentBaseline: ch.current_baseline || "",
+          location: ch.location || "",
+          applicationDeadline: ch.application_deadline ? ch.application_deadline.split("T")[0] : "",
+          desiredOutcome: ch.desired_outcome || "",
+          kpis: Array.isArray(ch.kpis)
+            ? ch.kpis.map((k) => ({
+                id: k.id || crypto.randomUUID(),
+                name: k.name || "",
+                unit: k.unit || "",
+                baseline: k.baseline !== undefined && k.baseline !== null ? String(k.baseline) : "",
+                target: k.target !== undefined && k.target !== null ? String(k.target) : "",
+                weight: k.weight !== undefined && k.weight !== null ? String(k.weight) : "",
+              }))
+            : [],
+          startup: ch.startup_requirements || "",
+          pilotLocation: ch.pilot_location || ch.location || "",
+          pilotStartDate: ch.pilot_start_date ? ch.pilot_start_date.split("T")[0] : "",
+          pilotEndDate: ch.pilot_end_date ? ch.pilot_end_date.split("T")[0] : "",
+          budget: ch.budget_max ? String(ch.budget_max) : (ch.budget_min ? String(ch.budget_min) : ""),
+          milestones: Array.isArray(ch.milestones)
+            ? ch.milestones.map((m) => ({
+                id: m.id || crypto.randomUUID(),
+                name: m.name || "",
+                description: m.description || "",
+                dueDate: m.dueDate || (m.due_date ? m.due_date.split("T")[0] : ""),
+                paymentPercentage:
+                  m.paymentPercentage !== undefined
+                    ? String(m.paymentPercentage)
+                    : m.payment_percentage !== undefined
+                    ? String(m.payment_percentage)
+                    : "",
+                status: m.status || "not_started",
+              }))
+            : [],
+          requiredTechnologies: Array.isArray(ch.required_technologies)
+            ? ch.required_technologies.map((t) =>
+                typeof t === "string" ? { id: crypto.randomUUID(), name: t } : t
+              )
+            : [],
+          eligibilityRequirements: Array.isArray(ch.eligibility_requirements)
+            ? ch.eligibility_requirements.map((e) => ({
+                id: e.id || crypto.randomUUID(),
+                name: e.name || "",
+                description: e.description || "",
+                required: e.required !== false,
+              }))
+            : [],
+          requiredDocuments: Array.isArray(ch.required_documents)
+            ? ch.required_documents.map((d) => ({
+                id: d.id || crypto.randomUUID(),
+                name: d.name || "",
+                description: d.description || "",
+                verificationStatus: d.verificationStatus || d.verification_status || "pending",
+              }))
+            : [],
+          cybersecurityDocumentation: ch.cybersecurity_requirements || "",
+          dataCompliance: ch.data_compliance || "",
+          evidence: [],
+        });
+      }
+    } catch (err) {
+      console.error("Failed to load draft challenge:", err);
+      setSubmitError(err.message || "Failed to load existing challenge draft.");
+    } finally {
+      setIsLoadingDraft(false);
+    }
+  };
 
   // =========================================================
   // GENERAL CHANGE
@@ -267,18 +363,40 @@ function CreateChallenge() {
     try {
       setIsSaving(true);
       setSubmitError("");
+      setSaveSuccessMsg("");
       const payload = buildBackendPayload();
-      const response = await createChallenge(payload);
-      const createdId =
-        response?.data?.challenge?.id ||
-        response?.data?.id ||
-        response?.challenge?.id ||
-        response?.id;
-      if (createdId) {
-        navigate(`/government/challenges/${createdId}/overview`);
+
+      let savedId = draftId;
+      if (draftId) {
+        // Update existing draft without creating duplicate
+        const response = await updateChallenge(draftId, payload);
+        savedId =
+          response?.data?.challenge?.id ||
+          response?.data?.id ||
+          response?.challenge?.id ||
+          draftId;
       } else {
-        navigate("/government/dashboard");
+        // Create new draft
+        const response = await createChallenge(payload);
+        savedId =
+          response?.data?.challenge?.id ||
+          response?.data?.id ||
+          response?.challenge?.id ||
+          response?.id;
+        if (savedId) {
+          setDraftId(savedId);
+          window.history.replaceState(
+            null,
+            "",
+            `/government/challenges/${savedId}/edit`
+          );
+        }
       }
+
+      setSaveSuccessMsg(
+        "Draft saved successfully to PostgreSQL! You can continue editing, refresh safely, or return anytime."
+      );
+      setTimeout(() => setSaveSuccessMsg(""), 6000);
     } catch (error) {
       console.error("Unable to save draft challenge:", error);
       setSubmitError(
@@ -294,19 +412,30 @@ function CreateChallenge() {
     try {
       setIsSaving(true);
       setSubmitError("");
+      setSaveSuccessMsg("");
       const payload = buildBackendPayload();
-      const createRes = await createChallenge(payload);
-      const createdId =
-        createRes?.data?.challenge?.id ||
-        createRes?.data?.id ||
-        createRes?.challenge?.id ||
-        createRes?.id;
+      let targetId = draftId;
 
-      if (createdId) {
-        const pubRes = await publishChallenge(createdId);
-        navigate(`/government/challenges/${createdId}/overview`);
+      if (draftId) {
+        // Persist all current form values before publishing
+        await updateChallenge(draftId, payload);
       } else {
-        navigate("/government/dashboard");
+        const createRes = await createChallenge(payload);
+        targetId =
+          createRes?.data?.challenge?.id ||
+          createRes?.data?.id ||
+          createRes?.challenge?.id ||
+          createRes?.id;
+        if (targetId) {
+          setDraftId(targetId);
+        }
+      }
+
+      if (targetId) {
+        await publishChallenge(targetId);
+        navigate(`/government/challenges/${targetId}/overview`);
+      } else {
+        throw new Error("Unable to determine challenge ID for publication.");
       }
     } catch (error) {
       console.error("Unable to publish challenge:", error);
@@ -608,7 +737,7 @@ function CreateChallenge() {
                 "/government/dashboard"
               )
             }
-            className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            className="back-nav"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
@@ -647,6 +776,25 @@ function CreateChallenge() {
           formData={formData}
           onAutofill={handleAutofill}
         />
+
+        {/* DRAFT LOADING STATE */}
+        {isLoadingDraft && (
+          <div className="mb-6 flex items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-4 text-xs text-indigo-800 dark:border-indigo-900/50 dark:bg-indigo-950/30 dark:text-indigo-300">
+            <Loader2 className="h-4 w-4 animate-spin text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <p className="font-semibold">Loading challenge draft from PostgreSQL database...</p>
+          </div>
+        )}
+
+        {/* SAVE SUCCESS BANNER */}
+        {saveSuccessMsg && (
+          <div className="mb-6 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-300">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-bold">Draft Saved</p>
+              <p className="mt-0.5">{saveSuccessMsg}</p>
+            </div>
+          </div>
+        )}
 
         {/* SUBMISSION ERROR ALERT */}
         {submitError && (
@@ -805,7 +953,7 @@ function CreateChallenge() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                  className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-900/15 transition-all hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
                 >
                   Continue
 
@@ -834,7 +982,7 @@ function CreateChallenge() {
                   <button
                     type="button"
                     onClick={handlePublish}
-                    className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                    className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-900/15 transition-all hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
                   >
                     Publish Challenge
 

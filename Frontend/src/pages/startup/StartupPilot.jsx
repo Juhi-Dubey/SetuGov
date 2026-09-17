@@ -23,6 +23,7 @@ import {
   ShieldAlert,
   Star,
   Lock,
+  Pencil,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -69,11 +70,14 @@ function StartupPilot() {
   const [feedbackRole, setFeedbackRole] = useState("Sanitation Supervisor");
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
 
-  // Issues form
+  // Issues form & editing
   const [showIssueForm, setShowIssueForm] = useState(false);
+  const [editingIssue, setEditingIssue] = useState(null);
   const [issueTitle, setIssueTitle] = useState("");
   const [issueDesc, setIssueDesc] = useState("");
   const [issueSeverity, setIssueSeverity] = useState("MEDIUM");
+  const [issueStatus, setIssueStatus] = useState("OPEN");
+  const [issueResolution, setIssueResolution] = useState("");
   const [isSubmittingIssue, setIsSubmittingIssue] = useState(false);
 
   const milestones = activePilot?.milestones || [];
@@ -118,7 +122,8 @@ function StartupPilot() {
             if (mounted) {
               if (evRes?.data?.evidence) setEvidenceList(evRes.data.evidence);
               if (compRes?.data?.compliance_items) setComplianceList(compRes.data.compliance_items);
-              if (fbRes?.data?.feedback) setFeedbackList(fbRes.data.feedback);
+              const fbItems = fbRes?.data?.feedback || fbRes?.data?.feedbacks || [];
+              if (Array.isArray(fbItems)) setFeedbackList(fbItems);
               if (issuesRes?.data?.issues) setIssuesList(issuesRes.data.issues);
             }
           } catch (err) {
@@ -159,17 +164,26 @@ function StartupPilot() {
       setIsSubmittingFeedback(true);
       const res = await addPilotFeedback(activePilot.id, {
         rating: Number(feedbackRating),
+        comments: feedbackComment.trim(),
         comment: feedbackComment.trim(),
         stakeholder_type: "BENEFICIARY",
         respondent_role: feedbackRole,
+        citizen_name: feedbackRole,
       });
-      if (res?.data?.feedback) {
-        setFeedbackList((prev) => [res.data.feedback, ...prev]);
-      }
+      const savedFeedback = res?.data?.feedback || res?.data || {
+        id: Date.now().toString(),
+        rating: Number(feedbackRating),
+        comment: feedbackComment.trim(),
+        comments: feedbackComment.trim(),
+        respondent_role: feedbackRole,
+        citizen_name: feedbackRole,
+        created_at: new Date().toISOString()
+      };
+      setFeedbackList((prev) => [savedFeedback, ...prev]);
       setFeedbackComment("");
       setShowFeedbackForm(false);
     } catch (err) {
-      alert(`Error submitting feedback: ${err.message}`);
+      alert(`Error submitting feedback: ${err?.message || "Failed to submit"}`);
     } finally {
       setIsSubmittingFeedback(false);
     }
@@ -186,14 +200,53 @@ function StartupPilot() {
         severity: issueSeverity,
         assigned_to: "Startup Engineering Team",
       });
-      if (res?.data?.issue) {
-        setIssuesList((prev) => [res.data.issue, ...prev]);
-      }
+      const newIssue = res?.data?.issue || res?.data || {
+        id: Date.now().toString(),
+        title: issueTitle.trim(),
+        description: issueDesc.trim(),
+        severity: issueSeverity,
+        status: "OPEN",
+        created_at: new Date().toISOString()
+      };
+      setIssuesList((prev) => [newIssue, ...prev]);
       setIssueTitle("");
       setIssueDesc("");
       setShowIssueForm(false);
     } catch (err) {
-      alert(`Error recording issue: ${err.message}`);
+      alert(`Error recording issue: ${err?.message || "Failed to submit blocker"}`);
+    } finally {
+      setIsSubmittingIssue(false);
+    }
+  };
+
+  const handleIssueUpdate = async (e) => {
+    e.preventDefault();
+    if (!activePilot?.id || !editingIssue?.id || !issueTitle.trim()) return;
+    try {
+      setIsSubmittingIssue(true);
+      const res = await updatePilotIssue(activePilot.id, editingIssue.id, {
+        title: issueTitle.trim(),
+        description: issueDesc.trim(),
+        severity: issueSeverity,
+        status: issueStatus,
+        resolution: issueResolution.trim() || undefined,
+      });
+      const updated = res?.data?.issue || res?.data || {
+        ...editingIssue,
+        title: issueTitle.trim(),
+        description: issueDesc.trim(),
+        severity: issueSeverity,
+        status: issueStatus,
+        resolution: issueResolution.trim() || null,
+      };
+      setIssuesList((prev) => prev.map((item) => (item.id === editingIssue.id ? updated : item)));
+      setEditingIssue(null);
+      setIssueTitle("");
+      setIssueDesc("");
+      setIssueStatus("OPEN");
+      setIssueResolution("");
+    } catch (err) {
+      alert(`Error updating issue: ${err?.message || "Failed to update blocker"}`);
     } finally {
       setIsSubmittingIssue(false);
     }
@@ -322,7 +375,7 @@ function StartupPilot() {
         </p>
         <button
           onClick={() => navigate('/startup/challenges')}
-          className="mt-6 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+          className="btn-primary mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-900 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
         >
           Explore Challenges & Apply
         </button>
@@ -358,13 +411,13 @@ function StartupPilot() {
             onClick={() =>
               navigate("/startup")
             }
-            className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            className="back-nav"
           >
             <ChevronRight className="h-4 w-4 rotate-180" />
             Back to Dashboard
           </button>
 
-          <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="mt-2 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
                 <Rocket className="h-6 w-6" />
@@ -677,18 +730,20 @@ function StartupPilot() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setShowEvidenceForm((previous) => !previous);
-              setEvidenceError("");
-              setEvidenceSuccess("");
-            }}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-indigo-700"
-          >
-            <Upload className="h-4 w-4" />
-            {showEvidenceForm ? "Close Form" : "Upload Evidence File"}
-          </button>
+          {!showEvidenceForm && (
+            <button
+              type="button"
+              onClick={() => {
+                setShowEvidenceForm(true);
+                setEvidenceError("");
+                setEvidenceSuccess("");
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-indigo-700"
+            >
+              <Upload className="h-4 w-4" />
+              Upload Evidence File
+            </button>
+          )}
         </div>
 
         {showEvidenceForm && (
@@ -955,14 +1010,16 @@ function StartupPilot() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowFeedbackForm((prev) => !prev)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow hover:bg-indigo-700"
-          >
-            <Plus className="h-4 w-4" />
-            {showFeedbackForm ? "Close" : "Record Feedback"}
-          </button>
+          {!showFeedbackForm && (
+            <button
+              type="button"
+              onClick={() => setShowFeedbackForm(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow hover:bg-indigo-700"
+            >
+              <Plus className="h-4 w-4" />
+              Record Feedback
+            </button>
+          )}
         </div>
 
         {showFeedbackForm && (
@@ -1069,24 +1126,43 @@ function StartupPilot() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowIssueForm((prev) => !prev)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow hover:bg-indigo-700"
-          >
-            <Plus className="h-4 w-4" />
-            {showIssueForm ? "Close" : "Report Issue / Blocker"}
-          </button>
+          {!showIssueForm && !editingIssue && (
+            <button
+              type="button"
+              onClick={() => {
+                setShowIssueForm(true);
+                setEditingIssue(null);
+                setIssueTitle("");
+                setIssueDesc("");
+                setIssueSeverity("MEDIUM");
+                setIssueStatus("OPEN");
+                setIssueResolution("");
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow hover:bg-indigo-700"
+            >
+              <Plus className="h-4 w-4" />
+              Report Issue / Blocker
+            </button>
+          )}
         </div>
 
-        {showIssueForm && (
+        {(showIssueForm || editingIssue) && (
           <motion.form
-            onSubmit={handleIssueSubmit}
+            onSubmit={editingIssue ? handleIssueUpdate : handleIssueSubmit}
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/40 p-4 dark:border-amber-900/40 dark:bg-amber-950/20"
           >
-            <h3 className="text-xs font-bold text-slate-900 dark:text-white">Report Operational Blocker</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white">
+                {editingIssue ? "Edit Operational Blocker" : "Report Operational Blocker"}
+              </h3>
+              {editingIssue && (
+                <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                  Editing Blocker
+                </span>
+              )}
+            </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2">
                 <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Issue Title *</label>
@@ -1107,13 +1183,41 @@ function StartupPilot() {
                   onChange={(e) => setIssueSeverity(e.target.value)}
                   className="mt-1 h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs dark:border-slate-800 dark:bg-slate-950"
                 >
-                  <option value="LOW">LOW (Informational)</option>
-                  <option value="MEDIUM">MEDIUM (Minor operational impact)</option>
-                  <option value="HIGH">HIGH (Timeline impact)</option>
-                  <option value="CRITICAL">CRITICAL (Blocking sandbox)</option>
+                  <option value="LOW">Low (Informational)</option>
+                  <option value="MEDIUM">Medium (Minor operational impact)</option>
+                  <option value="HIGH">High (Timeline impact)</option>
+                  <option value="CRITICAL">Critical (Blocking sandbox)</option>
                 </select>
               </div>
             </div>
+
+            {editingIssue && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Status</label>
+                  <select
+                    value={issueStatus}
+                    onChange={(e) => setIssueStatus(e.target.value)}
+                    className="mt-1 h-9 w-full rounded-xl border border-slate-200 bg-white px-2 text-xs dark:border-slate-800 dark:bg-slate-950"
+                  >
+                    <option value="OPEN">Open (Active)</option>
+                    <option value="IN_PROGRESS">In Progress / Under Investigation</option>
+                    <option value="RESOLVED">Resolved</option>
+                    <option value="CLOSED">Closed</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Resolution Notes</label>
+                  <input
+                    type="text"
+                    value={issueResolution}
+                    onChange={(e) => setIssueResolution(e.target.value)}
+                    placeholder="e.g., API keys provisioned by dept nodal team"
+                    className="mt-1 h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950"
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="mt-3">
               <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Description & Details</label>
@@ -1129,7 +1233,14 @@ function StartupPilot() {
             <div className="mt-3 flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setShowIssueForm(false)}
+                onClick={() => {
+                  setShowIssueForm(false);
+                  setEditingIssue(null);
+                  setIssueTitle("");
+                  setIssueDesc("");
+                  setIssueStatus("OPEN");
+                  setIssueResolution("");
+                }}
                 className="rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-500 hover:bg-slate-100"
               >
                 Cancel
@@ -1137,9 +1248,9 @@ function StartupPilot() {
               <button
                 type="submit"
                 disabled={isSubmittingIssue}
-                className="rounded-xl bg-slate-900 px-4 py-1.5 text-xs font-bold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 disabled:opacity-50"
+                className="btn-primary rounded-xl bg-blue-900 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
               >
-                {isSubmittingIssue ? "Saving..." : "Submit Blocker"}
+                {isSubmittingIssue ? "Saving..." : editingIssue ? "Update Blocker" : "Submit Blocker"}
               </button>
             </div>
           </motion.form>
@@ -1165,9 +1276,27 @@ function StartupPilot() {
                   >
                     {issue.severity}
                   </span>
-                  <span className="text-[10px] text-slate-400">
-                    Status: <strong className="text-slate-700 dark:text-slate-300">{issue.status}</strong>
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-slate-400">
+                      Status: <strong className="text-slate-700 dark:text-slate-300">{issue.status}</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingIssue(issue);
+                        setIssueTitle(issue.title || "");
+                        setIssueDesc(issue.description || "");
+                        setIssueSeverity(issue.severity || "MEDIUM");
+                        setIssueStatus(issue.status || "OPEN");
+                        setIssueResolution(issue.resolution || "");
+                        setShowIssueForm(false);
+                      }}
+                      className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                    >
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </button>
+                  </div>
                 </div>
                 <h4 className="mt-2 text-xs font-bold text-slate-900 dark:text-white">{issue.title}</h4>
                 {issue.description && (
@@ -1429,7 +1558,12 @@ function EvidenceCard({ evidence }) {
 
   const handleOpenFile = () => {
     if (evidence.file_url) {
-      window.open(evidence.file_url, "_blank", "noopener,noreferrer");
+      let url = evidence.file_url;
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        const origin = window.location.origin.includes("5173") ? "http://localhost:5000" : window.location.origin;
+        url = `${origin}${url.startsWith("/") ? "" : "/"}${url}`;
+      }
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 

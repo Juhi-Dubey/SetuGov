@@ -15,6 +15,7 @@ import {
   Award
 } from "lucide-react";
 import { getEvaluators, verifyEvaluator } from "../../services/evaluatorService";
+import { formatEmploymentType } from "../../utils/filterUtils";
 
 function AdminEvaluators() {
   const [evaluators, setEvaluators] = useState([]);
@@ -171,7 +172,7 @@ function AdminEvaluators() {
                       <div className="text-[11px] text-slate-400">{profile.designation}</div>
                     </td>
                     <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300">
-                      {profile.employment_type || "Independent"}
+                      {formatEmploymentType(profile.employment_type)}
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="flex flex-wrap gap-1 max-w-[200px]">

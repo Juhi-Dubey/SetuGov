@@ -35,7 +35,7 @@ const kpiIcons = {
 
 const kpiRoutes = {
   challenges: "/government/challenges",
-  applications: "/government/challenges",
+  applications: "/government/applications",
   pilots: "/government/pilots",
   "at-risk": "/government/pilots?status=AT_RISK",
 };
@@ -116,7 +116,7 @@ function GovernmentDashboard() {
             label: "Total Challenges",
             value: analyticsData?.overview?.total_challenges ?? rawChallenges.length,
             trend: "up",
-            href: "/government/challenges",
+            href: kpiRoutes.challenges,
           },
           {
             id: "applications",
@@ -130,14 +130,14 @@ function GovernmentDashboard() {
             label: "Active Pilots",
             value: analyticsData?.overview?.total_pilots ?? rawPilots.length,
             trend: "up",
-            href: "/government/pilots",
+            href: kpiRoutes.pilots,
           },
           {
             id: "at-risk",
             label: "At-Risk Pilots",
             value: atRiskPilots,
             trend: atRiskPilots > 0 ? "down" : "neutral",
-            href: "/government/pilots?status=AT_RISK",
+            href: kpiRoutes["at-risk"],
           },
         ],
         challenges: formattedChallenges,
@@ -166,7 +166,7 @@ function GovernmentDashboard() {
 
   return (
     <AppLayout role="government">
-      <div className="space-y-8">
+      <div className="space-y-5 sm:space-y-6">
         {/* Header */}
         <PageHeader
           title={`Welcome, ${user?.name || "Officer"}`}
@@ -199,51 +199,51 @@ function GovernmentDashboard() {
             {/* Financial & Milestone Intelligence */}
             {analytics?.financials && (
               <section className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-4.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Department Budget Utilization</p>
-                      <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+                      <p className="mt-1 text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
                         ₹{Number(analytics.financials.total_paid_budget || 0).toLocaleString("en-IN")}
                         <span className="text-sm font-normal text-slate-400"> / ₹{Number(analytics.financials.total_allocated_budget || 0).toLocaleString("en-IN")}</span>
                       </p>
                     </div>
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
                       {analytics.financials.budget_utilization_rate}% Disbursed
                     </span>
                   </div>
-                  <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                  <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                     <div
                       className="h-full bg-emerald-500 transition-all duration-500"
                       style={{ width: `${Math.min(100, Number(analytics.financials.budget_utilization_rate || 0))}%` }}
                     />
                   </div>
-                  <div className="mt-3 flex justify-between text-xs text-slate-400">
+                  <div className="mt-2.5 flex justify-between text-xs text-slate-400">
                     <span>Disbursed: ₹{Number(analytics.financials.total_paid_budget || 0).toLocaleString("en-IN")}</span>
                     <span>Pending: ₹{Number(analytics.financials.total_pending_budget || 0).toLocaleString("en-IN")}</span>
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-4.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Milestone Execution Rate</p>
-                      <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+                      <p className="mt-1 text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
                         {analytics.milestone_analytics?.completed_milestones || 0}
                         <span className="text-sm font-normal text-slate-400"> / {analytics.milestone_analytics?.total_milestones || 0} Delivered</span>
                       </p>
                     </div>
-                    <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                    <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
                       {analytics.milestone_analytics?.completion_rate || 0}% Complete
                     </span>
                   </div>
-                  <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                  <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                     <div
                       className="h-full bg-indigo-600 transition-all duration-500"
                       style={{ width: `${Math.min(100, Number(analytics.milestone_analytics?.completion_rate || 0))}%` }}
                     />
                   </div>
-                  <div className="mt-3 flex justify-between text-xs text-slate-400">
+                  <div className="mt-2.5 flex justify-between text-xs text-slate-400">
                     <span>In Progress: {analytics.milestone_analytics?.in_progress_milestones || 0}</span>
                     <span>Pending: {analytics.milestone_analytics?.pending_milestones || 0}</span>
                   </div>
@@ -290,21 +290,21 @@ function KPICard({ data, index }) {
       <Link
         to={href}
         aria-label={`${data.label}: ${data.value}`}
-        className="group block cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
+        className="group block cursor-pointer rounded-2xl border border-slate-200 bg-white p-4 sm:p-4.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:border-slate-800 dark:bg-slate-900 dark:focus-visible:ring-offset-slate-950"
       >
         <div className="flex items-start justify-between">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700 transition-colors group-hover:bg-indigo-50 group-hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-200 dark:group-hover:bg-indigo-950/40 dark:group-hover:text-indigo-400">
-            <Icon className="h-5 w-5" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700 transition-colors group-hover:bg-indigo-50 group-hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-200 dark:group-hover:bg-indigo-950/40 dark:group-hover:text-indigo-400">
+            <Icon className="h-4.5 w-4.5" />
           </div>
           <ArrowUpRight className="h-4 w-4 text-slate-300 transition-colors group-hover:text-indigo-500" />
         </div>
 
-        <div className="mt-5">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+        <div className="mt-3">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             {data.label}
           </p>
-          <div className="mt-1 flex items-end justify-between gap-3">
-            <p className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <div className="mt-0.5 flex items-end justify-between gap-3">
+            <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               {data.value}
             </p>
           </div>
@@ -511,12 +511,12 @@ function ChallengeTable({ challenges, onCreateChallenge, onSelectChallenge }) {
                   className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
                   <option value="ALL">All Status</option>
-                  <option value="PUBLISHED">PUBLISHED</option>
-                  <option value="EVALUATION">EVALUATION</option>
-                  <option value="PILOT">PILOT</option>
-                  <option value="DRAFT">DRAFT</option>
-                  <option value="COMPLETED">COMPLETED</option>
-                  <option value="CLOSED">CLOSED</option>
+                  <option value="PUBLISHED">Open / Published</option>
+                  <option value="EVALUATION">In Evaluation</option>
+                  <option value="PILOT">Pilot Stage</option>
+                  <option value="DRAFT">Draft</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="CLOSED">Closed</option>
                 </select>
               </div>
 
@@ -727,7 +727,7 @@ function ChallengeTable({ challenges, onCreateChallenge, onSelectChallenge }) {
 function TableHeading({ children, className = "" }) {
   return (
     <th
-      className={`px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 ${className}`}
+      className={`px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 ${className}`}
     >
       {children}
     </th>
@@ -743,17 +743,17 @@ function ChallengeRow({ challenge, onSelectChallenge }) {
       onClick={() => onSelectChallenge(challenge.id)}
       className="cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 last:border-0 dark:border-slate-800 dark:hover:bg-slate-800/50"
     >
-      <td className="px-5 py-4">
+      <td className="px-4 py-2.5">
         <div className="min-w-0 overflow-hidden">
           <p
-            className="text-sm font-semibold text-slate-900 dark:text-white leading-snug"
+            className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white leading-snug"
             title={challenge.title}
           >
             {challenge.title}
           </p>
           {challenge.description && (
             <p
-              className="mt-1 truncate text-xs text-slate-400"
+              className="mt-0.5 truncate text-xs text-slate-400"
               title={challenge.description}
             >
               {challenge.description}
@@ -762,23 +762,23 @@ function ChallengeRow({ challenge, onSelectChallenge }) {
         </div>
       </td>
 
-      <td className="px-5 py-4 text-sm text-slate-600 dark:text-slate-300">
+      <td className="px-4 py-2.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
         <span className="block leading-snug break-words">
           {challenge.department}
         </span>
       </td>
 
-      <td className="px-5 py-4 text-sm font-medium whitespace-nowrap">
-        <span className="inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+      <td className="px-4 py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap">
+        <span className="inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
           {proposalsLabel}
         </span>
       </td>
 
-      <td className="px-5 py-4 whitespace-nowrap">
+      <td className="px-4 py-2.5 whitespace-nowrap">
         <StatusBadge status={challenge.status} />
       </td>
 
-      <td className="px-5 py-4 text-center">
+      <td className="px-4 py-2.5 text-center">
         <button
           type="button"
           onClick={(e) => {
@@ -786,7 +786,7 @@ function ChallengeRow({ challenge, onSelectChallenge }) {
             onSelectChallenge(challenge.id);
           }}
           aria-label={`View details for ${challenge.title}`}
-          className="inline-flex items-center justify-center rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white"
+          className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white"
         >
           <ArrowRight className="h-4 w-4" />
         </button>
@@ -928,7 +928,7 @@ function EmptyChallenges({ onCreateChallenge }) {
       <button
         type="button"
         onClick={onCreateChallenge}
-        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+        className="btn-primary mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
       >
         <Plus className="h-4 w-4" />
         Create Challenge

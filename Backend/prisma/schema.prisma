@@ -61,6 +61,7 @@ model User {
   evaluator_pool_memberships   ChallengeEvaluatorPool[] @relation("EvaluatorPoolMember")
   added_evaluator_pools        ChallengeEvaluatorPool[] @relation("EvaluatorPoolAdder")
   evaluator_match_scores       EvaluatorMatchScore[]    @relation("EvaluatorMatched")
+  eligibility_reviews          ChallengeEligibilityReview[] @relation("ChallengeEligibilityReviewer")
 
   @@index([role])
   @@index([department_id])
@@ -114,6 +115,17 @@ model Challenge {
   ip_ownership               String?         @default("STARTUP_OWNED")
   licensing_terms            String?
   confidentiality_terms      String?
+  current_process            String?
+  pilot_location             String?
+  pilot_start_date           DateTime?
+  pilot_end_date             DateTime?
+  startup_requirements       String?
+  kpis                       Json?
+  milestones                 Json?
+  eligibility_requirements   Json?
+  required_documents         Json?
+  cybersecurity_requirements String?
+  data_compliance            String?
   created_at                 DateTime        @default(now())
   updated_at                 DateTime        @updatedAt
   applications               Application[]
@@ -125,10 +137,27 @@ model Challenge {
   evaluator_applications       EvaluatorApplication[]
   evaluator_pools              ChallengeEvaluatorPool[]
   evaluator_match_scores       EvaluatorMatchScore[]
+  eligibility_review           ChallengeEligibilityReview?
 
   @@index([status])
   @@index([department_id])
   @@map("challenges")
+}
+
+model ChallengeEligibilityReview {
+  id           String    @id @default(uuid())
+  challenge_id String    @unique
+  reviewed_by  String
+  decision     String    @default("PENDING")
+  remarks      String?
+  checks       Json
+  reviewed_at  DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  challenge    Challenge @relation(fields: [challenge_id], references: [id], onDelete: Cascade)
+  reviewer     User      @relation("ChallengeEligibilityReviewer", fields: [reviewed_by], references: [id])
+
+  @@index([challenge_id])
+  @@map("challenge_eligibility_reviews")
 }
 
 model MatchScore {

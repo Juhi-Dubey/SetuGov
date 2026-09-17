@@ -38,12 +38,11 @@ export const updatePaymentStatus = async (req, res, next) => {
     const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
     const payment = await paymentService.updatePaymentStatus(
       paymentId,
-      req.body.status,
-      req.body.payment_date,
+      req.body,
       req.user,
       ip_address
     );
-    return successResponse(res, { payment }, `Payment status updated to ${req.body.status}`, 200);
+    return successResponse(res, { payment }, `Payment status updated to ${req.body.status || payment.status}`, 200);
   } catch (error) {
     next(error);
   }

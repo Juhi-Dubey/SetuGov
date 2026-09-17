@@ -537,7 +537,7 @@ export default function StartupProfile() {
                   <button
                     type="button"
                     onClick={() => setActiveStep(2)}
-                    className="flex h-11 items-center gap-2 rounded-xl bg-slate-900 px-6 text-xs font-bold text-white shadow-sm hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                    className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
                   >
                     Continue to Organization Details
                     <ArrowRight className="h-4 w-4" />
@@ -700,7 +700,7 @@ export default function StartupProfile() {
                     type="button"
                     disabled={saving}
                     onClick={() => handleSaveStep(2)}
-                    className="flex h-11 items-center gap-2 rounded-xl bg-slate-900 px-6 text-xs font-bold text-white shadow-sm hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 disabled:opacity-50"
+                    className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700 disabled:opacity-50"
                   >
                     Save & Next <ArrowRight className="h-4 w-4" />
                   </button>
@@ -810,7 +810,7 @@ export default function StartupProfile() {
                     type="button"
                     disabled={saving}
                     onClick={() => handleSaveStep(3)}
-                    className="flex h-11 items-center gap-2 rounded-xl bg-slate-900 px-6 text-xs font-bold text-white shadow-sm hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 disabled:opacity-50"
+                    className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700 disabled:opacity-50"
                   >
                     Save & Next <ArrowRight className="h-4 w-4" />
                   </button>
@@ -914,7 +914,7 @@ export default function StartupProfile() {
                     type="button"
                     disabled={saving}
                     onClick={() => handleSaveStep(4)}
-                    className="flex h-11 items-center gap-2 rounded-xl bg-slate-900 px-6 text-xs font-bold text-white shadow-sm hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 disabled:opacity-50"
+                    className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700 disabled:opacity-50"
                   >
                     Save & Next <ArrowRight className="h-4 w-4" />
                   </button>
@@ -1054,7 +1054,7 @@ export default function StartupProfile() {
                     type="button"
                     disabled={saving}
                     onClick={() => handleSaveStep(5)}
-                    className="flex h-11 items-center gap-2 rounded-xl bg-slate-900 px-6 text-xs font-bold text-white shadow-sm hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 disabled:opacity-50"
+                    className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700 disabled:opacity-50"
                   >
                     Save & Next <ArrowRight className="h-4 w-4" />
                   </button>
@@ -1206,7 +1206,7 @@ export default function StartupProfile() {
                     <button
                       type="button"
                       onClick={() => setActiveStep(7)}
-                      className="flex h-11 items-center gap-2 rounded-xl bg-slate-900 px-6 text-xs font-bold text-white shadow-sm hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                      className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
                     >
                       Next <ArrowRight className="h-4 w-4" />
                     </button>
@@ -1215,7 +1215,7 @@ export default function StartupProfile() {
                       type="button"
                       disabled={saving}
                       onClick={() => handleSaveStep(6)}
-                      className="flex h-11 items-center gap-2 rounded-xl bg-slate-900 px-6 text-xs font-bold text-white shadow-sm hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 disabled:opacity-50"
+                      className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700 disabled:opacity-50"
                     >
                       Save & Next <ArrowRight className="h-4 w-4" />
                     </button>
@@ -1413,7 +1413,7 @@ export default function StartupProfile() {
                   <button
                     type="button"
                     onClick={() => setActiveStep(8)}
-                    className="flex h-11 items-center gap-2 rounded-xl bg-slate-900 px-6 text-xs font-bold text-white shadow-sm hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                    className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
                   >
                     Continue to Final Review <ArrowRight className="h-4 w-4" />
                   </button>
@@ -1662,7 +1662,7 @@ export default function StartupProfile() {
                       <button
                         type="button"
                         onClick={() => setActiveStep(2)}
-                        className="rounded-xl bg-slate-900 px-6 py-2.5 text-xs font-bold text-white hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                        className="btn-primary rounded-xl bg-blue-900 px-6 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
                       >
                         {vStatus === "CORRECTION_REQUESTED" ? "Update Requested Records & Resubmit" : "Edit Registration Dossier"}
                       </button>

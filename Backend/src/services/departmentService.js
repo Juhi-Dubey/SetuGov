@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma.js';
-import { NotFoundError, ForbiddenError, ConflictError } from '../utils/errors.js';
+import { NotFoundError, ForbiddenError, ConflictError, BadRequestError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
 
 export const createDepartment = async (data, user, ip_address = null) => {
@@ -194,12 +194,84 @@ export const updateDepartment = async (id, data, user, ip_address = null) => {
 /**
  * Phase 5: Real Database Government Analytics & Budget Utilization
  */
-export const getGovernmentAnalytics = async (user) => {
+export const getGovernmentAnalytics = async (user, query = {}) => {
+  const { start_date, startDate, end_date, endDate, department_id } = query;
+
+  // Validate Date Range
+  const sDate = start_date || startDate;
+  const eDate = end_date || endDate;
+  const dateFilter = {};
+
+  if (sDate || eDate) {
+    const parsedStart = sDate ? new Date(sDate) : null;
+    const parsedEnd = eDate ? new Date(eDate) : null;
+
+    if (parsedStart && isNaN(parsedStart.getTime())) {
+      throw new BadRequestError('Invalid start_date format');
+    }
+    if (parsedEnd && isNaN(parsedEnd.getTime())) {
+      throw new BadRequestError('Invalid end_date format');
+    }
+    if (parsedStart && parsedEnd && parsedStart > parsedEnd) {
+      throw new BadRequestError('start_date must be less than or equal to end_date');
+    }
+
+    if (parsedStart) dateFilter.gte = parsedStart;
+    if (parsedEnd) dateFilter.lte = parsedEnd;
+  }
+
   const whereChallenge = {};
   const wherePilot = {};
-  if (user && user.role === 'GOVERNMENT' && user.department_id) {
+  const whereApplication = {};
+
+  if (user && user.role === 'GOVERNMENT') {
+    if (!user.department_id) {
+      return {
+        metrics: {
+          total_challenges: 0,
+          published_challenges: 0,
+          active_challenges: 0,
+          total_applications: 0,
+          shortlisted_applications: 0,
+          selected_startups: 0,
+          total_pilots: 0,
+          active_pilots: 0,
+          completed_pilots: 0,
+          successful_pilots: 0,
+          pilots_at_risk: 0,
+          avg_validation_score: 0
+        },
+        budget: {
+          allocated_budget: 0,
+          pilot_budget: 0,
+          paid_amount: 0,
+          pending_amount: 0,
+          remaining_amount: 0,
+          utilization_percentage: 0
+        },
+        status_breakdowns: {
+          challenges: {},
+          applications: {},
+          pilots: {}
+        }
+      };
+    }
+
     whereChallenge.department_id = user.department_id;
     wherePilot.challenge = { department_id: user.department_id };
+    whereApplication.challenge = { department_id: user.department_id };
+  } else if (user && user.role === 'ADMIN') {
+    if (department_id) {
+      whereChallenge.department_id = department_id;
+      wherePilot.challenge = { department_id: department_id };
+      whereApplication.challenge = { department_id: department_id };
+    }
+  }
+
+  if (dateFilter.gte || dateFilter.lte) {
+    whereChallenge.created_at = dateFilter;
+    wherePilot.created_at = dateFilter;
+    whereApplication.created_at = dateFilter;
   }
 
   const [
@@ -210,7 +282,8 @@ export const getGovernmentAnalytics = async (user) => {
     applicationsByStatus,
     pilotsList,
     totalPilots,
-    pilotsByStatus
+    pilotsByStatus,
+    validationsList
   ] = await Promise.all([
     prisma.challenge.count({ where: whereChallenge }),
     prisma.challenge.groupBy({
@@ -227,16 +300,10 @@ export const getGovernmentAnalytics = async (user) => {
         status: true
       }
     }),
-    prisma.application.count({
-      where: user?.role === 'GOVERNMENT' && user.department_id
-        ? { challenge: { department_id: user.department_id } }
-        : {}
-    }),
+    prisma.application.count({ where: whereApplication }),
     prisma.application.groupBy({
       by: ['status'],
-      where: user?.role === 'GOVERNMENT' && user.department_id
-        ? { challenge: { department_id: user.department_id } }
-        : {},
+      where: whereApplication,
       _count: { id: true }
     }),
     prisma.pilot.findMany({
@@ -244,7 +311,8 @@ export const getGovernmentAnalytics = async (user) => {
       include: {
         payments: true,
         kpis: true,
-        scale_decisions: true
+        scale_decisions: true,
+        validations: true
       }
     }),
     prisma.pilot.count({ where: wherePilot }),
@@ -252,6 +320,18 @@ export const getGovernmentAnalytics = async (user) => {
       by: ['status'],
       where: wherePilot,
       _count: { id: true }
+    }),
+    prisma.validation.findMany({
+      where: user?.role === 'GOVERNMENT' && user.department_id
+        ? { pilot: { challenge: { department_id: user.department_id } } }
+        : {},
+      select: {
+        performance_score: true,
+        kpi_achievement_score: true,
+        evidence_quality_score: true,
+        technical_stability_score: true,
+        user_satisfaction_score: true
+      }
     })
   ]);
 
@@ -289,6 +369,21 @@ export const getGovernmentAnalytics = async (user) => {
 
   const remainingBudget = Math.max(0, totalAllocatedBudget - totalPaidAmount);
 
+  // Authoritative average validation score
+  let avgValidationScore = 0;
+  if (validationsList.length > 0) {
+    const sum = validationsList.reduce((acc, v) => {
+      const itemAvg = ((v.performance_score || 0) + (v.kpi_achievement_score || 0) + (v.evidence_quality_score || 0) + (v.technical_stability_score || 0) + (v.user_satisfaction_score || 0)) / 5;
+      return acc + itemAvg;
+    }, 0);
+    avgValidationScore = parseFloat((sum / validationsList.length).toFixed(1));
+  } else if (pilotsList.some(p => p.overall_score != null)) {
+    const validScores = pilotsList.filter(p => p.overall_score != null).map(p => Number(p.overall_score));
+    if (validScores.length > 0) {
+      avgValidationScore = parseFloat((validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(1));
+    }
+  }
+
   return {
     metrics: {
       total_challenges: totalChallenges,
@@ -301,7 +396,8 @@ export const getGovernmentAnalytics = async (user) => {
       active_pilots: activePilots,
       completed_pilots: completedPilots,
       successful_pilots: successfulPilots,
-      pilots_at_risk: atRiskPilots
+      pilots_at_risk: atRiskPilots,
+      avg_validation_score: avgValidationScore
     },
     budget: {
       allocated_budget: totalAllocatedBudget,

@@ -39,10 +39,20 @@ export const normalizeChallengePayload = (raw = {}) => {
     return fallback;
   };
 
+  const parseSafeDate = (val) => {
+    if (!val) return null;
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  };
+
   const title = extractString(raw.title, "Government Innovation Challenge");
   const problem_description = extractString(
     raw.problemDescription || raw.problem_description,
     "Operational challenge statement created through SetuGov platform."
+  );
+  const current_process = extractString(
+    raw.currentProcess || raw.current_process,
+    ""
   );
   const current_baseline = extractString(
     raw.currentBaseline || raw.current_baseline,
@@ -53,6 +63,22 @@ export const normalizeChallengePayload = (raw = {}) => {
     "Digitized measurable operational target"
   );
   const location = extractString(raw.location, "Maharashtra");
+  const pilot_location = extractString(
+    raw.pilotLocation || raw.pilot_location || raw.location,
+    location
+  );
+  const startup_requirements = extractString(
+    raw.startup || raw.startupRequirements || raw.startup_requirements,
+    ""
+  );
+  const cybersecurity_requirements = extractString(
+    raw.cybersecurityDocumentation || raw.cybersecurity_requirements || raw.cybersecurityRequirements,
+    ""
+  );
+  const data_compliance = extractString(
+    raw.dataCompliance || raw.data_compliance,
+    ""
+  );
 
   // Numeric budgets
   const budget_min = Math.max(
@@ -69,9 +95,18 @@ export const normalizeChallengePayload = (raw = {}) => {
 
   // Integer positive pilot duration
   let pilot_duration_days = parseInt(
-    raw.pilotDurationDays ?? raw.pilot_duration_days ?? 60,
+    raw.pilotDurationDays ?? raw.pilot_duration_days,
     10
   );
+  if (isNaN(pilot_duration_days) || pilot_duration_days <= 0) {
+    const sDate = raw.pilotStartDate || raw.pilot_start_date;
+    const eDate = raw.pilotEndDate || raw.pilot_end_date;
+    if (sDate && eDate) {
+      const diffMs = new Date(eDate).getTime() - new Date(sDate).getTime();
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+      if (diffDays > 0) pilot_duration_days = diffDays;
+    }
+  }
   if (isNaN(pilot_duration_days) || pilot_duration_days <= 0) {
     pilot_duration_days = 60;
   }
@@ -130,8 +165,41 @@ export const normalizeChallengePayload = (raw = {}) => {
     required_technologies,
   };
 
-  if (raw.application_deadline || raw.applicationDeadline || raw.deadline) {
-    payload.application_deadline = new Date(raw.application_deadline || raw.applicationDeadline || raw.deadline).toISOString();
+  if (current_process) payload.current_process = current_process;
+  if (pilot_location) payload.pilot_location = pilot_location;
+  if (startup_requirements) payload.startup_requirements = startup_requirements;
+  if (cybersecurity_requirements) payload.cybersecurity_requirements = cybersecurity_requirements;
+  if (data_compliance) payload.data_compliance = data_compliance;
+
+  const appDeadline = parseSafeDate(raw.application_deadline || raw.applicationDeadline || raw.deadline);
+  if (appDeadline) payload.application_deadline = appDeadline;
+
+  const pilotStart = parseSafeDate(raw.pilotStartDate || raw.pilot_start_date);
+  if (pilotStart) payload.pilot_start_date = pilotStart;
+
+  const pilotEnd = parseSafeDate(raw.pilotEndDate || raw.pilot_end_date);
+  if (pilotEnd) payload.pilot_end_date = pilotEnd;
+
+  // KPIs
+  if (Array.isArray(raw.kpis) && raw.kpis.length > 0) {
+    payload.kpis = raw.kpis;
+  }
+
+  // Milestones
+  if (Array.isArray(raw.milestones) && raw.milestones.length > 0) {
+    payload.milestones = raw.milestones;
+  }
+
+  // Eligibility Requirements
+  const eligSource = raw.eligibilityRequirements || raw.eligibility_requirements;
+  if (Array.isArray(eligSource) && eligSource.length > 0) {
+    payload.eligibility_requirements = eligSource;
+  }
+
+  // Required Documents
+  const docSource = raw.requiredDocuments || raw.required_documents;
+  if (Array.isArray(docSource) && docSource.length > 0) {
+    payload.required_documents = docSource;
   }
 
   const isUUID = (str) =>
@@ -221,8 +289,26 @@ export const generateChallengeBrain1 = async (challengeId) => {
   });
 };
 
-export const getGovernmentAnalytics = async () => {
-  return apiRequest("/departments/analytics");
+export const getChallengeEligibility = async (challengeId) => {
+  return apiRequest(`/challenges/${challengeId}/eligibility`);
+};
+
+export const saveChallengeEligibility = async (challengeId, payload) => {
+  return apiRequest(`/challenges/${challengeId}/eligibility`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const getGovernmentAnalytics = async (params = {}) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.append(key, value);
+    }
+  });
+  const queryString = query.toString();
+  return apiRequest(`/departments/analytics${queryString ? `?${queryString}` : ""}`);
 };
 
 export const getGovernmentDashboard = async () => {
@@ -246,6 +332,8 @@ export default {
   getChallengeDecisions,
   getChallengePilot,
   generateChallengeBrain1,
+  getChallengeEligibility,
+  saveChallengeEligibility,
   getGovernmentAnalytics,
   getGovernmentDashboard,
 };

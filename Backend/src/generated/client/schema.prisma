@@ -11,14 +11,14 @@ datasource db {
 }
 
 model User {
-  id                            String                   @id @default(uuid())
+  id                            String                       @id @default(uuid())
   name                          String
-  email                         String                   @unique
+  email                         String                       @unique
   password_hash                 String
   role                          UserRole
   department_id                 String?
-  is_active                     Boolean                  @default(true)
-  is_verified                   Boolean                  @default(false)
+  is_active                     Boolean                      @default(true)
+  is_verified                   Boolean                      @default(false)
   designation                   String?
   phone                         String?
   invitation_token_hash         String?
@@ -27,40 +27,41 @@ model User {
   email_verification_token_hash String?
   email_verification_expires_at DateTime?
   email_verified_at             DateTime?
-  created_at                    DateTime                 @default(now())
-  updated_at                    DateTime                 @updatedAt
+  created_at                    DateTime                     @default(now())
+  updated_at                    DateTime                     @updatedAt
   audit_logs                    AuditLog[]
-  created_challenges            Challenge[]              @relation("ChallengeCreator")
-  evaluations                   Evaluation[]             @relation("Evaluator")
-  uploaded_evidence             Evidence[]               @relation("EvidenceUploader")
+  created_challenges            Challenge[]                  @relation("ChallengeCreator")
+  evaluations                   Evaluation[]                 @relation("Evaluator")
+  uploaded_evidence             Evidence[]                   @relation("EvidenceUploader")
   notifications                 Notification[]
-  approved_decisions            ScaleDecision[]          @relation("DecisionApprover")
-  verified_documents            StartupDocument[]        @relation("DocumentVerifier")
+  approved_decisions            ScaleDecision[]              @relation("DecisionApprover")
+  verified_documents            StartupDocument[]            @relation("DocumentVerifier")
   startups                      Startup[]
-  department                    Department?              @relation(fields: [department_id], references: [id])
-  validations                   Validation[]             @relation("Validator")
+  department                    Department?                  @relation(fields: [department_id], references: [id])
+  validations                   Validation[]                 @relation("Validator")
   evaluator_profile             EvaluatorProfile?
-  conflict_declarations         ConflictDeclaration[]    @relation("ConflictDeclarer")
-  verified_startups             Startup[]                @relation("StartupVerifier")
-  verified_evaluators           EvaluatorProfile[]       @relation("EvaluatorProfileVerifier")
-  verified_compliance           ComplianceItem[]         @relation("ComplianceVerifier")
-  reviewed_access_requests      AccessRequest[]          @relation("AccessRequestReviewer")
-  nominated_access_requests     AccessRequest[]          @relation("AccessRequestNominator")
-  evaluator_assignments         EvaluatorAssignment[]    @relation("EvaluatorAssigned")
-  created_evaluator_assignments EvaluatorAssignment[]    @relation("EvaluatorAssigner")
-  initiated_procurements        ProcurementRecord[]      @relation("ProcurementInitiator")
-  approved_procurements         ProcurementRecord[]      @relation("ProcurementApprover")
-  accepted_deliveries           ProcurementRecord[]      @relation("DeliveryAcceptor")
-  failed_login_attempts         Int                      @default(0)
+  conflict_declarations         ConflictDeclaration[]        @relation("ConflictDeclarer")
+  verified_startups             Startup[]                    @relation("StartupVerifier")
+  verified_evaluators           EvaluatorProfile[]           @relation("EvaluatorProfileVerifier")
+  verified_compliance           ComplianceItem[]             @relation("ComplianceVerifier")
+  reviewed_access_requests      AccessRequest[]              @relation("AccessRequestReviewer")
+  nominated_access_requests     AccessRequest[]              @relation("AccessRequestNominator")
+  evaluator_assignments         EvaluatorAssignment[]        @relation("EvaluatorAssigned")
+  created_evaluator_assignments EvaluatorAssignment[]        @relation("EvaluatorAssigner")
+  initiated_procurements        ProcurementRecord[]          @relation("ProcurementInitiator")
+  approved_procurements         ProcurementRecord[]          @relation("ProcurementApprover")
+  accepted_deliveries           ProcurementRecord[]          @relation("DeliveryAcceptor")
+  failed_login_attempts         Int                          @default(0)
   locked_until                  DateTime?
   last_failed_login_at          DateTime?
-  reviewed_startups             Startup[]                @relation("StartupReviewer")
-  application_documents         ApplicationDocument[]    @relation("ApplicationDocumentUploader")
-  evaluator_applications        EvaluatorApplication[]   @relation("EvaluatorApplicant")
-  reviewed_evaluator_apps       EvaluatorApplication[]   @relation("EvaluatorApplicationReviewer")
-  evaluator_pool_memberships    ChallengeEvaluatorPool[] @relation("EvaluatorPoolMember")
-  added_evaluator_pools         ChallengeEvaluatorPool[] @relation("EvaluatorPoolAdder")
-  evaluator_match_scores        EvaluatorMatchScore[]    @relation("EvaluatorMatched")
+  reviewed_startups             Startup[]                    @relation("StartupReviewer")
+  application_documents         ApplicationDocument[]        @relation("ApplicationDocumentUploader")
+  evaluator_applications        EvaluatorApplication[]       @relation("EvaluatorApplicant")
+  reviewed_evaluator_apps       EvaluatorApplication[]       @relation("EvaluatorApplicationReviewer")
+  evaluator_pool_memberships    ChallengeEvaluatorPool[]     @relation("EvaluatorPoolMember")
+  added_evaluator_pools         ChallengeEvaluatorPool[]     @relation("EvaluatorPoolAdder")
+  evaluator_match_scores        EvaluatorMatchScore[]        @relation("EvaluatorMatched")
+  eligibility_reviews           ChallengeEligibilityReview[] @relation("ChallengeEligibilityReviewer")
 
   @@index([role])
   @@index([department_id])
@@ -114,6 +115,17 @@ model Challenge {
   ip_ownership                 String?                     @default("STARTUP_OWNED")
   licensing_terms              String?
   confidentiality_terms        String?
+  current_process              String?
+  pilot_location               String?
+  pilot_start_date             DateTime?
+  pilot_end_date               DateTime?
+  startup_requirements         String?
+  kpis                         Json?
+  milestones                   Json?
+  eligibility_requirements     Json?
+  required_documents           Json?
+  cybersecurity_requirements   String?
+  data_compliance              String?
   created_at                   DateTime                    @default(now())
   updated_at                   DateTime                    @updatedAt
   applications                 Application[]
@@ -125,10 +137,27 @@ model Challenge {
   evaluator_applications       EvaluatorApplication[]
   evaluator_pools              ChallengeEvaluatorPool[]
   evaluator_match_scores       EvaluatorMatchScore[]
+  eligibility_review           ChallengeEligibilityReview?
 
   @@index([status])
   @@index([department_id])
   @@map("challenges")
+}
+
+model ChallengeEligibilityReview {
+  id           String    @id @default(uuid())
+  challenge_id String    @unique
+  reviewed_by  String
+  decision     String    @default("PENDING")
+  remarks      String?
+  checks       Json
+  reviewed_at  DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+  challenge    Challenge @relation(fields: [challenge_id], references: [id], onDelete: Cascade)
+  reviewer     User      @relation("ChallengeEligibilityReviewer", fields: [reviewed_by], references: [id])
+
+  @@index([challenge_id])
+  @@map("challenge_eligibility_reviews")
 }
 
 model MatchScore {

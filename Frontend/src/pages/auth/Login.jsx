@@ -174,7 +174,7 @@ function Login() {
           <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-indigo-500/10 blur-3xl dark:bg-indigo-500/20" />
           <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl dark:bg-blue-500/20" />
 
-          <div className="relative z-10 flex w-full flex-col justify-between p-12 xl:p-16">
+          <div className="relative z-10 flex w-full flex-col justify-between p-8 xl:p-10">
             {/* Logo */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -182,15 +182,15 @@ function Login() {
               transition={{ duration: 0.5 }}
             >
               <Link to="/" className="flex items-center gap-3 w-fit">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm backdrop-blur dark:bg-white/10 dark:text-white">
-                  <Building2 className="h-6 w-6" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm backdrop-blur dark:bg-white/10 dark:text-white">
+                  <Building2 className="h-5 w-5" />
                 </div>
 
                 <div>
-                  <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
                     SetuGov
                   </h1>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     Government Innovation Procurement OS
                   </p>
                 </div>
@@ -202,41 +202,41 @@ function Login() {
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.15 }}
-              className="max-w-xl"
+              className="max-w-xl my-auto py-6"
             >
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
-                <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 text-xs text-slate-700 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
+                <Sparkles className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
                 Problem Statement 26136 · Maharashtra
               </div>
 
-              <h2 className="text-4xl font-bold leading-tight text-slate-900 dark:text-white xl:text-5xl">
+              <h2 className="text-3xl font-bold leading-tight text-slate-900 dark:text-white xl:text-4xl">
                 Transform government challenges into
                 <span className="text-indigo-600 dark:text-indigo-400"> measurable innovation.</span>
               </h2>
 
-              <p className="mt-6 max-w-lg text-base leading-7 text-slate-600 dark:text-slate-400">
+              <p className="mt-4 max-w-lg text-sm leading-6 text-slate-600 dark:text-slate-400">
                 Connect government departments, startups, and evaluators through
                 an immutable, milestone-driven innovation procurement lifecycle.
               </p>
 
-              <div className="mt-10 grid grid-cols-3 gap-4">
-                <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">01</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              <div className="mt-6 grid grid-cols-3 gap-3">
+                <div className="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">01</p>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                     Challenge AI Copilot
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">02</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                <div className="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">02</p>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                     5-Factor Matching
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">03</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                <div className="rounded-xl border border-slate-200 bg-white/80 p-3 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
+                  <p className="text-xl font-bold text-slate-900 dark:text-white">03</p>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                     Pilot & Scale Engine
                   </p>
                 </div>
@@ -252,19 +252,19 @@ function Login() {
         </div>
 
         {/* Login Section */}
-        <div className="relative flex items-center justify-center px-6 py-12 sm:px-10 lg:px-12">
+        <div className="relative flex items-center justify-center px-6 py-8 sm:px-8 lg:px-10">
           {/* Top Header Controls */}
           <div className="absolute right-6 top-6 flex items-center gap-2">
             <Link
               to="/"
-              className="text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-colors"
+              className="back-nav"
             >
               Back to Home
             </Link>
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              className="flex h-8.5 w-8.5 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -278,15 +278,15 @@ function Login() {
             className="w-full max-w-md"
           >
             {/* Mobile Logo */}
-            <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
-              <Link to="/" className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-                  <Building2 className="h-6 w-6" />
+            <div className="mb-6 flex items-center justify-center gap-3 lg:hidden">
+              <Link to="/" className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900">
+                  <Building2 className="h-5 w-5" />
                 </div>
 
                 <div>
-                  <h1 className="text-xl font-bold">SetuGov</h1>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <h1 className="text-lg font-bold">SetuGov</h1>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     Innovation Procurement OS
                   </p>
                 </div>
@@ -294,16 +294,16 @@ function Login() {
             </div>
 
             {/* Heading */}
-            <div className="mb-6">
-              <p className="mb-1 text-sm font-medium text-indigo-600 dark:text-indigo-400">
+            <div className="mb-4">
+              <p className="mb-0.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
                 Welcome back
               </p>
 
-              <h2 className="text-3xl font-bold tracking-tight">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                 Sign in to SetuGov
               </h2>
 
-              <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
+              <p className="mt-0.5 text-xs sm:text-sm leading-5 text-slate-500 dark:text-slate-400">
                 Access your procurement lifecycle workspace.
               </p>
             </div>
@@ -342,7 +342,7 @@ function Login() {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="you@domain.gov.in"
-                    className={`h-11 w-full rounded-xl border bg-white pl-11 pr-4 text-sm outline-none transition-all placeholder:text-slate-400 focus:ring-4 dark:bg-slate-900 ${
+                    className={`h-10 w-full rounded-xl border bg-white pl-11 pr-4 text-xs sm:text-sm outline-none transition-all placeholder:text-slate-400 focus:ring-4 dark:bg-slate-900 ${
                       errors.email
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                         : "border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-slate-800"
@@ -377,7 +377,7 @@ function Login() {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Enter your password"
-                    className={`h-11 w-full rounded-xl border bg-white pl-11 pr-12 text-sm outline-none transition-all placeholder:text-slate-400 focus:ring-4 dark:bg-slate-900 ${
+                    className={`h-10 w-full rounded-xl border bg-white pl-11 pr-12 text-xs sm:text-sm outline-none transition-all placeholder:text-slate-400 focus:ring-4 dark:bg-slate-900 ${
                       errors.password
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                         : "border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-slate-800"
@@ -413,7 +413,7 @@ function Login() {
                 whileTap={{ scale: isLoading ? 1 : 0.98 }}
                 type="submit"
                 disabled={isLoading}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                className="btn-primary flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-blue-900 px-5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-blue-900/15 transition-all hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
               >
                 {isLoading ? (
                   <>

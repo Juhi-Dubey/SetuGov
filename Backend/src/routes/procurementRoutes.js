@@ -6,6 +6,7 @@ import {
   issueContract,
   submitDelivery,
   acceptDelivery,
+  completeProcurement,
   createPayment,
   listProcurements,
   getProcurement
@@ -39,6 +40,9 @@ router.post('/:id/delivery', authenticate, authorizeRoles('STARTUP', 'GOVERNMENT
 
 // Accept Formal Delivery (Government, Admin)
 router.post('/:id/accept', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), acceptDelivery);
+
+// Complete Procurement Process (Government, Admin)
+router.post('/:id/complete', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), completeProcurement);
 
 // Schedule Payment upon Accepted Delivery (Government, Admin)
 router.post('/:id/payments', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), createPayment);

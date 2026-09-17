@@ -422,7 +422,7 @@ function EvaluationDetail() {
                 "/evaluator/assignments"
               )
             }
-            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-indigo-700"
+            className="back-nav mt-5"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Assignments

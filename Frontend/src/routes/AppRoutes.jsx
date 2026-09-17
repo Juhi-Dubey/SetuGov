@@ -161,6 +161,16 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/government/challenges/:id/edit"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
+              <CreateChallenge />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/government/challenges/:id"
         element={
           <ProtectedRoute>
@@ -192,7 +202,13 @@ function AppRoutes() {
       />
       <Route
         path="/government/applications"
-        element={<Navigate to="/government/challenges" replace />}
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
+              <ChallengeApplications />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/government/challenges/:id/eligibility"

@@ -18,6 +18,8 @@ import {
   ExternalLink
 } from "lucide-react";
 import { getEvaluators, nominateEvaluator } from "../../services/evaluatorService";
+import { formatEmploymentType } from "../../utils/filterUtils";
+import Pagination from "../../components/common/Pagination";
 
 function GovernmentEvaluators() {
   const navigate = useNavigate();
@@ -26,6 +28,8 @@ function GovernmentEvaluators() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [domainFilter, setDomainFilter] = useState("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9);
 
   // Nomination Modal
   const [showNominateModal, setShowNominateModal] = useState(false);
@@ -38,7 +42,7 @@ function GovernmentEvaluators() {
     phone: "",
     organization: "",
     designation: "",
-    employment_type: "EMPLOYED",
+    employment_type: "employed",
     domain_expertise: "",
     years_experience: "",
     bio: "",
@@ -81,6 +85,15 @@ function GovernmentEvaluators() {
       return matchesQuery && matchesDomain;
     });
   }, [evaluators, search, domainFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, domainFilter]);
+
+  const paginatedEvaluators = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredEvaluators.slice(start, start + pageSize);
+  }, [filteredEvaluators, currentPage, pageSize]);
 
   const handleNominateSubmit = async (e) => {
     e.preventDefault();
@@ -132,7 +145,7 @@ function GovernmentEvaluators() {
                 setNominateSuccess(false);
                 setNominateError("");
               }}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+              className="btn-primary inline-flex items-center gap-2 rounded-xl bg-blue-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
             >
               <UserPlus className="h-4 w-4" />
               Nominate Evaluator
@@ -189,8 +202,9 @@ function GovernmentEvaluators() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredEvaluators.map((profile) => (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {paginatedEvaluators.map((profile) => (
               <motion.div
                 key={profile.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -243,20 +257,31 @@ function GovernmentEvaluators() {
                   </div>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                   <span>
                     {profile.years_experience != null
                       ? `Experience: ${profile.years_experience} yr${profile.years_experience !== 1 ? "s" : ""}`
                       : "Experience: —"}
                   </span>
-                  <span className="text-slate-400">
-                    {profile.employment_type || "Independent"}
+                  <span>
+                    {formatEmploymentType(profile.employment_type)}
                   </span>
                 </div>
               </motion.div>
             ))}
           </div>
-        )}
+
+          <Pagination
+            currentPage={currentPage}
+            totalItems={filteredEvaluators.length}
+            pageSize={pageSize}
+            pageSizeOptions={[6, 9, 18, 27]}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            itemName="evaluators"
+          />
+        </div>
+      )}
 
         {/* =====================================================
             GOVERNMENT NOMINATE EVALUATOR MODAL
@@ -294,7 +319,7 @@ function GovernmentEvaluators() {
                       setShowNominateModal(false);
                       setNominateSuccess(false);
                     }}
-                    className="mt-4 inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+                    className="btn-primary mt-4 inline-flex items-center justify-center rounded-xl bg-blue-900 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
                   >
                     Done
                   </button>

@@ -346,10 +346,17 @@ export const startPilot = async (id, user, ip_address = null, options = {}) => {
   });
 
   const uncompliedItems = complianceItems.filter(c => c.status !== 'COMPLIED');
-  if (uncompliedItems.length > 0 && !options.readiness_override) {
-    throw new BadRequestError(
-      `Pilot readiness checklist has ${uncompliedItems.length} unverified item(s). Complete compliance verification or provide an authorized administrative readiness_override.`
-    );
+  if (uncompliedItems.length > 0) {
+    if (!options.readiness_override) {
+      throw new BadRequestError(
+        `Pilot readiness checklist has ${uncompliedItems.length} unverified item(s). Complete compliance verification or provide an authorized administrative readiness_override.`
+      );
+    }
+    if (!options.override_reason || !String(options.override_reason).trim()) {
+      throw new BadRequestError(
+        'An explicit override_reason justification is required when starting a pilot with unverified compliance items.'
+      );
+    }
   }
 
   const updated = await prisma.pilot.update({
@@ -764,15 +771,16 @@ export const addPilotFeedback = async (pilotId, data, user = null, ip_address = 
     throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
   }
 
-  const { citizen_name, beneficiary_type = 'CITIZEN', rating, comments } = data;
+  const { citizen_name, beneficiary_type = 'CITIZEN', rating, comments, comment, respondent_role, stakeholder_type } = data;
+  const rawComment = (comments || comment || '').trim() || 'Beneficiary feedback recorded';
 
   const feedback = await prisma.pilotFeedback.create({
     data: {
       pilot_id: pilotId,
-      citizen_name: citizen_name ? citizen_name.trim() : 'Beneficiary / Citizen',
-      beneficiary_type: beneficiary_type || 'CITIZEN',
+      citizen_name: (citizen_name || respondent_role || 'Beneficiary / Citizen').trim(),
+      beneficiary_type: beneficiary_type || stakeholder_type || 'CITIZEN',
       rating: Math.max(1, Math.min(5, parseInt(rating, 10) || 5)),
-      comments: comments.trim(),
+      comments: rawComment,
       feedback_date: new Date()
     }
   });
@@ -786,7 +794,11 @@ export const addPilotFeedback = async (pilotId, data, user = null, ip_address = 
     ip_address
   });
 
-  return feedback;
+  return {
+    ...feedback,
+    comment: feedback.comments,
+    respondent_role: feedback.citizen_name
+  };
 };
 
 /**
@@ -798,15 +810,22 @@ export const getPilotFeedbacks = async (pilotId, user = null) => {
     orderBy: { feedback_date: 'desc' }
   });
 
-  const total = feedbacks.length;
+  const formattedFeedbacks = feedbacks.map((fb) => ({
+    ...fb,
+    comment: fb.comments,
+    respondent_role: fb.citizen_name || 'Beneficiary'
+  }));
+
+  const total = formattedFeedbacks.length;
   const avgRating = total > 0
-    ? parseFloat((feedbacks.reduce((sum, f) => sum + f.rating, 0) / total).toFixed(1))
+    ? parseFloat((formattedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / total).toFixed(1))
     : 0;
 
   return {
     total,
     average_rating: avgRating,
-    feedbacks
+    feedbacks: formattedFeedbacks,
+    feedback: formattedFeedbacks
   };
 };
 

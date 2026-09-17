@@ -63,6 +63,60 @@ export const APPLICATION_STATUS_LABELS = {
 };
 
 /**
+ * Display label mapping for PilotStatus enum
+ */
+export const PILOT_STATUS_LABELS = {
+  PLANNED: 'Planned',
+  RUNNING: 'Running',
+  AT_RISK: 'At Risk',
+  VALIDATION: 'In Validation',
+  COMPLETED: 'Completed',
+  SCALED: 'Scaled',
+  EXTENDED: 'Extended',
+  STOPPED: 'Stopped',
+};
+
+/**
+ * Display label mapping for ChallengeStatus enum
+ */
+export const CHALLENGE_STATUS_LABELS = {
+  DRAFT: 'Draft',
+  PUBLISHED: 'Open / Published',
+  CLOSED: 'Closed',
+  EVALUATION: 'In Evaluation',
+  PILOT: 'Pilot Stage',
+  COMPLETED: 'Completed',
+};
+
+/**
+ * Display label mapping for PaymentStatus enum
+ */
+export const PAYMENT_STATUS_LABELS = {
+  UPCOMING: 'Upcoming',
+  PENDING: 'Pending Approval',
+  PAID: 'Disbursed / Paid',
+  REJECTED: 'Rejected',
+};
+
+/**
+ * Display label mapping for ValidationStatus enum
+ */
+export const VALIDATION_STATUS_LABELS = {
+  VALIDATED: 'Validated',
+  VALIDATED_WITH_CONDITIONS: 'Validated with Conditions',
+  NOT_VALIDATED: 'Not Validated',
+};
+
+/**
+ * Display label mapping for ScaleDecisionType enum
+ */
+export const SCALE_DECISION_LABELS = {
+  SCALE: 'Scale Statewide',
+  EXTEND: 'Extend Sandbox',
+  STOP: 'Stop Pilot',
+};
+
+/**
  * Display label mapping for Evaluation proposal status
  */
 export const EVALUATION_STATUS_LABELS = {
@@ -85,4 +139,52 @@ export const toTitleCase = (str) => {
     .split(/[_\s]+/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+};
+
+/**
+ * Format pilot status with canonical label
+ */
+export const formatPilotStatus = (status) => {
+  if (!status) return 'Planned';
+  const upper = String(status).toUpperCase();
+  return PILOT_STATUS_LABELS[upper] || toTitleCase(status);
+};
+
+/**
+ * Format challenge status with canonical label
+ */
+export const formatChallengeStatus = (status) => {
+  if (!status) return 'Draft';
+  const upper = String(status).toUpperCase();
+  return CHALLENGE_STATUS_LABELS[upper] || toTitleCase(status);
+};
+
+/**
+ * Format application status with canonical label
+ */
+export const formatApplicationStatus = (status) => {
+  if (!status) return 'Submitted';
+  const upper = String(status).toUpperCase();
+  return APPLICATION_STATUS_LABELS[upper] || toTitleCase(status);
+};
+
+/**
+ * Display label mapping for Evaluator Employment Types
+ */
+export const EMPLOYMENT_TYPE_LABELS = {
+  EMPLOYED: 'Employed',
+  INDEPENDENT: 'Independent',
+};
+
+/**
+ * Formats employment type to Title Case (e.g. 'EMPLOYED' -> 'Employed', 'INDEPENDENT' -> 'Independent')
+ */
+export const formatEmploymentType = (type) => {
+  if (!type || typeof type !== 'string') return 'Independent';
+  const trimmed = type.trim();
+  const upper = trimmed.toUpperCase();
+  if (EMPLOYMENT_TYPE_LABELS[upper]) {
+    return EMPLOYMENT_TYPE_LABELS[upper];
+  }
+  return toTitleCase(trimmed);
 };

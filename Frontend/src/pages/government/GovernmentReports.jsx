@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart3,
@@ -12,12 +12,16 @@ import {
   ChevronRight,
   AlertCircle,
   RefreshCw,
-  FolderOpen
+  FolderOpen,
+  Calendar,
+  Layers
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getGovernmentAnalytics } from "../../services/challengeService";
 import { getPilots } from "../../services/pilotService";
 import { useAuth } from "../../context/AuthContext";
+import Pagination from "../../components/common/Pagination";
+import { formatPilotStatus } from "../../utils/filterUtils";
 
 function GovernmentReports() {
   const navigate = useNavigate();
@@ -29,26 +33,63 @@ function GovernmentReports() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Date Range Filters
+  const [datePreset, setDatePreset] = useState("ALL");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [dateError, setDateError] = useState("");
+
+  const [pilotPage, setPilotPage] = useState(1);
+  const [pilotPageSize, setPilotPageSize] = useState(10);
+  const [disbursementPage, setDisbursementPage] = useState(1);
+  const [disbursementPageSize, setDisbursementPageSize] = useState(10);
+
   const [analytics, setAnalytics] = useState(null);
   const [pilots, setPilots] = useState([]);
 
-  useEffect(() => {
-    fetchReportData();
-  }, []);
+  const handleDatePresetChange = (preset) => {
+    setDatePreset(preset);
+    setDateError("");
+    const now = new Date();
 
-  const fetchReportData = async () => {
+    if (preset === "ALL") {
+      setStartDate("");
+      setEndDate("");
+    } else if (preset === "30D") {
+      const d = new Date();
+      d.setDate(now.getDate() - 30);
+      setStartDate(d.toISOString().slice(0, 10));
+      setEndDate(now.toISOString().slice(0, 10));
+    } else if (preset === "90D") {
+      const d = new Date();
+      d.setDate(now.getDate() - 90);
+      setStartDate(d.toISOString().slice(0, 10));
+      setEndDate(now.toISOString().slice(0, 10));
+    } else if (preset === "YEAR") {
+      const d = new Date(now.getFullYear(), 0, 1);
+      setStartDate(d.toISOString().slice(0, 10));
+      setEndDate(now.toISOString().slice(0, 10));
+    }
+  };
+
+  const fetchReportData = useCallback(async () => {
     try {
+      if (startDate && endDate && startDate > endDate) {
+        setDateError("Start date cannot be after end date");
+        return;
+      }
+      setDateError("");
+
       setLoading(true);
       setError(null);
+
+      const analyticsParams = {};
+      if (startDate) analyticsParams.start_date = startDate;
+      if (endDate) analyticsParams.end_date = endDate;
+
       const [analyticsRes, pilotsRes] = await Promise.all([
-        getGovernmentAnalytics().catch((err) => {
-          console.warn("Analytics fetch error:", err);
-          return null;
-        }),
-        getPilots().catch((err) => {
-          console.warn("Pilots fetch error:", err);
-          return null;
-        }),
+        getGovernmentAnalytics(analyticsParams),
+        getPilots()
       ]);
 
       if (analyticsRes?.data) {
@@ -70,9 +111,13 @@ function GovernmentReports() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate]);
 
-  // Real Aggregated Metrics
+  useEffect(() => {
+    fetchReportData();
+  }, [fetchReportData]);
+
+  // Real Database Authoritative Aggregated Metrics
   const metrics = useMemo(() => {
     const totalChallenges = analytics?.metrics?.total_challenges ?? 0;
     const activePilots = analytics?.metrics?.active_pilots ?? pilots.filter((p) => ["RUNNING", "PLANNED", "VALIDATION"].includes(p.status)).length;
@@ -82,13 +127,21 @@ function GovernmentReports() {
     const totalAllocated = analytics?.budget?.allocated_budget ?? 0;
     const totalDisbursed = analytics?.budget?.paid_amount ?? 0;
     const pendingDisbursement = analytics?.budget?.pending_amount ?? 0;
+    const remainingBudget = analytics?.budget?.remaining_amount ?? Math.max(0, totalAllocated - totalDisbursed);
 
-    const scores = pilots.filter((p) => p.overall_score != null).map((p) => Number(p.overall_score));
-    const avgValidationScore = scores.length > 0
-      ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
-      : "0.0";
+    const rawAvgScore = analytics?.metrics?.avg_validation_score;
+    let avgValidationScore = "0.0";
+    if (rawAvgScore != null && Number(rawAvgScore) > 0) {
+      avgValidationScore = Number(rawAvgScore).toFixed(1);
+    } else {
+      const scores = pilots.filter((p) => p.overall_score != null).map((p) => Number(p.overall_score));
+      if (scores.length > 0) {
+        avgValidationScore = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+      }
+    }
 
     const successRate = totalPilots > 0 ? Math.round((completedPilots / totalPilots) * 100) : 0;
+    const utilizationPercentage = analytics?.budget?.utilization_percentage ?? (totalAllocated > 0 ? Math.round((totalDisbursed / totalAllocated) * 100) : 0);
 
     return {
       totalChallenges,
@@ -98,9 +151,11 @@ function GovernmentReports() {
       totalAllocated,
       totalDisbursed,
       pendingDisbursement,
+      remainingBudget,
       avgValidationScore,
       successRate,
-      utilizationPercentage: analytics?.budget?.utilization_percentage ?? (totalAllocated > 0 ? Math.round((totalDisbursed / totalAllocated) * 100) : 0)
+      utilizationPercentage,
+      pilotsAtRisk: analytics?.metrics?.pilots_at_risk || 0
     };
   }, [analytics, pilots]);
 
@@ -114,6 +169,15 @@ function GovernmentReports() {
     });
   }, [pilots, statusFilter, searchQuery]);
 
+  useEffect(() => {
+    setPilotPage(1);
+  }, [statusFilter, searchQuery]);
+
+  const paginatedPilots = useMemo(() => {
+    const start = (pilotPage - 1) * pilotPageSize;
+    return filteredPilots.slice(start, start + pilotPageSize);
+  }, [filteredPilots, pilotPage, pilotPageSize]);
+
   // Real Database Payments Extract
   const allPayments = useMemo(() => {
     const list = [];
@@ -126,13 +190,18 @@ function GovernmentReports() {
           amount: pay.amount || 0,
           status: pay.status || "PENDING",
           trancheNumber: pay.tranche_number,
-          releaseDate: pay.released_at ? new Date(pay.released_at).toLocaleDateString("en-IN") : (pay.due_date ? new Date(pay.due_date).toLocaleDateString("en-IN") : "Scheduled"),
-          remarks: pay.remarks || pay.milestone?.title || `Tranche ${pay.tranche_number || 1} Payment`
+          releaseDate: pay.payment_date ? new Date(pay.payment_date).toLocaleDateString("en-IN") : (pay.created_at ? new Date(pay.created_at).toLocaleDateString("en-IN") : "Scheduled"),
+          remarks: pay.milestone?.name || pay.reference_number || `Tranche Milestone Payment`
         });
       });
     });
     return list;
   }, [pilots]);
+
+  const paginatedDisbursements = useMemo(() => {
+    const start = (disbursementPage - 1) * disbursementPageSize;
+    return allPayments.slice(start, start + disbursementPageSize);
+  }, [allPayments, disbursementPage, disbursementPageSize]);
 
   const handleExportCSV = () => {
     const headers = ["Pilot ID", "Challenge", "Startup", "Budget (INR)", "Status", "Validation Score", "Created Date"];
@@ -151,7 +220,7 @@ function GovernmentReports() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `SetuGov_Procurement_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute("download", `SetuGov_Department_Report_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -161,7 +230,7 @@ function GovernmentReports() {
     window.print();
   };
 
-  if (loading) {
+  if (loading && !analytics && pilots.length === 0) {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center gap-3">
         <RefreshCw className="h-7 w-7 animate-spin text-slate-400" />
@@ -170,7 +239,7 @@ function GovernmentReports() {
     );
   }
 
-  if (error) {
+  if (error && !analytics) {
     return (
       <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center dark:border-red-900/30 dark:bg-red-950/30">
         <AlertCircle className="mx-auto h-8 w-8 text-red-500" />
@@ -187,20 +256,20 @@ function GovernmentReports() {
   }
 
   return (
-    <div className="space-y-8 print:space-y-4">
+    <div className="space-y-5 sm:space-y-6 print:space-y-4">
       {/* PAGE HEADER */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between print:hidden">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between print:hidden">
         <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
             <BarChart3 className="h-3.5 w-3.5" /> Departmental Analytics
           </span>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="mt-1.5 text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
             Procurement & Pilot Performance Reports
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
             {user?.department?.name
-              ? `Real-time analytics for ${user.department.name}.`
-              : "Live database oversight on challenges, pilot milestones, and budget disbursements."}
+              ? `Department-scoped oversight for ${user.department.name}.`
+              : "Live database oversight on departmental challenges, stage-gate milestones, and disbursements."}
           </p>
         </div>
 
@@ -208,18 +277,88 @@ function GovernmentReports() {
           <button
             type="button"
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             <Download className="h-4 w-4 text-slate-500" /> Export CSV
           </button>
           <button
             type="button"
             onClick={handlePrint}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+            className="btn-primary inline-flex items-center gap-2 rounded-xl bg-blue-900 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
           >
-            <Printer className="h-4 w-4" /> Print / Save PDF
+            <Printer className="h-4 w-4 text-white" /> Print / Save PDF
           </button>
         </div>
+      </div>
+
+      {/* DATE RANGE FILTER BAR */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 print:hidden">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <Calendar className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+            <span>Date Filter:</span>
+            <div className="flex flex-wrap items-center gap-1">
+              {[
+                { id: "ALL", label: "All Time" },
+                { id: "30D", label: "Last 30 Days" },
+                { id: "90D", label: "Last 90 Days" },
+                { id: "YEAR", label: "This Year" }
+              ].map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => handleDatePresetChange(p.id)}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                    datePreset === p.id
+                      ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300"
+                      : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span>From:</span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setDatePreset("CUSTOM");
+                  setStartDate(e.target.value);
+                }}
+                className="h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              />
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <span>To:</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setDatePreset("CUSTOM");
+                  setEndDate(e.target.value);
+                }}
+                className="h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={fetchReportData}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-50"
+            >
+              <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} /> Apply
+            </button>
+          </div>
+        </div>
+
+        {dateError && (
+          <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">{dateError}</p>
+        )}
       </div>
 
       {/* EXECUTIVE KPI SUMMARY CARDS */}
@@ -227,10 +366,10 @@ function GovernmentReports() {
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-medium">Total Challenges</span>
+            <span className="text-xs font-medium">Department Challenges</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
               <FileText className="h-4 w-4" />
             </div>
@@ -239,7 +378,7 @@ function GovernmentReports() {
             {metrics.totalChallenges}
           </p>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            {analytics?.metrics?.published_challenges ? `${analytics.metrics.published_challenges} published & active` : "Department challenges"}
+            {analytics?.metrics?.published_challenges ? `${analytics.metrics.published_challenges} published` : "Challenges in department"}
           </p>
         </motion.div>
 
@@ -247,7 +386,7 @@ function GovernmentReports() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-xs font-medium">Active Pilots</span>
@@ -259,7 +398,7 @@ function GovernmentReports() {
             {metrics.activePilots}
           </p>
           <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
-            {metrics.completedPilots > 0 ? `${metrics.completedPilots} completed successfully` : "0 completed pilots"}
+            {metrics.completedPilots > 0 ? `${metrics.completedPilots} completed successfully` : `${metrics.totalPilots} total pilots`}
           </p>
         </motion.div>
 
@@ -267,7 +406,7 @@ function GovernmentReports() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-xs font-medium">Actual Paid Funds</span>
@@ -287,7 +426,7 @@ function GovernmentReports() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-xs font-medium">Avg Validation Score</span>
@@ -304,16 +443,15 @@ function GovernmentReports() {
         </motion.div>
       </div>
 
-      {/* CONTROLS & FILTER BAR */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 md:flex-row md:items-center md:justify-between print:hidden">
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+      {/* NAVIGATION TABS */}
+      <div className="flex items-center rounded-2xl border border-slate-200 bg-white p-2.5 shadow-xs dark:border-slate-800 dark:bg-slate-900 print:hidden">
+        <div className="flex flex-wrap items-center gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
           <button
             type="button"
             onClick={() => setActiveTab("overview")}
             className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
               activeTab === "overview"
-                ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white"
+                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
                 : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
@@ -324,7 +462,7 @@ function GovernmentReports() {
             onClick={() => setActiveTab("pilots")}
             className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
               activeTab === "pilots"
-                ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white"
+                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
                 : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
@@ -335,53 +473,26 @@ function GovernmentReports() {
             onClick={() => setActiveTab("disbursements")}
             className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
               activeTab === "disbursements"
-                ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white"
+                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
                 : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
             Milestone Disbursements
           </button>
         </div>
-
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-[200px] flex-1 sm:flex-none">
-            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search challenges or startups..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-blue-500"
-            />
-          </div>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-9 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:[color-scheme:dark]"
-          >
-            <option value="ALL">All Status</option>
-            <option value="RUNNING">Running</option>
-            <option value="VALIDATION">In Validation</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="PLANNED">Planned</option>
-            <option value="AT_RISK">At Risk</option>
-          </select>
-        </div>
       </div>
 
       {/* TAB 1: OVERVIEW & ANALYTICS */}
       {activeTab === "overview" && (
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Real Stage Gate Milestone Health */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          {/* Stage Gate Milestone Health */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   Stage-Gate Validation Summary
                 </h3>
-                <p className="text-xs text-slate-400">Status counts from database</p>
+                <p className="text-xs text-slate-400">Authoritative status counts from database</p>
               </div>
               <span className="rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-semibold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
                 {metrics.totalPilots} Total Pilots
@@ -396,7 +507,7 @@ function GovernmentReports() {
                 </div>
                 <div className="mt-1.5 h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800">
                   <div
-                    className="h-full rounded-full bg-blue-500"
+                    className="h-full rounded-full bg-blue-500 transition-all duration-500"
                     style={{ width: `${metrics.totalPilots > 0 ? (metrics.activePilots / metrics.totalPilots) * 100 : 0}%` }}
                   />
                 </div>
@@ -409,7 +520,7 @@ function GovernmentReports() {
                 </div>
                 <div className="mt-1.5 h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800">
                   <div
-                    className="h-full rounded-full bg-emerald-500"
+                    className="h-full rounded-full bg-emerald-500 transition-all duration-500"
                     style={{ width: `${metrics.totalPilots > 0 ? (metrics.completedPilots / metrics.totalPilots) * 100 : 0}%` }}
                   />
                 </div>
@@ -418,12 +529,12 @@ function GovernmentReports() {
               <div>
                 <div className="flex justify-between text-xs font-medium text-slate-700 dark:text-slate-300">
                   <span>Pilots At Risk</span>
-                  <span>{analytics?.metrics?.pilots_at_risk || 0}</span>
+                  <span>{metrics.pilotsAtRisk}</span>
                 </div>
                 <div className="mt-1.5 h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800">
                   <div
-                    className="h-full rounded-full bg-red-500"
-                    style={{ width: `${metrics.totalPilots > 0 ? ((analytics?.metrics?.pilots_at_risk || 0) / metrics.totalPilots) * 100 : 0}%` }}
+                    className="h-full rounded-full bg-red-500 transition-all duration-500"
+                    style={{ width: `${metrics.totalPilots > 0 ? (metrics.pilotsAtRisk / metrics.totalPilots) * 100 : 0}%` }}
                   />
                 </div>
               </div>
@@ -434,13 +545,13 @@ function GovernmentReports() {
                 <ShieldCheck className="h-4 w-4 text-emerald-500" /> Procurement Audit Guard
               </div>
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                All milestone payments and stage-gate validations are verified against database records with complete audit trails.
+                All milestone payments and stage-gate validations are verified against PostgreSQL records with complete audit trails.
               </p>
             </div>
           </div>
 
-          {/* Real Database Budget Utilization */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          {/* Database Budget Utilization */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
@@ -480,7 +591,7 @@ function GovernmentReports() {
                   <span className="font-medium text-slate-700 dark:text-slate-300">Remaining Budget</span>
                 </div>
                 <span className="font-semibold text-slate-900 dark:text-white">
-                  ₹{Number(analytics?.budget?.remaining_amount ?? Math.max(0, metrics.totalAllocated - metrics.totalDisbursed)).toLocaleString("en-IN")}
+                  ₹{Number(metrics.remainingBudget).toLocaleString("en-IN")}
                 </span>
               </div>
             </div>
@@ -499,15 +610,47 @@ function GovernmentReports() {
       )}
 
       {/* TAB 2: PILOT STATUS MATRIX */}
-      {(activeTab === "pilots" || activeTab === "overview") && (
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="border-b border-slate-100 p-6 dark:border-slate-800">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              Active & Completed Pilot Deployments
-            </h3>
-            <p className="text-xs text-slate-400">
-              Tracking of startup deliverables, milestone completions, and empirical evaluation scores from database
-            </p>
+      {activeTab === "pilots" && (
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-col gap-4 border-b border-slate-100 p-6 dark:border-slate-800 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Active & Completed Pilot Deployments
+              </h3>
+              <p className="mt-0.5 text-xs text-slate-400">
+                Tracking startup deliverables, milestone completions, and empirical evaluation scores from database
+              </p>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative min-w-[200px] flex-1 sm:w-64 sm:flex-none">
+                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Search challenges or startups..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-blue-500"
+                />
+              </div>
+
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-9 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:[color-scheme:dark]"
+              >
+                <option value="ALL">All Status</option>
+                <option value="RUNNING">Running</option>
+                <option value="VALIDATION">In Validation</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="SCALED">Scaled</option>
+                <option value="EXTENDED">Extended</option>
+                <option value="STOPPED">Stopped</option>
+                <option value="PLANNED">Planned</option>
+                <option value="AT_RISK">At Risk</option>
+              </select>
+            </div>
           </div>
 
           {filteredPilots.length === 0 ? (
@@ -534,7 +677,7 @@ function GovernmentReports() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredPilots.map((p, idx) => (
+                  {paginatedPilots.map((p, idx) => (
                     <tr key={p.id || idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
                       <td className="py-4 pl-6 pr-4">
                         <p className="font-semibold text-slate-900 dark:text-white">
@@ -555,14 +698,14 @@ function GovernmentReports() {
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
                             p.status === "COMPLETED" || p.status === "SCALED"
                               ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
-                              : p.status === "VALIDATION"
+                              : p.status === "VALIDATION" || p.status === "EXTENDED"
                               ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300"
-                              : p.status === "AT_RISK"
+                              : p.status === "AT_RISK" || p.status === "STOPPED"
                               ? "bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300"
                               : "bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300"
                           }`}
                         >
-                          {p.status || "PLANNED"}
+                          {formatPilotStatus(p.status)}
                         </span>
                       </td>
                       <td className="px-4 py-4">
@@ -585,12 +728,23 @@ function GovernmentReports() {
               </table>
             </div>
           )}
+
+          <Pagination
+            currentPage={pilotPage}
+            totalItems={filteredPilots.length}
+            pageSize={pilotPageSize}
+            pageSizeOptions={[5, 10, 20, 50]}
+            onPageChange={setPilotPage}
+            onPageSizeChange={setPilotPageSize}
+            itemName="pilots"
+            className="mt-4"
+          />
         </div>
       )}
 
       {/* TAB 3: MILESTONE DISBURSEMENTS */}
       {activeTab === "disbursements" && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
             Procurement Tranche & Disbursement History
           </h3>
@@ -608,7 +762,7 @@ function GovernmentReports() {
             </div>
           ) : (
             <div className="mt-6 space-y-3">
-              {allPayments.map((pay, idx) => (
+              {paginatedDisbursements.map((pay, idx) => (
                 <div
                   key={pay.id || idx}
                   className="flex flex-col gap-2 rounded-xl border border-slate-100 p-4 text-xs dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between"
@@ -638,6 +792,17 @@ function GovernmentReports() {
               ))}
             </div>
           )}
+
+          <Pagination
+            currentPage={disbursementPage}
+            totalItems={allPayments.length}
+            pageSize={disbursementPageSize}
+            pageSizeOptions={[5, 10, 20, 50]}
+            onPageChange={setDisbursementPage}
+            onPageSizeChange={setDisbursementPageSize}
+            itemName="disbursements"
+            className="mt-6"
+          />
         </div>
       )}
     </div>

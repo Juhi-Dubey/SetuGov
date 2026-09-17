@@ -19,6 +19,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { getEvaluatorProfile } from "../../services/evaluatorService";
+import { formatEmploymentType } from "../../utils/filterUtils";
 
 /* ─── helpers ─────────────────────────────────────────────────────────── */
 
@@ -87,7 +88,7 @@ function NotFoundState({ onBack }) {
       </p>
       <button
         onClick={onBack}
-        className="mt-2 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+        className="back-nav mt-2"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Back to Registry
@@ -171,7 +172,7 @@ function GovernmentEvaluatorDetail() {
         <button
           onClick={handleBack}
           aria-label="Back to Evaluator Registry"
-          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+          className="back-nav"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back
@@ -268,7 +269,7 @@ function GovernmentEvaluatorDetail() {
                 <InfoRow
                   icon={Briefcase}
                   label="Employment Type"
-                  value={safeValue(profile.employment_type, null)}
+                  value={profile.employment_type ? formatEmploymentType(profile.employment_type) : null}
                 />
                 <InfoRow
                   icon={Award}

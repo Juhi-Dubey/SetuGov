@@ -17,6 +17,17 @@ export const createChallengeSchema = z.object({
   ip_ownership: z.string().optional(),
   licensing_terms: z.string().nullable().optional(),
   confidentiality_terms: z.string().nullable().optional(),
+  current_process: z.string().nullable().optional(),
+  pilot_location: z.string().nullable().optional(),
+  pilot_start_date: z.string().datetime({ offset: true }).or(z.string()).nullable().optional(),
+  pilot_end_date: z.string().datetime({ offset: true }).or(z.string()).nullable().optional(),
+  startup_requirements: z.string().nullable().optional(),
+  kpis: z.array(z.any()).nullable().optional(),
+  milestones: z.array(z.any()).nullable().optional(),
+  eligibility_requirements: z.array(z.any()).nullable().optional(),
+  required_documents: z.array(z.any()).nullable().optional(),
+  cybersecurity_requirements: z.string().nullable().optional(),
+  data_compliance: z.string().nullable().optional(),
   department_id: z.string().uuid().optional()
 }).refine(data => data.budget_max >= data.budget_min, {
   message: 'Budget max must be greater than or equal to budget min',
@@ -46,10 +57,35 @@ export const updateChallengeSchema = z.object({
   data_retention_period: z.string().nullable().optional(),
   ip_ownership: z.string().optional(),
   licensing_terms: z.string().nullable().optional(),
-  confidentiality_terms: z.string().nullable().optional()
+  confidentiality_terms: z.string().nullable().optional(),
+  current_process: z.string().nullable().optional(),
+  pilot_location: z.string().nullable().optional(),
+  pilot_start_date: z.string().datetime({ offset: true }).or(z.string()).nullable().optional(),
+  pilot_end_date: z.string().datetime({ offset: true }).or(z.string()).nullable().optional(),
+  startup_requirements: z.string().nullable().optional(),
+  kpis: z.array(z.any()).nullable().optional(),
+  milestones: z.array(z.any()).nullable().optional(),
+  eligibility_requirements: z.array(z.any()).nullable().optional(),
+  required_documents: z.array(z.any()).nullable().optional(),
+  cybersecurity_requirements: z.string().nullable().optional(),
+  data_compliance: z.string().nullable().optional()
+});
+
+export const saveChallengeEligibilitySchema = z.object({
+  checks: z.array(z.object({
+    id: z.string(),
+    title: z.string().optional(),
+    name: z.string().optional(),
+    description: z.string().nullable().optional(),
+    status: z.string().min(1, 'Status is required'),
+    required: z.boolean().optional()
+  })).min(1, 'At least one eligibility check item is required'),
+  decision: z.string().optional(),
+  remarks: z.string().nullable().optional()
 });
 
 export default {
   createChallengeSchema,
-  updateChallengeSchema
+  updateChallengeSchema,
+  saveChallengeEligibilitySchema
 };

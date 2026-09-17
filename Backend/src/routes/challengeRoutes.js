@@ -10,7 +10,9 @@ import {
   shortlistStartup,
   getChallengeApplications,
   getChallengePilot,
-  generateChallengeBrain1
+  generateChallengeBrain1,
+  getChallengeEligibility,
+  saveChallengeEligibility
 } from '../controllers/challengeController.js';
 import {
   createApplication
@@ -38,7 +40,7 @@ import {
 import { authenticate, optionalAuthenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
-import { createChallengeSchema, updateChallengeSchema } from '../schemas/challengeSchemas.js';
+import { createChallengeSchema, updateChallengeSchema, saveChallengeEligibilitySchema } from '../schemas/challengeSchemas.js';
 import { createApplicationSchema } from '../schemas/applicationSchemas.js';
 
 const router = Router();
@@ -107,5 +109,10 @@ router.get('/:challenge_id/evaluator-matches', authenticate, authorizeRoles('GOV
 router.get('/:challenge_id/evaluator-pool', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), getChallengeEvaluatorPool);
 router.post('/:challenge_id/evaluator-pool', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), addToEvaluatorPool);
 router.delete('/:challenge_id/evaluator-pool/:evaluator_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), removeFromEvaluatorPool);
+
+// Challenge Eligibility Verification (GOVERNMENT or ADMIN)
+router.get('/:challenge_id/eligibility', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), getChallengeEligibility);
+router.post('/:challenge_id/eligibility', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(saveChallengeEligibilitySchema), saveChallengeEligibility);
+router.put('/:challenge_id/eligibility', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(saveChallengeEligibilitySchema), saveChallengeEligibility);
 
 export default router;

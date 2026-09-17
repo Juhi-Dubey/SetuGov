@@ -194,7 +194,7 @@ export default function LandingPage() {
 
             <Link
               to="/signup"
-              className="hidden sm:inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 text-xs font-bold text-white shadow-md transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+              className="btn-primary hidden sm:inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-blue-900 px-4 text-xs font-bold text-white shadow-md shadow-blue-900/15 transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
             >
               <Rocket className="h-3.5 w-3.5" />
               Startup Signup
@@ -255,7 +255,7 @@ export default function LandingPage() {
             >
               <Link
                 to="/signup"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-bold text-white shadow-lg shadow-slate-900/15 transition hover:bg-slate-800 hover:-translate-y-0.5 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                className="btn-primary inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition hover:bg-blue-800 hover:-translate-y-0.5 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
               >
                 <Rocket className="h-4 w-4" />
                 Register as Startup
@@ -447,7 +447,7 @@ export default function LandingPage() {
                     <div className="mt-8">
                       <Link
                         to={activeData.ctaLink}
-                        className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                        className="btn-primary inline-flex items-center gap-2 rounded-xl bg-blue-900 px-5 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
                       >
                         {activeData.ctaText}
                         <ArrowRight className="h-4 w-4" />
@@ -523,7 +523,7 @@ export default function LandingPage() {
               </div>
               <Link
                 to="/login"
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+                className="btn-primary mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-900 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
               >
                 Sign In <ArrowRight className="h-3.5 w-3.5" />
               </Link>

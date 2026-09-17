@@ -57,6 +57,13 @@ export const acceptProcurementDelivery = async (id, data) => {
   });
 };
 
+export const completeProcurement = async (id, data = {}) => {
+  return apiRequest(`/procurements/${id}/complete`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
 export const scheduleProcurementPayment = async (id, data) => {
   return apiRequest(`/procurements/${id}/payments`, {
     method: "POST",
@@ -73,5 +80,6 @@ export default {
   issueProcurementContract,
   submitProcurementDelivery,
   acceptProcurementDelivery,
+  completeProcurement,
   scheduleProcurementPayment,
 };

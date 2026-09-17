@@ -3,7 +3,7 @@ import { successResponse } from '../utils/response.js';
 
 export const getAuditLogs = async (req, res, next) => {
   try {
-    const result = await auditService.getAuditLogs(req.query);
+    const result = await auditService.getAuditLogs(req.query, req.user);
     return successResponse(res, result, 'Audit logs retrieved successfully', 200);
   } catch (error) {
     next(error);
@@ -13,7 +13,7 @@ export const getAuditLogs = async (req, res, next) => {
 export const getAuditLogById = async (req, res, next) => {
   try {
     const auditLogId = req.params.audit_log_id || req.params.id;
-    const log = await auditService.getAuditLogById(auditLogId);
+    const log = await auditService.getAuditLogById(auditLogId, req.user);
     return successResponse(res, { log }, 'Audit log retrieved successfully', 200);
   } catch (error) {
     next(error);

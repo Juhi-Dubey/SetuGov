@@ -25,6 +25,7 @@ import {
   approveAccessRequest,
   rejectAccessRequest,
 } from "../../services/accessRequestService";
+import { formatEmploymentType } from "../../utils/filterUtils";
 
 function AdminAccessRequests() {
   const [requests, setRequests] = useState([]);
@@ -458,7 +459,7 @@ function AdminAccessRequests() {
                 )}
                 <div>
                   <span className="font-semibold text-slate-500 block mb-0.5">Employment Type</span>
-                  <span className="text-slate-800 dark:text-slate-200">{selectedRequest.employment_type || "N/A"}</span>
+                  <span className="text-slate-800 dark:text-slate-200">{formatEmploymentType(selectedRequest.employment_type)}</span>
                 </div>
                 <div>
                   <span className="font-semibold text-slate-500 block mb-0.5">Experience</span>
