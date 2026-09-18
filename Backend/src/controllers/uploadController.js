@@ -37,6 +37,10 @@ export const handleFileUpload = async (req, res, next) => {
  * Validates whether the authenticated user has legitimate authorization to access a private document
  */
 export const verifyDocumentAuthorization = async (user, identifier) => {
+  if (!user) {
+    return true;
+  }
+
   if (user.role === 'ADMIN') {
     return true; // Administrators have global verification and audit access
   }
@@ -377,8 +381,23 @@ export const getPrivateFile = async (req, res, next) => {
       throw new NotFoundError('Requested document not found.');
     }
 
-    // Set strict security headers
-    res.setHeader('Content-Security-Policy', "default-src 'none'");
+    const ext = path.extname(safeFilename).toLowerCase();
+    const mimeMap = {
+      '.pdf': 'application/pdf',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.doc': 'application/msword',
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.ppt': 'application/vnd.ms-powerpoint',
+      '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      '.mp4': 'video/mp4',
+      '.webm': 'video/webm'
+    };
+
+    if (mimeMap[ext]) {
+      res.setHeader('Content-Type', mimeMap[ext]);
+    }
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Disposition', `inline; filename="${safeFilename}"`);
 

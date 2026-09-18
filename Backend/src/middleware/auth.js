@@ -8,13 +8,16 @@ import { logger } from '../utils/logger.js';
 export const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedError('Authentication token missing or invalid format.');
+    let token = null;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    } else if (req.query?.token && typeof req.query.token === 'string') {
+      token = req.query.token;
     }
 
-    const token = authHeader.split(' ')[1];
     if (!token) {
-      throw new UnauthorizedError('Authentication token missing.');
+      throw new UnauthorizedError('Authentication token missing or invalid format.');
     }
 
     // Check if token has been explicitly revoked
@@ -145,7 +148,8 @@ export const authenticate = async (req, res, next) => {
 
 export const optionalAuthenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const queryToken = req.query?.token;
+  if ((!authHeader || !authHeader.startsWith('Bearer ')) && !queryToken) {
     return next();
   }
   return authenticate(req, res, next);

@@ -19,6 +19,7 @@ import {
 import AppLayout from "../../components/layout/AppLayout";
 import Pagination from "../../components/common/Pagination";
 import { getPilots, getPilotEvidence, addPilotEvidence, updateEvidence as apiUpdateEvidence } from "../../services/pilotService.js";
+import { openDocumentSecurely } from "../../utils/documentUtils.js";
 
 const initialEvidence = [
   {
@@ -528,7 +529,7 @@ function ChallengeEvidence() {
 
                         <button
                           type="button"
-                          onClick={() => window.open(item.file_url, "_blank", "noopener,noreferrer")}
+                          onClick={() => openDocumentSecurely(item.file_url, item.fileName || "evidence_doc.pdf")}
                           className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-indigo-700"
                         >
                           <ExternalLink className="h-3.5 w-3.5" />

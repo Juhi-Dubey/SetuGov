@@ -43,6 +43,7 @@ import {
   scheduleProcurementPayment,
   completeProcurement,
 } from "../../services/procurementService";
+import { openDocumentSecurely } from "../../utils/documentUtils.js";
 import { generateDocumentDraftWithAI } from "../../services/aiService";
 
 // Canonical Enums & Display Labels
@@ -1260,14 +1261,13 @@ function ChallengeContract() {
                             Executed Statutory Contract Document
                           </span>
                         </div>
-                        <a
-                          href={procurement.contract_document_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-indigo-600 hover:underline"
+                        <button
+                          type="button"
+                          onClick={() => openDocumentSecurely(procurement.contract_document_url, "statutory_contract.pdf")}
+                          className="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:underline"
                         >
                           View Document <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1329,14 +1329,13 @@ function ChallengeContract() {
                         </div>
                       )}
                       {procurement.delivery_evidence_url && (
-                        <a
-                          href={procurement.delivery_evidence_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => openDocumentSecurely(procurement.delivery_evidence_url, "delivery_evidence_proof.pdf")}
                           className="inline-flex items-center gap-1.5 font-semibold text-indigo-600 hover:underline"
                         >
                           <ExternalLink className="h-3.5 w-3.5" /> Inspect Delivery Proof / Audit Telemetry
-                        </a>
+                        </button>
                       )}
                     </div>
 

@@ -39,6 +39,7 @@ import {
   getPilotIssues,
   updatePilotIssue,
 } from "../../services/pilotService.js";
+import { openDocumentSecurely } from "../../utils/documentUtils.js";
 
 function StartupPilot() {
   const navigate = useNavigate();
@@ -1558,12 +1559,10 @@ function EvidenceCard({ evidence }) {
 
   const handleOpenFile = () => {
     if (evidence.file_url) {
-      let url = evidence.file_url;
-      if (!url.startsWith("http://") && !url.startsWith("https://")) {
-        const origin = window.location.origin.includes("5173") ? "http://localhost:5000" : window.location.origin;
-        url = `${origin}${url.startsWith("/") ? "" : "/"}${url}`;
-      }
-      window.open(url, "_blank", "noopener,noreferrer");
+      const fileName = `${typeLabels[evidence.type] || evidence.type || 'evidence'}_doc.pdf`;
+      openDocumentSecurely(evidence.file_url, fileName);
+    } else {
+      alert("No document file attached to this evidence entry.");
     }
   };
 

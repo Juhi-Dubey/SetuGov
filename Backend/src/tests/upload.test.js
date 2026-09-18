@@ -25,6 +25,10 @@ async function runUploadTests() {
   // Get Startup Profile
   const startup = await prisma.startup.findFirst({ where: { user_id: user.id } });
   assert(startup, 'Startup profile must exist in DB');
+  await prisma.startup.update({
+    where: { id: startup.id },
+    data: { verification_status: 'DRAFT' }
+  });
   console.log('✅ [PASS] Startup profile resolved:', startup.id, startup.company_name);
 
   // Test 1: Upload PDF via POST /api/v1/upload

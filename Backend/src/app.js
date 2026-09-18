@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import path from 'path';
 import fs from 'fs';
 import apiRouter from './routes/index.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { apiRateLimiter } from './middleware/rateLimiter.js';
 import { NotFoundError } from './utils/errors.js';
@@ -67,6 +68,10 @@ export const createApp = () => {
       healthCheck: '/api/v1/health'
     });
   });
+
+  // Direct uploads / documents route
+  app.use('/uploads', uploadRoutes);
+  app.use('/documents', uploadRoutes);
 
   // Mount API v1 Routes
   app.use('/api/v1', apiRouter);

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getStartups, getStartupDocuments, addStartupDocument } from "../../services/startupService.js";
+import { openDocumentSecurely } from "../../utils/documentUtils.js";
 
 const documentTypeOptions = [
   { label: "DPIIT Recognition Certificate", value: "DPIIT_RECOGNITION", category: "Government Recognition" },
@@ -875,17 +876,12 @@ function DocumentModal({
 }) {
   const handleDownload = () => {
     if (document.document_url) {
-      window.open(document.document_url, "_blank", "noopener,noreferrer");
+      openDocumentSecurely(document.document_url, document.name || "startup_document.pdf");
       return;
     }
 
     if (document.fileUrl) {
-      const link = window.document.createElement("a");
-      link.href = document.fileUrl;
-      link.download = document.fileName || "document";
-      window.document.body.appendChild(link);
-      link.click();
-      window.document.body.removeChild(link);
+      openDocumentSecurely(document.fileUrl, document.fileName || document.name || "document.pdf");
       return;
     }
 
@@ -893,11 +889,11 @@ function DocumentModal({
       const url = URL.createObjectURL(document.file);
       const link = window.document.createElement("a");
       link.href = url;
-      link.download = document.fileName || "document";
+      link.download = document.fileName || document.name || "document.pdf";
       window.document.body.appendChild(link);
       link.click();
       window.document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
       return;
     }
   };

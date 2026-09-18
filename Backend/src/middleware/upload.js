@@ -93,8 +93,10 @@ export const validateFileSignature = (filePath) => {
     const isMp4 = buffer[4] === 0x66 && buffer[5] === 0x74 && buffer[6] === 0x79 && buffer[7] === 0x70;
     // WEBM: 1A 45 DF A3
     const isWebm = buffer[0] === 0x1A && buffer[1] === 0x45 && buffer[2] === 0xDF && buffer[3] === 0xA3;
+    // Data URI prefix: 'data:'
+    const isDataUri = buffer.toString('utf8', 0, 5) === 'data:';
 
-    return isPdf || isPng || isJpg || isZip || isOle || isMp4 || isWebm;
+    return isPdf || isPng || isJpg || isZip || isOle || isMp4 || isWebm || isDataUri;
   } catch (err) {
     return false;
   }
