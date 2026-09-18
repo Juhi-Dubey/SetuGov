@@ -38,7 +38,7 @@ function OutcomeForm({
       />
 
       {/* KPI Section */}
-      <section className="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+      <section className="rounded-2xl border border-slate-200 p-5 dark:border-slate-800" data-field="kpis" id="kpis-section">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="font-semibold">
@@ -53,6 +53,7 @@ function OutcomeForm({
           <button
             type="button"
             onClick={onAddKPI}
+            id="add-kpi-button"
             className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-xs font-semibold transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800"
           >
             <Plus className="h-4 w-4" />
@@ -71,7 +72,7 @@ function OutcomeForm({
             </p>
 
             {errors.kpis && (
-              <p className="mt-2 text-xs text-red-500">
+              <p className="mt-2 text-xs font-semibold text-red-500">
                 {errors.kpis}
               </p>
             )}
@@ -81,6 +82,7 @@ function OutcomeForm({
             {formData.kpis.map((kpi, index) => (
               <div
                 key={kpi.id}
+                data-kpi-id={kpi.id}
                 className="rounded-xl border border-slate-200 p-4 dark:border-slate-800"
               >
                 <div className="mb-4 flex items-center justify-between">
@@ -102,6 +104,7 @@ function OutcomeForm({
                   <FormField
                     label="KPI name"
                     name="name"
+                    id={`kpi_${kpi.id}_name`}
                     value={kpi.name}
                     onChange={(event) =>
                       onKPIChange(
@@ -112,11 +115,13 @@ function OutcomeForm({
                     }
                     placeholder="Waiting Time"
                     required
+                    error={errors[`kpi_${kpi.id}_name`]}
                   />
 
                   <FormField
                     label="Unit"
                     name="unit"
+                    id={`kpi_${kpi.id}_unit`}
                     value={kpi.unit}
                     onChange={(event) =>
                       onKPIChange(

@@ -11,38 +11,27 @@ import {
   XCircle,
   Clock,
   ExternalLink,
-  Download,
   AlertCircle,
   Loader2,
+  FlaskConical,
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
 import Pagination from "../../components/common/Pagination";
-import { getPilots, getPilotEvidence, addPilotEvidence, updateEvidence as apiUpdateEvidence } from "../../services/pilotService.js";
+import { getPilotEvidence, addPilotEvidence, updateEvidence as apiUpdateEvidence } from "../../services/pilotService.js";
+import { getChallengePilot } from "../../services/challengeService.js";
 import { openDocumentSecurely } from "../../utils/documentUtils.js";
 
-const initialEvidence = [
-  {
-    id: crypto.randomUUID(),
-    title: "Deployment & Initial Metrics Report",
-    type: "DEPLOYMENT_REPORT",
-    description: "Startup telemetry logs and field deployment report.",
-    fileName: "deployment-telemetry.pdf",
-    file_url: null,
-    status: "pending",
-    remarks: "",
-  },
-];
-
+// No fake initialEvidence — always start empty. Real evidence is fetched from PostgreSQL.
 function ChallengeEvidence() {
   const navigate = useNavigate();
   const { challengeId } = useParams();
 
-  const id = challengeId || "1";
-
+  // challengeId is the canonical challenge UUID from the route — never fallback to "1"
   const [pilot, setPilot] = useState(null);
-  const [evidence, setEvidence] = useState(initialEvidence);
+  const [evidence, setEvidence] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,39 +42,64 @@ function ChallengeEvidence() {
     return evidence.slice(start, start + pageSize);
   }, [evidence, currentPage, pageSize]);
 
-  // Load pilot and its evidence from backend
+  // Load pilot and its evidence from backend using canonical challenge-scoped lookup
   useEffect(() => {
+    if (!challengeId) {
+      setLoading(false);
+      return;
+    }
     let mounted = true;
     const fetchEvidenceData = async () => {
       try {
         setLoading(true);
-        const pilotsRes = await getPilots();
-        const pilots = pilotsRes?.data?.pilots || [];
-        // Part 22: Strictly match challenge_id only. Do NOT fallback to pilots[0].
-        const matchedPilot = pilots.find((p) => p.challenge_id === challengeId) || null;
+        setFetchError(null);
 
-        if (matchedPilot && mounted) {
-          setPilot(matchedPilot);
-          const evRes = await getPilotEvidence(matchedPilot.id);
-          const items = evRes?.data?.evidence || [];
-          if (items.length > 0 && mounted) {
-            setEvidence(
-              items.map((item) => ({
-                id: item.id,
-                title: item.type?.replace(/_/g, " "),
-                type: item.type,
-                description: item.description,
-                fileName: item.file_url ? item.file_url.split("/").pop() : "evidence-file",
-                file_url: item.file_url,
-                status: item.verification_status?.toLowerCase() || "pending",
-                remarks: "",
-                raw: item,
-              }))
-            );
+        // Use getChallengePilot — the canonical challenge → pilot resolution.
+        // Never call getPilots() and scan, never use pilots[0].
+        const pilotRes = await getChallengePilot(challengeId);
+        const pilotData =
+          pilotRes?.data?.pilot !== undefined
+            ? pilotRes.data.pilot
+            : pilotRes?.data || pilotRes;
+
+        if (!pilotData?.id) {
+          // No pilot for this challenge yet — show empty state
+          if (mounted) {
+            setPilot(null);
+            setEvidence([]);
           }
+          return;
+        }
+
+        if (mounted) setPilot(pilotData);
+
+        const evRes = await getPilotEvidence(pilotData.id);
+        const items = evRes?.data?.evidence || evRes?.evidence || (Array.isArray(evRes?.data) ? evRes.data : []) || [];
+
+        if (mounted) {
+          setEvidence(
+            items.map((item) => ({
+              id: item.id,
+              title: item.type?.replace(/_/g, " "),
+              type: item.type,
+              description: item.description || "",
+              fileName: item.file_url ? item.file_url.split("/").pop() : "evidence-file",
+              file_url: item.file_url,
+              status: item.verification_status?.toLowerCase() || "pending",
+              remarks: "",
+              raw: item,
+            }))
+          );
         }
       } catch (err) {
-        console.warn("Could not load backend evidence:", err);
+        console.error("Failed to load evidence data:", err);
+        if (mounted) {
+          setFetchError(
+            err?.response?.data?.message ||
+              err?.message ||
+              "Failed to load pilot evidence from PostgreSQL."
+          );
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -206,45 +220,24 @@ function ChallengeEvidence() {
     }
   };
 
-  const verifiedCount = evidence.filter(
-    (item) => item.status === "verified"
-  ).length;
-
-  const rejectedCount = evidence.filter(
-    (item) => item.status === "rejected"
-  ).length;
-
-  const pendingCount = evidence.filter(
-    (item) => item.status === "pending"
-  ).length;
+  const verifiedCount = evidence.filter((item) => item.status === "verified").length;
+  const rejectedCount = evidence.filter((item) => item.status === "rejected").length;
+  const pendingCount = evidence.filter((item) => item.status === "pending").length;
 
   return (
     <AppLayout role="government">
       <div className="mx-auto max-w-6xl">
 
         {/* HEADER */}
-
         <motion.div
-          initial={{
-            opacity: 0,
-            y: 10,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.35,
-          }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
           className="mb-8"
         >
           <button
             type="button"
-            onClick={() =>
-              navigate(
-                `/government/challenges/${id}/pilot`
-              )
-            }
+            onClick={() => navigate(`/government/challenges/${challengeId}/pilot`)}
             className="back-nav"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -263,90 +256,93 @@ function ChallengeEvidence() {
               </h1>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                Upload, review and verify evidence
-                collected during the pilot.
+                Upload, review and verify evidence collected during the pilot.
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={addEvidence}
-              className="btn-primary inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
-            >
-              <Plus className="h-4 w-4" />
-              Add Evidence
-            </button>
+            {pilot && (
+              <button
+                type="button"
+                onClick={addEvidence}
+                className="btn-primary inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4" />
+                Add Evidence
+              </button>
+            )}
           </div>
         </motion.div>
 
-        {/* SUMMARY */}
-
-        <section className="mb-6 grid gap-4 sm:grid-cols-3">
-
-          <EvidenceSummary
-            icon={CheckCircle2}
-            label="Verified"
-            value={verifiedCount}
-            description="Evidence approved"
-            type="success"
-          />
-
-          <EvidenceSummary
-            icon={Clock}
-            label="Pending"
-            value={pendingCount}
-            description="Awaiting verification"
-            type="warning"
-          />
-
-          <EvidenceSummary
-            icon={XCircle}
-            label="Rejected"
-            value={rejectedCount}
-            description="Needs correction"
-            type="danger"
-          />
-
-        </section>
-
-        {/* PILOT INFO */}
-
-        <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Pilot
-              </p>
-
-              <h2 className="mt-1 text-lg font-semibold">
-                {pilot?.title || pilot?.challenge?.title || "Pilot Sandbox"}
-              </h2>
-
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                {pilot?.startup?.company_name ? `${pilot.startup.company_name} · ` : ""}Challenge ID:{" "}
-                {id}
-              </p>
-            </div>
-
-            <div className="rounded-xl bg-emerald-50 px-4 py-3 dark:bg-emerald-500/10">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                Pilot Status
-              </p>
-
-              <p className="mt-1 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-                Active
-              </p>
-            </div>
-
+        {/* LOADING */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-16 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <p className="mt-4 text-sm font-medium text-slate-600 dark:text-slate-300">
+              Loading evidence from PostgreSQL...
+            </p>
           </div>
+        )}
 
-        </section>
+        {/* FETCH ERROR */}
+        {!loading && fetchError && (
+          <div className="rounded-2xl border border-red-200 bg-red-50/50 p-8 text-center dark:border-red-900/40 dark:bg-red-950/20 mb-6">
+            <AlertCircle className="mx-auto h-10 w-10 text-red-500" />
+            <h3 className="mt-3 text-base font-bold text-red-900 dark:text-red-300">Unable to Load Evidence</h3>
+            <p className="mt-2 text-sm text-red-700 dark:text-red-400 max-w-md mx-auto">{fetchError}</p>
+          </div>
+        )}
 
-        {/* EVIDENCE LIST */}
+        {/* NO PILOT YET */}
+        {!loading && !fetchError && !pilot && (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 mb-6">
+            <FlaskConical className="mx-auto h-12 w-12 text-indigo-400 dark:text-indigo-600" />
+            <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">No Pilot Project Found</h3>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+              Evidence can only be reviewed once a pilot project has been created for this challenge.
+            </p>
+          </div>
+        )}
 
-        <section className="space-y-5">
+        {/* SUMMARY — only show when pilot and evidence exist */}
+        {!loading && !fetchError && pilot && (
+          <>
+            <section className="mb-6 grid gap-4 sm:grid-cols-3">
+              <EvidenceSummary icon={CheckCircle2} label="Verified" value={verifiedCount} description="Evidence approved" type="success" />
+              <EvidenceSummary icon={Clock} label="Pending" value={pendingCount} description="Awaiting verification" type="warning" />
+              <EvidenceSummary icon={XCircle} label="Rejected" value={rejectedCount} description="Needs correction" type="danger" />
+            </section>
+
+            {/* PILOT INFO */}
+            <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Pilot</p>
+                  <h2 className="mt-1 text-lg font-semibold">
+                    {pilot?.title || pilot?.challenge?.title || "Pilot Sandbox"}
+                  </h2>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    {pilot?.startup?.company_name ? `${pilot.startup.company_name} · ` : ""}
+                    Challenge: {challengeId}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-emerald-50 px-4 py-3 dark:bg-emerald-500/10">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Pilot Status</p>
+                  <p className="mt-1 text-sm font-semibold text-emerald-700 dark:text-emerald-300">{pilot?.status || "Active"}</p>
+                </div>
+              </div>
+            </section>
+
+            {/* EVIDENCE LIST — empty state when pilot exists but no evidence */}
+            {evidence.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 mb-6">
+                <FileText className="mx-auto h-10 w-10 text-slate-400" />
+                <h3 className="mt-3 text-base font-bold text-slate-900 dark:text-white">No Evidence Uploaded Yet</h3>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  No evidence documents have been submitted for this pilot. Click "Add Evidence" to upload the first document.
+                </p>
+              </div>
+            ) : (
+              <section className="space-y-5">
 
           {paginatedEvidence.map(
             (item, index) => (
@@ -664,81 +660,64 @@ function ChallengeEvidence() {
             )
           )}
 
-        </section>
+              </section>
+            )}
 
-        <Pagination
-          currentPage={currentPage}
-          totalItems={evidence.length}
-          pageSize={pageSize}
-          pageSizeOptions={[5, 10, 20]}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setPageSize}
-          itemName="evidence items"
-          className="mt-6"
-        />
+            <Pagination
+              currentPage={currentPage}
+              totalItems={evidence.length}
+              pageSize={pageSize}
+              pageSizeOptions={[5, 10, 20]}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              itemName="evidence items"
+              className="mt-6"
+            />
 
-        {statusMessage && (
-          <div className="mt-6 flex items-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-xs font-semibold text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300">
-            <CheckCircle2 className="h-4 w-4 shrink-0" />
-            <span>{statusMessage}</span>
-          </div>
+            {statusMessage && (
+              <div className="mt-6 flex items-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-xs font-semibold text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300">
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                <span>{statusMessage}</span>
+              </div>
+            )}
+
+            {/* ACTIONS */}
+            <div className="mt-6 flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => navigate(`/government/challenges/${challengeId}/pilot`)}
+                className="back-nav"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Pilot
+              </button>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  disabled={isSaving}
+                  onClick={handleSave}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {isSaving ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" />Saving...</>
+                  ) : (
+                    <><FileText className="h-4 w-4" />Save Verification Changes</>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate(`/government/challenges/${challengeId}/decision`)}
+                  className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-900/15 transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                >
+                  Continue to Decision
+                  <CheckCircle2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </>
         )}
-
-        {/* ACTIONS */}
-
-        <div className="mt-6 flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
-
-          <button
-            type="button"
-            onClick={() =>
-              navigate(
-                `/government/challenges/${id}/pilot`
-              )
-            }
-            className="back-nav"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Pilot
-          </button>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-
-            <button
-              type="button"
-              disabled={isSaving}
-              onClick={handleSave}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <FileText className="h-4 w-4" />
-                  Save Verification Changes
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() =>
-                navigate(
-                  `/government/challenges/${id}/decision`
-                )
-              }
-              className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-900/15 transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
-            >
-              Continue to Decision
-              <CheckCircle2 className="h-4 w-4" />
-            </button>
-
-          </div>
-
-        </div>
-
       </div>
     </AppLayout>
   );

@@ -24,6 +24,7 @@ import {
 
 import AppLayout from "../../components/layout/AppLayout";
 import { getChallengeById, runChallengeMatching } from "../../services/challengeService";
+import { formatPublishDate } from "../../utils/filterUtils";
 
 const workflowItems = [
   {
@@ -144,6 +145,7 @@ function ChallengeOverview() {
       ? `₹${Number(challenge.budget_max).toLocaleString("en-IN")}`
       : (challenge?.budget_min ? `₹${Number(challenge.budget_min).toLocaleString("en-IN")}` : "Not specified"),
     startDate: challenge?.created_at ? new Date(challenge.created_at).toLocaleDateString() : "Active",
+    publishedDate: formatPublishDate(challenge),
     endDate: challenge?.pilot_duration_days ? `${challenge.pilot_duration_days} days` : "Not specified",
     applications: appCount,
     eligibleStartups: eligibleCount,
@@ -178,6 +180,11 @@ function ChallengeOverview() {
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                   {displayData.status}
+                </span>
+
+                <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 inline-flex items-center gap-1.5">
+                  <Calendar className="h-3 w-3" />
+                  Published: {displayData.publishedDate}
                 </span>
 
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -298,6 +305,12 @@ function ChallengeOverview() {
                   <Target className="h-4 w-4" /> Status
                 </span>
                 <span className="font-semibold">{displayData.status}</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
+                <span className="flex items-center gap-2 text-slate-500">
+                  <Calendar className="h-4 w-4" /> Published Date
+                </span>
+                <span className="font-semibold">{displayData.publishedDate}</span>
               </div>
             </div>
           </div>

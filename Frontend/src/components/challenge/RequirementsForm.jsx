@@ -38,7 +38,7 @@ function RequirementsForm({
       </div>
 
       {/* REQUIRED TECHNOLOGIES */}
-      <section className="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+      <section className="rounded-2xl border border-slate-200 p-5 dark:border-slate-800" data-field="requiredTechnologies" id="requiredTechnologies-section">
         <SectionHeader
           title="Required Technologies"
           description="Specify the technologies or technical capabilities required for the solution."

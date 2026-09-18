@@ -25,6 +25,7 @@ import PageHeader from "../../components/layout/PageHeader";
 import { getChallenges, getGovernmentAnalytics } from "../../services/challengeService";
 import { getPilots } from "../../services/pilotService";
 import { useAuth } from "../../context/AuthContext";
+import { formatPublishDate } from "../../utils/filterUtils";
 
 const kpiIcons = {
   challenges: FileText,
@@ -81,16 +82,19 @@ function GovernmentDashboard() {
         setAnalytics(analyticsData);
       }
 
-      // Calculate total applications
-      const totalApplications = analyticsData?.overview?.total_applications ?? rawChallenges.reduce((sum, ch) => {
+      // Use authoritative backend analytics contract:
+      // { metrics: { total_challenges, total_applications, active_pilots, pilots_at_risk, ... }, budget: {...} }
+      // analyticsData.overview does NOT exist — it's analyticsData.metrics
+      const totalApplications = analyticsData?.metrics?.total_applications ?? rawChallenges.reduce((sum, ch) => {
         const count = ch._count?.applications ?? (Array.isArray(ch.applications) ? ch.applications.length : 0);
         return sum + count;
       }, 0);
 
-      // Pilot status counts
-      const atRiskPilots = analyticsData?.overview?.at_risk_pilots ?? rawPilots.filter((p) => p.status === "AT_RISK").length;
-      const onTrackPilots = rawPilots.filter((p) => ["RUNNING", "VALIDATION", "SCALED", "COMPLETED"].includes(p.status)).length;
-      const criticalPilots = rawPilots.filter((p) => p.status === "STOPPED").length;
+      // Pilot status counts — prefer authoritative backend metrics
+      const atRiskPilots = analyticsData?.metrics?.pilots_at_risk ?? rawPilots.filter((p) => p.status === "AT_RISK").length;
+      const activePilots = analyticsData?.metrics?.active_pilots ?? rawPilots.filter((p) => ["PLANNED", "RUNNING", "VALIDATION"].includes(p.status)).length;
+      const onTrackPilots = analyticsData?.metrics?.active_pilots ?? rawPilots.filter((p) => ["RUNNING", "VALIDATION", "SCALED", "COMPLETED"].includes(p.status)).length;
+      const criticalPilots = analyticsData?.metrics?.completed_pilots ?? rawPilots.filter((p) => p.status === "STOPPED").length;
 
       const formattedChallenges = rawChallenges.map((ch) => ({
         id: ch.id,
@@ -114,13 +118,15 @@ function GovernmentDashboard() {
           {
             id: "challenges",
             label: "Total Challenges",
-            value: analyticsData?.overview?.total_challenges ?? rawChallenges.length,
+            // metrics.total_challenges is the authoritative backend field
+            value: analyticsData?.metrics?.total_challenges ?? rawChallenges.length,
             trend: "up",
             href: kpiRoutes.challenges,
           },
           {
             id: "applications",
             label: "Proposals Received",
+            // metrics.total_applications
             value: totalApplications,
             trend: "up",
             href: kpiRoutes.applications,
@@ -128,13 +134,15 @@ function GovernmentDashboard() {
           {
             id: "pilots",
             label: "Active Pilots",
-            value: analyticsData?.overview?.total_pilots ?? rawPilots.length,
+            // metrics.active_pilots (NOT total_pilots)
+            value: activePilots,
             trend: "up",
             href: kpiRoutes.pilots,
           },
           {
             id: "at-risk",
             label: "At-Risk Pilots",
+            // metrics.pilots_at_risk
             value: atRiskPilots,
             trend: atRiskPilots > 0 ? "down" : "neutral",
             href: kpiRoutes["at-risk"],
@@ -751,14 +759,18 @@ function ChallengeRow({ challenge, onSelectChallenge }) {
           >
             {challenge.title}
           </p>
-          {challenge.description && (
-            <p
-              className="mt-0.5 truncate text-xs text-slate-400"
-              title={challenge.description}
-            >
-              {challenge.description}
-            </p>
-          )}
+          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-400">
+            <span className="inline-flex items-center gap-1 font-medium text-slate-500 dark:text-slate-400">
+              <Calendar className="h-3 w-3 text-indigo-500 shrink-0" />
+              Published: {formatPublishDate(challenge)}
+            </span>
+            {challenge.description && (
+              <>
+                <span>·</span>
+                <span className="truncate max-w-[180px]" title={challenge.description}>{challenge.description}</span>
+              </>
+            )}
+          </div>
         </div>
       </td>
 

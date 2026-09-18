@@ -181,6 +181,105 @@ function CreateChallenge() {
   };
 
   // =========================================================
+  // AUTO-SCROLL & FOCUS TO FIRST INVALID FIELD
+  // =========================================================
+
+  const scrollToFirstInvalidField = (errorMap = {}) => {
+    const errorKeys = Object.keys(errorMap).filter((key) => Boolean(errorMap[key]));
+    if (errorKeys.length === 0) return;
+
+    setTimeout(() => {
+      const candidates = [];
+
+      errorKeys.forEach((key) => {
+        // 1. Direct match by id, name, or data-field
+        const element = document.querySelector(
+          `[id="${key}"], [name="${key}"], [data-field="${key}"], #${key}-section, #${key}`
+        );
+        if (element) {
+          candidates.push(element);
+          return;
+        }
+
+        // 2. Dynamic milestone keys
+        if (key.startsWith("milestone_")) {
+          const mElement = document.querySelector(`[id="${key}"], [name="${key}"]`);
+          if (mElement) {
+            candidates.push(mElement);
+          } else {
+            const mSec = document.querySelector('[data-field="milestones"], #milestones-section');
+            if (mSec) candidates.push(mSec);
+          }
+          return;
+        }
+
+        // 3. Dynamic KPI keys
+        if (key.startsWith("kpi_")) {
+          const kElement = document.querySelector(`[id="${key}"], [name="${key}"]`);
+          if (kElement) {
+            candidates.push(kElement);
+          } else {
+            const kSec = document.querySelector('[data-field="kpis"], #kpis-section');
+            if (kSec) candidates.push(kSec);
+          }
+          return;
+        }
+      });
+
+      // 4. Also collect any rendered error indicators inside the form
+      const errorIndicators = document.querySelectorAll(
+        '.border-red-400, .border-red-500, .text-red-500, [aria-invalid="true"]'
+      );
+      errorIndicators.forEach((el) => {
+        const wrapper = el.closest('.space-y-1.5, section, .rounded-xl, .rounded-2xl') || el;
+        candidates.push(wrapper);
+      });
+
+      if (candidates.length === 0) return;
+
+      // Deduplicate candidates
+      const uniqueCandidates = Array.from(new Set(candidates));
+
+      // Sort candidates in top-to-bottom visual order
+      uniqueCandidates.sort((a, b) => {
+        if (a === b) return 0;
+        const position = a.compareDocumentPosition(b);
+        if (position & Node.DOCUMENT_POSITION_FOLLOWING) return -1;
+        if (position & Node.DOCUMENT_POSITION_PRECEDING) return 1;
+        return 0;
+      });
+
+      const firstInvalidElement = uniqueCandidates[0];
+      if (!firstInvalidElement) return;
+
+      // 1. Scroll smoothly to center in viewport
+      firstInvalidElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      // 2. Focus first invalid input/control
+      const focusTarget =
+        typeof firstInvalidElement.focus === "function" &&
+        ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(firstInvalidElement.tagName)
+          ? firstInvalidElement
+          : firstInvalidElement.querySelector(
+              "input:not([disabled]), textarea:not([disabled]), select:not([disabled]), button:not([disabled])"
+            );
+
+      if (focusTarget && typeof focusTarget.focus === "function") {
+        setTimeout(() => {
+          try {
+            focusTarget.focus({ preventScroll: true });
+          } catch {
+            focusTarget.focus();
+          }
+        }, 150);
+      }
+    }, 40);
+  };
+
+  // =========================================================
   // STEP 1 VALIDATION
   // =========================================================
 
@@ -216,7 +315,12 @@ function CreateChallenge() {
 
     setErrors(newErrors);
 
-    return Object.keys(newErrors).length === 0;
+    if (Object.keys(newErrors).length > 0) {
+      scrollToFirstInvalidField(newErrors);
+      return false;
+    }
+
+    return true;
   };
 
   // =========================================================
@@ -233,11 +337,22 @@ function CreateChallenge() {
 
     if (formData.kpis.length === 0) {
       newErrors.kpis = "Add at least one KPI.";
+    } else {
+      formData.kpis.forEach((kpi, idx) => {
+        if (!kpi.name || !kpi.name.trim()) {
+          newErrors[`kpi_${kpi.id}_name`] = `KPI ${idx + 1} name is required.`;
+        }
+      });
     }
 
     setErrors(newErrors);
 
-    return Object.keys(newErrors).length === 0;
+    if (Object.keys(newErrors).length > 0) {
+      scrollToFirstInvalidField(newErrors);
+      return false;
+    }
+
+    return true;
   };
 
   // =========================================================
@@ -282,11 +397,28 @@ function CreateChallenge() {
     if (formData.milestones.length === 0) {
       newErrors.milestones =
         "Add at least one milestone.";
+    } else {
+      formData.milestones.forEach((m, idx) => {
+        if (!m.name || !m.name.trim()) {
+          newErrors[`milestone_${m.id}_name`] = `Milestone ${idx + 1} name is required.`;
+        }
+        if (!m.dueDate) {
+          newErrors[`milestone_${m.id}_dueDate`] = `Milestone ${idx + 1} due date is required.`;
+        }
+        if (!m.paymentPercentage) {
+          newErrors[`milestone_${m.id}_paymentPercentage`] = `Milestone ${idx + 1} payment percentage is required.`;
+        }
+      });
     }
 
     setErrors(newErrors);
 
-    return Object.keys(newErrors).length === 0;
+    if (Object.keys(newErrors).length > 0) {
+      scrollToFirstInvalidField(newErrors);
+      return false;
+    }
+
+    return true;
   };
 
   // =========================================================
@@ -303,7 +435,12 @@ function CreateChallenge() {
 
     setErrors(newErrors);
 
-    return Object.keys(newErrors).length === 0;
+    if (Object.keys(newErrors).length > 0) {
+      scrollToFirstInvalidField(newErrors);
+      return false;
+    }
+
+    return true;
   };
 
   // =========================================================

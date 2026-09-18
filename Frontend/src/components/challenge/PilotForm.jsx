@@ -128,7 +128,7 @@ function PilotForm({
       </section>
 
       {/* MILESTONES */}
-      <section className="rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+      <section className="rounded-2xl border border-slate-200 p-5 dark:border-slate-800" data-field="milestones" id="milestones-section">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="font-semibold">
@@ -144,6 +144,7 @@ function PilotForm({
           <button
             type="button"
             onClick={onAddMilestone}
+            id="add-milestone-button"
             className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-xs font-semibold transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800"
           >
             <Plus className="h-4 w-4" />
@@ -152,7 +153,7 @@ function PilotForm({
         </div>
 
         {errors.milestones && (
-          <p className="mt-4 text-xs text-red-500">
+          <p className="mt-4 text-xs font-semibold text-red-500">
             {errors.milestones}
           </p>
         )}
@@ -174,6 +175,7 @@ function PilotForm({
               (milestone, index) => (
                 <div
                   key={milestone.id}
+                  data-milestone-id={milestone.id}
                   className="rounded-xl border border-slate-200 p-4 dark:border-slate-800"
                 >
                   {/* MILESTONE HEADER */}
@@ -202,6 +204,7 @@ function PilotForm({
                     <FormField
                       label="Milestone name"
                       name="name"
+                      id={`milestone_${milestone.id}_name`}
                       value={milestone.name}
                       onChange={(event) =>
                         onMilestoneChange(
@@ -212,11 +215,13 @@ function PilotForm({
                       }
                       placeholder="Initial deployment"
                       required
+                      error={errors[`milestone_${milestone.id}_name`]}
                     />
 
                     <FormField
                       label="Due date"
                       name="dueDate"
+                      id={`milestone_${milestone.id}_dueDate`}
                       value={milestone.dueDate}
                       onChange={(event) =>
                         onMilestoneChange(
@@ -227,12 +232,14 @@ function PilotForm({
                       }
                       type="date"
                       required
+                      error={errors[`milestone_${milestone.id}_dueDate`]}
                     />
 
                     <div className="md:col-span-2">
                       <FormField
                         label="Description"
                         name="description"
+                        id={`milestone_${milestone.id}_description`}
                         value={milestone.description}
                         onChange={(event) =>
                           onMilestoneChange(
@@ -245,12 +252,14 @@ function PilotForm({
                         type="textarea"
                         rows={4}
                         required
+                        error={errors[`milestone_${milestone.id}_description`]}
                       />
                     </div>
 
                     <FormField
                       label="Payment percentage"
                       name="paymentPercentage"
+                      id={`milestone_${milestone.id}_paymentPercentage`}
                       value={
                         milestone.paymentPercentage
                       }
@@ -265,6 +274,7 @@ function PilotForm({
                       type="number"
                       required
                       helperText="Percentage of the pilot budget."
+                      error={errors[`milestone_${milestone.id}_paymentPercentage`]}
                     />
 
                     <div className="space-y-2">

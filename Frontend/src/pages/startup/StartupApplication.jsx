@@ -38,6 +38,7 @@ import { getChallengeById, getChallenges } from "../../services/challengeService
 import { getStartupApplications } from "../../services/startupService";
 import { useAuth } from "../../context/AuthContext";
 import { API_BASE_URL } from "../../services/api";
+import { formatPublishDate } from "../../utils/filterUtils";
 
 
 
@@ -56,7 +57,7 @@ function StartupApplication() {
       setChallengeError(null);
       getChallengeById(id)
         .then((res) => {
-          const ch = res?.data || res;
+          const ch = res?.data?.challenge || res?.challenge || res?.data || res;
           if (ch?.id) {
             setChallenge({
               id: ch.id,
@@ -67,6 +68,7 @@ function StartupApplication() {
                 ? new Date(ch.application_deadline).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
                 : "Open Rolling",
               deadlineRaw: ch.application_deadline,
+              publishedDate: formatPublishDate(ch),
               budget: ch.budget_max ? `₹${Number(ch.budget_max).toLocaleString("en-IN")}` : (ch.budget_min ? `₹${Number(ch.budget_min).toLocaleString("en-IN")}` : "Not specified"),
               status: ch.status,
             });
@@ -432,14 +434,25 @@ function StartupApplication() {
             </p>
           </div>
 
-          <div className="shrink-0 rounded-2xl bg-amber-50 px-4 py-3 dark:bg-amber-500/10">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-              Application Deadline
-            </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="shrink-0 rounded-2xl bg-indigo-50 px-4 py-3 dark:bg-indigo-500/10">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                Published Date
+              </p>
+              <p className="mt-1 text-sm font-bold text-slate-800 dark:text-white">
+                {challenge.publishedDate}
+              </p>
+            </div>
 
-            <p className="mt-1 text-sm font-bold text-slate-800 dark:text-white">
-              {challenge.deadline}
-            </p>
+            <div className="shrink-0 rounded-2xl bg-amber-50 px-4 py-3 dark:bg-amber-500/10">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                Application Deadline
+              </p>
+
+              <p className="mt-1 text-sm font-bold text-slate-800 dark:text-white">
+                {challenge.deadline}
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -470,6 +483,10 @@ function StartupApplication() {
 
               <InfoPill
                 text={challenge.category}
+              />
+
+              <InfoPill
+                text={`Published: ${challenge.publishedDate}`}
               />
 
               <InfoPill

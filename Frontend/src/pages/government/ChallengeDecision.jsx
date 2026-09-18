@@ -83,7 +83,7 @@ function ChallengeDecision() {
 
       // 1. Fetch Challenge Details
       const chalRes = await getChallengeById(challengeRouteId);
-      const chData = chalRes?.data || chalRes;
+      const chData = chalRes?.data?.challenge || chalRes?.data || chalRes;
       setChallenge(chData);
 
       // 2. Fetch Pilot strictly scoped to this Challenge

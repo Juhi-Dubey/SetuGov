@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getChallenges } from "../../services/challengeService";
+import { formatPublishDate } from "../../utils/filterUtils";
 
 const categories = [
   "All Categories",
@@ -62,6 +63,7 @@ function StartupChallenges() {
               ? new Date(c.application_deadline).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
               : "Open Rolling",
             deadlineRaw: c.application_deadline,
+            publishedDate: formatPublishDate(c),
             isExpired,
             applicants: c._count?.applications || (Array.isArray(c.applications) ? c.applications.length : 0),
             status: isExpired ? "Closed" : c.status === "PUBLISHED" ? "Open" : c.status,
@@ -378,13 +380,19 @@ function ChallengeCard({
           </div>
 
           <div className="min-w-0">
-            <p className="text-[10px] font-semibold text-slate-400">
+            <p className="text-[10px] font-semibold text-slate-400 truncate">
               {challenge.department}
             </p>
 
-            <span className="mt-1 inline-flex rounded-full bg-slate-100 px-2 py-1 text-[9px] font-bold text-slate-600 dark:bg-slate-900 dark:text-slate-400">
-              {challenge.category}
-            </span>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-600 dark:bg-slate-900 dark:text-slate-400">
+                {challenge.category}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-md bg-slate-50 px-1.5 py-0.5 text-[9px] font-medium text-slate-600 border border-slate-100 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300">
+                <CalendarDays className="h-2.5 w-2.5 text-indigo-500 shrink-0" />
+                Published: {challenge.publishedDate}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -599,9 +607,13 @@ function ChallengeDetailModal({
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 {challenge.department}
               </p>
-              <div className="mt-1 flex items-center gap-2">
+              <div className="mt-1 flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-900 dark:text-slate-400">
                   {challenge.category}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                  <CalendarDays className="h-3 w-3 text-indigo-500" />
+                  Published: {challenge.publishedDate}
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />

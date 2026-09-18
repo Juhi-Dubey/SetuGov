@@ -21,7 +21,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getChallenges } from "../../services/challengeService";
 import { getStartupApplications, getStartupPilots, getStartupPerformance } from "../../services/startupService";
 import Pagination from "../../components/common/Pagination";
-import { formatApplicationStatus } from "../../utils/filterUtils";
+import { formatApplicationStatus, formatPublishDate } from "../../utils/filterUtils";
 
 function StartupDashboard() {
   const navigate = useNavigate();
@@ -211,12 +211,18 @@ function StartupDashboard() {
                       className="flex items-center justify-between rounded-xl border border-slate-100 p-4 transition-all hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
                     >
                       <div className="min-w-0 flex-1 pr-3">
-                        <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
-                          {ch.department?.name || "State Department"}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                            {ch.department?.name || "State Department"}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                            <CalendarDays className="h-3 w-3 text-indigo-500" />
+                            Published: {formatPublishDate(ch)}
+                          </span>
+                        </div>
                         <h3 className="mt-1 text-sm font-semibold truncate">{ch.title}</h3>
                         <p className="text-xs text-slate-400">
-                          Budget: ₹{ch.budget_max ? Number(ch.budget_max).toLocaleString("en-IN") : "25,00,000"} · {ch.location || "Maharashtra"}
+                          Budget: ₹{ch.budget_max ? Number(ch.budget_max).toLocaleString("en-IN") : "25,00,000"} · {ch.location || "National"}
                         </p>
                       </div>
 

@@ -3,6 +3,7 @@ import { AlertCircle } from "lucide-react";
 function FormField({
   label,
   name,
+  id,
   value,
   onChange,
   placeholder,
@@ -13,6 +14,8 @@ function FormField({
   rows = 4,
   helperText,
 }) {
+  const inputId = id || name;
+
   const baseClasses =
     "w-full rounded-xl border bg-white px-3.5 text-xs sm:text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:ring-4 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-950 dark:text-white";
 
@@ -21,7 +24,7 @@ function FormField({
     : "border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-slate-800";
 
   const commonProps = {
-    id: name,
+    id: inputId,
     name,
     value: value ?? "",
     onChange,
@@ -32,9 +35,9 @@ function FormField({
   };
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5" data-field={name}>
       <label
-        htmlFor={name}
+        htmlFor={inputId}
         className="block text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200"
       >
         {label}

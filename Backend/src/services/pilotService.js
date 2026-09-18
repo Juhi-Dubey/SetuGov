@@ -332,13 +332,24 @@ export const updatePilot = async (id, data, user, ip_address = null) => {
 };
 
 export const startPilot = async (id, user, ip_address = null, options = {}) => {
+  if (!user || (user.role !== 'GOVERNMENT' && user.role !== 'ADMIN')) {
+    throw new ForbiddenError('Only authorized Government officials or Administrators can start pilot projects or authorize readiness overrides.');
+  }
+
+  // P0-3: Verify tenant authorization for the pilot project
   const pilot = await verifyPilotAccess(id, user, 'PILOT_LIFECYCLE');
 
   if (pilot.status === 'RUNNING') {
     throw new BadRequestError('Pilot project is already in RUNNING status.');
   }
 
+  // Strict canonical lifecycle validation: PLANNED -> RUNNING
   validateTransition('PILOT', pilot.status, 'RUNNING');
+
+  // Verify that readiness override can only be invoked by authorized Government/Admin
+  if (options.readiness_override && user.role !== 'GOVERNMENT' && user.role !== 'ADMIN') {
+    throw new ForbiddenError('Only authorized Government officials or Administrators can authorize a readiness override.');
+  }
 
   // Phase 4-11: Pilot Readiness Checklist Enforcement
   const complianceItems = await prisma.complianceItem.findMany({
@@ -346,19 +357,22 @@ export const startPilot = async (id, user, ip_address = null, options = {}) => {
   });
 
   const uncompliedItems = complianceItems.filter(c => c.status !== 'COMPLIED');
+  const trimmedReason = options.override_reason ? String(options.override_reason).trim() : '';
+
   if (uncompliedItems.length > 0) {
     if (!options.readiness_override) {
       throw new BadRequestError(
         `Pilot readiness checklist has ${uncompliedItems.length} unverified item(s). Complete compliance verification or provide an authorized administrative readiness_override.`
       );
     }
-    if (!options.override_reason || !String(options.override_reason).trim()) {
+    if (!trimmedReason) {
       throw new BadRequestError(
         'An explicit override_reason justification is required when starting a pilot with unverified compliance items.'
       );
     }
   }
 
+  // Note: complianceItems are strictly NOT marked COMPLIED or modified on override
   const updated = await prisma.pilot.update({
     where: { id },
     data: { status: 'RUNNING' }
@@ -370,10 +384,14 @@ export const startPilot = async (id, user, ip_address = null, options = {}) => {
     entity_type: 'PILOT',
     entity_id: id,
     details: {
+      actor_id: user.id,
+      actor_role: user.role,
+      user_id: user.id,
+      pilot_id: id,
       previousStatus: pilot.status,
       newStatus: 'RUNNING',
       readiness_override: Boolean(options.readiness_override),
-      override_reason: options.override_reason || null
+      override_reason: options.readiness_override ? trimmedReason : null
     },
     ip_address
   });
@@ -805,6 +823,10 @@ export const addPilotFeedback = async (pilotId, data, user = null, ip_address = 
  * Get all Citizen / Beneficiary Feedbacks for a pilot
  */
 export const getPilotFeedbacks = async (pilotId, user = null) => {
+  if (user) {
+    await verifyPilotAccess(pilotId, user, 'READ');
+  }
+
   const feedbacks = await prisma.pilotFeedback.findMany({
     where: { pilot_id: pilotId },
     orderBy: { feedback_date: 'desc' }

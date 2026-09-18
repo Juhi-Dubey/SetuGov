@@ -208,10 +208,24 @@ function ChallengeContract() {
         const latestVal = Array.isArray(vList) ? vList[0] : vList;
         setValidation(latestVal);
 
-        // 5. Fetch Active Procurement Record
+        // 5. Fetch Active Procurement Record — select by status priority, NOT array position
         const procRes = await getProcurements({ pilot_id: pData.id }).catch(() => null);
         const procList = procRes?.data?.procurements || procRes?.data || [];
-        const currentProc = Array.isArray(procList) && procList.length > 0 ? procList[0] : null;
+
+        // Status priority: prefer an in-progress record, then DRAFT, never COMPLETED/CANCELLED/REJECTED
+        const ACTIVE_STATUSES = [
+          "READINESS_CHECK",
+          "APPROVED",
+          "HANDED_OFF",
+          "CONTRACT_ISSUED",
+          "DELIVERY_SUBMITTED",
+          "ACCEPTED",
+        ];
+        const currentProc =
+          (Array.isArray(procList) && procList.find((p) => ACTIVE_STATUSES.includes(p.status))) ||
+          (Array.isArray(procList) && procList.find((p) => p.status === "DRAFT")) ||
+          null;
+        // Never reopen COMPLETED, CANCELLED, or REJECTED as the current active procurement
 
         if (currentProc) {
           setProcurement(currentProc);

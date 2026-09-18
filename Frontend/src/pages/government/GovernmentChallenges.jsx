@@ -42,6 +42,7 @@ import {
   closeChallenge,
 } from "../../services/challengeService";
 import { useAuth } from "../../context/AuthContext";
+import { formatPublishDate } from "../../utils/filterUtils";
 
 const statusTabs = [
   { id: "ALL", label: "All Challenges" },
@@ -117,6 +118,8 @@ export default function GovernmentChallenges() {
           ch._count?.pilots ??
           (Array.isArray(ch.pilots) ? ch.pilots.length : ch.status === "PILOT" ? 1 : 0),
         created_at: ch.created_at || new Date().toISOString(),
+        published_at: ch.published_at || ch.created_at || new Date().toISOString(),
+        published_date: formatPublishDate(ch),
         deadline: ch.application_deadline || ch.deadline || "Open Rolling",
         category: ch.sector || ch.category || "GovTech Innovation",
       }));
@@ -594,6 +597,14 @@ export default function GovernmentChallenges() {
                           <p className="font-semibold text-slate-900 dark:text-white line-clamp-1">
                             {challenge.title}
                           </p>
+                          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-400">
+                            <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 font-medium">
+                              <Calendar className="h-3 w-3 text-indigo-500" />
+                              Published: {challenge.published_date}
+                            </span>
+                            <span>·</span>
+                            <span>Deadline: {challenge.deadline}</span>
+                          </div>
                           <p className="mt-1 text-xs text-slate-400 line-clamp-1">
                             {challenge.problem_description}
                           </p>
@@ -762,11 +773,17 @@ function ChallengeCard({
       className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-indigo-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-900 cursor-pointer"
     >
       <div>
-        {/* Card Header: Category & Status */}
+        {/* Card Header: Category, Publish Date & Status */}
         <div className="flex items-center justify-between gap-2">
-          <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-            {challenge.category || "GovTech"}
-          </span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              {challenge.category || "GovTech"}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-lg bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-600 border border-slate-100 dark:bg-slate-800/80 dark:border-slate-800 dark:text-slate-300">
+              <Calendar className="h-2.5 w-2.5 text-indigo-500 shrink-0" />
+              Published: {challenge.published_date}
+            </span>
+          </div>
           <StatusBadge status={challenge.status} />
         </div>
 

@@ -188,3 +188,32 @@ export const formatEmploymentType = (type) => {
   }
   return toTitleCase(trimmed);
 };
+
+/**
+ * Formats challenge published date into standard Indian date string (e.g. "18 Sep 2026")
+ * Gracefully extracts published_at, created_at, createdAt, or updated_at from either an object or string.
+ */
+export const formatPublishDate = (challengeOrDate) => {
+  if (!challengeOrDate) return 'Recently';
+  let dateVal = challengeOrDate;
+  if (typeof challengeOrDate === 'object' && challengeOrDate !== null && !(challengeOrDate instanceof Date)) {
+    dateVal =
+      challengeOrDate.published_at ||
+      challengeOrDate.publishedAt ||
+      challengeOrDate.created_at ||
+      challengeOrDate.createdAt ||
+      challengeOrDate.updated_at;
+  }
+  if (!dateVal) return 'Recently';
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return 'Recently';
+    return d.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return 'Recently';
+  }
+};

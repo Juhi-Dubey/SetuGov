@@ -26,7 +26,6 @@ import AppLayout from "../../components/layout/AppLayout";
 import Pagination from "../../components/common/Pagination";
 import { getChallengeById, getChallengePilot } from "../../services/challengeService";
 import {
-  getPilotById,
   getPilotMilestones,
   getPilotPayments,
   createPayment,
@@ -73,19 +72,14 @@ function ChallengePayments() {
         setChallenge(chData);
       }
 
-      // 2. Resolve pilot associated with challenge or direct pilot ID
+      // 2. Resolve pilot strictly via challenge route — never fall back to getPilotById(challengeId)
       let resolvedPilot = null;
       try {
         const pilotRes = await getChallengePilot(routeId);
         resolvedPilot = pilotRes?.data?.pilot || pilotRes?.pilot || pilotRes?.data;
       } catch {
-        // Fallback in case routeId is already a pilotId
-        try {
-          const directPilotRes = await getPilotById(routeId);
-          resolvedPilot = directPilotRes?.data?.pilot || directPilotRes?.pilot || directPilotRes?.data;
-        } catch {
-          resolvedPilot = null;
-        }
+        // Challenge has no pilot yet — show empty state instead of misinterpreting routeId
+        resolvedPilot = null;
       }
 
       if (!resolvedPilot || !resolvedPilot.id) {
@@ -170,7 +164,7 @@ function ChallengePayments() {
       ? Math.min(100, Math.round((paidAmount / totalContractValue) * 100))
       : 0;
 
-  // Schedule payment tranche for a milestone if not created yet
+  // Schedule payment tranche for a milestone — only if amount and percentage are calculable from PostgreSQL data
   const handleScheduleMilestonePayment = async (milestone) => {
     if (!pilot?.id || schedulingMilestoneId) return;
 
@@ -185,10 +179,18 @@ function ChallengePayments() {
           ? (Number(pilot.budget) * percentage) / 100
           : 0;
 
+      // Block submission if amount or percentage cannot be derived from persisted data
+      if (calculatedAmount <= 0 || percentage <= 0) {
+        setActionError(
+          `Cannot schedule payment: milestone "${milestone.name}" does not have a valid payment_percentage, or this pilot does not have a budget recorded in the database. Update the milestone's payment percentage and pilot budget before scheduling.`
+        );
+        return;
+      }
+
       await createPayment(pilot.id, {
         milestone_id: milestone.id,
-        amount: calculatedAmount > 0 ? calculatedAmount : 100000,
-        payment_percentage: percentage > 0 ? percentage : 10,
+        amount: calculatedAmount,
+        payment_percentage: percentage,
         status: "UPCOMING",
       });
 

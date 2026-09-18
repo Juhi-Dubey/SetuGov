@@ -351,27 +351,47 @@ async function runGovernmentPilotTests() {
     console.log('\n--- TEST 9: Explicit Administrative Override with Justification ---');
     let overrideWithoutReasonBlocked = false;
     try {
-      await pilotService.startPilot(pilotA.id, userA, null, { readiness_override: true, override_reason: '' });
+      await pilotService.startPilot(pilotA.id, userA, null, { readiness_override: true, override_reason: '   ' });
     } catch (err) {
       overrideWithoutReasonBlocked = true;
-      assert(err.message.includes('reason') || err.message.includes('override') || err.status === 400, `Empty justification rejected: "${err.message}"`);
+      assert(err.message.includes('reason') || err.message.includes('override') || err.status === 400, `Whitespace justification rejected: "${err.message}"`);
     }
     assert(overrideWithoutReasonBlocked, 'Readiness override requires non-empty override_reason justification');
 
+    // Unauthorized role (STARTUP) attempt to use readiness_override must be rejected
+    let unauthorizedOverrideBlocked = false;
+    try {
+      await pilotService.startPilot(pilotA.id, startupUser1, null, {
+        readiness_override: true,
+        override_reason: 'Unauthorized startup attempting override',
+      });
+    } catch (err) {
+      unauthorizedOverrideBlocked = true;
+      assert(err.status === 403 || err.name === 'ForbiddenError', `Unauthorized startup override rejected with 403 Forbidden: "${err.message}"`);
+    }
+    assert(unauthorizedOverrideBlocked, 'Unauthorized startup role strictly rejected from executing readiness_override');
+
     // Start with valid override reason
+    const overrideReasonInput = '  Deputy Director signed provisional security waiver under Gov Memo #891.  ';
     const startedPilot = await pilotService.startPilot(
       pilotA.id,
       userA,
       null,
       {
         readiness_override: true,
-        override_reason: 'Deputy Director signed provisional security waiver under Gov Memo #891.',
+        override_reason: overrideReasonInput,
       }
     );
 
     assert(startedPilot.status === 'RUNNING', 'Pilot successfully transitioned to RUNNING via override');
 
-    // Verify audit log created for override
+    // Verify compliance items remain unchanged after override (NOT marked COMPLIED)
+    const compAfterOverride = await pilotService.getComplianceChecklist(pilotA.id);
+    const compItemsAfter = Array.isArray(compAfterOverride) ? compAfterOverride : (compAfterOverride.items || []);
+    const pendingItemsCount = compItemsAfter.filter((i) => i.status === 'PENDING').length;
+    assert(pendingItemsCount > 0, 'Incomplete compliance items remain PENDING and are NOT silently marked COMPLIED on override');
+
+    // Verify audit log created for override with trimmed reason
     const auditLogs = await prisma.auditLog.findMany({
       where: {
         entity_id: pilotA.id,
@@ -379,6 +399,20 @@ async function runGovernmentPilotTests() {
       },
     });
     assert(auditLogs.length > 0, 'Audit trail PILOT_STARTED_WITH_OVERRIDE created in PostgreSQL');
+    assert(auditLogs[0].details?.readiness_override === true, 'Audit log records readiness_override = true');
+    assert(auditLogs[0].details?.override_reason === overrideReasonInput.trim(), 'Audit log records trimmed override justification');
+    assert(auditLogs[0].details?.previousStatus === 'PLANNED', 'Audit log records previousStatus = PLANNED');
+    assert(auditLogs[0].details?.newStatus === 'RUNNING', 'Audit log records newStatus = RUNNING');
+
+    // Duplicate / already RUNNING start must be rejected
+    let duplicateStartBlocked = false;
+    try {
+      await pilotService.startPilot(pilotA.id, userA, null, { readiness_override: true, override_reason: 'Repeated override' });
+    } catch (err) {
+      duplicateStartBlocked = true;
+      assert(err.message.includes('already in RUNNING') || err.status === 400, `Duplicate start blocked: "${err.message}"`);
+    }
+    assert(duplicateStartBlocked, 'Starting an already RUNNING pilot is strictly rejected');
 
     // ----------------------------------------------------
     // TEST 10: Error Handling (Duplicate Pilot & Unauthorized Application)
@@ -443,33 +477,39 @@ async function runGovernmentPilotTests() {
   } finally {
     console.log('\n[Cleanup] Removing test entities...');
     try {
-      if (pilotA?.id) {
-        await prisma.complianceItem.deleteMany({ where: { pilot_id: pilotA.id } });
-        await prisma.auditLog.deleteMany({ where: { entity_id: pilotA.id } });
-        await prisma.milestone.deleteMany({ where: { pilot_id: pilotA.id } });
-        await prisma.pilotKpi.deleteMany({ where: { pilot_id: pilotA.id } });
-        await prisma.pilot.delete({ where: { id: pilotA.id } }).catch(() => null);
+      const pIds = [pilotA?.id, pilotB?.id].filter(Boolean);
+      if (pIds.length > 0) {
+        await prisma.complianceItem.deleteMany({ where: { pilot_id: { in: pIds } } });
+        await prisma.milestone.deleteMany({ where: { pilot_id: { in: pIds } } });
+        await prisma.pilotKpi.deleteMany({ where: { pilot_id: { in: pIds } } });
+        await prisma.pilotIssue.deleteMany({ where: { pilot_id: { in: pIds } } });
+        await prisma.pilotFeedback.deleteMany({ where: { pilot_id: { in: pIds } } });
+        await prisma.payment.deleteMany({ where: { pilot_id: { in: pIds } } });
+        await prisma.auditLog.deleteMany({ where: { entity_id: { in: pIds } } });
+        await prisma.pilot.deleteMany({ where: { id: { in: pIds } } });
       }
-      if (pilotB?.id) {
-        await prisma.complianceItem.deleteMany({ where: { pilot_id: pilotB.id } });
-        await prisma.auditLog.deleteMany({ where: { entity_id: pilotB.id } });
-        await prisma.milestone.deleteMany({ where: { pilot_id: pilotB.id } });
-        await prisma.pilotKpi.deleteMany({ where: { pilot_id: pilotB.id } });
-        await prisma.pilot.delete({ where: { id: pilotB.id } }).catch(() => null);
+      const appIds = [appA?.id, appB?.id].filter(Boolean);
+      if (appIds.length > 0) {
+        await prisma.application.deleteMany({ where: { id: { in: appIds } } });
       }
-      if (appA?.id) await prisma.application.delete({ where: { id: appA.id } }).catch(() => null);
-      if (appB?.id) await prisma.application.delete({ where: { id: appB.id } }).catch(() => null);
-      if (challengeWithoutPilot?.id) await prisma.challenge.delete({ where: { id: challengeWithoutPilot.id } }).catch(() => null);
-      if (challengeA?.id) await prisma.challenge.delete({ where: { id: challengeA.id } }).catch(() => null);
-      if (challengeB?.id) await prisma.challenge.delete({ where: { id: challengeB.id } }).catch(() => null);
-      if (startup1?.id) await prisma.startup.delete({ where: { id: startup1.id } }).catch(() => null);
-      if (startup2?.id) await prisma.startup.delete({ where: { id: startup2.id } }).catch(() => null);
-      if (startupUser1?.id) await prisma.user.delete({ where: { id: startupUser1.id } }).catch(() => null);
-      if (startupUser2?.id) await prisma.user.delete({ where: { id: startupUser2.id } }).catch(() => null);
-      if (userA?.id) await prisma.user.delete({ where: { id: userA.id } }).catch(() => null);
-      if (userB?.id) await prisma.user.delete({ where: { id: userB.id } }).catch(() => null);
-      if (deptA?.id) await prisma.department.delete({ where: { id: deptA.id } }).catch(() => null);
-      if (deptB?.id) await prisma.department.delete({ where: { id: deptB.id } }).catch(() => null);
+      const chalIds = [challengeWithoutPilot?.id, challengeA?.id, challengeB?.id].filter(Boolean);
+      if (chalIds.length > 0) {
+        await prisma.auditLog.deleteMany({ where: { entity_id: { in: chalIds } } });
+        await prisma.challenge.deleteMany({ where: { id: { in: chalIds } } });
+      }
+      const sIds = [startup1?.id, startup2?.id].filter(Boolean);
+      if (sIds.length > 0) {
+        await prisma.startup.deleteMany({ where: { id: { in: sIds } } });
+      }
+      const uIds = [startupUser1?.id, startupUser2?.id, userA?.id, userB?.id].filter(Boolean);
+      if (uIds.length > 0) {
+        await prisma.auditLog.deleteMany({ where: { user_id: { in: uIds } } });
+        await prisma.user.deleteMany({ where: { id: { in: uIds } } });
+      }
+      const dIds = [deptA?.id, deptB?.id].filter(Boolean);
+      if (dIds.length > 0) {
+        await prisma.department.deleteMany({ where: { id: { in: dIds } } });
+      }
       console.log('[Cleanup Complete]\n');
     } catch (cleanErr) {
       console.warn('Cleanup error (non-fatal):', cleanErr.message);
