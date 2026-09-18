@@ -238,7 +238,7 @@ function ChallengePilot() {
         ]);
 
         if (chalRes.status === "fulfilled") {
-          parentChallenge = chalRes.value?.data || chalRes.value;
+          parentChallenge = chalRes.value?.data?.challenge || chalRes.value?.data || chalRes.value;
           setChallenge(parentChallenge);
         }
 
@@ -292,7 +292,8 @@ function ChallengePilot() {
           setChallenge(parentChallenge);
         }
       } else if (isPilotsListRoute) {
-        // Direct Government Pilots route /government/pilots (with canonical ?status=AT_RISK filtering)
+        // Direct Government Pilots route /government/pilots — show ALL pilots as a card grid.
+        // Do NOT auto-select or auto-load any single pilot's dashboard.
         const pilotsRes = await getPilots().catch(() => ({ data: { pilots: [] } }));
         const rawPilots =
           pilotsRes?.data?.pilots ||
@@ -301,28 +302,8 @@ function ChallengePilot() {
           [];
 
         setPilotsList(rawPilots);
-
-        const filtered = statusParam && statusParam !== "ALL"
-          ? rawPilots.filter((p) => p.status === statusParam)
-          : rawPilots;
-
-        if (filtered.length > 0) {
-          const targetPilot =
-            (activeSelectedPilotId && filtered.find((p) => p.id === activeSelectedPilotId)) ||
-            filtered[0];
-
-          if (targetPilot?.id) {
-            if (targetPilot.id !== activeSelectedPilotId) {
-              setActiveSelectedPilotId(targetPilot.id);
-            }
-            const dashRes = await getPilotDashboard(targetPilot.id).catch(() => null);
-            resolvedPilot = dashRes ? normalizePilot(dashRes) : normalizePilot(targetPilot);
-            parentChallenge = resolvedPilot?.challenge || targetPilot.challenge || null;
-            if (parentChallenge) setChallenge(parentChallenge);
-          }
-        } else {
-          resolvedPilot = null;
-        }
+        // Leave resolvedPilot = null so the card grid renders instead of a single detail view
+        resolvedPilot = null;
       }
 
       setPilot(resolvedPilot);
@@ -360,7 +341,7 @@ function ChallengePilot() {
     } finally {
       setLoading(false);
     }
-  }, [routeId, location.pathname, location.search, activeSelectedPilotId]);
+  }, [routeId, location.pathname, location.search]);
 
   useEffect(() => {
     loadPilotData();
@@ -717,6 +698,8 @@ function ChallengePilot() {
               onClick={() => {
                 if (challenge?.id && location.pathname.includes("/challenges/")) {
                   navigate(`/government/challenges/${challenge.id}/applications`);
+                } else if (isDirectPilotRoute) {
+                  navigate("/government/pilots");
                 } else {
                   navigate("/government/dashboard");
                 }
@@ -724,7 +707,7 @@ function ChallengePilot() {
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition"
             >
               <ArrowLeft className="h-4 w-4" />
-              {challenge?.id && location.pathname.includes("/challenges/") ? "Back to Challenge Applications" : "Back to Dashboard"}
+              {challenge?.id && location.pathname.includes("/challenges/") ? "Back to Challenge Applications" : isDirectPilotRoute ? "All Pilots" : "Back to Dashboard"}
             </button>
           </div>
 
@@ -774,7 +757,7 @@ function ChallengePilot() {
                         className="inline-flex h-10 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 text-xs font-semibold text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
                       >
                         <ShieldAlert className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                        Authorize Override
+                        Start with Readiness Override
                       </button>
                     )}
                   </>
@@ -809,7 +792,7 @@ function ChallengePilot() {
           </div>
         </motion.div>
 
-        {/* PILOT STATUS FILTER & SELECTION TOOLBAR (Shown on /government/pilots) */}
+        {/* PILOT STATUS FILTER TOOLBAR (Shown on /government/pilots list and direct pilot route) */}
         {!isChallengeRoute && (
           <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -851,26 +834,126 @@ function ChallengePilot() {
                 })}
               </div>
 
-              {/* Active Pilot Selector (when multiple pilots in current filter) */}
-              {displayedPilots.length > 1 && (
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                    Active Pilot:
-                  </span>
-                  <select
-                    value={pilot?.id || ""}
-                    onChange={(e) => handleSelectPilotFromList(e.target.value)}
-                    className="h-9 max-w-[280px] truncate rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white cursor-pointer"
-                  >
-                    {displayedPilots.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.startup?.company_name || p.startup?.name || "Startup"} — {p.challenge?.title || "Pilot"} ({formatPilotStatus(p.status)})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* Pilot count summary */}
+              {isPilotsListRoute && pilotsList.length > 0 && (
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0">
+                  {displayedPilots.length} of {pilotsList.length} pilot{pilotsList.length !== 1 ? "s" : ""}
+                </span>
               )}
             </div>
+          </div>
+        )}
+
+        {/* PILOTS CARD GRID (list route only — /government/pilots) */}
+        {!loading && !fetchError && isPilotsListRoute && pilotsList.length > 0 && (
+          <div className="mb-6">
+            {displayedPilots.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <AlertTriangle className="mx-auto h-10 w-10 text-amber-400" />
+                <h3 className="mt-3 text-base font-bold text-slate-900 dark:text-white">
+                  No {statusParam ? formatPilotStatus(statusParam) : ""} Pilots Found
+                </h3>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                  No pilots match this filter. Try a different status or view all pilots.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate("/government/pilots")}
+                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500 transition"
+                >
+                  <FlaskConical className="h-4 w-4" />
+                  View All Pilots
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {displayedPilots.map((p) => {
+                  const statusColors = {
+                    PLANNED: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+                    RUNNING: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
+                    AT_RISK: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+                    VALIDATION: "bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300",
+                    COMPLETED: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300",
+                    SCALED: "bg-purple-100 text-purple-800 dark:bg-purple-950/50 dark:text-purple-300",
+                    STOPPED: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300",
+                  };
+                  const statusColor = statusColors[p.status] || statusColors.PLANNED;
+                  const startupName = p.startup?.company_name || p.startup?.name || "Startup";
+                  const challengeTitle = p.challenge?.title || "Pilot Project";
+                  const pilotLocation = p.location || "Location not set";
+                  const startDate = p.start_date ? new Date(p.start_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
+                  const endDate = p.end_date ? new Date(p.end_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
+                  const budget = p.budget ? `₹${Number(p.budget).toLocaleString("en-IN")}` : "—";
+
+                  return (
+                    <motion.button
+                      key={p.id}
+                      type="button"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25 }}
+                      onClick={() => navigate(`/government/pilots/${p.id}`)}
+                      className="group relative flex flex-col rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm hover:border-indigo-300 hover:shadow-md transition-all dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700 cursor-pointer"
+                    >
+                      {/* Status badge */}
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${statusColor}`}>
+                          {p.status === "AT_RISK" && <AlertTriangle className="mr-1 h-3 w-3" />}
+                          {formatPilotStatus(p.status)}
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-500 transition shrink-0 mt-0.5" />
+                      </div>
+
+                      {/* Challenge title */}
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2 mb-1">
+                        {challengeTitle}
+                      </h3>
+
+                      {/* Startup */}
+                      <div className="flex items-center gap-1.5 mb-3">
+                        <Building2 className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                        <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 truncate">{startupName}</span>
+                      </div>
+
+                      {/* Meta info */}
+                      <div className="mt-auto space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{pilotLocation}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                          <Clock3 className="h-3 w-3 shrink-0" />
+                          <span>{startDate} → {endDate}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                          <DollarSign className="h-3 w-3 shrink-0" />
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">{budget}</span>
+                        </div>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* EMPTY STATE when no pilots exist at all on list route */}
+        {!loading && !fetchError && isPilotsListRoute && pilotsList.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 mb-6">
+            <FlaskConical className="mx-auto h-14 w-14 text-indigo-400 dark:text-indigo-600" />
+            <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">No Pilot Projects Yet</h3>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
+              Pilot projects appear here once a startup application has been awarded SELECTED status and a pilot sandbox has been created.
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate("/government/challenges")}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500 transition"
+            >
+              View Challenges
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
         )}
 
@@ -936,35 +1019,10 @@ function ChallengePilot() {
           </div>
         )}
 
-        {/* NO PILOT YET STATE / FILTERED EMPTY STATE */}
-        {!loading && !fetchError && !pilot && (
+        {/* NO PILOT YET STATE — only shown on challenge-scoped or direct pilot routes (not list route) */}
+        {!loading && !fetchError && !pilot && !isPilotsListRoute && (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 mb-6">
-            {statusParam ? (
-              <>
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
-                  <AlertTriangle className="h-7 w-7" />
-                </div>
-                <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
-                  No {statusParam === "AT_RISK" ? "At-Risk" : formatPilotStatus(statusParam)} Pilots Found
-                </h3>
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                  There are currently no active sandbox pilots matching status filter{" "}
-                  <strong className="text-slate-700 dark:text-slate-200">
-                    {formatPilotStatus(statusParam)} ({statusParam})
-                  </strong>.
-                </p>
-                <div className="mt-6 flex justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/government/pilots")}
-                    className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500 transition"
-                  >
-                    <FlaskConical className="h-4 w-4" />
-                    View All Department Pilots
-                  </button>
-                </div>
-              </>
-            ) : selectedApp ? (
+            {selectedApp ? (
               <>
                 <FlaskConical className="mx-auto h-14 w-14 text-indigo-400 dark:text-indigo-600" />
                 <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
@@ -1935,13 +1993,21 @@ function ChallengePilot() {
                 <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-3">
                   <ShieldAlert className="h-5 w-5" />
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    Administrative Readiness Override
+                    Start Pilot with Readiness Override
                   </h3>
                 </div>
 
-                <p className="text-xs leading-5 text-slate-600 dark:text-slate-300">
-                  There are currently <b>{uncompliedCount}</b> unverified compliance checkpoints. Starting the pilot requires an explicit administrative sanction and justification recorded in the platform audit trail.
-                </p>
+                <div className="space-y-2 text-xs leading-5 text-slate-600 dark:text-slate-300">
+                  <p>
+                    Some compliance checkpoints (<b>{uncompliedCount}</b> item{uncompliedCount === 1 ? "" : "s"}) are incomplete.
+                  </p>
+                  <p>
+                    The pilot can be started despite incomplete readiness only through an explicit administrative justification recorded in the platform audit trail.
+                  </p>
+                  <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                    Note: Incomplete compliance checkpoints will remain unchanged and this override does NOT mark items as COMPLIED.
+                  </p>
+                </div>
 
                 <div className="mt-4">
                   <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
