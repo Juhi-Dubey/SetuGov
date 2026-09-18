@@ -86,7 +86,7 @@ function ChallengePilot() {
   const [actionSuccess, setActionSuccess] = useState("");
 
   const [pilotsList, setPilotsList] = useState([]);
-  const [activeSelectedPilotId, setActiveSelectedPilotId] = useState(null);
+  const [pilotsPagination, setPilotsPagination] = useState(null);
 
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const statusParam = searchParams.get("status");
@@ -294,15 +294,18 @@ function ChallengePilot() {
       } else if (isPilotsListRoute) {
         // Direct Government Pilots route /government/pilots — show ALL pilots as a card grid.
         // Do NOT auto-select or auto-load any single pilot's dashboard.
-        const pilotsRes = await getPilots().catch(() => ({ data: { pilots: [] } }));
+        // Request limit=100 to avoid silently truncating at the default 20-item page.
+        const pilotsRes = await getPilots({ limit: 100 }).catch(() => ({ data: { pilots: [], pagination: null } }));
         const rawPilots =
           pilotsRes?.data?.pilots ||
           pilotsRes?.pilots ||
           (Array.isArray(pilotsRes?.data) ? pilotsRes.data : []) ||
           [];
+        const rawPagination = pilotsRes?.data?.pagination || null;
 
         setPilotsList(rawPilots);
-        // Leave resolvedPilot = null so the card grid renders instead of a single detail view
+        setPilotsPagination(rawPagination);
+        // Leave resolvedPilot = null — the card grid renders and the user explicitly selects a pilot
         resolvedPilot = null;
       }
 
@@ -836,9 +839,17 @@ function ChallengePilot() {
 
               {/* Pilot count summary */}
               {isPilotsListRoute && pilotsList.length > 0 && (
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 shrink-0">
-                  {displayedPilots.length} of {pilotsList.length} pilot{pilotsList.length !== 1 ? "s" : ""}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    {displayedPilots.length} of {pilotsPagination?.total ?? pilotsList.length} pilot{(pilotsPagination?.total ?? pilotsList.length) !== 1 ? "s" : ""}
+                  </span>
+                  {pilotsPagination?.total > 100 && (
+                    <span className="inline-flex items-center gap-1 rounded-lg bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
+                      <AlertTriangle className="h-3 w-3" />
+                      Showing first 100
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           </div>
