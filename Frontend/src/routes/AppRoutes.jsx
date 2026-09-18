@@ -1,4 +1,9 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
+
+function RedirectSingularPilot() {
+  const { id } = useParams();
+  return <Navigate to={`/government/pilots/${id}`} replace />;
+}
 
 // =====================================================
 // AUTHENTICATION & PUBLIC PAGES
@@ -268,23 +273,11 @@ function AppRoutes() {
       />
       <Route
         path="/government/pilot"
-        element={
-          <ProtectedRoute>
-            <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
-              <ChallengePilot />
-            </RoleRoute>
-          </ProtectedRoute>
-        }
+        element={<Navigate to="/government/pilots" replace />}
       />
       <Route
         path="/government/pilot/:id"
-        element={
-          <ProtectedRoute>
-            <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
-              <ChallengePilot />
-            </RoleRoute>
-          </ProtectedRoute>
-        }
+        element={<RedirectSingularPilot />}
       />
       <Route
         path="/government/pilots"

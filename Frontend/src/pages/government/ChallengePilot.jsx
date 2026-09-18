@@ -263,8 +263,8 @@ function ChallengePilot() {
               budget: selected.estimated_cost
                 ? String(selected.estimated_cost)
                 : parentChallenge.budget_max
-                ? String(parentChallenge.budget_max)
-                : "",
+                  ? String(parentChallenge.budget_max)
+                  : "",
             });
           }
         }
@@ -359,8 +359,8 @@ function ChallengePilot() {
       console.error("Failed to load pilot data:", err);
       setFetchError(
         err?.response?.data?.message ||
-          err?.message ||
-          "Failed to load pilot project details from PostgreSQL."
+        err?.message ||
+        "Failed to load pilot project details from PostgreSQL."
       );
     } finally {
       setLoading(false);
@@ -685,8 +685,8 @@ function ChallengePilot() {
         pilot?.overall_score != null
           ? Number(pilot.overall_score)
           : pilot?.kpi_score != null
-          ? Number(pilot.kpi_score)
-          : undefined;
+            ? Number(pilot.kpi_score)
+            : undefined;
 
       await createScaleDecision(pilot.id, {
         decision: govDecision.decision,
@@ -834,22 +834,20 @@ function ChallengePilot() {
                       key={tab.id}
                       type="button"
                       onClick={() => handleStatusFilterChange(tab.id)}
-                      className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
-                        isActive
+                      className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${isActive
                           ? tab.id === "AT_RISK"
                             ? "bg-amber-600 text-white shadow-sm shadow-amber-600/20"
                             : "bg-indigo-600 text-white shadow-sm shadow-indigo-600/20"
                           : "bg-slate-50 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
-                      }`}
+                        }`}
                     >
                       {tab.id === "AT_RISK" && <AlertTriangle className="h-3.5 w-3.5" />}
                       {tab.label}
                       <span
-                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                          isActive
+                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${isActive
                             ? "bg-white/20 text-white"
                             : "bg-slate-200/80 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                        }`}
+                          }`}
                       >
                         {count}
                       </span>
@@ -1127,10 +1125,10 @@ function ChallengePilot() {
                   {pilot.status === "PLANNED"
                     ? "Onboarding & Readiness Check"
                     : pilot.status === "RUNNING"
-                    ? "Active Operational Sandbox"
-                    : pilot.status === "COMPLETED"
-                    ? "Successfully Concluded"
-                    : "Live Execution"}
+                      ? "Active Operational Sandbox"
+                      : pilot.status === "COMPLETED"
+                        ? "Successfully Concluded"
+                        : "Live Execution"}
                 </p>
               </div>
 
@@ -1155,10 +1153,10 @@ function ChallengePilot() {
                 <p className="mt-1 text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">
                   {pilot.milestones?.length
                     ? `${Math.round(
-                        ((pilot.milestones?.filter((m) => m.status === "COMPLETED" || m.completion_percentage === 100).length || 0) /
-                          pilot.milestones.length) *
-                          100
-                      )}% Completed`
+                      ((pilot.milestones?.filter((m) => m.status === "COMPLETED" || m.completion_percentage === 100).length || 0) /
+                        pilot.milestones.length) *
+                      100
+                    )}% Completed`
                     : "No milestones configured"}
                 </p>
               </div>
@@ -1181,11 +1179,10 @@ function ChallengePilot() {
               <button
                 type="button"
                 onClick={() => setActiveTab("overview")}
-                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-                  activeTab === "overview"
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${activeTab === "overview"
                     ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                     : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                }`}
+                  }`}
               >
                 <LayoutDashboard className="h-4 w-4 text-sky-500" />
                 Sandbox Overview
@@ -1194,11 +1191,10 @@ function ChallengePilot() {
               <button
                 type="button"
                 onClick={() => setActiveTab("kpis")}
-                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-                  activeTab === "kpis"
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${activeTab === "kpis"
                     ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                     : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                }`}
+                  }`}
               >
                 <BarChart2 className="h-4 w-4 text-cyan-500" />
                 KPIs & Measurements ({pilot?.kpis?.length || 0})
@@ -1207,11 +1203,10 @@ function ChallengePilot() {
               <button
                 type="button"
                 onClick={() => setActiveTab("milestones")}
-                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-                  activeTab === "milestones"
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${activeTab === "milestones"
                     ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                     : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                }`}
+                  }`}
               >
                 <Flag className="h-4 w-4 text-violet-500" />
                 Milestones ({pilot?.milestones?.length || 0})
@@ -1220,11 +1215,10 @@ function ChallengePilot() {
               <button
                 type="button"
                 onClick={() => setActiveTab("compliance")}
-                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-                  activeTab === "compliance"
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${activeTab === "compliance"
                     ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                     : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                }`}
+                  }`}
               >
                 <ShieldCheck className="h-4 w-4 text-emerald-500" />
                 Compliance & Security ({complianceList.length})
@@ -1233,11 +1227,10 @@ function ChallengePilot() {
               <button
                 type="button"
                 onClick={() => setActiveTab("issues")}
-                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-                  activeTab === "issues"
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${activeTab === "issues"
                     ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                     : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                }`}
+                  }`}
               >
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
                 Live Issues & Incidents ({issuesList.length})
@@ -1246,11 +1239,10 @@ function ChallengePilot() {
               <button
                 type="button"
                 onClick={() => setActiveTab("feedback")}
-                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-                  activeTab === "feedback"
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${activeTab === "feedback"
                     ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                     : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                }`}
+                  }`}
               >
                 <Star className="h-4 w-4 text-amber-500" />
                 Beneficiary Feedback ({feedbackList.length})
@@ -1259,11 +1251,10 @@ function ChallengePilot() {
               <button
                 type="button"
                 onClick={() => setActiveTab("ai-intelligence")}
-                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
-                  activeTab === "ai-intelligence"
+                className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${activeTab === "ai-intelligence"
                     ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
                     : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                }`}
+                  }`}
               >
                 <Sparkles className="h-4 w-4 text-indigo-500" />
                 Brain 4 Scaling Advisory
@@ -1337,71 +1328,71 @@ function ChallengePilot() {
               </div>
             )}
 
-        {/* TAB 2: KPIS */}
-        {activeTab === "kpis" && (
-          <div className="space-y-6">
-            <form onSubmit={handleAddKpi} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-              <h3 className="text-sm font-bold mb-3">Add Custom Pilot KPI</h3>
-              <div className="grid gap-3 sm:grid-cols-4">
-                <input
-                  type="text"
-                  placeholder="Metric name (e.g., Wait time)"
-                  value={newKpi.name}
-                  onChange={(e) => setNewKpi({ ...newKpi, name: e.target.value })}
-                  className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Unit (e.g., %, mins)"
-                  value={newKpi.unit}
-                  onChange={(e) => setNewKpi({ ...newKpi, unit: e.target.value })}
-                  className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
-                />
-                <input
-                  type="number"
-                  placeholder="Baseline"
-                  value={newKpi.baseline}
-                  onChange={(e) => setNewKpi({ ...newKpi, baseline: e.target.value })}
-                  className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
-                />
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
-                >
-                  <Plus className="h-4 w-4" /> Save KPI
-                </button>
-              </div>
-            </form>
+            {/* TAB 2: KPIS */}
+            {activeTab === "kpis" && (
+              <div className="space-y-6">
+                <form onSubmit={handleAddKpi} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                  <h3 className="text-sm font-bold mb-3">Add Custom Pilot KPI</h3>
+                  <div className="grid gap-3 sm:grid-cols-4">
+                    <input
+                      type="text"
+                      placeholder="Metric name (e.g., Wait time)"
+                      value={newKpi.name}
+                      onChange={(e) => setNewKpi({ ...newKpi, name: e.target.value })}
+                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                      required
+                    />
+                    <input
+                      type="text"
+                      placeholder="Unit (e.g., %, mins)"
+                      value={newKpi.unit}
+                      onChange={(e) => setNewKpi({ ...newKpi, unit: e.target.value })}
+                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Baseline"
+                      value={newKpi.baseline}
+                      onChange={(e) => setNewKpi({ ...newKpi, baseline: e.target.value })}
+                      className="h-10 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSaving}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+                    >
+                      <Plus className="h-4 w-4" /> Save KPI
+                    </button>
+                  </div>
+                </form>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              {(pilot?.kpis || [
-                { id: "1", name: "Patient Queue Wait Time", unit: "mins", baseline: 45, target: 15 },
-                { id: "2", name: "Daily Throughput Capacity", unit: "patients", baseline: 120, target: 200 },
-              ]).map((kpi) => (
-                <div key={kpi.id} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold">{kpi.name}</h4>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold dark:bg-slate-800">
-                      Unit: {kpi.unit}
-                    </span>
-                  </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs">
-                    <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/50">
-                      <p className="text-slate-400">Baseline</p>
-                      <p className="font-bold">{kpi.baseline} {kpi.unit}</p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {(pilot?.kpis || [
+                    { id: "1", name: "Patient Queue Wait Time", unit: "mins", baseline: 45, target: 15 },
+                    { id: "2", name: "Daily Throughput Capacity", unit: "patients", baseline: 120, target: 200 },
+                  ]).map((kpi) => (
+                    <div key={kpi.id} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-bold">{kpi.name}</h4>
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold dark:bg-slate-800">
+                          Unit: {kpi.unit}
+                        </span>
+                      </div>
+                      <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs">
+                        <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/50">
+                          <p className="text-slate-400">Baseline</p>
+                          <p className="font-bold">{kpi.baseline} {kpi.unit}</p>
+                        </div>
+                        <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/50">
+                          <p className="text-slate-400">Target</p>
+                          <p className="font-bold text-emerald-600 dark:text-emerald-400">{kpi.target} {kpi.unit}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="rounded-xl bg-slate-50 p-2 dark:bg-slate-800/50">
-                      <p className="text-slate-400">Target</p>
-                      <p className="font-bold text-emerald-600 dark:text-emerald-400">{kpi.target} {kpi.unit}</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
+            )}
 
             {/* TAB 3: MILESTONES */}
             {activeTab === "milestones" && (
@@ -1476,11 +1467,10 @@ function ChallengePilot() {
                           </div>
                         </div>
                         <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                            m.status === "COMPLETED" || m.completion_percentage === 100
+                          className={`rounded-full px-2.5 py-1 text-xs font-bold ${m.status === "COMPLETED" || m.completion_percentage === 100
                               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
                               : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                          }`}
+                            }`}
                         >
                           {m.status || (m.completion_percentage === 100 ? "COMPLETED" : "PLANNED")}
                         </span>
@@ -1543,33 +1533,30 @@ function ChallengePilot() {
                               <button
                                 type="button"
                                 onClick={() => handleUpdateComplianceStatus(item, "COMPLIED")}
-                                className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition ${
-                                  item.status === "COMPLIED"
+                                className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition ${item.status === "COMPLIED"
                                     ? "bg-emerald-600 text-white"
                                     : "border border-slate-200 bg-white text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-900"
-                                }`}
+                                  }`}
                               >
                                 Complied
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleUpdateComplianceStatus(item, "PENDING")}
-                                className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition ${
-                                  item.status === "PENDING"
+                                className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition ${item.status === "PENDING"
                                     ? "bg-amber-500 text-white"
                                     : "border border-slate-200 bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-700 dark:border-slate-700 dark:bg-slate-900"
-                                }`}
+                                  }`}
                               >
                                 Pending
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleUpdateComplianceStatus(item, "NON_COMPLIANT")}
-                                className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition ${
-                                  item.status === "NON_COMPLIANT"
+                                className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition ${item.status === "NON_COMPLIANT"
                                     ? "bg-red-600 text-white"
                                     : "border border-slate-200 bg-white text-slate-600 hover:bg-red-50 hover:text-red-700 dark:border-slate-700 dark:bg-slate-900"
-                                }`}
+                                  }`}
                               >
                                 Non-Compliant
                               </button>
@@ -1731,11 +1718,10 @@ function ChallengePilot() {
 
                           <div className="flex items-center gap-2 shrink-0">
                             <span
-                              className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                                issue.status === "RESOLVED" || issue.status === "CLOSED"
+                              className={`rounded-full px-2.5 py-1 text-xs font-bold ${issue.status === "RESOLVED" || issue.status === "CLOSED"
                                   ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
                                   : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-                              }`}
+                                }`}
                             >
                               {issue.status}
                             </span>
@@ -1853,13 +1839,12 @@ function ChallengePilot() {
                               </h4>
                             </div>
                           </div>
-                          <span className={`inline-flex self-start sm:self-auto rounded-lg px-3 py-1 text-xs font-bold ${
-                            savedScaleDecision.decision === "SCALE"
+                          <span className={`inline-flex self-start sm:self-auto rounded-lg px-3 py-1 text-xs font-bold ${savedScaleDecision.decision === "SCALE"
                               ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
                               : savedScaleDecision.decision === "STOP"
-                              ? "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
-                              : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
-                          }`}>
+                                ? "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
+                                : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                            }`}>
                             {savedScaleDecision.decision === "SCALE" ? "SCALE (Full Department Rollout)" : savedScaleDecision.decision === "STOP" ? "STOP (Do Not Scale)" : savedScaleDecision.decision}
                           </span>
                         </div>
