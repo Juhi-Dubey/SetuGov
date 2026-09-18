@@ -475,9 +475,9 @@ function Topbar({ onMenuClick, role = "government", hideSearch = false }) {
     const normalizedRole = String(authUser?.role || role || "").toUpperCase();
     const profileRouteMap = {
       STARTUP: "/startup/profile",
-      GOVERNMENT: "/startup/profile",
-      EVALUATOR: "/startup/profile",
-      ADMIN: "/startup/profile",
+      GOVERNMENT: "/government/my-page",
+      EVALUATOR: "/evaluator/my-page",
+      ADMIN: "/admin/my-page",
     };
     const targetRoute = profileRouteMap[normalizedRole] || "/startup/profile";
     navigate(targetRoute);

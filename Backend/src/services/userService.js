@@ -159,6 +159,7 @@ export const updateUser = async (id, data, currentUser) => {
 
   const updateData = {};
   if (data.name !== undefined) updateData.name = data.name.trim();
+  if (data.phone !== undefined) updateData.phone = data.phone ? data.phone.trim() : null;
   if (currentUser.role === 'ADMIN' && data.department_id !== undefined) {
     updateData.department_id = data.department_id;
   }
@@ -170,6 +171,7 @@ export const updateUser = async (id, data, currentUser) => {
       id: true,
       name: true,
       email: true,
+      phone: true,
       role: true,
       department_id: true,
       is_active: true,

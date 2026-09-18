@@ -149,6 +149,27 @@ export const updatePilotIssue = async (req, res, next) => {
   }
 };
 
+export const createProgressUpdate = async (req, res, next) => {
+  try {
+    const pilotId = req.params.pilot_id || req.params.id;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const update = await pilotService.createProgressUpdate(pilotId, req.body, req.user, ip_address);
+    return successResponse(res, { update }, 'Progress update submitted successfully', 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProgressUpdates = async (req, res, next) => {
+  try {
+    const pilotId = req.params.pilot_id || req.params.id;
+    const updates = await pilotService.getProgressUpdates(pilotId, req.user);
+    return successResponse(res, { updates }, 'Progress updates retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   createPilot,
   getPilots,
@@ -163,7 +184,9 @@ export default {
   getPilotFeedbacks,
   createPilotIssue,
   getPilotIssues,
-  updatePilotIssue
+  updatePilotIssue,
+  createProgressUpdate,
+  getProgressUpdates
 };
 
 

@@ -115,7 +115,23 @@ async function main() {
       CONSTRAINT "challenge_evaluator_pools_evaluator_id_fkey" FOREIGN KEY ("evaluator_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE,
       CONSTRAINT "challenge_evaluator_pools_added_by_fkey" FOREIGN KEY ("added_by") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE
     );`,
-    `CREATE INDEX IF NOT EXISTS "challenge_evaluator_pools_challenge_id_idx" ON "challenge_evaluator_pools"("challenge_id");`
+    `CREATE INDEX IF NOT EXISTS "challenge_evaluator_pools_challenge_id_idx" ON "challenge_evaluator_pools"("challenge_id");`,
+
+    // 8. Create pilot_progress_updates table
+    `CREATE TABLE IF NOT EXISTS "pilot_progress_updates" (
+      "id" TEXT NOT NULL,
+      "pilot_id" TEXT NOT NULL,
+      "user_id" TEXT,
+      "title" TEXT NOT NULL DEFAULT 'Startup Progress Update',
+      "description" TEXT NOT NULL,
+      "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "pilot_progress_updates_pkey" PRIMARY KEY ("id"),
+      CONSTRAINT "pilot_progress_updates_pilot_id_fkey" FOREIGN KEY ("pilot_id") REFERENCES "pilots"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "pilot_progress_updates_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE
+    );`,
+    `CREATE INDEX IF NOT EXISTS "pilot_progress_updates_pilot_id_idx" ON "pilot_progress_updates"("pilot_id");`,
+    `CREATE INDEX IF NOT EXISTS "pilot_progress_updates_created_at_idx" ON "pilot_progress_updates"("created_at");`
   ];
 
   for (const sql of statements) {

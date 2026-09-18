@@ -19,7 +19,20 @@ export const updatePilotSchema = z.object({
   final_recommendation: z.string().optional()
 });
 
+export const createProgressUpdateSchema = z.object({
+  title: z.string().trim().min(1).optional(),
+  description: z.string().trim().min(1, 'Update description cannot be empty').optional(),
+  updateText: z.string().trim().min(1, 'Update text cannot be empty').optional()
+}).refine(
+  (data) => (data.description && data.description.trim().length > 0) || (data.updateText && data.updateText.trim().length > 0),
+  {
+    message: 'Progress update description cannot be empty',
+    path: ['description']
+  }
+);
+
 export default {
   createPilotSchema,
-  updatePilotSchema
+  updatePilotSchema,
+  createProgressUpdateSchema
 };

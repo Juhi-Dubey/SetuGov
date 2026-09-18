@@ -1,590 +1,191 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
+  ShieldCheck,
   CheckCircle2,
   Clock,
   AlertCircle,
   FileText,
-  Upload,
-  Trash2,
-  CreditCard,
-  User,
-  ShieldCheck,
   Globe,
   Mail,
   Phone,
   MapPin,
   Sparkles,
-  ArrowRight,
-  ArrowLeft,
-  Save,
-  Check,
-  Eye,
-  AlertTriangle,
-  RefreshCw,
-  Lock,
+  ExternalLink,
+  FileCheck2,
   Layers,
-  FileCheck
+  Calendar,
+  Award,
+  Edit3,
+  Save,
+  X,
+  RefreshCw,
+  User,
+  ArrowRight,
+  Check,
+  FileStack,
+  ChevronRight
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import {
-  getMyRegistration,
-  updateRegistration,
-  saveBankDetails,
-  uploadStartupDocument,
-  deleteStartupDocument,
-  submitStartupRegistration
-} from "../../services/startupService";
+import { getMyRegistration, updateStartup } from "../../services/startupService";
 import { useAuth } from "../../context/AuthContext";
-import SearchableSelect from "../../components/common/SearchableSelect";
-import TechTagInput from "../../components/common/TechTagInput";
-import {
-  getStatesAndUTs,
-  getCitiesForState,
-  isValidState,
-  isValidCityForState
-} from "../../data/indiaLocations";
 
-const ORG_TYPES = [
-  { value: "PRIVATE_LIMITED", label: "Private Limited Company (Pvt Ltd)" },
-  { value: "LLP", label: "Limited Liability Partnership (LLP)" },
-  { value: "PROPRIETORSHIP", label: "Sole Proprietorship" },
-  { value: "PARTNERSHIP", label: "Partnership Firm" },
-  { value: "PUBLIC_LIMITED", label: "Public Limited Company" },
-  { value: "TRUST", label: "Registered Trust" },
-  { value: "SOCIETY", label: "Registered Society" },
-  { value: "OTHER", label: "Other Legal Entity" }
-];
-
-const DOMAINS = [
-  "Healthcare & MedTech",
-  "Transportation & Smart Mobility",
-  "Urban Governance & Smart Cities",
-  "Agriculture & AgriTech",
-  "Clean Energy & Environment",
-  "Education & EdTech",
-  "Cybersecurity & Data Defense",
-  "Public Safety & Disaster Management",
-  "Technology & AI/ML"
-];
-
-export const getRequiredDocumentTypes = (orgType) => {
-  const normalized = (orgType || "PRIVATE_LIMITED").toUpperCase();
-  switch (normalized) {
-    case "PRIVATE_LIMITED":
-    case "PUBLIC_LIMITED":
-    case "LLP":
-    case "PARTNERSHIP":
-    case "TRUST":
-    case "SOCIETY":
-    case "OTHER":
-      return ["PAN", "INCORPORATION_CERTIFICATE", "BANK_PROOF", "AUTHORIZED_PERSON_PROOF"];
-    case "PROPRIETORSHIP":
-      return ["PAN", "BANK_PROOF", "AUTHORIZED_PERSON_PROOF"];
-    default:
-      return ["PAN", "INCORPORATION_CERTIFICATE", "BANK_PROOF", "AUTHORIZED_PERSON_PROOF"];
-  }
+const TRL_DESCRIPTIONS = {
+  1: "Basic principles observed and reported",
+  2: "Technology concept and/or application formulated",
+  3: "Analytical and experimental critical function / proof of concept",
+  4: "Component and/or breadboard validation in laboratory environment",
+  5: "Component and/or breadboard validation in relevant environment",
+  6: "System/subsystem model or prototype demonstration in a relevant environment",
+  7: "System prototype demonstration in an operational environment",
+  8: "Actual system completed and qualified through test and demonstration",
+  9: "Actual system proven through successful mission operations"
 };
-
-const ALL_DOCUMENT_DEFINITIONS = [
-  { id: "PAN", label: "Permanent Account Number (PAN) Card", description: "Official business or proprietor PAN card copy." },
-  { id: "INCORPORATION_CERTIFICATE", label: "Certificate of Incorporation / Registration", description: "ROC incorporation certificate, LLP agreement, or partnership deed." },
-  { id: "BANK_PROOF", label: "Bank Account Proof", description: "Canceled cheque copy or latest bank passbook/statement showing account details." },
-  { id: "AUTHORIZED_PERSON_PROOF", label: "Authorized Signatory Proof", description: "Board resolution, power of attorney, or partnership authorization letter." },
-  { id: "GST_CERTIFICATE", label: "GST Registration Certificate", description: "Optional GSTIN certificate for tax-registered suppliers." },
-  { id: "DPIIT_CERTIFICATE", label: "DPIIT Startup Recognition Certificate", description: "Optional DPIIT recognition certificate for startup benefits." },
-  { id: "PITCH_DECK", label: "Product Overview / Technical Dossier", description: "Optional product documentation or pilot architecture summary." }
-];
 
 export default function StartupProfile() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [activeStep, setActiveStep] = useState(1);
   const [startup, setStartup] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
-  const [errors, setErrors] = useState({});
 
-  const clearError = (field) => {
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
-  };
-
-  // Form State
-  const [orgData, setOrgData] = useState({
-    company_name: "",
-    org_type: "PRIVATE_LIMITED",
-    registered_address: "",
-    city: "",
-    state: "",
-    pincode: "",
-    official_email: "",
-    official_website: "",
-    incorporation_date: ""
-  });
-
-  const [authPersonData, setAuthPersonData] = useState({
-    authorized_person_name: user?.name || "",
-    authorized_person_designation: user?.designation || "",
-    authorized_person_email: user?.email || "",
-    authorized_person_phone: user?.phone || "",
-    authorization_type: "BOARD_RESOLUTION"
-  });
-
-  const [bizIdentityData, setBizIdentityData] = useState({
-    pan_number: "",
-    cin_number: "",
-    gstin: "",
-    dpiit_number: "",
-    certificate_number: ""
-  });
-
-  const [techProfileData, setTechProfileData] = useState({
+  // Editable fields for profile
+  const [editData, setEditData] = useState({
     description: "",
-    domain: "",
-    technologies: [],
+    official_website: "",
     products_services: "",
-    readiness_level: 1,
-    years_experience: 0,
-    previous_deployments: 0,
-    location: ""
+    technologies: []
   });
+  const [newTechTag, setNewTechTag] = useState("");
 
-  const [bankData, setBankData] = useState({
-    account_holder_name: "",
-    bank_name: "",
-    account_number: "",
-    ifsc_code: "",
-    branch_name: "",
-    account_type: "CURRENT"
-  });
-
-  const [documents, setDocuments] = useState([]);
-  const [uploadingDoc, setUploadingDoc] = useState(false);
-  const [selectedDocType, setSelectedDocType] = useState("PAN");
-  const [declarationAccepted, setDeclarationAccepted] = useState(false);
-  const [showAccountNumber, setShowAccountNumber] = useState(false);
-
-  const fetchDossier = async () => {
+  const fetchProfile = async () => {
     try {
       setLoading(true);
       const res = await getMyRegistration();
-      const s = res?.data?.startup || res?.startup;
+      const s = res?.data?.startup || res?.startup || res?.data;
       if (s) {
         setStartup(s);
-
-        setOrgData({
-          company_name: s.company_name || "",
-          org_type: s.org_type || "PRIVATE_LIMITED",
-          registered_address: s.registered_address || "",
-          city: s.city || "",
-          state: s.state || "",
-          pincode: s.pincode || "",
-          official_email: s.official_email || s.user?.email || "",
-          official_website: s.official_website || "",
-          incorporation_date: s.incorporation_date ? s.incorporation_date.split("T")[0] : ""
-        });
-
-        setAuthPersonData({
-          authorized_person_name: s.authorized_person_name || s.user?.name || "",
-          authorized_person_designation: s.authorized_person_designation || "",
-          authorized_person_email: s.authorized_person_email || s.user?.email || "",
-          authorized_person_phone: s.authorized_person_phone || s.user?.phone || "",
-          authorization_type: s.authorization_type || "BOARD_RESOLUTION"
-        });
-
-        setBizIdentityData({
-          pan_number: s.pan_number || "",
-          cin_number: s.cin_number || "",
-          gstin: s.gstin || "",
-          dpiit_number: s.dpiit_number || "",
-          certificate_number: s.certificate_number || ""
-        });
-
-        setTechProfileData({
+        setEditData({
           description: s.description || "",
-          domain: s.domain || "",
-          technologies: s.technologies || [],
+          official_website: s.official_website || "",
           products_services: s.products_services || "",
-          readiness_level: s.readiness_level ?? 1,
-          years_experience: s.years_experience ?? 0,
-          previous_deployments: s.previous_deployments ?? 0,
-          location: s.location || ""
+          technologies: Array.isArray(s.technologies)
+            ? s.technologies
+            : typeof s.technologies === "string" && s.technologies.trim()
+            ? s.technologies.split(",").map((t) => t.trim()).filter(Boolean)
+            : []
         });
-
-        if (s.bank_details) {
-          setBankData({
-            account_holder_name: s.bank_details.account_holder_name || "",
-            bank_name: s.bank_details.bank_name || "",
-            account_number: s.bank_details.account_number || "",
-            ifsc_code: s.bank_details.ifsc_code || "",
-            branch_name: s.bank_details.branch_name || "",
-            account_type: s.bank_details.account_type || "CURRENT"
-          });
-        }
-
-        setDocuments(s.documents || []);
-
-        // If startup is already SUBMITTED or VERIFIED, jump to status review step by default
-        if (s.verification_status === "VERIFIED" || s.verification_status === "SUBMITTED" || s.verification_status === "UNDER_REVIEW") {
-          setActiveStep(9);
-        }
       }
     } catch (err) {
-      console.warn("Startup registration fetch notice:", err);
-      if (user?.role === "STARTUP") {
-        setFeedback({ type: "error", message: err?.message || "Failed to load registration data." });
-      }
+      console.warn("Startup profile fetch notice:", err);
+      setFeedback({
+        type: "error",
+        message: err?.message || "Failed to load startup profile."
+      });
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDossier();
+    fetchProfile();
   }, []);
 
-  useEffect(() => {
-    if (user && !startup) {
-      setAuthPersonData((prev) => ({
-        ...prev,
-        authorized_person_name: prev.authorized_person_name || user.name || "",
-        authorized_person_email: prev.authorized_person_email || user.email || "",
-        authorized_person_phone: prev.authorized_person_phone || user.phone || "",
-        authorized_person_designation: prev.authorized_person_designation || user.designation || "",
-      }));
-    }
-  }, [user, startup]);
-
-  const vStatus = startup?.verification_status || "DRAFT";
-  const isLocked = ["SUBMITTED", "UNDER_REVIEW", "VERIFIED"].includes(vStatus);
-
-  const validateStep1 = () => {
-    return {};
-  };
-
-  const validateStep2 = () => {
-    const errs = {};
-    if (!orgData.company_name?.trim()) {
-      errs.company_name = "Organization legal name is required.";
-    } else if (orgData.company_name.trim().length < 2) {
-      errs.company_name = "Organization legal name must be at least 2 characters.";
-    }
-
-    if (!orgData.org_type) {
-      errs.org_type = "Please select constitution / entity type.";
-    }
-
-    if (!orgData.registered_address?.trim()) {
-      errs.registered_address = "Registered head office address is required.";
-    }
-
-    if (!orgData.state) {
-      errs.state = "Please select a State / UT.";
-    } else if (!isValidState(orgData.state)) {
-      errs.state = `Invalid State / UT '${orgData.state}'. Please select a canonical Indian State or UT.`;
-    }
-
-    if (!orgData.city) {
-      errs.city = "Please select a City.";
-    } else if (orgData.state && !isValidCityForState(orgData.state, orgData.city)) {
-      errs.city = `City '${orgData.city}' does not belong to '${orgData.state}'.`;
-    }
-
-    const pinStr = String(orgData.pincode || "").trim();
-    if (!pinStr) {
-      errs.pincode = "Postal PIN Code is required.";
-    } else if (!/^[1-9][0-9]{5}$/.test(pinStr)) {
-      errs.pincode = "Postal PIN Code must be exactly 6 numeric digits (e.g. 560001).";
-    }
-
-    return errs;
-  };
-
-  const validateStep3 = () => {
-    const errs = {};
-    if (!authPersonData.authorized_person_name?.trim()) {
-      errs.authorized_person_name = "Authorized signatory full name is required.";
-    }
-
-    if (!authPersonData.authorized_person_designation?.trim()) {
-      errs.authorized_person_designation = "Official designation is required.";
-    }
-
-    const email = (authPersonData.authorized_person_email || "").trim();
-    if (!email) {
-      errs.authorized_person_email = "Official email address is required.";
-    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
-      errs.authorized_person_email = "Please enter a valid official email address.";
-    }
-
-    const phone = (authPersonData.authorized_person_phone || "").trim();
-    const cleanPhone = phone.replace(/[\s\-\(\)]/g, "");
-    if (!phone) {
-      errs.authorized_person_phone = "Authorized contact phone is required.";
-    } else if (!/^(?:\+91|0)?[6-9]\d{9}$/.test(cleanPhone)) {
-      errs.authorized_person_phone = "Please enter a valid 10-digit Indian phone number.";
-    }
-
-    if (!authPersonData.authorization_type) {
-      errs.authorization_type = "Please select authorization type / basis.";
-    }
-
-    return errs;
-  };
-
-  const validateStep4 = () => {
-    const errs = {};
-    const pan = (bizIdentityData.pan_number || "").trim().toUpperCase();
-    if (!pan) {
-      errs.pan_number = "Business PAN is required.";
-    } else if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
-      errs.pan_number = "Invalid PAN format. Must be 10 characters alphanumeric (e.g. ABCDE1234F).";
-    }
-
-    const gstin = (bizIdentityData.gstin || "").trim().toUpperCase();
-    if (gstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(gstin)) {
-      errs.gstin = "Invalid GSTIN format (e.g. 29ABCDE1234F1Z5).";
-    }
-
-    const cin = (bizIdentityData.cin_number || "").trim().toUpperCase();
-    if (cin && !/^[LU][0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/.test(cin)) {
-      errs.cin_number = "Invalid CIN format (e.g. U72900KA2024PTC123456).";
-    }
-
-    return errs;
-  };
-
-  const validateStep5 = () => {
-    const errs = {};
-    const desc = (techProfileData.description || "").trim();
-    if (!desc) {
-      errs.description = "Organization executive summary is required.";
-    } else if (desc.length < 10) {
-      errs.description = "Summary must be at least 10 characters long.";
-    }
-
-    if (!techProfileData.domain?.trim()) {
-      errs.domain = "Please select primary sector / domain.";
-    }
-
-    const trl = parseInt(techProfileData.readiness_level, 10);
-    if (!trl || trl < 1 || trl > 9) {
-      errs.readiness_level = "Technology Readiness Level must be between 1 and 9.";
-    }
-
-    return errs;
-  };
-
-  const validateStep6 = () => {
-    const errs = {};
-    if (!bankData.account_holder_name?.trim()) {
-      errs.account_holder_name = "Account holder name is required.";
-    }
-    if (!bankData.bank_name?.trim()) {
-      errs.bank_name = "Bank name is required.";
-    }
-    const acc = (bankData.account_number || "").trim();
-    if (!acc) {
-      errs.account_number = "Bank account number is required.";
-    } else if (!/^\d{9,18}$/.test(acc)) {
-      errs.account_number = "Bank account number must be between 9 and 18 digits.";
-    }
-    const ifsc = (bankData.ifsc_code || "").trim().toUpperCase();
-    if (!ifsc) {
-      errs.ifsc_code = "Bank IFSC code is required.";
-    } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) {
-      errs.ifsc_code = "Invalid IFSC format (e.g. SBIN0001234).";
-    }
-    return errs;
-  };
-
-  const validateStep7 = () => {
-    const errs = {};
-    const reqDocs = getRequiredDocumentTypes(orgData.org_type);
-    const uploaded = new Set((documents || []).map((d) => d.document_type));
-    const missing = reqDocs.filter((t) => !uploaded.has(t));
-    if (missing.length > 0) {
-      errs.documents = `Please upload all required statutory documents: ${missing.map(m => m.replace(/_/g, ' ')).join(', ')}`;
-    }
-    return errs;
-  };
-
-  const validateStep8 = () => {
-    const errs = {};
-    if (!declarationAccepted) {
-      errs.declaration = "Please accept the legal accuracy declaration before submission.";
-    }
-    return errs;
-  };
-
-  const handleSaveStep = async (stepNumber) => {
-    if (stepNumber === 1) {
-      setErrors({});
+  const handleSaveProfile = async () => {
+    if (!startup?.id) return;
+    try {
+      setSaving(true);
       setFeedback({ type: "", message: "" });
-      setActiveStep(2);
-      return;
-    }
-
-    let stepErrors = {};
-    if (stepNumber === 2) stepErrors = validateStep2();
-    else if (stepNumber === 3) stepErrors = validateStep3();
-    else if (stepNumber === 4) stepErrors = validateStep4();
-    else if (stepNumber === 5) stepErrors = validateStep5();
-    else if (stepNumber === 6) stepErrors = validateStep6();
-    else if (stepNumber === 7) stepErrors = validateStep7();
-
-    if (Object.keys(stepErrors).length > 0) {
-      setErrors(stepErrors);
+      const payload = {
+        description: editData.description.trim(),
+        official_website: editData.official_website.trim(),
+        products_services: editData.products_services.trim(),
+        technologies: editData.technologies
+      };
+      const res = await updateStartup(startup.id, payload);
+      const updated = res?.data?.startup || res?.startup || res?.data;
+      if (updated) {
+        setStartup((prev) => ({ ...prev, ...updated }));
+      } else {
+        setStartup((prev) => ({ ...prev, ...payload }));
+      }
+      setIsEditing(false);
+      setFeedback({
+        type: "success",
+        message: "Profile details updated successfully."
+      });
+    } catch (err) {
+      console.error("Save profile error:", err);
       setFeedback({
         type: "error",
-        message: "Please complete all required fields marked with * before proceeding."
+        message: err?.message || "Failed to update profile details."
       });
-      return;
-    }
-
-    setErrors({});
-    setFeedback({ type: "", message: "" });
-
-    if (stepNumber === 7) {
-      setActiveStep(8);
-      return;
-    }
-
-    if (!startup?.id) {
-      setFeedback({ type: "error", message: "Registration session not initialized. Please refresh the page." });
-      return;
-    }
-
-    setSaving(true);
-    try {
-      if (stepNumber === 2) {
-        const res = await updateRegistration(startup.id, orgData);
-        if (res?.data?.startup) setStartup(res.data.startup);
-      } else if (stepNumber === 3) {
-        const res = await updateRegistration(startup.id, authPersonData);
-        if (res?.data?.startup) setStartup(res.data.startup);
-      } else if (stepNumber === 4) {
-        const res = await updateRegistration(startup.id, bizIdentityData);
-        if (res?.data?.startup) setStartup(res.data.startup);
-      } else if (stepNumber === 5) {
-        const res = await updateRegistration(startup.id, techProfileData);
-        if (res?.data?.startup) setStartup(res.data.startup);
-      } else if (stepNumber === 6) {
-        const res = await saveBankDetails(startup.id, bankData);
-        if (res?.data?.startup) setStartup(res.data.startup);
-      }
-
-      setFeedback({ type: "success", message: "Section saved successfully!" });
-      setTimeout(() => setFeedback({ type: "", message: "" }), 3000);
-      setActiveStep(Math.min(9, stepNumber + 1));
-    } catch (err) {
-      setFeedback({ type: "error", message: err?.message || "Failed to save data." });
     } finally {
       setSaving(false);
     }
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file || !startup?.id) return;
-
-    setUploadingDoc(true);
-    setFeedback({ type: "", message: "" });
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("document_type", selectedDocType);
-
-      await uploadStartupDocument(startup.id, formData);
-      await fetchDossier();
-      setFeedback({ type: "success", message: `${selectedDocType} document uploaded securely.` });
-    } catch (err) {
-      setFeedback({ type: "error", message: err?.message || "Document upload failed." });
-    } finally {
-      setUploadingDoc(false);
+  const handleAddTechTag = (e) => {
+    e.preventDefault();
+    const tag = newTechTag.trim();
+    if (tag && !editData.technologies.includes(tag)) {
+      setEditData((prev) => ({
+        ...prev,
+        technologies: [...prev.technologies, tag]
+      }));
+      setNewTechTag("");
     }
   };
 
-  const handleDeleteDoc = async (docId) => {
-    if (!startup?.id) return;
+  const handleRemoveTechTag = (tagToRemove) => {
+    setEditData((prev) => ({
+      ...prev,
+      technologies: prev.technologies.filter((t) => t !== tagToRemove)
+    }));
+  };
+
+  const formatOrgType = (type) => {
+    if (!type) return "Not provided";
+    return type
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "Not provided";
     try {
-      await deleteStartupDocument(startup.id, docId);
-      await fetchDossier();
-      setFeedback({ type: "success", message: "Document removed." });
-    } catch (err) {
-      setFeedback({ type: "error", message: err?.message || "Failed to remove document." });
+      return new Date(dateStr).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      });
+    } catch {
+      return dateStr;
     }
   };
 
-  const handleSubmitRegistration = async () => {
-    if (!startup?.id) return;
-    const step8Errors = validateStep8();
-    if (Object.keys(step8Errors).length > 0) {
-      setErrors(step8Errors);
-      setFeedback({ type: "error", message: step8Errors.declaration });
-      return;
-    }
-
-    setSaving(true);
-    setFeedback({ type: "", message: "" });
-
-    try {
-      await submitStartupRegistration(startup.id, true);
-      await fetchDossier();
-      setActiveStep(9);
-      setFeedback({ type: "success", message: "Registration dossier successfully submitted for administrative verification!" });
-    } catch (err) {
-      setFeedback({ type: "error", message: err?.message || "Submission failed. Please verify required fields." });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const steps = [
-    { num: 1, title: "Account & Email" },
-    { num: 2, title: "Organization" },
-    { num: 3, title: "Authorized Person" },
-    { num: 4, title: "Business Identity" },
-    { num: 5, title: "Tech & Profile" },
-    { num: 6, title: "Banking Details" },
-    { num: 7, title: "Documents" },
-    { num: 8, title: "Review & Sign" },
-    { num: 9, title: "Verification Status" }
-  ];
-
-  const isStepComplete = (stepNum) => {
-    switch (stepNum) {
-      case 1:
-        return Boolean(startup?.user?.email || user?.email);
-      case 2:
-        return Object.keys(validateStep2()).length === 0;
-      case 3:
-        return Object.keys(validateStep3()).length === 0;
-      case 4:
-        return Object.keys(validateStep4()).length === 0;
-      case 5:
-        return Object.keys(validateStep5()).length === 0;
-      case 6:
-        return Object.keys(validateStep6()).length === 0;
-      case 7:
-        return Object.keys(validateStep7()).length === 0;
-      case 8:
-        return Boolean(declarationAccepted || (vStatus && vStatus !== "DRAFT"));
-      case 9:
-        return vStatus === "VERIFIED";
-      default:
-        return false;
-    }
+  // Calculate Profile Completion %
+  const calculateCompletion = () => {
+    if (!startup) return 0;
+    const checks = [
+      Boolean(startup.company_name),
+      Boolean(startup.org_type),
+      Boolean(startup.registered_address),
+      Boolean(startup.pan_number),
+      Boolean(startup.description),
+      Boolean(startup.domain),
+      Boolean(startup.bank_details?.account_number),
+      Boolean(startup.documents && startup.documents.length > 0),
+      Boolean(startup.submitted_at || startup.verification_status === "SUBMITTED" || startup.verification_status === "VERIFIED"),
+      Boolean(startup.authorized_person_name)
+    ];
+    const completedCount = checks.filter(Boolean).length;
+    return Math.round((completedCount / checks.length) * 100);
   };
 
   if (loading) {
@@ -592,38 +193,104 @@ export default function StartupProfile() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-slate-500">
           <RefreshCw className="h-8 w-8 animate-spin text-emerald-600" />
-          <p className="text-xs font-semibold">Loading GeM-Style Organization Dossier...</p>
+          <p className="text-xs font-semibold">Loading Startup Profile...</p>
         </div>
       </div>
     );
   }
 
+  const vStatus = (startup?.verification_status || "DRAFT").toUpperCase();
+  const completionPercentage = calculateCompletion();
+  const technologies = Array.isArray(startup?.technologies)
+    ? startup.technologies
+    : typeof startup?.technologies === "string" && startup?.technologies.trim()
+    ? startup.technologies.split(",").map((t) => t.trim()).filter(Boolean)
+    : [];
+
+  const locationText = [startup?.city, startup?.state, startup?.pincode]
+    .filter(Boolean)
+    .join(", ") || startup?.registered_address || "Not provided";
+
+  const foundedYear = startup?.incorporation_date
+    ? new Date(startup.incorporation_date).getFullYear()
+    : startup?.years_experience
+    ? `${new Date().getFullYear() - Number(startup.years_experience)} (Approx.)`
+    : "Not provided";
+
   return (
-    <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8 dark:bg-slate-950 text-slate-900 dark:text-white">
-      <div className="mx-auto max-w-6xl space-y-6">
-        
-        {/* Top Header & Status Banner */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-emerald-100 px-3 py-0.5 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                GeM-Style Seller Onboarding
-              </span>
-              <span className="text-xs text-slate-500">
-                ID: {startup?.id ? startup.id.slice(0, 8) : "N/A"}
-              </span>
+    <div className="mx-auto max-w-6xl space-y-6 pb-12">
+      
+      {/* Feedback Alert */}
+      {feedback.message && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`flex items-start gap-3 rounded-2xl border p-4 text-xs font-semibold ${
+            feedback.type === "success"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300"
+              : "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/60 dark:text-red-300"
+          }`}
+        >
+          {feedback.type === "success" ? (
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+          ) : (
+            <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+          )}
+          <span>{feedback.message}</span>
+        </motion.div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* CARD 1: STARTUP PROFILE HERO HEADER                                       */}
+      {/* ========================================================================= */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            {/* Startup Avatar / Logo */}
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-800 text-2xl font-black text-white shadow-md ring-4 ring-emerald-500/20">
+              {(startup?.company_name || user?.name || "S").charAt(0).toUpperCase()}
             </div>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-              {startup?.company_name || "Startup Organization Registration"}
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Verified organization lifecycle for government sandbox pilots and institutional procurement.
-            </p>
+
+            {/* Entity Names and Subtext */}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/80">
+                  Startup Profile
+                </span>
+                <span className="text-xs text-slate-400">
+                  Entity ID: {startup?.id ? startup.id.slice(0, 8) : "N/A"}
+                </span>
+              </div>
+
+              <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl truncate">
+                {startup?.company_name || user?.name || "Startup Name"}
+              </h1>
+
+              <div className="mt-1 flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-slate-600 dark:text-slate-400">
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  {startup?.authorized_person_name || user?.name || "Not provided"}
+                </span>
+                <span>•</span>
+                <span>
+                  {startup?.authorized_person_designation || user?.role || "Authorized Representative"}
+                </span>
+                <span>•</span>
+                <span>
+                  {startup?.official_email || user?.email || "Not provided"}
+                </span>
+                <span>•</span>
+                <span>
+                  {formatOrgType(startup?.org_type)}
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Verification Status Badge */}
-          <div className="flex items-center gap-3">
-            <div className={`flex items-center gap-2 rounded-2xl border px-4 py-2.5 text-xs font-bold shadow-sm ${
+          {/* Right Action & Status Section */}
+          <div className="flex flex-wrap items-center gap-3 sm:self-center">
+            {/* Status Badge */}
+            <div className={`flex items-center gap-2 rounded-2xl border px-3.5 py-2 text-xs font-bold ${
               vStatus === "VERIFIED"
                 ? "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
                 : vStatus === "SUBMITTED" || vStatus === "UNDER_REVIEW"
@@ -635,1506 +302,567 @@ export default function StartupProfile() {
                 : "border-slate-300 bg-slate-100 text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
             }`}>
               {vStatus === "VERIFIED" ? (
-                <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
               ) : vStatus === "SUBMITTED" || vStatus === "UNDER_REVIEW" ? (
-                <Clock className="h-5 w-5 text-amber-600" />
-              ) : vStatus === "CORRECTION_REQUESTED" ? (
-                <AlertCircle className="h-5 w-5 text-blue-600" />
+                <Clock className="h-4 w-4 text-amber-600" />
               ) : (
-                <FileText className="h-5 w-5 text-slate-500" />
+                <FileText className="h-4 w-4 text-slate-500" />
               )}
+              <span>{vStatus.replace("_", " ")}</span>
+            </div>
+
+            {/* Edit / Cancel Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditing(!isEditing);
+                setFeedback({ type: "", message: "" });
+              }}
+              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition"
+            >
+              {isEditing ? (
+                <>
+                  <X className="h-3.5 w-3.5 text-slate-500" />
+                  Cancel
+                </>
+              ) : (
+                <>
+                  <Edit3 className="h-3.5 w-3.5 text-slate-500" />
+                  Edit Profile
+                </>
+              )}
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Quick Edit Profile Panel */}
+      <AnimatePresence>
+        {isEditing && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden rounded-3xl border border-emerald-200 bg-emerald-50/40 p-6 dark:border-emerald-900/60 dark:bg-emerald-950/20"
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-emerald-200/60 dark:border-emerald-900/40">
               <div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">Verification Status</div>
-                <div className="text-sm font-black">{vStatus.replace("_", " ")}</div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Quick Edit Profile Details</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Update presentation details visible on your startup profile card.</p>
+              </div>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={handleSaveProfile}
+                className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-emerald-700 disabled:opacity-50 transition"
+              >
+                {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                Save Changes
+              </button>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Official Website</label>
+                <input
+                  type="url"
+                  value={editData.official_website}
+                  onChange={(e) => setEditData({ ...editData, official_website: e.target.value })}
+                  placeholder="https://example.com"
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Core Technologies</label>
+                <form onSubmit={handleAddTechTag} className="mt-1 flex gap-2">
+                  <input
+                    type="text"
+                    value={newTechTag}
+                    onChange={(e) => setNewTechTag(e.target.value)}
+                    placeholder="Add technology (press Enter)"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  />
+                  <button
+                    type="submit"
+                    className="rounded-xl bg-slate-800 px-3 py-2 text-xs font-bold text-white hover:bg-slate-700 dark:bg-slate-700"
+                  >
+                    Add
+                  </button>
+                </form>
+                {editData.technologies.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {editData.technologies.map((t) => (
+                      <span
+                        key={t}
+                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-100/80 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                      >
+                        {t}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTechTag(t)}
+                          className="text-emerald-700 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-200"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Organization Summary / Description</label>
+                <textarea
+                  rows={3}
+                  value={editData.description}
+                  onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                  placeholder="Describe your startup's core mission and public sector focus..."
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-800 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Products & Services</label>
+                <input
+                  type="text"
+                  value={editData.products_services}
+                  onChange={(e) => setEditData({ ...editData, products_services: e.target.value })}
+                  placeholder="Flagship software, SaaS platform, AI models, hardware devices..."
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================================= */}
+      {/* 2-COLUMN ROW: ACCOUNT INFORMATION & VERIFICATION                          */}
+      {/* ========================================================================= */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        {/* CARD 2: ACCOUNT INFORMATION */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                <User className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">ACCOUNT INFORMATION</h2>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Primary user identity and platform credentials</p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
+                <span className="text-xs text-slate-500 dark:text-slate-400">User Full Name</span>
+                <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
+                  {user?.name || startup?.authorized_person_name || "Not provided"}
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Email Address</span>
+                <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
+                  {user?.email || startup?.official_email || "Not provided"}
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
+                <span className="text-xs text-slate-500 dark:text-slate-400">System Role</span>
+                <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 mt-0.5 sm:mt-0">
+                  {user?.role || "STARTUP"}
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Phone Number</span>
+                <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
+                  {user?.phone || startup?.authorized_person_phone || "Not provided"}
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Account Auth Status</span>
+                <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-bold mt-0.5 sm:mt-0 ${
+                  user?.is_verified
+                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                    : "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
+                }`}>
+                  {user?.is_verified ? (
+                    <>
+                      <CheckCircle2 className="h-3 w-3" /> Email Verified
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="h-3 w-3" /> Verification Pending
+                    </>
+                  )}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Global Feedback Alert */}
-        {feedback.message && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex items-start gap-3 rounded-2xl border p-4 text-xs font-semibold ${
-              feedback.type === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300"
-                : "border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/60 dark:text-red-300"
-            }`}
-          >
-            {feedback.type === "success" ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-            ) : (
-              <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
-            )}
-            <span>{feedback.message}</span>
-          </motion.div>
-        )}
+        {/* CARD 3: VERIFICATION */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">VERIFICATION & COMPLIANCE</h2>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Institutional validation & compliance status</p>
+              </div>
+            </div>
 
-        {/* Step Navigation Pill Bar */}
-        <div className="overflow-x-auto pb-2">
-          <div className="flex min-w-[760px] items-center justify-between rounded-2xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-            {steps.map((s) => {
-              const isCurrent = activeStep === s.num;
-              const isComplete = isStepComplete(s.num);
-              return (
-                <button
-                  key={s.num}
-                  type="button"
-                  onClick={() => setActiveStep(s.num)}
-                  className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition ${
-                    isCurrent
-                      ? "bg-slate-900 text-white shadow-sm dark:bg-emerald-600 dark:text-white"
-                      : isComplete
-                      ? "text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-slate-800"
-                      : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                  }`}
-                >
-                  <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
-                    isCurrent
-                      ? "bg-white text-slate-900 dark:bg-slate-950 dark:text-emerald-400"
-                      : isComplete
-                      ? "bg-emerald-200 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300"
-                      : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
-                  }`}>
-                    {isComplete ? <Check className="h-3 w-3" /> : s.num}
-                  </span>
-                  <span className="whitespace-nowrap">{s.title}</span>
-                </button>
-              );
-            })}
+            <div className="mt-5 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Verification Status</span>
+                <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-[11px] font-bold mt-0.5 sm:mt-0 ${
+                  vStatus === "VERIFIED"
+                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                    : vStatus === "SUBMITTED" || vStatus === "UNDER_REVIEW"
+                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
+                    : vStatus === "CORRECTION_REQUESTED"
+                    ? "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
+                    : vStatus === "REJECTED"
+                    ? "bg-red-50 text-red-700 dark:bg-red-950/60 dark:text-red-300"
+                    : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                }`}>
+                  {vStatus.replace("_", " ")}
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Registration Status</span>
+                <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
+                  {startup?.submitted_at
+                    ? "Submitted for Verification"
+                    : vStatus === "VERIFIED"
+                    ? "Fully Verified & Active"
+                    : "Draft / In Progress"}
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
+                <span className="text-xs text-slate-500 dark:text-slate-400">DPIIT Recognition</span>
+                <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
+                  {startup?.dpiit_number || "Not provided"}
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Statutory Certificate No</span>
+                <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
+                  {startup?.certificate_number || "Not provided"}
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5">
+                <span className="text-xs text-slate-500 dark:text-slate-400">Last Profile Update</span>
+                <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
+                  {formatDate(startup?.updated_at || startup?.created_at)}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Wizard Main Card */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <AnimatePresence mode="wait">
-            
-            {/* STEP 1: Account Status */}
-            {activeStep === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-bold">Step 1: User Account & Email Authentication</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Your personal user credentials and email verification state.
-                  </p>
-                </div>
+      </div>
 
-                <div className="grid gap-4 sm:grid-cols-2 rounded-2xl border border-slate-100 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950/50">
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500">Account Name:</span>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{startup?.user?.name || user?.name || "N/A"}</p>
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500">
-                      {user?.role === "STARTUP" ? "Founder Email:" : "Account Email:"}
-                    </span>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{startup?.user?.email || user?.email || "N/A"}</p>
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500">Email Verification Status:</span>
-                    <div className="mt-1 flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>{startup?.user?.is_verified ?? user?.is_verified ? "Verified & Authenticated" : "Pending Verification"}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500">Platform Role:</span>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">
-                      {{
-                        STARTUP: "STARTUP / INNOVATOR",
-                        GOVERNMENT: "GOVERNMENT OFFICER",
-                        EVALUATOR: "EXPERT EVALUATOR",
-                        ADMIN: "PLATFORM ADMINISTRATOR"
-                      }[String(user?.role || "").toUpperCase()] || String(user?.role || "STARTUP").toUpperCase()}
-                    </p>
-                  </div>
-                </div>
+      {/* ========================================================================= */}
+      {/* CARD 4: ORGANIZATION INFORMATION                                          */}
+      {/* ========================================================================= */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
+            <Building2 className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">ORGANIZATION INFORMATION</h2>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Statutory entity credentials, corporate registration, and official address</p>
+          </div>
+        </div>
 
-                <div className="flex justify-end pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setErrors({});
-                      setFeedback({ type: "", message: "" });
-                      setActiveStep(2);
-                    }}
-                    className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Organization Name</span>
+            <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {startup?.company_name || "Not provided"}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Legal Entity</span>
+            <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {formatOrgType(startup?.org_type)}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Organization Type</span>
+            <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {startup?.org_type || "Not provided"}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Industry / Sector</span>
+            <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {startup?.domain || "Not provided"}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Official Website</span>
+            <div className="mt-1">
+              {startup?.official_website ? (
+                <a
+                  href={startup.official_website.startsWith("http") ? startup.official_website : `https://${startup.official_website}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 hover:underline"
+                >
+                  <Globe className="h-3.5 w-3.5" />
+                  <span className="truncate max-w-[200px]">{startup.official_website}</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              ) : (
+                <p className="text-sm font-semibold text-slate-500">Not provided</p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Registered Location</span>
+            <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+              <span>{locationText}</span>
+            </p>
+          </div>
+
+        </div>
+
+        {/* Statutory Identifiers Strip */}
+        <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50/70 p-4 dark:border-slate-800/80 dark:bg-slate-950/50">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Registration Details & Identifiers</span>
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <span className="text-[10px] text-slate-400 uppercase">Business PAN</span>
+              <p className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                {startup?.pan_number || "Not provided"}
+              </p>
+            </div>
+            <div>
+              <span className="text-[10px] text-slate-400 uppercase">Corporate CIN</span>
+              <p className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                {startup?.cin_number || "Not provided"}
+              </p>
+            </div>
+            <div>
+              <span className="text-[10px] text-slate-400 uppercase">GSTIN</span>
+              <p className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                {startup?.gstin || "Not provided"}
+              </p>
+            </div>
+            <div>
+              <span className="text-[10px] text-slate-400 uppercase">Incorporation Date</span>
+              <p className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                {formatDate(startup?.incorporation_date)}
+              </p>
+            </div>
+          </div>
+          {startup?.registered_address && (
+            <div className="mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 text-xs text-slate-600 dark:text-slate-400">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Registered Office: </span>
+              {startup.registered_address}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* CARD 5: STARTUP INFORMATION                                               */}
+      {/* ========================================================================= */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">STARTUP INFORMATION</h2>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Technology profile, readiness level, and product catalog</p>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-5">
+          
+          {/* Executive Description */}
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Description</span>
+            <p className="mt-1.5 text-xs text-slate-700 dark:text-slate-300 leading-relaxed rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+              {startup?.description || "Not provided"}
+            </p>
+          </div>
+
+          {/* Technology & Domain */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Domain / Focus Area</span>
+              <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-slate-100">
+                {startup?.domain || "Not provided"}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Founded Year / Experience</span>
+              <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-slate-100">
+                {foundedYear} {startup?.years_experience ? `(${startup.years_experience} yrs in business)` : ""}
+              </p>
+            </div>
+          </div>
+
+          {/* Products & Services */}
+          <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Products & Services</span>
+            <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-slate-100">
+              {startup?.products_services || "Not provided"}
+            </p>
+          </div>
+
+          {/* Core Technologies Badges */}
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Core Technologies</span>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {technologies.length > 0 ? (
+                technologies.map((t) => (
+                  <span
+                    key={t}
+                    className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-800/80 dark:text-slate-300"
                   >
-                    Continue to Organization Details
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 2: Organization Details */}
-            {activeStep === 2 && (
-              <motion.div
-                key="step2"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-bold">Step 2: Legal Organization Details</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Enter the registered legal entity details exactly as recorded with Ministry of Corporate Affairs or Registrar of Firms.
-                  </p>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Legal Entity Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={orgData.company_name}
-                      onChange={(e) => {
-                        setOrgData({ ...orgData, company_name: e.target.value });
-                        clearError("company_name");
-                      }}
-                      placeholder="e.g. Setu Diagnostic Systems Private Limited"
-                      className={`h-10 w-full rounded-xl border ${
-                        errors.company_name
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
-                    />
-                    {errors.company_name && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.company_name}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Organization Constitution / Type <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={orgData.org_type}
-                      onChange={(e) => {
-                        setOrgData({ ...orgData, org_type: e.target.value });
-                        clearError("org_type");
-                      }}
-                      className={`h-10 w-full rounded-xl border ${
-                        errors.org_type
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
-                    >
-                      {ORG_TYPES.map(t => (
-                        <option key={t.value} value={t.value}>{t.label}</option>
-                      ))}
-                    </select>
-                    {errors.org_type && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.org_type}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Date of Incorporation / Registration
-                    </label>
-                    <input
-                      type="date"
-                      value={orgData.incorporation_date}
-                      onChange={(e) => setOrgData({ ...orgData, incorporation_date: e.target.value })}
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Registered Head Office Address <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={orgData.registered_address}
-                      onChange={(e) => {
-                        setOrgData({ ...orgData, registered_address: e.target.value });
-                        clearError("registered_address");
-                      }}
-                      placeholder="Street address, building, industrial area"
-                      className={`h-10 w-full rounded-xl border ${
-                        errors.registered_address
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
-                    />
-                    {errors.registered_address && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.registered_address}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      State / UT <span className="text-red-500">*</span>
-                    </label>
-                    <SearchableSelect
-                      id="org-state"
-                      value={orgData.state}
-                      disabled={isLocked}
-                      options={getStatesAndUTs()}
-                      placeholder="Select State / UT"
-                      error={errors.state}
-                      onChange={(selectedState) => {
-                        setOrgData(prev => ({
-                          ...prev,
-                          state: selectedState,
-                          city: "" // clear city when state changes
-                        }));
-                        clearError("state");
-                        clearError("city");
-                      }}
-                    />
-                    {errors.state && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.state}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      City <span className="text-red-500">*</span>
-                    </label>
-                    <SearchableSelect
-                      id="org-city"
-                      value={orgData.city}
-                      disabled={!orgData.state || isLocked}
-                      options={getCitiesForState(orgData.state)}
-                      placeholder={orgData.state ? "Select City" : "Select State First"}
-                      error={errors.city}
-                      onChange={(selectedCity) => {
-                        setOrgData(prev => ({
-                          ...prev,
-                          city: selectedCity
-                        }));
-                        clearError("city");
-                      }}
-                    />
-                    {errors.city && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.city}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Postal PIN Code <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      maxLength={6}
-                      disabled={isLocked}
-                      value={orgData.pincode}
-                      onChange={(e) => {
-                        const numericOnly = e.target.value.replace(/\D/g, "").slice(0, 6);
-                        setOrgData({ ...orgData, pincode: numericOnly });
-                        clearError("pincode");
-                      }}
-                      placeholder="6-digit PIN"
-                      className={`h-10 w-full rounded-xl border ${
-                        errors.pincode
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950 font-mono disabled:opacity-50 disabled:cursor-not-allowed`}
-                    />
-                    {errors.pincode && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.pincode}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Official Website</label>
-                    <input
-                      type="url"
-                      value={orgData.official_website}
-                      onChange={(e) => setOrgData({ ...orgData, official_website: e.target.value })}
-                      placeholder="https://company.ai"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-between pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setActiveStep(1)}
-                    className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-5 text-xs font-bold hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
-                  >
-                    <ArrowLeft className="h-4 w-4" /> Back
-                  </button>
-                  <button
-                    type="button"
-                    disabled={saving}
-                    onClick={() => handleSaveStep(2)}
-                    className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Save & Next <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 3: Authorized Person */}
-            {activeStep === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-bold">Step 3: Authorized Signatory Details</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Details of the officer authorized to sign government contracts, tenders, and submit deliverables.
-                  </p>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Authorized Signatory Full Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={authPersonData.authorized_person_name}
-                      onChange={(e) => {
-                        setAuthPersonData({ ...authPersonData, authorized_person_name: e.target.value });
-                        clearError("authorized_person_name");
-                      }}
-                      placeholder="e.g. Ramesh Chandra"
-                      className={`h-10 w-full rounded-xl border ${
-                        errors.authorized_person_name
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
-                    />
-                    {errors.authorized_person_name && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.authorized_person_name}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Official Designation <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={authPersonData.authorized_person_designation}
-                      onChange={(e) => {
-                        setAuthPersonData({ ...authPersonData, authorized_person_designation: e.target.value });
-                        clearError("authorized_person_designation");
-                      }}
-                      placeholder="e.g. Founder & Chief Executive Officer"
-                      className={`h-10 w-full rounded-xl border ${
-                        errors.authorized_person_designation
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
-                    />
-                    {errors.authorized_person_designation && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.authorized_person_designation}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Official Email Address <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={authPersonData.authorized_person_email}
-                      onChange={(e) => {
-                        setAuthPersonData({ ...authPersonData, authorized_person_email: e.target.value });
-                        clearError("authorized_person_email");
-                      }}
-                      placeholder="ceo@company.ai"
-                      className={`h-10 w-full rounded-xl border ${
-                        errors.authorized_person_email
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
-                    />
-                    {errors.authorized_person_email && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.authorized_person_email}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Authorized Contact Phone <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={authPersonData.authorized_person_phone}
-                      onChange={(e) => {
-                        setAuthPersonData({ ...authPersonData, authorized_person_phone: e.target.value });
-                        clearError("authorized_person_phone");
-                      }}
-                      placeholder="+91 98765 43210"
-                      className={`h-10 w-full rounded-xl border ${
-                        errors.authorized_person_phone
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
-                    />
-                    {errors.authorized_person_phone && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.authorized_person_phone}</p>
-                    )}
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Authorization Type / Basis <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={authPersonData.authorization_type}
-                      onChange={(e) => {
-                        setAuthPersonData({ ...authPersonData, authorization_type: e.target.value });
-                        clearError("authorization_type");
-                      }}
-                      className={`h-10 w-full rounded-xl border ${
-                        errors.authorization_type
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
-                    >
-                      <option value="BOARD_RESOLUTION">Board Resolution (Companies / LLPs)</option>
-                      <option value="POWER_OF_ATTORNEY">Power of Attorney (POA)</option>
-                      <option value="PROPRIETOR_FOUNDER">Sole Proprietor / Direct Founder</option>
-                      <option value="PARTNER_AUTHORIZATION">Partner Authorization Deed</option>
-                    </select>
-                    {errors.authorization_type && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.authorization_type}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex justify-between pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setActiveStep(2)}
-                    className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-5 text-xs font-bold hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
-                  >
-                    <ArrowLeft className="h-4 w-4" /> Back
-                  </button>
-                  <button
-                    type="button"
-                    disabled={saving}
-                    onClick={() => handleSaveStep(3)}
-                    className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Save & Next <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 4: Business Identity */}
-            {activeStep === 4 && (
-              <motion.div
-                key="step4"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-bold">Step 4: Statutory Business Identity & Registrations</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Provide your Indian statutory business identifiers (PAN, GSTIN, CIN, DPIIT recognition).
-                  </p>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Business PAN (10 chars alphanumeric) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      maxLength={10}
-                      value={bizIdentityData.pan_number}
-                      onChange={(e) => {
-                        setBizIdentityData({ ...bizIdentityData, pan_number: e.target.value.toUpperCase() });
-                        clearError("pan_number");
-                      }}
-                      placeholder="e.g. ABCDE1234F"
-                      className={`h-10 w-full font-mono rounded-xl border ${
-                        errors.pan_number
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs uppercase outline-none dark:bg-slate-950`}
-                    />
-                    {errors.pan_number && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.pan_number}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      GSTIN (15 chars)
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={15}
-                      value={bizIdentityData.gstin}
-                      onChange={(e) => {
-                        setBizIdentityData({ ...bizIdentityData, gstin: e.target.value.toUpperCase() });
-                        clearError("gstin");
-                      }}
-                      placeholder="e.g. 29ABCDE1234F1Z5"
-                      className={`h-10 w-full font-mono rounded-xl border ${
-                        errors.gstin
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs uppercase outline-none dark:bg-slate-950`}
-                    />
-                    {errors.gstin && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.gstin}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Corporate Identification Number (CIN)
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={21}
-                      value={bizIdentityData.cin_number}
-                      onChange={(e) => {
-                        setBizIdentityData({ ...bizIdentityData, cin_number: e.target.value.toUpperCase() });
-                        clearError("cin_number");
-                      }}
-                      placeholder="e.g. U72900KA2024PTC123456"
-                      className={`h-10 w-full font-mono rounded-xl border ${
-                        errors.cin_number
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs uppercase outline-none dark:bg-slate-950`}
-                    />
-                    {errors.cin_number && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.cin_number}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      DPIIT Recognition Number
-                    </label>
-                    <input
-                      type="text"
-                      value={bizIdentityData.dpiit_number}
-                      onChange={(e) => {
-                        setBizIdentityData({ ...bizIdentityData, dpiit_number: e.target.value });
-                        clearError("dpiit_number");
-                      }}
-                      placeholder="e.g. DIPP12345"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
-                    />
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-4 text-xs text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300">
-                  <p className="font-bold flex items-center gap-1.5">
-                    <ShieldCheck className="h-4 w-4 text-blue-600" />
-                    Verification Source Policy:
-                  </p>
-                  <p className="mt-1 leading-relaxed">
-                    SetuGov performs cryptographic format validation and administrative document cross-referencing. Upload supporting PAN and Certificate copies in Step 7.
-                  </p>
-                </div>
-
-                <div className="flex justify-between pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setActiveStep(3)}
-                    className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-5 text-xs font-bold hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
-                  >
-                    <ArrowLeft className="h-4 w-4" /> Back
-                  </button>
-                  <button
-                    type="button"
-                    disabled={saving}
-                    onClick={() => handleSaveStep(4)}
-                    className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Save & Next <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 5: Tech & Profile */}
-            {activeStep === 5 && (
-              <motion.div
-                key="step5"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-bold">Step 5: Technology Capabilities & Deployment History</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Describe your core technological solutions for challenge matching and eligibility scoring.
-                  </p>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Organization Executive Summary <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      rows={3}
-                      required
-                      value={techProfileData.description}
-                      onChange={(e) => {
-                        setTechProfileData({ ...techProfileData, description: e.target.value });
-                        clearError("description");
-                      }}
-                      placeholder="Brief overview of innovations, mission delivery capabilities, and key product offerings..."
-                      className={`w-full rounded-xl border ${
-                        errors.description
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white p-3.5 text-xs outline-none dark:bg-slate-950`}
-                    />
-                    {errors.description && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.description}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Primary Sector / Domain <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={techProfileData.domain}
-                      onChange={(e) => {
-                        setTechProfileData({ ...techProfileData, domain: e.target.value });
-                        clearError("domain");
-                      }}
-                      className={`h-10 w-full rounded-xl border ${
-                        errors.domain
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950`}
-                    >
-                      {DOMAINS.map(d => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                    {errors.domain && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.domain}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Technology Readiness Level (TRL 1-9) <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={techProfileData.readiness_level}
-                      onChange={(e) => {
-                        setTechProfileData({ ...techProfileData, readiness_level: parseInt(e.target.value, 10) });
-                        clearError("readiness_level");
-                      }}
-                      className={`h-10 w-full rounded-xl border ${
-                        errors.readiness_level
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950 font-bold`}
-                    >
-                      <option value={1}>TRL 1 - Basic Principles Observed</option>
-                      <option value={2}>TRL 2 - Technology Concept Formulated</option>
-                      <option value={3}>TRL 3 - Proof of Concept Demonstrated</option>
-                      <option value={4}>TRL 4 - Component Validated in Lab</option>
-                      <option value={5}>TRL 5 - System Validated in Relevant Environment</option>
-                      <option value={6}>TRL 6 - Prototype Demonstrated in Relevant Environment</option>
-                      <option value={7}>TRL 7 - System Prototype Demonstrated in Operational Environment</option>
-                      <option value={8}>TRL 8 - Actual System Completed and Qualified</option>
-                      <option value={9}>TRL 9 - Actual System Proven in Operational Sandbox</option>
-                    </select>
-                    {errors.readiness_level && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.readiness_level}</p>
-                    )}
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                        Core Technologies
-                      </label>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {techProfileData.technologies?.length || 0} added
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-                      Add technologies used by your solution. Press Enter to add.
-                    </p>
-                    <TechTagInput
-                      id="core-technologies"
-                      value={techProfileData.technologies}
-                      disabled={isLocked}
-                      placeholder="Type a technology and press Enter"
-                      onChange={(newTechs) => {
-                        setTechProfileData(prev => ({
-                          ...prev,
-                          technologies: newTechs
-                        }));
-                      }}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Years of Domain Experience
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={techProfileData.years_experience}
-                      onChange={(e) => setTechProfileData({ ...techProfileData, years_experience: parseInt(e.target.value, 10) || 0 })}
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Previous Commercial / Public Deployments
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={techProfileData.previous_deployments}
-                      onChange={(e) => setTechProfileData({ ...techProfileData, previous_deployments: parseInt(e.target.value, 10) || 0 })}
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-between pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setActiveStep(4)}
-                    className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-5 text-xs font-bold hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
-                  >
-                    <ArrowLeft className="h-4 w-4" /> Back
-                  </button>
-                  <button
-                    type="button"
-                    disabled={saving}
-                    onClick={() => handleSaveStep(5)}
-                    className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Save & Next <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 6: Sensitive Bank Account */}
-            {activeStep === 6 && (
-              <motion.div
-                key="step6"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-6"
-              >
-                <div>
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-300 mb-2">
-                    <Lock className="h-3 w-3" />
-                    Protected Financial Record (Masked in Public Views)
-                  </div>
-                  <h2 className="text-xl font-bold">Step 6: Verified Bank Account (For Procurement & Grants)</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Enter the legal company bank account for milestone funding disbursements. Raw account numbers are protected with strict access controls and masked in public views.
-                  </p>
-                </div>
-
-                {isLocked && (
-                  <div className="flex items-center gap-2.5 rounded-2xl border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
-                    <Lock className="h-4 w-4 shrink-0 text-amber-600" />
-                    <span>Bank information is locked while registration is <strong>{vStatus.replace("_", " ")}</strong>.</span>
-                  </div>
-                )}
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Account Holder Legal Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      disabled={isLocked}
-                      value={bankData.account_holder_name}
-                      onChange={(e) => {
-                        setBankData({ ...bankData, account_holder_name: e.target.value });
-                        clearError("account_holder_name");
-                      }}
-                      placeholder="Must match Legal Entity Name"
-                      className={`h-10 w-full rounded-xl border ${
-                        errors.account_holder_name
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950 disabled:opacity-60`}
-                    />
-                    {errors.account_holder_name && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.account_holder_name}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Bank Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      disabled={isLocked}
-                      value={bankData.bank_name}
-                      onChange={(e) => {
-                        setBankData({ ...bankData, bank_name: e.target.value });
-                        clearError("bank_name");
-                      }}
-                      placeholder="e.g. State Bank of India"
-                      className={`h-10 w-full rounded-xl border ${
-                        errors.bank_name
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950 disabled:opacity-60`}
-                    />
-                    {errors.bank_name && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.bank_name}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                        Bank Account Number <span className="text-red-500">*</span>
-                      </label>
-                      {bankData.account_number && (
-                        <button
-                          type="button"
-                          onClick={() => setShowAccountNumber(!showAccountNumber)}
-                          className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
-                        >
-                          <Eye className="h-3 w-3" />
-                          {showAccountNumber ? "Hide" : "Reveal"}
-                        </button>
-                      )}
-                    </div>
-                    <input
-                      type={showAccountNumber ? "text" : "password"}
-                      required
-                      disabled={isLocked}
-                      value={bankData.account_number}
-                      onChange={(e) => {
-                        setBankData({ ...bankData, account_number: e.target.value });
-                        clearError("account_number");
-                      }}
-                      placeholder="9 to 18 digits"
-                      className={`h-10 w-full font-mono rounded-xl border ${
-                        errors.account_number
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950 disabled:opacity-60`}
-                    />
-                    {errors.account_number && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.account_number}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Bank IFSC Code (11 chars) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      disabled={isLocked}
-                      maxLength={11}
-                      value={bankData.ifsc_code}
-                      onChange={(e) => {
-                        setBankData({ ...bankData, ifsc_code: e.target.value.toUpperCase() });
-                        clearError("ifsc_code");
-                      }}
-                      placeholder="e.g. SBIN0001234"
-                      className={`h-10 w-full font-mono uppercase rounded-xl border ${
-                        errors.ifsc_code
-                          ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/10"
-                          : "border-slate-200 focus:border-emerald-500 dark:border-slate-800"
-                      } bg-white px-3.5 text-xs outline-none dark:bg-slate-950 disabled:opacity-60`}
-                    />
-                    {errors.ifsc_code && (
-                      <p className="mt-1 text-xs text-red-600 dark:text-red-400 font-medium">{errors.ifsc_code}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Branch Name
-                    </label>
-                    <input
-                      type="text"
-                      disabled={isLocked}
-                      value={bankData.branch_name}
-                      onChange={(e) => setBankData({ ...bankData, branch_name: e.target.value })}
-                      placeholder="e.g. Koramangala Industrial Branch"
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950 disabled:opacity-60"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Account Type
-                    </label>
-                    <select
-                      disabled={isLocked}
-                      value={bankData.account_type}
-                      onChange={(e) => setBankData({ ...bankData, account_type: e.target.value })}
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950 disabled:opacity-60"
-                    >
-                      <option value="CURRENT">Current Account</option>
-                      <option value="SAVINGS">Savings Account (Proprietorship only)</option>
-                      <option value="ESCROW">Escrow Account</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex justify-between pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setActiveStep(5)}
-                    className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-5 text-xs font-bold hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
-                  >
-                    <ArrowLeft className="h-4 w-4" /> Back
-                  </button>
-                  {isLocked ? (
-                    <button
-                      type="button"
-                      onClick={() => setActiveStep(7)}
-                      className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
-                    >
-                      Next <ArrowRight className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={saving}
-                      onClick={() => handleSaveStep(6)}
-                      className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      Save & Next <ArrowRight className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 7: Document Checklist */}
-            {activeStep === 7 && (
-              <motion.div
-                key="step7"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-bold">Step 7: Verification Documents Checklist</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Upload private PDF/PNG verification proofs. Uploaded files are served securely and inspected only by nodal officers.
-                  </p>
-                </div>
-
-                {isLocked && (
-                  <div className="flex items-center gap-2.5 rounded-2xl border border-amber-200 bg-amber-50/80 p-3.5 text-xs text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300">
-                    <Lock className="h-4 w-4 shrink-0 text-amber-600" />
-                    <span>Document uploads and removals are locked while registration is <strong>{vStatus.replace("_", " ")}</strong>.</span>
-                  </div>
-                )}
-
-                {/* Entity-Specific Mandatory Document Requirements Checklist */}
-                {(() => {
-                  const reqDocTypes = getRequiredDocumentTypes(orgData.org_type);
-                  const uploadedTypes = new Set(documents.map(d => d.document_type));
-                  const allRequiredUploaded = reqDocTypes.every(t => uploadedTypes.has(t));
-
-                  return (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5 dark:border-slate-800 dark:bg-slate-900/60">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                        <div className="flex items-center gap-2">
-                          <FileCheck className="h-4 w-4 text-emerald-600" />
-                          <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                            Required Statutory Documents for {orgData.org_type.replace(/_/g, " ")}
-                          </h3>
-                        </div>
-                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                          allRequiredUploaded
-                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                            : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                        }`}>
-                          {allRequiredUploaded ? "All Mandatory Documents Attached" : "Pending Mandatory Documents"}
-                        </span>
-                      </div>
-
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {reqDocTypes.map(typeId => {
-                          const isUploaded = uploadedTypes.has(typeId);
-                          const def = ALL_DOCUMENT_DEFINITIONS.find(d => d.id === typeId) || { label: typeId.replace(/_/g, " "), description: "" };
-
-                          return (
-                            <div
-                              key={typeId}
-                              className={`flex items-start gap-2.5 rounded-xl border p-3 text-xs ${
-                                isUploaded
-                                  ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/40 dark:bg-emerald-950/20"
-                                  : "border-amber-200 bg-amber-50/40 dark:border-amber-900/40 dark:bg-amber-950/20"
-                              }`}
-                            >
-                              {isUploaded ? (
-                                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                              ) : (
-                                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                              )}
-                              <div className="min-w-0">
-                                <p className={`font-bold ${isUploaded ? "text-emerald-900 dark:text-emerald-200" : "text-amber-900 dark:text-amber-200"}`}>
-                                  {def.label}
-                                </p>
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
-                                  {def.description}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Upload Action Card */}
-                {!isLocked && (
-                  <div className="rounded-2xl border border-dashed border-emerald-300 bg-emerald-50/50 p-5 dark:border-emerald-800 dark:bg-emerald-950/20">
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                      <div className="w-full sm:w-1/2">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          Select Document Type to Upload:
-                        </label>
-                        <select
-                          value={selectedDocType}
-                          onChange={(e) => setSelectedDocType(e.target.value)}
-                          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs outline-none dark:border-slate-800 dark:bg-slate-900 font-medium"
-                        >
-                          {ALL_DOCUMENT_DEFINITIONS.map(d => {
-                            const isReq = getRequiredDocumentTypes(orgData.org_type).includes(d.id);
-                            return (
-                              <option key={d.id} value={d.id}>
-                                {d.label} {isReq ? "(Required)" : "(Optional)"}
-                              </option>
-                            );
-                          })}
-                        </select>
-                      </div>
-
-                      <div className="w-full sm:w-1/2 pt-5 sm:pt-0">
-                        <label className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition">
-                          <Upload className="h-4 w-4" />
-                          {uploadingDoc ? "Uploading & Checking Signatures..." : "Upload Private Document"}
-                          <input
-                            type="file"
-                            accept=".pdf,.png,.jpg,.jpeg"
-                            onChange={handleFileUpload}
-                            disabled={uploadingDoc || isLocked}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Uploaded Documents List */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                    Uploaded Verification Dossier ({documents.length})
-                  </h3>
-
-                  {documents.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-xs text-slate-400 dark:border-slate-800">
-                      No documents uploaded yet. Please upload required statutory documents according to your entity type checklist above.
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900">
-                      {documents.map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between p-4 text-xs">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                              <FileText className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-slate-900 dark:text-white">
-                                {doc.document_type.replace(/_/g, " ")}
-                              </p>
-                              <p className="text-[11px] text-slate-500">
-                                {doc.file_name || "Document Attachment"} &bull; Uploaded {new Date(doc.created_at).toLocaleDateString("en-IN")}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-3">
-                            <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                              doc.verification_status === "VERIFIED"
-                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                                : doc.verification_status === "REJECTED"
-                                ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
-                                : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                            }`}>
-                              {doc.verification_status}
-                            </span>
-
-                            {!isLocked && (
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteDoc(doc.id)}
-                                className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {errors.documents && (
-                  <div className="rounded-xl border border-red-200 bg-red-50/80 p-3.5 text-xs text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 font-medium">
-                    {errors.documents}
-                  </div>
-                )}
-
-                <div className="flex justify-between pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setActiveStep(6)}
-                    className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-5 text-xs font-bold hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
-                  >
-                    <ArrowLeft className="h-4 w-4" /> Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSaveStep(7)}
-                    className="btn-primary flex h-11 items-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
-                  >
-                    Continue to Final Review <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 8: Review & Sign Declaration */}
-            {activeStep === 8 && (
-              <motion.div
-                key="step8"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-bold">Step 8: Comprehensive Dossier Review & Sign-off</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Carefully review all submitted organization records before formal submission for nodal officer review.
-                  </p>
-                </div>
-
-                {/* Step 8 Readiness Breakdown */}
-                {(() => {
-                  const reqDocTypes = getRequiredDocumentTypes(orgData.org_type);
-                  const uploadedDocTypes = new Set(documents.map(d => d.document_type));
-                  const missingDocList = reqDocTypes.filter(t => !uploadedDocTypes.has(t));
-                  const verifiedDocCount = documents.filter(d => d.verification_status === "VERIFIED").length;
-
-                  const missingFields = [];
-                  if (!orgData.company_name) missingFields.push("Legal Company Name");
-                  if (!orgData.registered_address || !orgData.city || !orgData.state || !orgData.pincode) {
-                    missingFields.push("Registered Address & Location");
-                  } else {
-                    if (!isValidState(orgData.state)) missingFields.push("Valid State / UT");
-                    if (!isValidCityForState(orgData.state, orgData.city)) missingFields.push("Valid City for selected State / UT");
-                    if (!/^[1-9][0-9]{5}$/.test(String(orgData.pincode).trim())) missingFields.push("Valid 6-Digit Postal PIN Code");
-                  }
-                  if (!authPersonData.authorized_person_name || !authPersonData.authorized_person_email) missingFields.push("Authorized Signatory");
-                  if (!bizIdentityData.pan_number) missingFields.push("Business PAN");
-                  if (!bankData.bank_name || !bankData.account_number || !bankData.ifsc_code) missingFields.push("Bank Details");
-                  if (missingDocList.length > 0) missingFields.push(`Mandatory Documents (${missingDocList.join(", ")})`);
-
-                  const isReady = missingFields.length === 0;
-
-                  return (
-                    <div className="space-y-4">
-                      {/* Readiness Status Box */}
-                      <div className={`rounded-2xl border p-4 text-xs ${
-                        isReady
-                          ? "border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/50 dark:bg-emerald-950/20"
-                          : "border-amber-200 bg-amber-50/60 dark:border-amber-900/50 dark:bg-amber-950/20"
-                      }`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-bold uppercase tracking-wider text-[11px]">
-                            {isReady ? "Registration Dossier Complete" : "Dossier Incomplete - Action Required"}
-                          </span>
-                          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                            isReady
-                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                              : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                          }`}>
-                            {isReady ? "Ready for Submission" : `${missingFields.length} Missing Item(s)`}
-                          </span>
-                        </div>
-                        {!isReady && (
-                          <div className="mt-1 text-amber-900 dark:text-amber-300">
-                            <p className="font-semibold mb-1">Please complete the following before submitting:</p>
-                            <ul className="list-disc pl-5 space-y-0.5 text-[11px]">
-                              {missingFields.map((f, idx) => (
-                                <li key={idx}>{f}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Summary Grid */}
-                      <div className="grid gap-4 sm:grid-cols-2 rounded-2xl border border-slate-200 p-5 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 text-xs">
-                        <div>
-                          <span className="font-bold text-slate-500">Legal Company Name:</span>
-                          <p className="text-sm font-black text-slate-900 dark:text-white">{orgData.company_name || "Missing"}</p>
-                        </div>
-                        <div>
-                          <span className="font-bold text-slate-500">Constitution Type:</span>
-                          <p className="text-sm font-bold text-slate-900 dark:text-white">{orgData.org_type}</p>
-                        </div>
-                        <div>
-                          <span className="font-bold text-slate-500">Registered Office:</span>
-                          <p className="font-medium text-slate-700 dark:text-slate-300">
-                            {orgData.registered_address ? `${orgData.registered_address}, ${orgData.city}, ${orgData.state} - ${orgData.pincode}` : "Missing"}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="font-bold text-slate-500">Authorized Signatory:</span>
-                          <p className="font-medium text-slate-700 dark:text-slate-300">
-                            {authPersonData.authorized_person_name ? `${authPersonData.authorized_person_name} (${authPersonData.authorized_person_designation || "Signatory"})` : "Missing"}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="font-bold text-slate-500">Business PAN:</span>
-                          <p className="font-mono font-bold text-slate-900 dark:text-white">{bizIdentityData.pan_number || "Missing"}</p>
-                        </div>
-                        <div>
-                          <span className="font-bold text-slate-500">GSTIN / CIN:</span>
-                          <p className="font-mono text-slate-700 dark:text-slate-300">{bizIdentityData.gstin || bizIdentityData.cin_number || "Optional / N/A"}</p>
-                        </div>
-                        <div>
-                          <span className="font-bold text-slate-500">Bank Account Details:</span>
-                          <p className="font-mono text-slate-700 dark:text-slate-300">
-                            {bankData.bank_name && bankData.account_number ? `${bankData.bank_name} • ****${bankData.account_number.slice(-4)}` : "Missing"}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="font-bold text-slate-500">Statutory Documents Attached:</span>
-                          <p className="font-bold text-emerald-600 dark:text-emerald-400">
-                            {documents.length} attached ({verifiedDocCount} verified by Admin, {documents.length - verifiedDocCount} pending review)
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {/* Legal Declaration Checkbox */}
-                <div className={`rounded-2xl border ${
-                  errors.declaration
-                    ? "border-red-500 ring-2 ring-red-500/10 bg-red-50/20"
-                    : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
-                } p-5`}>
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={declarationAccepted}
-                      onChange={(e) => {
-                        setDeclarationAccepted(e.target.checked);
-                        clearError("declaration");
-                      }}
-                      className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                    />
-                    <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                      <strong className="text-slate-900 dark:text-white">Legal Declaration & Authority: <span className="text-red-500">*</span></strong> I hereby declare that all statutory business identity numbers, organization constitution data, banking credentials, and uploaded documents are genuine, authentic, and authorized under applicable Indian laws. I acknowledge that submitting fraudulent representations will lead to immediate disqualification and blacklisting from government sandbox tenders.
-                    </div>
-                  </label>
-                  {errors.declaration && (
-                    <p className="mt-2 text-xs text-red-600 dark:text-red-400 font-medium">{errors.declaration}</p>
-                  )}
-                </div>
-
-                <div className="flex justify-between pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setActiveStep(7)}
-                    className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 px-5 text-xs font-bold hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
-                  >
-                    <ArrowLeft className="h-4 w-4" /> Back
-                  </button>
-                  <button
-                    type="button"
-                    disabled={saving || !declarationAccepted}
-                    onClick={handleSubmitRegistration}
-                    className="flex h-11 items-center gap-2 rounded-xl bg-emerald-600 px-8 text-xs font-bold text-white shadow-md hover:bg-emerald-700 disabled:opacity-50"
-                  >
-                    {saving ? "Submitting Dossier..." : "Submit Dossier for Verification"}
-                    <CheckCircle2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* STEP 9: Verification Status & Feedback Dashboard */}
-            {activeStep === 9 && (
-              <motion.div
-                key="step9"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-bold">Step 9: Administrative Verification Status</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Live lifecycle state of your GeM-style seller onboarding verification.
-                  </p>
-                </div>
-
-                <div className="rounded-3xl border border-slate-200 bg-slate-50/50 p-6 dark:border-slate-800 dark:bg-slate-950/40 text-center">
-                  <div className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
-                    vStatus === "VERIFIED"
-                      ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400"
-                      : vStatus === "SUBMITTED" || vStatus === "UNDER_REVIEW"
-                      ? "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400"
-                      : vStatus === "CORRECTION_REQUESTED"
-                      ? "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
-                      : vStatus === "REJECTED"
-                      ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"
-                      : "bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                  }`}>
-                    {vStatus === "VERIFIED" ? (
-                      <ShieldCheck className="h-8 w-8" />
-                    ) : vStatus === "SUBMITTED" || vStatus === "UNDER_REVIEW" ? (
-                      <Clock className="h-8 w-8" />
-                    ) : vStatus === "CORRECTION_REQUESTED" ? (
-                      <RefreshCw className="h-8 w-8" />
-                    ) : (
-                      <AlertCircle className="h-8 w-8" />
-                    )}
-                  </div>
-
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                    {vStatus === "VERIFIED"
-                      ? "Officially Verified Organization"
-                      : vStatus === "UNDER_REVIEW"
-                      ? "Under Nodal Officer Review"
-                      : vStatus === "SUBMITTED"
-                      ? "Submitted - Awaiting Review"
-                      : vStatus === "CORRECTION_REQUESTED"
-                      ? "Action Required: Correction Requested"
-                      : vStatus === "REJECTED"
-                      ? "Registration Verification Rejected"
-                      : "Draft Registration"}
-                  </h3>
-
-                  <p className="mx-auto mt-2 max-w-md text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                    {vStatus === "VERIFIED"
-                      ? "Your organization credentials and documents have been verified. You are eligible to submit proposals for all public government challenges and enter sandbox procurement contracts."
-                      : vStatus === "UNDER_REVIEW" || vStatus === "SUBMITTED"
-                      ? "Your dossier has been submitted to the platform nodal officers for PAN, entity constitution, and private document validation. Verification decisions are completed within 24 to 48 hours."
-                      : vStatus === "CORRECTION_REQUESTED"
-                      ? (startup?.correction_notes || "Administrative review identified items needing correction. Please update the requested records and re-submit your dossier.")
-                      : vStatus === "REJECTED"
-                      ? (startup?.rejection_reason || "Your registration dossier was reviewed and rejected. Please contact support or submit updated credentials.")
-                      : "Please complete all registration steps and submit your dossier for verification."}
-                  </p>
-
-                  {/* For CORRECTION_REQUESTED: Show admin correction notes box */}
-                  {vStatus === "CORRECTION_REQUESTED" && startup?.correction_notes && (
-                    <div className="mx-auto mt-4 max-w-md rounded-xl border border-blue-200 bg-blue-50/80 p-3.5 text-left text-xs text-blue-900 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-300">
-                      <p className="font-bold mb-1">Admin Correction Notes:</p>
-                      <p>{startup.correction_notes}</p>
-                    </div>
-                  )}
-
-                  {/* For REJECTED: Show rejection reason box */}
-                  {vStatus === "REJECTED" && startup?.rejection_reason && (
-                    <div className="mx-auto mt-4 max-w-md rounded-xl border border-red-200 bg-red-50/80 p-3.5 text-left text-xs text-red-900 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300">
-                      <p className="font-bold mb-1">Rejection Reason:</p>
-                      <p>{startup.rejection_reason}</p>
-                    </div>
-                  )}
-
-                  {/* If Correction requested, Draft, or Rejected, offer edit button */}
-                  {(vStatus === "DRAFT" || vStatus === "CORRECTION_REQUESTED" || vStatus === "REJECTED") && (
-                    <div className="mt-6 flex justify-center">
-                      <button
-                        type="button"
-                        onClick={() => setActiveStep(2)}
-                        className="btn-primary rounded-xl bg-blue-900 px-6 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
-                      >
-                        {vStatus === "CORRECTION_REQUESTED" ? "Update Requested Records & Resubmit" : "Edit Registration Dossier"}
-                      </button>
-                    </div>
-                  )}
-
-                  {vStatus === "VERIFIED" && (
-                    <div className="mt-6 flex justify-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => navigate("/challenges")}
-                        className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-md"
-                      >
-                        Discover Government Challenges
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-
-          </AnimatePresence>
+                    <Layers className="h-3 w-3 text-emerald-600" />
+                    {t}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-slate-500">Not provided</span>
+              )}
+            </div>
+          </div>
+
+          {/* Other Existing Startup Information: TRL and Deployments */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Technology Readiness Level (TRL)</span>
+              <div className="mt-1.5 flex items-center gap-2">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-100 text-xs font-black text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                  {startup?.readiness_level ?? "—"}
+                </span>
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                  {startup?.readiness_level
+                    ? TRL_DESCRIPTIONS[startup.readiness_level] || `TRL ${startup.readiness_level}`
+                    : "Not evaluated"}
+                </span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Previous Government / Commercial Pilots</span>
+              <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-slate-100">
+                {startup?.previous_deployments !== undefined && startup?.previous_deployments !== null
+                  ? `${startup.previous_deployments} Deployments`
+                  : "0 Deployments"}
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* CARD 6: PROFILE / ONBOARDING STATUS                                       */}
+      {/* ========================================================================= */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-950/60 dark:text-teal-400">
+              <FileCheck2 className="h-4 w-4" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">PROFILE / ONBOARDING STATUS</h2>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Onboarding completion metrics and compliance dossier</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate("/startup/documents")}
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition"
+            >
+              <FileStack className="h-3.5 w-3.5 text-slate-500" />
+              View Documents
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate("/startup/registration")}
+              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-emerald-700 transition"
+            >
+              Continue Registration
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Progress Bar and Summary Cards */}
+        <div className="mt-6 space-y-6">
+          <div>
+            <div className="flex items-center justify-between text-xs font-bold mb-2">
+              <span className="text-slate-700 dark:text-slate-300">Profile Completion</span>
+              <span className="text-emerald-600 dark:text-emerald-400">{completionPercentage}%</span>
+            </div>
+            <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+              <div
+                className="h-full rounded-full bg-emerald-600 transition-all duration-500"
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Registration Status</span>
+              <p className="mt-1 text-xs font-bold text-slate-900 dark:text-slate-100">
+                {startup?.submitted_at ? "Submitted to Nodal Officer" : "Draft Lifecycle"}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Documents Status</span>
+              <p className="mt-1 text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-emerald-600" />
+                <span>{startup?.documents?.length || 0} Documents Uploaded</span>
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Verification Status</span>
+              <p className="mt-1 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                {vStatus.replace("_", " ")}
+              </p>
+            </div>
+          </div>
         </div>
 
       </div>
+
     </div>
   );
 }

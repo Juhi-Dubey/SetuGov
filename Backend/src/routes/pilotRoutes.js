@@ -13,7 +13,9 @@ import {
   getPilotFeedbacks,
   createPilotIssue,
   getPilotIssues,
-  updatePilotIssue
+  updatePilotIssue,
+  createProgressUpdate,
+  getProgressUpdates
 } from '../controllers/pilotController.js';
 import {
   createKpi,
@@ -49,7 +51,7 @@ import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
 import { uploadSingle, getFileUrl } from '../middleware/upload.js';
-import { createPilotSchema, updatePilotSchema } from '../schemas/pilotSchemas.js';
+import { createPilotSchema, updatePilotSchema, createProgressUpdateSchema } from '../schemas/pilotSchemas.js';
 import { createKpiSchema, createMeasurementSchema } from '../schemas/kpiSchemas.js';
 import { createMilestoneSchema } from '../schemas/milestoneSchemas.js';
 import { createEvidenceSchema } from '../schemas/evidenceSchemas.js';
@@ -136,6 +138,12 @@ router.get('/:pilot_id/payments', authenticate, getPilotPayments);
 // Scale Decisions
 router.post('/:pilot_id/scale-decision', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(createScaleDecisionSchema), createScaleDecision);
 router.get('/:pilot_id/scale-decision', authenticate, getScaleDecision);
+
+// Progress Updates (Persistent updates submitted by Startup/Gov/Admin)
+router.post('/:pilot_id/progress-updates', authenticate, authorizeRoles('GOVERNMENT', 'STARTUP', 'ADMIN'), validate(createProgressUpdateSchema), createProgressUpdate);
+router.get('/:pilot_id/progress-updates', authenticate, getProgressUpdates);
+router.post('/:pilot_id/updates', authenticate, authorizeRoles('GOVERNMENT', 'STARTUP', 'ADMIN'), validate(createProgressUpdateSchema), createProgressUpdate);
+router.get('/:pilot_id/updates', authenticate, getProgressUpdates);
 
 export default router;
 

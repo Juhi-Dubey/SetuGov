@@ -531,6 +531,16 @@ exports.Prisma.PilotIssueScalarFieldEnum = {
   updated_at: 'updated_at'
 };
 
+exports.Prisma.PilotProgressUpdateScalarFieldEnum = {
+  id: 'id',
+  pilot_id: 'pilot_id',
+  user_id: 'user_id',
+  title: 'title',
+  description: 'description',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
 exports.Prisma.ValidationScalarFieldEnum = {
   id: 'id',
   pilot_id: 'pilot_id',
@@ -941,6 +951,7 @@ exports.Prisma.ModelName = {
   Evidence: 'Evidence',
   Risk: 'Risk',
   PilotIssue: 'PilotIssue',
+  PilotProgressUpdate: 'PilotProgressUpdate',
   Validation: 'Validation',
   Payment: 'Payment',
   ScaleDecision: 'ScaleDecision',

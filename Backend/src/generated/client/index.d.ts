@@ -134,6 +134,11 @@ export type Risk = $Result.DefaultSelection<Prisma.$RiskPayload>
  */
 export type PilotIssue = $Result.DefaultSelection<Prisma.$PilotIssuePayload>
 /**
+ * Model PilotProgressUpdate
+ * 
+ */
+export type PilotProgressUpdate = $Result.DefaultSelection<Prisma.$PilotProgressUpdatePayload>
+/**
  * Model Validation
  * 
  */
@@ -843,6 +848,16 @@ export class PrismaClient<
   get pilotIssue(): Prisma.PilotIssueDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.pilotProgressUpdate`: Exposes CRUD operations for the **PilotProgressUpdate** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PilotProgressUpdates
+    * const pilotProgressUpdates = await prisma.pilotProgressUpdate.findMany()
+    * ```
+    */
+  get pilotProgressUpdate(): Prisma.PilotProgressUpdateDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.validation`: Exposes CRUD operations for the **Validation** model.
     * Example usage:
     * ```ts
@@ -1435,6 +1450,7 @@ export namespace Prisma {
     Evidence: 'Evidence',
     Risk: 'Risk',
     PilotIssue: 'PilotIssue',
+    PilotProgressUpdate: 'PilotProgressUpdate',
     Validation: 'Validation',
     Payment: 'Payment',
     ScaleDecision: 'ScaleDecision',
@@ -1463,7 +1479,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "department" | "challenge" | "challengeEligibilityReview" | "matchScore" | "startup" | "startupBankDetails" | "startupDocument" | "application" | "evaluatorProfile" | "conflictDeclaration" | "evaluation" | "applicationDocument" | "applicationProposalAnalysis" | "evaluatorMatchScore" | "evaluatorApplication" | "challengeEvaluatorPool" | "pilot" | "pilotKpi" | "pilotMeasurement" | "milestone" | "evidence" | "risk" | "pilotIssue" | "validation" | "payment" | "scaleDecision" | "complianceItem" | "pilotFeedback" | "notification" | "auditLog" | "accessRequest" | "evaluatorAssignment" | "procurementRecord" | "systemSetting" | "evaluationCriterion" | "systemTemplate"
+      modelProps: "user" | "department" | "challenge" | "challengeEligibilityReview" | "matchScore" | "startup" | "startupBankDetails" | "startupDocument" | "application" | "evaluatorProfile" | "conflictDeclaration" | "evaluation" | "applicationDocument" | "applicationProposalAnalysis" | "evaluatorMatchScore" | "evaluatorApplication" | "challengeEvaluatorPool" | "pilot" | "pilotKpi" | "pilotMeasurement" | "milestone" | "evidence" | "risk" | "pilotIssue" | "pilotProgressUpdate" | "validation" | "payment" | "scaleDecision" | "complianceItem" | "pilotFeedback" | "notification" | "auditLog" | "accessRequest" | "evaluatorAssignment" | "procurementRecord" | "systemSetting" | "evaluationCriterion" | "systemTemplate"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3243,6 +3259,80 @@ export namespace Prisma {
           }
         }
       }
+      PilotProgressUpdate: {
+        payload: Prisma.$PilotProgressUpdatePayload<ExtArgs>
+        fields: Prisma.PilotProgressUpdateFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PilotProgressUpdateFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PilotProgressUpdatePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PilotProgressUpdateFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PilotProgressUpdatePayload>
+          }
+          findFirst: {
+            args: Prisma.PilotProgressUpdateFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PilotProgressUpdatePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PilotProgressUpdateFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PilotProgressUpdatePayload>
+          }
+          findMany: {
+            args: Prisma.PilotProgressUpdateFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PilotProgressUpdatePayload>[]
+          }
+          create: {
+            args: Prisma.PilotProgressUpdateCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PilotProgressUpdatePayload>
+          }
+          createMany: {
+            args: Prisma.PilotProgressUpdateCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PilotProgressUpdateCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PilotProgressUpdatePayload>[]
+          }
+          delete: {
+            args: Prisma.PilotProgressUpdateDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PilotProgressUpdatePayload>
+          }
+          update: {
+            args: Prisma.PilotProgressUpdateUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PilotProgressUpdatePayload>
+          }
+          deleteMany: {
+            args: Prisma.PilotProgressUpdateDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PilotProgressUpdateUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.PilotProgressUpdateUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PilotProgressUpdatePayload>[]
+          }
+          upsert: {
+            args: Prisma.PilotProgressUpdateUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PilotProgressUpdatePayload>
+          }
+          aggregate: {
+            args: Prisma.PilotProgressUpdateAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePilotProgressUpdate>
+          }
+          groupBy: {
+            args: Prisma.PilotProgressUpdateGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PilotProgressUpdateGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PilotProgressUpdateCountArgs<ExtArgs>
+            result: $Utils.Optional<PilotProgressUpdateCountAggregateOutputType> | number
+          }
+        }
+      }
       Validation: {
         payload: Prisma.$ValidationPayload<ExtArgs>
         fields: Prisma.ValidationFieldRefs
@@ -4313,6 +4403,7 @@ export namespace Prisma {
     evidence?: EvidenceOmit
     risk?: RiskOmit
     pilotIssue?: PilotIssueOmit
+    pilotProgressUpdate?: PilotProgressUpdateOmit
     validation?: ValidationOmit
     payment?: PaymentOmit
     scaleDecision?: ScaleDecisionOmit
@@ -4448,6 +4539,7 @@ export namespace Prisma {
     added_evaluator_pools: number
     evaluator_match_scores: number
     eligibility_reviews: number
+    progress_updates: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4479,6 +4571,7 @@ export namespace Prisma {
     added_evaluator_pools?: boolean | UserCountOutputTypeCountAdded_evaluator_poolsArgs
     evaluator_match_scores?: boolean | UserCountOutputTypeCountEvaluator_match_scoresArgs
     eligibility_reviews?: boolean | UserCountOutputTypeCountEligibility_reviewsArgs
+    progress_updates?: boolean | UserCountOutputTypeCountProgress_updatesArgs
   }
 
   // Custom InputTypes
@@ -4686,6 +4779,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountEligibility_reviewsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ChallengeEligibilityReviewWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountProgress_updatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PilotProgressUpdateWhereInput
   }
 
 
@@ -4971,6 +5071,7 @@ export namespace Prisma {
     feedback: number
     risks: number
     issues: number
+    progress_updates: number
     scale_decisions: number
     validations: number
     procurements: number
@@ -4986,6 +5087,7 @@ export namespace Prisma {
     feedback?: boolean | PilotCountOutputTypeCountFeedbackArgs
     risks?: boolean | PilotCountOutputTypeCountRisksArgs
     issues?: boolean | PilotCountOutputTypeCountIssuesArgs
+    progress_updates?: boolean | PilotCountOutputTypeCountProgress_updatesArgs
     scale_decisions?: boolean | PilotCountOutputTypeCountScale_decisionsArgs
     validations?: boolean | PilotCountOutputTypeCountValidationsArgs
     procurements?: boolean | PilotCountOutputTypeCountProcurementsArgs
@@ -5063,6 +5165,13 @@ export namespace Prisma {
    */
   export type PilotCountOutputTypeCountIssuesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PilotIssueWhereInput
+  }
+
+  /**
+   * PilotCountOutputType without action
+   */
+  export type PilotCountOutputTypeCountProgress_updatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PilotProgressUpdateWhereInput
   }
 
   /**
@@ -5549,6 +5658,7 @@ export namespace Prisma {
     added_evaluator_pools?: boolean | User$added_evaluator_poolsArgs<ExtArgs>
     evaluator_match_scores?: boolean | User$evaluator_match_scoresArgs<ExtArgs>
     eligibility_reviews?: boolean | User$eligibility_reviewsArgs<ExtArgs>
+    progress_updates?: boolean | User$progress_updatesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -5658,6 +5768,7 @@ export namespace Prisma {
     added_evaluator_pools?: boolean | User$added_evaluator_poolsArgs<ExtArgs>
     evaluator_match_scores?: boolean | User$evaluator_match_scoresArgs<ExtArgs>
     eligibility_reviews?: boolean | User$eligibility_reviewsArgs<ExtArgs>
+    progress_updates?: boolean | User$progress_updatesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5700,6 +5811,7 @@ export namespace Prisma {
       added_evaluator_pools: Prisma.$ChallengeEvaluatorPoolPayload<ExtArgs>[]
       evaluator_match_scores: Prisma.$EvaluatorMatchScorePayload<ExtArgs>[]
       eligibility_reviews: Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>[]
+      progress_updates: Prisma.$PilotProgressUpdatePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -6147,6 +6259,7 @@ export namespace Prisma {
     added_evaluator_pools<T extends User$added_evaluator_poolsArgs<ExtArgs> = {}>(args?: Subset<T, User$added_evaluator_poolsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChallengeEvaluatorPoolPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     evaluator_match_scores<T extends User$evaluator_match_scoresArgs<ExtArgs> = {}>(args?: Subset<T, User$evaluator_match_scoresArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EvaluatorMatchScorePayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     eligibility_reviews<T extends User$eligibility_reviewsArgs<ExtArgs> = {}>(args?: Subset<T, User$eligibility_reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ChallengeEligibilityReviewPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
+    progress_updates<T extends User$progress_updatesArgs<ExtArgs> = {}>(args?: Subset<T, User$progress_updatesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PilotProgressUpdatePayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7300,6 +7413,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ChallengeEligibilityReviewScalarFieldEnum | ChallengeEligibilityReviewScalarFieldEnum[]
+  }
+
+  /**
+   * User.progress_updates
+   */
+  export type User$progress_updatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateInclude<ExtArgs> | null
+    where?: PilotProgressUpdateWhereInput
+    orderBy?: PilotProgressUpdateOrderByWithRelationInput | PilotProgressUpdateOrderByWithRelationInput[]
+    cursor?: PilotProgressUpdateWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PilotProgressUpdateScalarFieldEnum | PilotProgressUpdateScalarFieldEnum[]
   }
 
   /**
@@ -27763,6 +27900,7 @@ export namespace Prisma {
     startup?: boolean | StartupDefaultArgs<ExtArgs>
     risks?: boolean | Pilot$risksArgs<ExtArgs>
     issues?: boolean | Pilot$issuesArgs<ExtArgs>
+    progress_updates?: boolean | Pilot$progress_updatesArgs<ExtArgs>
     scale_decisions?: boolean | Pilot$scale_decisionsArgs<ExtArgs>
     validations?: boolean | Pilot$validationsArgs<ExtArgs>
     procurements?: boolean | Pilot$procurementsArgs<ExtArgs>
@@ -27849,6 +27987,7 @@ export namespace Prisma {
     startup?: boolean | StartupDefaultArgs<ExtArgs>
     risks?: boolean | Pilot$risksArgs<ExtArgs>
     issues?: boolean | Pilot$issuesArgs<ExtArgs>
+    progress_updates?: boolean | Pilot$progress_updatesArgs<ExtArgs>
     scale_decisions?: boolean | Pilot$scale_decisionsArgs<ExtArgs>
     validations?: boolean | Pilot$validationsArgs<ExtArgs>
     procurements?: boolean | Pilot$procurementsArgs<ExtArgs>
@@ -27877,6 +28016,7 @@ export namespace Prisma {
       startup: Prisma.$StartupPayload<ExtArgs>
       risks: Prisma.$RiskPayload<ExtArgs>[]
       issues: Prisma.$PilotIssuePayload<ExtArgs>[]
+      progress_updates: Prisma.$PilotProgressUpdatePayload<ExtArgs>[]
       scale_decisions: Prisma.$ScaleDecisionPayload<ExtArgs>[]
       validations: Prisma.$ValidationPayload<ExtArgs>[]
       procurements: Prisma.$ProcurementRecordPayload<ExtArgs>[]
@@ -28305,6 +28445,7 @@ export namespace Prisma {
     startup<T extends StartupDefaultArgs<ExtArgs> = {}>(args?: Subset<T, StartupDefaultArgs<ExtArgs>>): Prisma__StartupClient<$Result.GetResult<Prisma.$StartupPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | Null, Null, ExtArgs, ClientOptions>
     risks<T extends Pilot$risksArgs<ExtArgs> = {}>(args?: Subset<T, Pilot$risksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RiskPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     issues<T extends Pilot$issuesArgs<ExtArgs> = {}>(args?: Subset<T, Pilot$issuesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PilotIssuePayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
+    progress_updates<T extends Pilot$progress_updatesArgs<ExtArgs> = {}>(args?: Subset<T, Pilot$progress_updatesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PilotProgressUpdatePayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     scale_decisions<T extends Pilot$scale_decisionsArgs<ExtArgs> = {}>(args?: Subset<T, Pilot$scale_decisionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScaleDecisionPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     validations<T extends Pilot$validationsArgs<ExtArgs> = {}>(args?: Subset<T, Pilot$validationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ValidationPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
     procurements<T extends Pilot$procurementsArgs<ExtArgs> = {}>(args?: Subset<T, Pilot$procurementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProcurementRecordPayload<ExtArgs>, T, "findMany", ClientOptions> | Null>
@@ -28964,6 +29105,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: PilotIssueScalarFieldEnum | PilotIssueScalarFieldEnum[]
+  }
+
+  /**
+   * Pilot.progress_updates
+   */
+  export type Pilot$progress_updatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateInclude<ExtArgs> | null
+    where?: PilotProgressUpdateWhereInput
+    orderBy?: PilotProgressUpdateOrderByWithRelationInput | PilotProgressUpdateOrderByWithRelationInput[]
+    cursor?: PilotProgressUpdateWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PilotProgressUpdateScalarFieldEnum | PilotProgressUpdateScalarFieldEnum[]
   }
 
   /**
@@ -36119,6 +36284,1117 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: PilotIssueInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PilotProgressUpdate
+   */
+
+  export type AggregatePilotProgressUpdate = {
+    _count: PilotProgressUpdateCountAggregateOutputType | null
+    _min: PilotProgressUpdateMinAggregateOutputType | null
+    _max: PilotProgressUpdateMaxAggregateOutputType | null
+  }
+
+  export type PilotProgressUpdateMinAggregateOutputType = {
+    id: string | null
+    pilot_id: string | null
+    user_id: string | null
+    title: string | null
+    description: string | null
+    created_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type PilotProgressUpdateMaxAggregateOutputType = {
+    id: string | null
+    pilot_id: string | null
+    user_id: string | null
+    title: string | null
+    description: string | null
+    created_at: Date | null
+    updated_at: Date | null
+  }
+
+  export type PilotProgressUpdateCountAggregateOutputType = {
+    id: number
+    pilot_id: number
+    user_id: number
+    title: number
+    description: number
+    created_at: number
+    updated_at: number
+    _all: number
+  }
+
+
+  export type PilotProgressUpdateMinAggregateInputType = {
+    id?: true
+    pilot_id?: true
+    user_id?: true
+    title?: true
+    description?: true
+    created_at?: true
+    updated_at?: true
+  }
+
+  export type PilotProgressUpdateMaxAggregateInputType = {
+    id?: true
+    pilot_id?: true
+    user_id?: true
+    title?: true
+    description?: true
+    created_at?: true
+    updated_at?: true
+  }
+
+  export type PilotProgressUpdateCountAggregateInputType = {
+    id?: true
+    pilot_id?: true
+    user_id?: true
+    title?: true
+    description?: true
+    created_at?: true
+    updated_at?: true
+    _all?: true
+  }
+
+  export type PilotProgressUpdateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PilotProgressUpdate to aggregate.
+     */
+    where?: PilotProgressUpdateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PilotProgressUpdates to fetch.
+     */
+    orderBy?: PilotProgressUpdateOrderByWithRelationInput | PilotProgressUpdateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PilotProgressUpdateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PilotProgressUpdates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PilotProgressUpdates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PilotProgressUpdates
+    **/
+    _count?: true | PilotProgressUpdateCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PilotProgressUpdateMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PilotProgressUpdateMaxAggregateInputType
+  }
+
+  export type GetPilotProgressUpdateAggregateType<T extends PilotProgressUpdateAggregateArgs> = {
+        [P in keyof T & keyof AggregatePilotProgressUpdate]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePilotProgressUpdate[P]>
+      : GetScalarType<T[P], AggregatePilotProgressUpdate[P]>
+  }
+
+
+
+
+  export type PilotProgressUpdateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PilotProgressUpdateWhereInput
+    orderBy?: PilotProgressUpdateOrderByWithAggregationInput | PilotProgressUpdateOrderByWithAggregationInput[]
+    by: PilotProgressUpdateScalarFieldEnum[] | PilotProgressUpdateScalarFieldEnum
+    having?: PilotProgressUpdateScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PilotProgressUpdateCountAggregateInputType | true
+    _min?: PilotProgressUpdateMinAggregateInputType
+    _max?: PilotProgressUpdateMaxAggregateInputType
+  }
+
+  export type PilotProgressUpdateGroupByOutputType = {
+    id: string
+    pilot_id: string
+    user_id: string | null
+    title: string
+    description: string
+    created_at: Date
+    updated_at: Date
+    _count: PilotProgressUpdateCountAggregateOutputType | null
+    _min: PilotProgressUpdateMinAggregateOutputType | null
+    _max: PilotProgressUpdateMaxAggregateOutputType | null
+  }
+
+  type GetPilotProgressUpdateGroupByPayload<T extends PilotProgressUpdateGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PilotProgressUpdateGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PilotProgressUpdateGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PilotProgressUpdateGroupByOutputType[P]>
+            : GetScalarType<T[P], PilotProgressUpdateGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PilotProgressUpdateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    pilot_id?: boolean
+    user_id?: boolean
+    title?: boolean
+    description?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+    pilot?: boolean | PilotDefaultArgs<ExtArgs>
+    user?: boolean | PilotProgressUpdate$userArgs<ExtArgs>
+  }, ExtArgs["result"]["pilotProgressUpdate"]>
+
+  export type PilotProgressUpdateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    pilot_id?: boolean
+    user_id?: boolean
+    title?: boolean
+    description?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+    pilot?: boolean | PilotDefaultArgs<ExtArgs>
+    user?: boolean | PilotProgressUpdate$userArgs<ExtArgs>
+  }, ExtArgs["result"]["pilotProgressUpdate"]>
+
+  export type PilotProgressUpdateSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    pilot_id?: boolean
+    user_id?: boolean
+    title?: boolean
+    description?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+    pilot?: boolean | PilotDefaultArgs<ExtArgs>
+    user?: boolean | PilotProgressUpdate$userArgs<ExtArgs>
+  }, ExtArgs["result"]["pilotProgressUpdate"]>
+
+  export type PilotProgressUpdateSelectScalar = {
+    id?: boolean
+    pilot_id?: boolean
+    user_id?: boolean
+    title?: boolean
+    description?: boolean
+    created_at?: boolean
+    updated_at?: boolean
+  }
+
+  export type PilotProgressUpdateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pilot_id" | "user_id" | "title" | "description" | "created_at" | "updated_at", ExtArgs["result"]["pilotProgressUpdate"]>
+  export type PilotProgressUpdateInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    pilot?: boolean | PilotDefaultArgs<ExtArgs>
+    user?: boolean | PilotProgressUpdate$userArgs<ExtArgs>
+  }
+  export type PilotProgressUpdateIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    pilot?: boolean | PilotDefaultArgs<ExtArgs>
+    user?: boolean | PilotProgressUpdate$userArgs<ExtArgs>
+  }
+  export type PilotProgressUpdateIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    pilot?: boolean | PilotDefaultArgs<ExtArgs>
+    user?: boolean | PilotProgressUpdate$userArgs<ExtArgs>
+  }
+
+  export type $PilotProgressUpdatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PilotProgressUpdate"
+    objects: {
+      pilot: Prisma.$PilotPayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      pilot_id: string
+      user_id: string | null
+      title: string
+      description: string
+      created_at: Date
+      updated_at: Date
+    }, ExtArgs["result"]["pilotProgressUpdate"]>
+    composites: {}
+  }
+
+  type PilotProgressUpdateGetPayload<S extends boolean | null | undefined | PilotProgressUpdateDefaultArgs> = $Result.GetResult<Prisma.$PilotProgressUpdatePayload, S>
+
+  type PilotProgressUpdateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PilotProgressUpdateFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PilotProgressUpdateCountAggregateInputType | true
+    }
+
+  export interface PilotProgressUpdateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PilotProgressUpdate'], meta: { name: 'PilotProgressUpdate' } }
+    /**
+     * Find zero or one PilotProgressUpdate that matches the filter.
+     * @param {PilotProgressUpdateFindUniqueArgs} args - Arguments to find a PilotProgressUpdate
+     * @example
+     * // Get one PilotProgressUpdate
+     * const pilotProgressUpdate = await prisma.pilotProgressUpdate.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PilotProgressUpdateFindUniqueArgs>(args: SelectSubset<T, PilotProgressUpdateFindUniqueArgs<ExtArgs>>): Prisma__PilotProgressUpdateClient<$Result.GetResult<Prisma.$PilotProgressUpdatePayload<ExtArgs>, T, "findUnique", ClientOptions> | null, null, ExtArgs, ClientOptions>
+
+    /**
+     * Find one PilotProgressUpdate that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PilotProgressUpdateFindUniqueOrThrowArgs} args - Arguments to find a PilotProgressUpdate
+     * @example
+     * // Get one PilotProgressUpdate
+     * const pilotProgressUpdate = await prisma.pilotProgressUpdate.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PilotProgressUpdateFindUniqueOrThrowArgs>(args: SelectSubset<T, PilotProgressUpdateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PilotProgressUpdateClient<$Result.GetResult<Prisma.$PilotProgressUpdatePayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Find the first PilotProgressUpdate that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PilotProgressUpdateFindFirstArgs} args - Arguments to find a PilotProgressUpdate
+     * @example
+     * // Get one PilotProgressUpdate
+     * const pilotProgressUpdate = await prisma.pilotProgressUpdate.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PilotProgressUpdateFindFirstArgs>(args?: SelectSubset<T, PilotProgressUpdateFindFirstArgs<ExtArgs>>): Prisma__PilotProgressUpdateClient<$Result.GetResult<Prisma.$PilotProgressUpdatePayload<ExtArgs>, T, "findFirst", ClientOptions> | null, null, ExtArgs, ClientOptions>
+
+    /**
+     * Find the first PilotProgressUpdate that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PilotProgressUpdateFindFirstOrThrowArgs} args - Arguments to find a PilotProgressUpdate
+     * @example
+     * // Get one PilotProgressUpdate
+     * const pilotProgressUpdate = await prisma.pilotProgressUpdate.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PilotProgressUpdateFindFirstOrThrowArgs>(args?: SelectSubset<T, PilotProgressUpdateFindFirstOrThrowArgs<ExtArgs>>): Prisma__PilotProgressUpdateClient<$Result.GetResult<Prisma.$PilotProgressUpdatePayload<ExtArgs>, T, "findFirstOrThrow", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Find zero or more PilotProgressUpdates that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PilotProgressUpdateFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PilotProgressUpdates
+     * const pilotProgressUpdates = await prisma.pilotProgressUpdate.findMany()
+     * 
+     * // Get first 10 PilotProgressUpdates
+     * const pilotProgressUpdates = await prisma.pilotProgressUpdate.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const pilotProgressUpdateWithIdOnly = await prisma.pilotProgressUpdate.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PilotProgressUpdateFindManyArgs>(args?: SelectSubset<T, PilotProgressUpdateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PilotProgressUpdatePayload<ExtArgs>, T, "findMany", ClientOptions>>
+
+    /**
+     * Create a PilotProgressUpdate.
+     * @param {PilotProgressUpdateCreateArgs} args - Arguments to create a PilotProgressUpdate.
+     * @example
+     * // Create one PilotProgressUpdate
+     * const PilotProgressUpdate = await prisma.pilotProgressUpdate.create({
+     *   data: {
+     *     // ... data to create a PilotProgressUpdate
+     *   }
+     * })
+     * 
+     */
+    create<T extends PilotProgressUpdateCreateArgs>(args: SelectSubset<T, PilotProgressUpdateCreateArgs<ExtArgs>>): Prisma__PilotProgressUpdateClient<$Result.GetResult<Prisma.$PilotProgressUpdatePayload<ExtArgs>, T, "create", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Create many PilotProgressUpdates.
+     * @param {PilotProgressUpdateCreateManyArgs} args - Arguments to create many PilotProgressUpdates.
+     * @example
+     * // Create many PilotProgressUpdates
+     * const pilotProgressUpdate = await prisma.pilotProgressUpdate.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PilotProgressUpdateCreateManyArgs>(args?: SelectSubset<T, PilotProgressUpdateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PilotProgressUpdates and returns the data saved in the database.
+     * @param {PilotProgressUpdateCreateManyAndReturnArgs} args - Arguments to create many PilotProgressUpdates.
+     * @example
+     * // Create many PilotProgressUpdates
+     * const pilotProgressUpdate = await prisma.pilotProgressUpdate.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PilotProgressUpdates and only return the `id`
+     * const pilotProgressUpdateWithIdOnly = await prisma.pilotProgressUpdate.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PilotProgressUpdateCreateManyAndReturnArgs>(args?: SelectSubset<T, PilotProgressUpdateCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PilotProgressUpdatePayload<ExtArgs>, T, "createManyAndReturn", ClientOptions>>
+
+    /**
+     * Delete a PilotProgressUpdate.
+     * @param {PilotProgressUpdateDeleteArgs} args - Arguments to delete one PilotProgressUpdate.
+     * @example
+     * // Delete one PilotProgressUpdate
+     * const PilotProgressUpdate = await prisma.pilotProgressUpdate.delete({
+     *   where: {
+     *     // ... filter to delete one PilotProgressUpdate
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PilotProgressUpdateDeleteArgs>(args: SelectSubset<T, PilotProgressUpdateDeleteArgs<ExtArgs>>): Prisma__PilotProgressUpdateClient<$Result.GetResult<Prisma.$PilotProgressUpdatePayload<ExtArgs>, T, "delete", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Update one PilotProgressUpdate.
+     * @param {PilotProgressUpdateUpdateArgs} args - Arguments to update one PilotProgressUpdate.
+     * @example
+     * // Update one PilotProgressUpdate
+     * const pilotProgressUpdate = await prisma.pilotProgressUpdate.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PilotProgressUpdateUpdateArgs>(args: SelectSubset<T, PilotProgressUpdateUpdateArgs<ExtArgs>>): Prisma__PilotProgressUpdateClient<$Result.GetResult<Prisma.$PilotProgressUpdatePayload<ExtArgs>, T, "update", ClientOptions>, never, ExtArgs, ClientOptions>
+
+    /**
+     * Delete zero or more PilotProgressUpdates.
+     * @param {PilotProgressUpdateDeleteManyArgs} args - Arguments to filter PilotProgressUpdates to delete.
+     * @example
+     * // Delete a few PilotProgressUpdates
+     * const { count } = await prisma.pilotProgressUpdate.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PilotProgressUpdateDeleteManyArgs>(args?: SelectSubset<T, PilotProgressUpdateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PilotProgressUpdates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PilotProgressUpdateUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PilotProgressUpdates
+     * const pilotProgressUpdate = await prisma.pilotProgressUpdate.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PilotProgressUpdateUpdateManyArgs>(args: SelectSubset<T, PilotProgressUpdateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PilotProgressUpdates and returns the data updated in the database.
+     * @param {PilotProgressUpdateUpdateManyAndReturnArgs} args - Arguments to update many PilotProgressUpdates.
+     * @example
+     * // Update many PilotProgressUpdates
+     * const pilotProgressUpdate = await prisma.pilotProgressUpdate.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more PilotProgressUpdates and only return the `id`
+     * const pilotProgressUpdateWithIdOnly = await prisma.pilotProgressUpdate.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends PilotProgressUpdateUpdateManyAndReturnArgs>(args: SelectSubset<T, PilotProgressUpdateUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PilotProgressUpdatePayload<ExtArgs>, T, "updateManyAndReturn", ClientOptions>>
+
+    /**
+     * Create or update one PilotProgressUpdate.
+     * @param {PilotProgressUpdateUpsertArgs} args - Arguments to update or create a PilotProgressUpdate.
+     * @example
+     * // Update or create a PilotProgressUpdate
+     * const pilotProgressUpdate = await prisma.pilotProgressUpdate.upsert({
+     *   create: {
+     *     // ... data to create a PilotProgressUpdate
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PilotProgressUpdate we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PilotProgressUpdateUpsertArgs>(args: SelectSubset<T, PilotProgressUpdateUpsertArgs<ExtArgs>>): Prisma__PilotProgressUpdateClient<$Result.GetResult<Prisma.$PilotProgressUpdatePayload<ExtArgs>, T, "upsert", ClientOptions>, never, ExtArgs, ClientOptions>
+
+
+    /**
+     * Count the number of PilotProgressUpdates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PilotProgressUpdateCountArgs} args - Arguments to filter PilotProgressUpdates to count.
+     * @example
+     * // Count the number of PilotProgressUpdates
+     * const count = await prisma.pilotProgressUpdate.count({
+     *   where: {
+     *     // ... the filter for the PilotProgressUpdates we want to count
+     *   }
+     * })
+    **/
+    count<T extends PilotProgressUpdateCountArgs>(
+      args?: Subset<T, PilotProgressUpdateCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PilotProgressUpdateCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PilotProgressUpdate.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PilotProgressUpdateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PilotProgressUpdateAggregateArgs>(args: Subset<T, PilotProgressUpdateAggregateArgs>): Prisma.PrismaPromise<GetPilotProgressUpdateAggregateType<T>>
+
+    /**
+     * Group by PilotProgressUpdate.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PilotProgressUpdateGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PilotProgressUpdateGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PilotProgressUpdateGroupByArgs['orderBy'] }
+        : { orderBy?: PilotProgressUpdateGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PilotProgressUpdateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPilotProgressUpdateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PilotProgressUpdate model
+   */
+  readonly fields: PilotProgressUpdateFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PilotProgressUpdate.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PilotProgressUpdateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    pilot<T extends PilotDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PilotDefaultArgs<ExtArgs>>): Prisma__PilotClient<$Result.GetResult<Prisma.$PilotPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | Null, Null, ExtArgs, ClientOptions>
+    user<T extends PilotProgressUpdate$userArgs<ExtArgs> = {}>(args?: Subset<T, PilotProgressUpdate$userArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", ClientOptions> | null, null, ExtArgs, ClientOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PilotProgressUpdate model
+   */ 
+  interface PilotProgressUpdateFieldRefs {
+    readonly id: FieldRef<"PilotProgressUpdate", 'String'>
+    readonly pilot_id: FieldRef<"PilotProgressUpdate", 'String'>
+    readonly user_id: FieldRef<"PilotProgressUpdate", 'String'>
+    readonly title: FieldRef<"PilotProgressUpdate", 'String'>
+    readonly description: FieldRef<"PilotProgressUpdate", 'String'>
+    readonly created_at: FieldRef<"PilotProgressUpdate", 'DateTime'>
+    readonly updated_at: FieldRef<"PilotProgressUpdate", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PilotProgressUpdate findUnique
+   */
+  export type PilotProgressUpdateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateInclude<ExtArgs> | null
+    /**
+     * Filter, which PilotProgressUpdate to fetch.
+     */
+    where: PilotProgressUpdateWhereUniqueInput
+  }
+
+  /**
+   * PilotProgressUpdate findUniqueOrThrow
+   */
+  export type PilotProgressUpdateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateInclude<ExtArgs> | null
+    /**
+     * Filter, which PilotProgressUpdate to fetch.
+     */
+    where: PilotProgressUpdateWhereUniqueInput
+  }
+
+  /**
+   * PilotProgressUpdate findFirst
+   */
+  export type PilotProgressUpdateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateInclude<ExtArgs> | null
+    /**
+     * Filter, which PilotProgressUpdate to fetch.
+     */
+    where?: PilotProgressUpdateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PilotProgressUpdates to fetch.
+     */
+    orderBy?: PilotProgressUpdateOrderByWithRelationInput | PilotProgressUpdateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PilotProgressUpdates.
+     */
+    cursor?: PilotProgressUpdateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PilotProgressUpdates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PilotProgressUpdates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PilotProgressUpdates.
+     */
+    distinct?: PilotProgressUpdateScalarFieldEnum | PilotProgressUpdateScalarFieldEnum[]
+  }
+
+  /**
+   * PilotProgressUpdate findFirstOrThrow
+   */
+  export type PilotProgressUpdateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateInclude<ExtArgs> | null
+    /**
+     * Filter, which PilotProgressUpdate to fetch.
+     */
+    where?: PilotProgressUpdateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PilotProgressUpdates to fetch.
+     */
+    orderBy?: PilotProgressUpdateOrderByWithRelationInput | PilotProgressUpdateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PilotProgressUpdates.
+     */
+    cursor?: PilotProgressUpdateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PilotProgressUpdates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PilotProgressUpdates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PilotProgressUpdates.
+     */
+    distinct?: PilotProgressUpdateScalarFieldEnum | PilotProgressUpdateScalarFieldEnum[]
+  }
+
+  /**
+   * PilotProgressUpdate findMany
+   */
+  export type PilotProgressUpdateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateInclude<ExtArgs> | null
+    /**
+     * Filter, which PilotProgressUpdates to fetch.
+     */
+    where?: PilotProgressUpdateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PilotProgressUpdates to fetch.
+     */
+    orderBy?: PilotProgressUpdateOrderByWithRelationInput | PilotProgressUpdateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PilotProgressUpdates.
+     */
+    cursor?: PilotProgressUpdateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PilotProgressUpdates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PilotProgressUpdates.
+     */
+    skip?: number
+    distinct?: PilotProgressUpdateScalarFieldEnum | PilotProgressUpdateScalarFieldEnum[]
+  }
+
+  /**
+   * PilotProgressUpdate create
+   */
+  export type PilotProgressUpdateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PilotProgressUpdate.
+     */
+    data: XOR<PilotProgressUpdateCreateInput, PilotProgressUpdateUncheckedCreateInput>
+  }
+
+  /**
+   * PilotProgressUpdate createMany
+   */
+  export type PilotProgressUpdateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PilotProgressUpdates.
+     */
+    data: PilotProgressUpdateCreateManyInput | PilotProgressUpdateCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * PilotProgressUpdate createManyAndReturn
+   */
+  export type PilotProgressUpdateCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * The data used to create many PilotProgressUpdates.
+     */
+    data: PilotProgressUpdateCreateManyInput | PilotProgressUpdateCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PilotProgressUpdate update
+   */
+  export type PilotProgressUpdateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PilotProgressUpdate.
+     */
+    data: XOR<PilotProgressUpdateUpdateInput, PilotProgressUpdateUncheckedUpdateInput>
+    /**
+     * Choose, which PilotProgressUpdate to update.
+     */
+    where: PilotProgressUpdateWhereUniqueInput
+  }
+
+  /**
+   * PilotProgressUpdate updateMany
+   */
+  export type PilotProgressUpdateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PilotProgressUpdates.
+     */
+    data: XOR<PilotProgressUpdateUpdateManyMutationInput, PilotProgressUpdateUncheckedUpdateManyInput>
+    /**
+     * Filter which PilotProgressUpdates to update
+     */
+    where?: PilotProgressUpdateWhereInput
+    /**
+     * Limit how many PilotProgressUpdates to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * PilotProgressUpdate updateManyAndReturn
+   */
+  export type PilotProgressUpdateUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * The data used to update PilotProgressUpdates.
+     */
+    data: XOR<PilotProgressUpdateUpdateManyMutationInput, PilotProgressUpdateUncheckedUpdateManyInput>
+    /**
+     * Filter which PilotProgressUpdates to update
+     */
+    where?: PilotProgressUpdateWhereInput
+    /**
+     * Limit how many PilotProgressUpdates to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PilotProgressUpdate upsert
+   */
+  export type PilotProgressUpdateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PilotProgressUpdate to update in case it exists.
+     */
+    where: PilotProgressUpdateWhereUniqueInput
+    /**
+     * In case the PilotProgressUpdate found by the `where` argument doesn't exist, create a new PilotProgressUpdate with this data.
+     */
+    create: XOR<PilotProgressUpdateCreateInput, PilotProgressUpdateUncheckedCreateInput>
+    /**
+     * In case the PilotProgressUpdate was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PilotProgressUpdateUpdateInput, PilotProgressUpdateUncheckedUpdateInput>
+  }
+
+  /**
+   * PilotProgressUpdate delete
+   */
+  export type PilotProgressUpdateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateInclude<ExtArgs> | null
+    /**
+     * Filter which PilotProgressUpdate to delete.
+     */
+    where: PilotProgressUpdateWhereUniqueInput
+  }
+
+  /**
+   * PilotProgressUpdate deleteMany
+   */
+  export type PilotProgressUpdateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PilotProgressUpdates to delete
+     */
+    where?: PilotProgressUpdateWhereInput
+    /**
+     * Limit how many PilotProgressUpdates to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * PilotProgressUpdate.user
+   */
+  export type PilotProgressUpdate$userArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * PilotProgressUpdate without action
+   */
+  export type PilotProgressUpdateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PilotProgressUpdate
+     */
+    select?: PilotProgressUpdateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PilotProgressUpdate
+     */
+    omit?: PilotProgressUpdateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PilotProgressUpdateInclude<ExtArgs> | null
   }
 
 
@@ -52157,6 +53433,19 @@ export namespace Prisma {
   export type PilotIssueScalarFieldEnum = (typeof PilotIssueScalarFieldEnum)[keyof typeof PilotIssueScalarFieldEnum]
 
 
+  export const PilotProgressUpdateScalarFieldEnum: {
+    id: 'id',
+    pilot_id: 'pilot_id',
+    user_id: 'user_id',
+    title: 'title',
+    description: 'description',
+    created_at: 'created_at',
+    updated_at: 'updated_at'
+  };
+
+  export type PilotProgressUpdateScalarFieldEnum = (typeof PilotProgressUpdateScalarFieldEnum)[keyof typeof PilotProgressUpdateScalarFieldEnum]
+
+
   export const ValidationScalarFieldEnum: {
     id: 'id',
     pilot_id: 'pilot_id',
@@ -52859,6 +54148,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolListRelationFilter
     evaluator_match_scores?: EvaluatorMatchScoreListRelationFilter
     eligibility_reviews?: ChallengeEligibilityReviewListRelationFilter
+    progress_updates?: PilotProgressUpdateListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -52913,6 +54203,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolOrderByRelationAggregateInput
     evaluator_match_scores?: EvaluatorMatchScoreOrderByRelationAggregateInput
     eligibility_reviews?: ChallengeEligibilityReviewOrderByRelationAggregateInput
+    progress_updates?: PilotProgressUpdateOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -52970,6 +54261,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolListRelationFilter
     evaluator_match_scores?: EvaluatorMatchScoreListRelationFilter
     eligibility_reviews?: ChallengeEligibilityReviewListRelationFilter
+    progress_updates?: PilotProgressUpdateListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -54865,6 +56157,7 @@ export namespace Prisma {
     startup?: XOR<StartupScalarRelationFilter, StartupWhereInput>
     risks?: RiskListRelationFilter
     issues?: PilotIssueListRelationFilter
+    progress_updates?: PilotProgressUpdateListRelationFilter
     scale_decisions?: ScaleDecisionListRelationFilter
     validations?: ValidationListRelationFilter
     procurements?: ProcurementRecordListRelationFilter
@@ -54900,6 +56193,7 @@ export namespace Prisma {
     startup?: StartupOrderByWithRelationInput
     risks?: RiskOrderByRelationAggregateInput
     issues?: PilotIssueOrderByRelationAggregateInput
+    progress_updates?: PilotProgressUpdateOrderByRelationAggregateInput
     scale_decisions?: ScaleDecisionOrderByRelationAggregateInput
     validations?: ValidationOrderByRelationAggregateInput
     procurements?: ProcurementRecordOrderByRelationAggregateInput
@@ -54938,6 +56232,7 @@ export namespace Prisma {
     startup?: XOR<StartupScalarRelationFilter, StartupWhereInput>
     risks?: RiskListRelationFilter
     issues?: PilotIssueListRelationFilter
+    progress_updates?: PilotProgressUpdateListRelationFilter
     scale_decisions?: ScaleDecisionListRelationFilter
     validations?: ValidationListRelationFilter
     procurements?: ProcurementRecordListRelationFilter
@@ -55525,6 +56820,74 @@ export namespace Prisma {
     resolved_at?: DateTimeNullableWithAggregatesFilter<"PilotIssue"> | Date | string | null
     created_at?: DateTimeWithAggregatesFilter<"PilotIssue"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"PilotIssue"> | Date | string
+  }
+
+  export type PilotProgressUpdateWhereInput = {
+    AND?: PilotProgressUpdateWhereInput | PilotProgressUpdateWhereInput[]
+    OR?: PilotProgressUpdateWhereInput[]
+    NOT?: PilotProgressUpdateWhereInput | PilotProgressUpdateWhereInput[]
+    id?: StringFilter<"PilotProgressUpdate"> | string
+    pilot_id?: StringFilter<"PilotProgressUpdate"> | string
+    user_id?: StringNullableFilter<"PilotProgressUpdate"> | string | null
+    title?: StringFilter<"PilotProgressUpdate"> | string
+    description?: StringFilter<"PilotProgressUpdate"> | string
+    created_at?: DateTimeFilter<"PilotProgressUpdate"> | Date | string
+    updated_at?: DateTimeFilter<"PilotProgressUpdate"> | Date | string
+    pilot?: XOR<PilotScalarRelationFilter, PilotWhereInput>
+    user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }
+
+  export type PilotProgressUpdateOrderByWithRelationInput = {
+    id?: SortOrder
+    pilot_id?: SortOrder
+    user_id?: SortOrderInput | SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+    pilot?: PilotOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type PilotProgressUpdateWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PilotProgressUpdateWhereInput | PilotProgressUpdateWhereInput[]
+    OR?: PilotProgressUpdateWhereInput[]
+    NOT?: PilotProgressUpdateWhereInput | PilotProgressUpdateWhereInput[]
+    pilot_id?: StringFilter<"PilotProgressUpdate"> | string
+    user_id?: StringNullableFilter<"PilotProgressUpdate"> | string | null
+    title?: StringFilter<"PilotProgressUpdate"> | string
+    description?: StringFilter<"PilotProgressUpdate"> | string
+    created_at?: DateTimeFilter<"PilotProgressUpdate"> | Date | string
+    updated_at?: DateTimeFilter<"PilotProgressUpdate"> | Date | string
+    pilot?: XOR<PilotScalarRelationFilter, PilotWhereInput>
+    user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }, "id">
+
+  export type PilotProgressUpdateOrderByWithAggregationInput = {
+    id?: SortOrder
+    pilot_id?: SortOrder
+    user_id?: SortOrderInput | SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+    _count?: PilotProgressUpdateCountOrderByAggregateInput
+    _max?: PilotProgressUpdateMaxOrderByAggregateInput
+    _min?: PilotProgressUpdateMinOrderByAggregateInput
+  }
+
+  export type PilotProgressUpdateScalarWhereWithAggregatesInput = {
+    AND?: PilotProgressUpdateScalarWhereWithAggregatesInput | PilotProgressUpdateScalarWhereWithAggregatesInput[]
+    OR?: PilotProgressUpdateScalarWhereWithAggregatesInput[]
+    NOT?: PilotProgressUpdateScalarWhereWithAggregatesInput | PilotProgressUpdateScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PilotProgressUpdate"> | string
+    pilot_id?: StringWithAggregatesFilter<"PilotProgressUpdate"> | string
+    user_id?: StringNullableWithAggregatesFilter<"PilotProgressUpdate"> | string | null
+    title?: StringWithAggregatesFilter<"PilotProgressUpdate"> | string
+    description?: StringWithAggregatesFilter<"PilotProgressUpdate"> | string
+    created_at?: DateTimeWithAggregatesFilter<"PilotProgressUpdate"> | Date | string
+    updated_at?: DateTimeWithAggregatesFilter<"PilotProgressUpdate"> | Date | string
   }
 
   export type ValidationWhereInput = {
@@ -56874,6 +58237,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -56927,6 +58291,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -56980,6 +58345,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -57033,6 +58399,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -59190,6 +60557,7 @@ export namespace Prisma {
     startup: StartupCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
@@ -59223,6 +60591,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
@@ -59256,6 +60625,7 @@ export namespace Prisma {
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
@@ -59289,6 +60659,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
@@ -59942,6 +61313,74 @@ export namespace Prisma {
     resolution?: NullableStringFieldUpdateOperationsInput | string | null
     reported_at?: DateTimeFieldUpdateOperationsInput | Date | string
     resolved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PilotProgressUpdateCreateInput = {
+    id?: string
+    title?: string
+    description: string
+    created_at?: Date | string
+    updated_at?: Date | string
+    pilot: PilotCreateNestedOneWithoutProgress_updatesInput
+    user?: UserCreateNestedOneWithoutProgress_updatesInput
+  }
+
+  export type PilotProgressUpdateUncheckedCreateInput = {
+    id?: string
+    pilot_id: string
+    user_id?: string | null
+    title?: string
+    description: string
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type PilotProgressUpdateUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    pilot?: PilotUpdateOneRequiredWithoutProgress_updatesNestedInput
+    user?: UserUpdateOneWithoutProgress_updatesNestedInput
+  }
+
+  export type PilotProgressUpdateUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pilot_id?: StringFieldUpdateOperationsInput | string
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PilotProgressUpdateCreateManyInput = {
+    id?: string
+    pilot_id: string
+    user_id?: string | null
+    title?: string
+    description: string
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type PilotProgressUpdateUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PilotProgressUpdateUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pilot_id?: StringFieldUpdateOperationsInput | string
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -61593,6 +63032,12 @@ export namespace Prisma {
     none?: ChallengeEligibilityReviewWhereInput
   }
 
+  export type PilotProgressUpdateListRelationFilter = {
+    every?: PilotProgressUpdateWhereInput
+    some?: PilotProgressUpdateWhereInput
+    none?: PilotProgressUpdateWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -61675,6 +63120,10 @@ export namespace Prisma {
   }
 
   export type ChallengeEligibilityReviewOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PilotProgressUpdateOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -63682,6 +65131,36 @@ export namespace Prisma {
     updated_at?: SortOrder
   }
 
+  export type PilotProgressUpdateCountOrderByAggregateInput = {
+    id?: SortOrder
+    pilot_id?: SortOrder
+    user_id?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type PilotProgressUpdateMaxOrderByAggregateInput = {
+    id?: SortOrder
+    pilot_id?: SortOrder
+    user_id?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
+  export type PilotProgressUpdateMinOrderByAggregateInput = {
+    id?: SortOrder
+    pilot_id?: SortOrder
+    user_id?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    created_at?: SortOrder
+    updated_at?: SortOrder
+  }
+
   export type EnumValidationStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.ValidationStatus | EnumValidationStatusFieldRefInput<$PrismaModel>
     in?: $Enums.ValidationStatus[] | ListEnumValidationStatusFieldRefInput<$PrismaModel>
@@ -64799,6 +66278,13 @@ export namespace Prisma {
     connect?: ChallengeEligibilityReviewWhereUniqueInput | ChallengeEligibilityReviewWhereUniqueInput[]
   }
 
+  export type PilotProgressUpdateCreateNestedManyWithoutUserInput = {
+    create?: XOR<PilotProgressUpdateCreateWithoutUserInput, PilotProgressUpdateUncheckedCreateWithoutUserInput> | PilotProgressUpdateCreateWithoutUserInput[] | PilotProgressUpdateUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PilotProgressUpdateCreateOrConnectWithoutUserInput | PilotProgressUpdateCreateOrConnectWithoutUserInput[]
+    createMany?: PilotProgressUpdateCreateManyUserInputEnvelope
+    connect?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+  }
+
   export type AuditLogUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<AuditLogCreateWithoutUserInput, AuditLogUncheckedCreateWithoutUserInput> | AuditLogCreateWithoutUserInput[] | AuditLogUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AuditLogCreateOrConnectWithoutUserInput | AuditLogCreateOrConnectWithoutUserInput[]
@@ -64999,6 +66485,13 @@ export namespace Prisma {
     connectOrCreate?: ChallengeEligibilityReviewCreateOrConnectWithoutReviewerInput | ChallengeEligibilityReviewCreateOrConnectWithoutReviewerInput[]
     createMany?: ChallengeEligibilityReviewCreateManyReviewerInputEnvelope
     connect?: ChallengeEligibilityReviewWhereUniqueInput | ChallengeEligibilityReviewWhereUniqueInput[]
+  }
+
+  export type PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<PilotProgressUpdateCreateWithoutUserInput, PilotProgressUpdateUncheckedCreateWithoutUserInput> | PilotProgressUpdateCreateWithoutUserInput[] | PilotProgressUpdateUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PilotProgressUpdateCreateOrConnectWithoutUserInput | PilotProgressUpdateCreateOrConnectWithoutUserInput[]
+    createMany?: PilotProgressUpdateCreateManyUserInputEnvelope
+    connect?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -65445,6 +66938,20 @@ export namespace Prisma {
     deleteMany?: ChallengeEligibilityReviewScalarWhereInput | ChallengeEligibilityReviewScalarWhereInput[]
   }
 
+  export type PilotProgressUpdateUpdateManyWithoutUserNestedInput = {
+    create?: XOR<PilotProgressUpdateCreateWithoutUserInput, PilotProgressUpdateUncheckedCreateWithoutUserInput> | PilotProgressUpdateCreateWithoutUserInput[] | PilotProgressUpdateUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PilotProgressUpdateCreateOrConnectWithoutUserInput | PilotProgressUpdateCreateOrConnectWithoutUserInput[]
+    upsert?: PilotProgressUpdateUpsertWithWhereUniqueWithoutUserInput | PilotProgressUpdateUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: PilotProgressUpdateCreateManyUserInputEnvelope
+    set?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    disconnect?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    delete?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    connect?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    update?: PilotProgressUpdateUpdateWithWhereUniqueWithoutUserInput | PilotProgressUpdateUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: PilotProgressUpdateUpdateManyWithWhereWithoutUserInput | PilotProgressUpdateUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: PilotProgressUpdateScalarWhereInput | PilotProgressUpdateScalarWhereInput[]
+  }
+
   export type AuditLogUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<AuditLogCreateWithoutUserInput, AuditLogUncheckedCreateWithoutUserInput> | AuditLogCreateWithoutUserInput[] | AuditLogUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AuditLogCreateOrConnectWithoutUserInput | AuditLogCreateOrConnectWithoutUserInput[]
@@ -65845,6 +67352,20 @@ export namespace Prisma {
     update?: ChallengeEligibilityReviewUpdateWithWhereUniqueWithoutReviewerInput | ChallengeEligibilityReviewUpdateWithWhereUniqueWithoutReviewerInput[]
     updateMany?: ChallengeEligibilityReviewUpdateManyWithWhereWithoutReviewerInput | ChallengeEligibilityReviewUpdateManyWithWhereWithoutReviewerInput[]
     deleteMany?: ChallengeEligibilityReviewScalarWhereInput | ChallengeEligibilityReviewScalarWhereInput[]
+  }
+
+  export type PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<PilotProgressUpdateCreateWithoutUserInput, PilotProgressUpdateUncheckedCreateWithoutUserInput> | PilotProgressUpdateCreateWithoutUserInput[] | PilotProgressUpdateUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PilotProgressUpdateCreateOrConnectWithoutUserInput | PilotProgressUpdateCreateOrConnectWithoutUserInput[]
+    upsert?: PilotProgressUpdateUpsertWithWhereUniqueWithoutUserInput | PilotProgressUpdateUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: PilotProgressUpdateCreateManyUserInputEnvelope
+    set?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    disconnect?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    delete?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    connect?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    update?: PilotProgressUpdateUpdateWithWhereUniqueWithoutUserInput | PilotProgressUpdateUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: PilotProgressUpdateUpdateManyWithWhereWithoutUserInput | PilotProgressUpdateUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: PilotProgressUpdateScalarWhereInput | PilotProgressUpdateScalarWhereInput[]
   }
 
   export type ChallengeCreateNestedManyWithoutDepartmentInput = {
@@ -67427,6 +68948,13 @@ export namespace Prisma {
     connect?: PilotIssueWhereUniqueInput | PilotIssueWhereUniqueInput[]
   }
 
+  export type PilotProgressUpdateCreateNestedManyWithoutPilotInput = {
+    create?: XOR<PilotProgressUpdateCreateWithoutPilotInput, PilotProgressUpdateUncheckedCreateWithoutPilotInput> | PilotProgressUpdateCreateWithoutPilotInput[] | PilotProgressUpdateUncheckedCreateWithoutPilotInput[]
+    connectOrCreate?: PilotProgressUpdateCreateOrConnectWithoutPilotInput | PilotProgressUpdateCreateOrConnectWithoutPilotInput[]
+    createMany?: PilotProgressUpdateCreateManyPilotInputEnvelope
+    connect?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+  }
+
   export type ScaleDecisionCreateNestedManyWithoutPilotInput = {
     create?: XOR<ScaleDecisionCreateWithoutPilotInput, ScaleDecisionUncheckedCreateWithoutPilotInput> | ScaleDecisionCreateWithoutPilotInput[] | ScaleDecisionUncheckedCreateWithoutPilotInput[]
     connectOrCreate?: ScaleDecisionCreateOrConnectWithoutPilotInput | ScaleDecisionCreateOrConnectWithoutPilotInput[]
@@ -67509,6 +69037,13 @@ export namespace Prisma {
     connectOrCreate?: PilotIssueCreateOrConnectWithoutPilotInput | PilotIssueCreateOrConnectWithoutPilotInput[]
     createMany?: PilotIssueCreateManyPilotInputEnvelope
     connect?: PilotIssueWhereUniqueInput | PilotIssueWhereUniqueInput[]
+  }
+
+  export type PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput = {
+    create?: XOR<PilotProgressUpdateCreateWithoutPilotInput, PilotProgressUpdateUncheckedCreateWithoutPilotInput> | PilotProgressUpdateCreateWithoutPilotInput[] | PilotProgressUpdateUncheckedCreateWithoutPilotInput[]
+    connectOrCreate?: PilotProgressUpdateCreateOrConnectWithoutPilotInput | PilotProgressUpdateCreateOrConnectWithoutPilotInput[]
+    createMany?: PilotProgressUpdateCreateManyPilotInputEnvelope
+    connect?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
   }
 
   export type ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput = {
@@ -67686,6 +69221,20 @@ export namespace Prisma {
     deleteMany?: PilotIssueScalarWhereInput | PilotIssueScalarWhereInput[]
   }
 
+  export type PilotProgressUpdateUpdateManyWithoutPilotNestedInput = {
+    create?: XOR<PilotProgressUpdateCreateWithoutPilotInput, PilotProgressUpdateUncheckedCreateWithoutPilotInput> | PilotProgressUpdateCreateWithoutPilotInput[] | PilotProgressUpdateUncheckedCreateWithoutPilotInput[]
+    connectOrCreate?: PilotProgressUpdateCreateOrConnectWithoutPilotInput | PilotProgressUpdateCreateOrConnectWithoutPilotInput[]
+    upsert?: PilotProgressUpdateUpsertWithWhereUniqueWithoutPilotInput | PilotProgressUpdateUpsertWithWhereUniqueWithoutPilotInput[]
+    createMany?: PilotProgressUpdateCreateManyPilotInputEnvelope
+    set?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    disconnect?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    delete?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    connect?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    update?: PilotProgressUpdateUpdateWithWhereUniqueWithoutPilotInput | PilotProgressUpdateUpdateWithWhereUniqueWithoutPilotInput[]
+    updateMany?: PilotProgressUpdateUpdateManyWithWhereWithoutPilotInput | PilotProgressUpdateUpdateManyWithWhereWithoutPilotInput[]
+    deleteMany?: PilotProgressUpdateScalarWhereInput | PilotProgressUpdateScalarWhereInput[]
+  }
+
   export type ScaleDecisionUpdateManyWithoutPilotNestedInput = {
     create?: XOR<ScaleDecisionCreateWithoutPilotInput, ScaleDecisionUncheckedCreateWithoutPilotInput> | ScaleDecisionCreateWithoutPilotInput[] | ScaleDecisionUncheckedCreateWithoutPilotInput[]
     connectOrCreate?: ScaleDecisionCreateOrConnectWithoutPilotInput | ScaleDecisionCreateOrConnectWithoutPilotInput[]
@@ -67852,6 +69401,20 @@ export namespace Prisma {
     update?: PilotIssueUpdateWithWhereUniqueWithoutPilotInput | PilotIssueUpdateWithWhereUniqueWithoutPilotInput[]
     updateMany?: PilotIssueUpdateManyWithWhereWithoutPilotInput | PilotIssueUpdateManyWithWhereWithoutPilotInput[]
     deleteMany?: PilotIssueScalarWhereInput | PilotIssueScalarWhereInput[]
+  }
+
+  export type PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput = {
+    create?: XOR<PilotProgressUpdateCreateWithoutPilotInput, PilotProgressUpdateUncheckedCreateWithoutPilotInput> | PilotProgressUpdateCreateWithoutPilotInput[] | PilotProgressUpdateUncheckedCreateWithoutPilotInput[]
+    connectOrCreate?: PilotProgressUpdateCreateOrConnectWithoutPilotInput | PilotProgressUpdateCreateOrConnectWithoutPilotInput[]
+    upsert?: PilotProgressUpdateUpsertWithWhereUniqueWithoutPilotInput | PilotProgressUpdateUpsertWithWhereUniqueWithoutPilotInput[]
+    createMany?: PilotProgressUpdateCreateManyPilotInputEnvelope
+    set?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    disconnect?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    delete?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    connect?: PilotProgressUpdateWhereUniqueInput | PilotProgressUpdateWhereUniqueInput[]
+    update?: PilotProgressUpdateUpdateWithWhereUniqueWithoutPilotInput | PilotProgressUpdateUpdateWithWhereUniqueWithoutPilotInput[]
+    updateMany?: PilotProgressUpdateUpdateManyWithWhereWithoutPilotInput | PilotProgressUpdateUpdateManyWithWhereWithoutPilotInput[]
+    deleteMany?: PilotProgressUpdateScalarWhereInput | PilotProgressUpdateScalarWhereInput[]
   }
 
   export type ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput = {
@@ -68152,6 +69715,36 @@ export namespace Prisma {
     upsert?: PilotUpsertWithoutIssuesInput
     connect?: PilotWhereUniqueInput
     update?: XOR<XOR<PilotUpdateToOneWithWhereWithoutIssuesInput, PilotUpdateWithoutIssuesInput>, PilotUncheckedUpdateWithoutIssuesInput>
+  }
+
+  export type PilotCreateNestedOneWithoutProgress_updatesInput = {
+    create?: XOR<PilotCreateWithoutProgress_updatesInput, PilotUncheckedCreateWithoutProgress_updatesInput>
+    connectOrCreate?: PilotCreateOrConnectWithoutProgress_updatesInput
+    connect?: PilotWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutProgress_updatesInput = {
+    create?: XOR<UserCreateWithoutProgress_updatesInput, UserUncheckedCreateWithoutProgress_updatesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProgress_updatesInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type PilotUpdateOneRequiredWithoutProgress_updatesNestedInput = {
+    create?: XOR<PilotCreateWithoutProgress_updatesInput, PilotUncheckedCreateWithoutProgress_updatesInput>
+    connectOrCreate?: PilotCreateOrConnectWithoutProgress_updatesInput
+    upsert?: PilotUpsertWithoutProgress_updatesInput
+    connect?: PilotWhereUniqueInput
+    update?: XOR<XOR<PilotUpdateToOneWithWhereWithoutProgress_updatesInput, PilotUpdateWithoutProgress_updatesInput>, PilotUncheckedUpdateWithoutProgress_updatesInput>
+  }
+
+  export type UserUpdateOneWithoutProgress_updatesNestedInput = {
+    create?: XOR<UserCreateWithoutProgress_updatesInput, UserUncheckedCreateWithoutProgress_updatesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProgress_updatesInput
+    upsert?: UserUpsertWithoutProgress_updatesInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProgress_updatesInput, UserUpdateWithoutProgress_updatesInput>, UserUncheckedUpdateWithoutProgress_updatesInput>
   }
 
   export type PilotCreateNestedOneWithoutValidationsInput = {
@@ -70856,6 +72449,34 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type PilotProgressUpdateCreateWithoutUserInput = {
+    id?: string
+    title?: string
+    description: string
+    created_at?: Date | string
+    updated_at?: Date | string
+    pilot: PilotCreateNestedOneWithoutProgress_updatesInput
+  }
+
+  export type PilotProgressUpdateUncheckedCreateWithoutUserInput = {
+    id?: string
+    pilot_id: string
+    title?: string
+    description: string
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type PilotProgressUpdateCreateOrConnectWithoutUserInput = {
+    where: PilotProgressUpdateWhereUniqueInput
+    create: XOR<PilotProgressUpdateCreateWithoutUserInput, PilotProgressUpdateUncheckedCreateWithoutUserInput>
+  }
+
+  export type PilotProgressUpdateCreateManyUserInputEnvelope = {
+    data: PilotProgressUpdateCreateManyUserInput | PilotProgressUpdateCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type AuditLogUpsertWithWhereUniqueWithoutUserInput = {
     where: AuditLogWhereUniqueInput
     update: XOR<AuditLogUpdateWithoutUserInput, AuditLogUncheckedUpdateWithoutUserInput>
@@ -71825,6 +73446,35 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<"ChallengeEligibilityReview"> | Date | string
   }
 
+  export type PilotProgressUpdateUpsertWithWhereUniqueWithoutUserInput = {
+    where: PilotProgressUpdateWhereUniqueInput
+    update: XOR<PilotProgressUpdateUpdateWithoutUserInput, PilotProgressUpdateUncheckedUpdateWithoutUserInput>
+    create: XOR<PilotProgressUpdateCreateWithoutUserInput, PilotProgressUpdateUncheckedCreateWithoutUserInput>
+  }
+
+  export type PilotProgressUpdateUpdateWithWhereUniqueWithoutUserInput = {
+    where: PilotProgressUpdateWhereUniqueInput
+    data: XOR<PilotProgressUpdateUpdateWithoutUserInput, PilotProgressUpdateUncheckedUpdateWithoutUserInput>
+  }
+
+  export type PilotProgressUpdateUpdateManyWithWhereWithoutUserInput = {
+    where: PilotProgressUpdateScalarWhereInput
+    data: XOR<PilotProgressUpdateUpdateManyMutationInput, PilotProgressUpdateUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type PilotProgressUpdateScalarWhereInput = {
+    AND?: PilotProgressUpdateScalarWhereInput | PilotProgressUpdateScalarWhereInput[]
+    OR?: PilotProgressUpdateScalarWhereInput[]
+    NOT?: PilotProgressUpdateScalarWhereInput | PilotProgressUpdateScalarWhereInput[]
+    id?: StringFilter<"PilotProgressUpdate"> | string
+    pilot_id?: StringFilter<"PilotProgressUpdate"> | string
+    user_id?: StringNullableFilter<"PilotProgressUpdate"> | string | null
+    title?: StringFilter<"PilotProgressUpdate"> | string
+    description?: StringFilter<"PilotProgressUpdate"> | string
+    created_at?: DateTimeFilter<"PilotProgressUpdate"> | Date | string
+    updated_at?: DateTimeFilter<"PilotProgressUpdate"> | Date | string
+  }
+
   export type ChallengeCreateWithoutDepartmentInput = {
     id?: string
     title: string
@@ -71975,6 +73625,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutDepartmentInput = {
@@ -72027,6 +73678,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutDepartmentInput = {
@@ -72394,6 +74046,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreated_challengesInput = {
@@ -72446,6 +74099,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreated_challengesInput = {
@@ -72557,6 +74211,7 @@ export namespace Prisma {
     startup: StartupCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
@@ -72589,6 +74244,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
@@ -72926,6 +74582,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreated_challengesInput = {
@@ -72978,6 +74635,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type DepartmentUpsertWithoutChallengesInput = {
@@ -73340,6 +74998,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutEligibility_reviewsInput = {
@@ -73392,6 +75051,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutEligibility_reviewsInput = {
@@ -73561,6 +75221,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEligibility_reviewsInput = {
@@ -73613,6 +75274,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ChallengeCreateWithoutMatch_scoresInput = {
@@ -74138,6 +75800,7 @@ export namespace Prisma {
     challenge: ChallengeCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
@@ -74170,6 +75833,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
@@ -74402,6 +76066,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutStartupsInput = {
@@ -74454,6 +76119,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutStartupsInput = {
@@ -74511,6 +76177,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutVerified_startupsInput = {
@@ -74563,6 +76230,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutVerified_startupsInput = {
@@ -74620,6 +76288,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutReviewed_startupsInput = {
@@ -74672,6 +76341,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutReviewed_startupsInput = {
@@ -74855,6 +76525,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutStartupsInput = {
@@ -74907,6 +76578,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutVerified_startupsInput = {
@@ -74970,6 +76642,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutVerified_startupsInput = {
@@ -75022,6 +76695,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutReviewed_startupsInput = {
@@ -75085,6 +76759,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReviewed_startupsInput = {
@@ -75137,6 +76812,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type StartupCreateWithoutBank_detailsInput = {
@@ -75510,6 +77186,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutVerified_documentsInput = {
@@ -75562,6 +77239,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutVerified_documentsInput = {
@@ -75741,6 +77419,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutVerified_documentsInput = {
@@ -75793,6 +77472,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ChallengeCreateWithoutApplicationsInput = {
@@ -76557,6 +78237,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutEvaluator_profileInput = {
@@ -76609,6 +78290,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutEvaluator_profileInput = {
@@ -76666,6 +78348,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutVerified_evaluatorsInput = {
@@ -76718,6 +78401,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutVerified_evaluatorsInput = {
@@ -76786,6 +78470,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEvaluator_profileInput = {
@@ -76838,6 +78523,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutVerified_evaluatorsInput = {
@@ -76901,6 +78587,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutVerified_evaluatorsInput = {
@@ -76953,6 +78640,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ApplicationCreateWithoutConflict_declarationsInput = {
@@ -77048,6 +78736,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutConflict_declarationsInput = {
@@ -77100,6 +78789,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutConflict_declarationsInput = {
@@ -77217,6 +78907,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutConflict_declarationsInput = {
@@ -77269,6 +78960,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ApplicationCreateWithoutEvaluationsInput = {
@@ -77364,6 +79056,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutEvaluationsInput = {
@@ -77416,6 +79109,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutEvaluationsInput = {
@@ -77533,6 +79227,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEvaluationsInput = {
@@ -77585,6 +79280,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ApplicationCreateWithoutDocumentsInput = {
@@ -77680,6 +79376,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutApplication_documentsInput = {
@@ -77732,6 +79429,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutApplication_documentsInput = {
@@ -77849,6 +79547,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutApplication_documentsInput = {
@@ -77901,6 +79600,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ApplicationCreateWithoutProposal_analysisInput = {
@@ -78140,6 +79840,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutEvaluator_match_scoresInput = {
@@ -78192,6 +79893,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutEvaluator_match_scoresInput = {
@@ -78361,6 +80063,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEvaluator_match_scoresInput = {
@@ -78413,6 +80116,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ChallengeCreateWithoutEvaluator_applicationsInput = {
@@ -78560,6 +80264,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutEvaluator_applicationsInput = {
@@ -78612,6 +80317,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutEvaluator_applicationsInput = {
@@ -78669,6 +80375,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutReviewed_evaluator_appsInput = {
@@ -78721,6 +80428,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutReviewed_evaluator_appsInput = {
@@ -78890,6 +80598,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEvaluator_applicationsInput = {
@@ -78942,6 +80651,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutReviewed_evaluator_appsInput = {
@@ -79005,6 +80715,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReviewed_evaluator_appsInput = {
@@ -79057,6 +80768,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ChallengeCreateWithoutEvaluator_poolsInput = {
@@ -79204,6 +80916,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutEvaluator_pool_membershipsInput = {
@@ -79256,6 +80969,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutEvaluator_pool_membershipsInput = {
@@ -79313,6 +81027,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAdded_evaluator_poolsInput = {
@@ -79365,6 +81080,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAdded_evaluator_poolsInput = {
@@ -79534,6 +81250,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEvaluator_pool_membershipsInput = {
@@ -79586,6 +81303,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutAdded_evaluator_poolsInput = {
@@ -79649,6 +81367,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAdded_evaluator_poolsInput = {
@@ -79701,6 +81420,7 @@ export namespace Prisma {
     evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type EvidenceCreateWithoutPilotInput = {
@@ -80228,6 +81948,34 @@ export namespace Prisma {
 
   export type PilotIssueCreateManyPilotInputEnvelope = {
     data: PilotIssueCreateManyPilotInput | PilotIssueCreateManyPilotInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PilotProgressUpdateCreateWithoutPilotInput = {
+    id?: string
+    title?: string
+    description: string
+    created_at?: Date | string
+    updated_at?: Date | string
+    user?: UserCreateNestedOneWithoutProgress_updatesInput
+  }
+
+  export type PilotProgressUpdateUncheckedCreateWithoutPilotInput = {
+    id?: string
+    user_id?: string | null
+    title?: string
+    description: string
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type PilotProgressUpdateCreateOrConnectWithoutPilotInput = {
+    where: PilotProgressUpdateWhereUniqueInput
+    create: XOR<PilotProgressUpdateCreateWithoutPilotInput, PilotProgressUpdateUncheckedCreateWithoutPilotInput>
+  }
+
+  export type PilotProgressUpdateCreateManyPilotInputEnvelope = {
+    data: PilotProgressUpdateCreateManyPilotInput | PilotProgressUpdateCreateManyPilotInput[]
     skipDuplicates?: boolean
   }
 
@@ -80873,6 +82621,22 @@ export namespace Prisma {
     updated_at?: DateTimeFilter<"PilotIssue"> | Date | string
   }
 
+  export type PilotProgressUpdateUpsertWithWhereUniqueWithoutPilotInput = {
+    where: PilotProgressUpdateWhereUniqueInput
+    update: XOR<PilotProgressUpdateUpdateWithoutPilotInput, PilotProgressUpdateUncheckedUpdateWithoutPilotInput>
+    create: XOR<PilotProgressUpdateCreateWithoutPilotInput, PilotProgressUpdateUncheckedCreateWithoutPilotInput>
+  }
+
+  export type PilotProgressUpdateUpdateWithWhereUniqueWithoutPilotInput = {
+    where: PilotProgressUpdateWhereUniqueInput
+    data: XOR<PilotProgressUpdateUpdateWithoutPilotInput, PilotProgressUpdateUncheckedUpdateWithoutPilotInput>
+  }
+
+  export type PilotProgressUpdateUpdateManyWithWhereWithoutPilotInput = {
+    where: PilotProgressUpdateScalarWhereInput
+    data: XOR<PilotProgressUpdateUpdateManyMutationInput, PilotProgressUpdateUncheckedUpdateManyWithoutPilotInput>
+  }
+
   export type ScaleDecisionUpsertWithWhereUniqueWithoutPilotInput = {
     where: ScaleDecisionWhereUniqueInput
     update: XOR<ScaleDecisionUpdateWithoutPilotInput, ScaleDecisionUncheckedUpdateWithoutPilotInput>
@@ -80948,6 +82712,7 @@ export namespace Prisma {
     startup: StartupCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
@@ -80980,6 +82745,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
@@ -81094,6 +82860,7 @@ export namespace Prisma {
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
@@ -81126,6 +82893,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
@@ -81227,6 +82995,7 @@ export namespace Prisma {
     startup: StartupCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
@@ -81259,6 +83028,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
@@ -81350,6 +83120,7 @@ export namespace Prisma {
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
@@ -81382,6 +83153,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
@@ -81414,6 +83186,7 @@ export namespace Prisma {
     startup: StartupCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
@@ -81446,6 +83219,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
@@ -81534,6 +83308,7 @@ export namespace Prisma {
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
@@ -81566,6 +83341,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
@@ -81614,6 +83390,7 @@ export namespace Prisma {
     startup: StartupCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
@@ -81646,6 +83423,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
@@ -81743,6 +83521,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutUploaded_evidenceInput = {
@@ -81795,6 +83574,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutUploaded_evidenceInput = {
@@ -81840,6 +83620,7 @@ export namespace Prisma {
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
@@ -81872,6 +83653,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
@@ -81981,6 +83763,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutUploaded_evidenceInput = {
@@ -82033,6 +83816,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PilotCreateWithoutRisksInput = {
@@ -82062,6 +83846,7 @@ export namespace Prisma {
     challenge: ChallengeCreateNestedOneWithoutPilotsInput
     startup: StartupCreateNestedOneWithoutPilotsInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
@@ -82094,6 +83879,7 @@ export namespace Prisma {
     compliance_items?: ComplianceItemUncheckedCreateNestedManyWithoutPilotInput
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
@@ -82142,6 +83928,7 @@ export namespace Prisma {
     challenge?: ChallengeUpdateOneRequiredWithoutPilotsNestedInput
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
@@ -82174,6 +83961,7 @@ export namespace Prisma {
     compliance_items?: ComplianceItemUncheckedUpdateManyWithoutPilotNestedInput
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
@@ -82206,6 +83994,7 @@ export namespace Prisma {
     challenge: ChallengeCreateNestedOneWithoutPilotsInput
     startup: StartupCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
@@ -82238,6 +84027,7 @@ export namespace Prisma {
     compliance_items?: ComplianceItemUncheckedCreateNestedManyWithoutPilotInput
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
@@ -82286,6 +84076,7 @@ export namespace Prisma {
     challenge?: ChallengeUpdateOneRequiredWithoutPilotsNestedInput
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
@@ -82318,9 +84109,386 @@ export namespace Prisma {
     compliance_items?: ComplianceItemUncheckedUpdateManyWithoutPilotNestedInput
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
+  }
+
+  export type PilotCreateWithoutProgress_updatesInput = {
+    id?: string
+    location: string
+    start_date: Date | string
+    end_date: Date | string
+    budget: Decimal | DecimalJsLike | number | string
+    status?: $Enums.PilotStatus
+    overall_score?: number | null
+    final_recommendation?: string | null
+    data_classification?: string | null
+    data_access_requirements?: string | null
+    data_retention_period?: string | null
+    ip_ownership?: string | null
+    licensing_terms?: string | null
+    confidentiality_terms?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    evidence?: EvidenceCreateNestedManyWithoutPilotInput
+    milestones?: MilestoneCreateNestedManyWithoutPilotInput
+    payments?: PaymentCreateNestedManyWithoutPilotInput
+    kpis?: PilotKpiCreateNestedManyWithoutPilotInput
+    measurements?: PilotMeasurementCreateNestedManyWithoutPilotInput
+    compliance_items?: ComplianceItemCreateNestedManyWithoutPilotInput
+    feedback?: PilotFeedbackCreateNestedManyWithoutPilotInput
+    challenge: ChallengeCreateNestedOneWithoutPilotsInput
+    startup: StartupCreateNestedOneWithoutPilotsInput
+    risks?: RiskCreateNestedManyWithoutPilotInput
+    issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
+    validations?: ValidationCreateNestedManyWithoutPilotInput
+    procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
+  }
+
+  export type PilotUncheckedCreateWithoutProgress_updatesInput = {
+    id?: string
+    challenge_id: string
+    startup_id: string
+    location: string
+    start_date: Date | string
+    end_date: Date | string
+    budget: Decimal | DecimalJsLike | number | string
+    status?: $Enums.PilotStatus
+    overall_score?: number | null
+    final_recommendation?: string | null
+    data_classification?: string | null
+    data_access_requirements?: string | null
+    data_retention_period?: string | null
+    ip_ownership?: string | null
+    licensing_terms?: string | null
+    confidentiality_terms?: string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    evidence?: EvidenceUncheckedCreateNestedManyWithoutPilotInput
+    milestones?: MilestoneUncheckedCreateNestedManyWithoutPilotInput
+    payments?: PaymentUncheckedCreateNestedManyWithoutPilotInput
+    kpis?: PilotKpiUncheckedCreateNestedManyWithoutPilotInput
+    measurements?: PilotMeasurementUncheckedCreateNestedManyWithoutPilotInput
+    compliance_items?: ComplianceItemUncheckedCreateNestedManyWithoutPilotInput
+    feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
+    risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
+    issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
+    validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
+    procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
+  }
+
+  export type PilotCreateOrConnectWithoutProgress_updatesInput = {
+    where: PilotWhereUniqueInput
+    create: XOR<PilotCreateWithoutProgress_updatesInput, PilotUncheckedCreateWithoutProgress_updatesInput>
+  }
+
+  export type UserCreateWithoutProgress_updatesInput = {
+    id?: string
+    name: string
+    email: string
+    password_hash: string
+    role: $Enums.UserRole
+    is_active?: boolean
+    is_verified?: boolean
+    designation?: string | null
+    phone?: string | null
+    invitation_token_hash?: string | null
+    invitation_expires_at?: Date | string | null
+    invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
+    audit_logs?: AuditLogCreateNestedManyWithoutUserInput
+    created_challenges?: ChallengeCreateNestedManyWithoutCreatorInput
+    evaluations?: EvaluationCreateNestedManyWithoutEvaluatorInput
+    uploaded_evidence?: EvidenceCreateNestedManyWithoutUploaderInput
+    notifications?: NotificationCreateNestedManyWithoutUserInput
+    approved_decisions?: ScaleDecisionCreateNestedManyWithoutApproverInput
+    verified_documents?: StartupDocumentCreateNestedManyWithoutVerifierInput
+    startups?: StartupCreateNestedManyWithoutUserInput
+    department?: DepartmentCreateNestedOneWithoutUsersInput
+    validations?: ValidationCreateNestedManyWithoutValidatorInput
+    evaluator_profile?: EvaluatorProfileCreateNestedOneWithoutUserInput
+    conflict_declarations?: ConflictDeclarationCreateNestedManyWithoutEvaluatorInput
+    verified_startups?: StartupCreateNestedManyWithoutVerifierInput
+    verified_evaluators?: EvaluatorProfileCreateNestedManyWithoutVerifierInput
+    verified_compliance?: ComplianceItemCreateNestedManyWithoutVerifierInput
+    reviewed_access_requests?: AccessRequestCreateNestedManyWithoutReviewerInput
+    nominated_access_requests?: AccessRequestCreateNestedManyWithoutNominatorInput
+    evaluator_assignments?: EvaluatorAssignmentCreateNestedManyWithoutEvaluatorInput
+    created_evaluator_assignments?: EvaluatorAssignmentCreateNestedManyWithoutAssignerInput
+    initiated_procurements?: ProcurementRecordCreateNestedManyWithoutInitiatorInput
+    approved_procurements?: ProcurementRecordCreateNestedManyWithoutApproverInput
+    accepted_deliveries?: ProcurementRecordCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupCreateNestedManyWithoutReviewerInput
+    application_documents?: ApplicationDocumentCreateNestedManyWithoutUploaderInput
+    evaluator_applications?: EvaluatorApplicationCreateNestedManyWithoutEvaluatorInput
+    reviewed_evaluator_apps?: EvaluatorApplicationCreateNestedManyWithoutReviewerInput
+    evaluator_pool_memberships?: ChallengeEvaluatorPoolCreateNestedManyWithoutEvaluatorInput
+    added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
+    evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+  }
+
+  export type UserUncheckedCreateWithoutProgress_updatesInput = {
+    id?: string
+    name: string
+    email: string
+    password_hash: string
+    role: $Enums.UserRole
+    department_id?: string | null
+    is_active?: boolean
+    is_verified?: boolean
+    designation?: string | null
+    phone?: string | null
+    invitation_token_hash?: string | null
+    invitation_expires_at?: Date | string | null
+    invitation_accepted_at?: Date | string | null
+    email_verification_token_hash?: string | null
+    email_verification_expires_at?: Date | string | null
+    email_verified_at?: Date | string | null
+    created_at?: Date | string
+    updated_at?: Date | string
+    failed_login_attempts?: number
+    locked_until?: Date | string | null
+    last_failed_login_at?: Date | string | null
+    audit_logs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    created_challenges?: ChallengeUncheckedCreateNestedManyWithoutCreatorInput
+    evaluations?: EvaluationUncheckedCreateNestedManyWithoutEvaluatorInput
+    uploaded_evidence?: EvidenceUncheckedCreateNestedManyWithoutUploaderInput
+    notifications?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    approved_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutApproverInput
+    verified_documents?: StartupDocumentUncheckedCreateNestedManyWithoutVerifierInput
+    startups?: StartupUncheckedCreateNestedManyWithoutUserInput
+    validations?: ValidationUncheckedCreateNestedManyWithoutValidatorInput
+    evaluator_profile?: EvaluatorProfileUncheckedCreateNestedOneWithoutUserInput
+    conflict_declarations?: ConflictDeclarationUncheckedCreateNestedManyWithoutEvaluatorInput
+    verified_startups?: StartupUncheckedCreateNestedManyWithoutVerifierInput
+    verified_evaluators?: EvaluatorProfileUncheckedCreateNestedManyWithoutVerifierInput
+    verified_compliance?: ComplianceItemUncheckedCreateNestedManyWithoutVerifierInput
+    reviewed_access_requests?: AccessRequestUncheckedCreateNestedManyWithoutReviewerInput
+    nominated_access_requests?: AccessRequestUncheckedCreateNestedManyWithoutNominatorInput
+    evaluator_assignments?: EvaluatorAssignmentUncheckedCreateNestedManyWithoutEvaluatorInput
+    created_evaluator_assignments?: EvaluatorAssignmentUncheckedCreateNestedManyWithoutAssignerInput
+    initiated_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutInitiatorInput
+    approved_procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutApproverInput
+    accepted_deliveries?: ProcurementRecordUncheckedCreateNestedManyWithoutAcceptorInput
+    reviewed_startups?: StartupUncheckedCreateNestedManyWithoutReviewerInput
+    application_documents?: ApplicationDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    evaluator_applications?: EvaluatorApplicationUncheckedCreateNestedManyWithoutEvaluatorInput
+    reviewed_evaluator_apps?: EvaluatorApplicationUncheckedCreateNestedManyWithoutReviewerInput
+    evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutEvaluatorInput
+    added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
+    evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+  }
+
+  export type UserCreateOrConnectWithoutProgress_updatesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutProgress_updatesInput, UserUncheckedCreateWithoutProgress_updatesInput>
+  }
+
+  export type PilotUpsertWithoutProgress_updatesInput = {
+    update: XOR<PilotUpdateWithoutProgress_updatesInput, PilotUncheckedUpdateWithoutProgress_updatesInput>
+    create: XOR<PilotCreateWithoutProgress_updatesInput, PilotUncheckedCreateWithoutProgress_updatesInput>
+    where?: PilotWhereInput
+  }
+
+  export type PilotUpdateToOneWithWhereWithoutProgress_updatesInput = {
+    where?: PilotWhereInput
+    data: XOR<PilotUpdateWithoutProgress_updatesInput, PilotUncheckedUpdateWithoutProgress_updatesInput>
+  }
+
+  export type PilotUpdateWithoutProgress_updatesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    location?: StringFieldUpdateOperationsInput | string
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    budget?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    status?: EnumPilotStatusFieldUpdateOperationsInput | $Enums.PilotStatus
+    overall_score?: NullableFloatFieldUpdateOperationsInput | number | null
+    final_recommendation?: NullableStringFieldUpdateOperationsInput | string | null
+    data_classification?: NullableStringFieldUpdateOperationsInput | string | null
+    data_access_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_retention_period?: NullableStringFieldUpdateOperationsInput | string | null
+    ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
+    licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    evidence?: EvidenceUpdateManyWithoutPilotNestedInput
+    milestones?: MilestoneUpdateManyWithoutPilotNestedInput
+    payments?: PaymentUpdateManyWithoutPilotNestedInput
+    kpis?: PilotKpiUpdateManyWithoutPilotNestedInput
+    measurements?: PilotMeasurementUpdateManyWithoutPilotNestedInput
+    compliance_items?: ComplianceItemUpdateManyWithoutPilotNestedInput
+    feedback?: PilotFeedbackUpdateManyWithoutPilotNestedInput
+    challenge?: ChallengeUpdateOneRequiredWithoutPilotsNestedInput
+    startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
+    risks?: RiskUpdateManyWithoutPilotNestedInput
+    issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
+    validations?: ValidationUpdateManyWithoutPilotNestedInput
+    procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
+  }
+
+  export type PilotUncheckedUpdateWithoutProgress_updatesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    challenge_id?: StringFieldUpdateOperationsInput | string
+    startup_id?: StringFieldUpdateOperationsInput | string
+    location?: StringFieldUpdateOperationsInput | string
+    start_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    end_date?: DateTimeFieldUpdateOperationsInput | Date | string
+    budget?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    status?: EnumPilotStatusFieldUpdateOperationsInput | $Enums.PilotStatus
+    overall_score?: NullableFloatFieldUpdateOperationsInput | number | null
+    final_recommendation?: NullableStringFieldUpdateOperationsInput | string | null
+    data_classification?: NullableStringFieldUpdateOperationsInput | string | null
+    data_access_requirements?: NullableStringFieldUpdateOperationsInput | string | null
+    data_retention_period?: NullableStringFieldUpdateOperationsInput | string | null
+    ip_ownership?: NullableStringFieldUpdateOperationsInput | string | null
+    licensing_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    confidentiality_terms?: NullableStringFieldUpdateOperationsInput | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    evidence?: EvidenceUncheckedUpdateManyWithoutPilotNestedInput
+    milestones?: MilestoneUncheckedUpdateManyWithoutPilotNestedInput
+    payments?: PaymentUncheckedUpdateManyWithoutPilotNestedInput
+    kpis?: PilotKpiUncheckedUpdateManyWithoutPilotNestedInput
+    measurements?: PilotMeasurementUncheckedUpdateManyWithoutPilotNestedInput
+    compliance_items?: ComplianceItemUncheckedUpdateManyWithoutPilotNestedInput
+    feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
+    risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
+    issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
+    validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
+    procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
+  }
+
+  export type UserUpsertWithoutProgress_updatesInput = {
+    update: XOR<UserUpdateWithoutProgress_updatesInput, UserUncheckedUpdateWithoutProgress_updatesInput>
+    create: XOR<UserCreateWithoutProgress_updatesInput, UserUncheckedCreateWithoutProgress_updatesInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutProgress_updatesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutProgress_updatesInput, UserUncheckedUpdateWithoutProgress_updatesInput>
+  }
+
+  export type UserUpdateWithoutProgress_updatesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    is_verified?: BoolFieldUpdateOperationsInput | boolean
+    designation?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    audit_logs?: AuditLogUpdateManyWithoutUserNestedInput
+    created_challenges?: ChallengeUpdateManyWithoutCreatorNestedInput
+    evaluations?: EvaluationUpdateManyWithoutEvaluatorNestedInput
+    uploaded_evidence?: EvidenceUpdateManyWithoutUploaderNestedInput
+    notifications?: NotificationUpdateManyWithoutUserNestedInput
+    approved_decisions?: ScaleDecisionUpdateManyWithoutApproverNestedInput
+    verified_documents?: StartupDocumentUpdateManyWithoutVerifierNestedInput
+    startups?: StartupUpdateManyWithoutUserNestedInput
+    department?: DepartmentUpdateOneWithoutUsersNestedInput
+    validations?: ValidationUpdateManyWithoutValidatorNestedInput
+    evaluator_profile?: EvaluatorProfileUpdateOneWithoutUserNestedInput
+    conflict_declarations?: ConflictDeclarationUpdateManyWithoutEvaluatorNestedInput
+    verified_startups?: StartupUpdateManyWithoutVerifierNestedInput
+    verified_evaluators?: EvaluatorProfileUpdateManyWithoutVerifierNestedInput
+    verified_compliance?: ComplianceItemUpdateManyWithoutVerifierNestedInput
+    reviewed_access_requests?: AccessRequestUpdateManyWithoutReviewerNestedInput
+    nominated_access_requests?: AccessRequestUpdateManyWithoutNominatorNestedInput
+    evaluator_assignments?: EvaluatorAssignmentUpdateManyWithoutEvaluatorNestedInput
+    created_evaluator_assignments?: EvaluatorAssignmentUpdateManyWithoutAssignerNestedInput
+    initiated_procurements?: ProcurementRecordUpdateManyWithoutInitiatorNestedInput
+    approved_procurements?: ProcurementRecordUpdateManyWithoutApproverNestedInput
+    accepted_deliveries?: ProcurementRecordUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUpdateManyWithoutReviewerNestedInput
+    application_documents?: ApplicationDocumentUpdateManyWithoutUploaderNestedInput
+    evaluator_applications?: EvaluatorApplicationUpdateManyWithoutEvaluatorNestedInput
+    reviewed_evaluator_apps?: EvaluatorApplicationUpdateManyWithoutReviewerNestedInput
+    evaluator_pool_memberships?: ChallengeEvaluatorPoolUpdateManyWithoutEvaluatorNestedInput
+    added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
+    evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutProgress_updatesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password_hash?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    department_id?: NullableStringFieldUpdateOperationsInput | string | null
+    is_active?: BoolFieldUpdateOperationsInput | boolean
+    is_verified?: BoolFieldUpdateOperationsInput | boolean
+    designation?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    invitation_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    invitation_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invitation_accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verification_token_hash?: NullableStringFieldUpdateOperationsInput | string | null
+    email_verification_expires_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    email_verified_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    failed_login_attempts?: IntFieldUpdateOperationsInput | number
+    locked_until?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    last_failed_login_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    audit_logs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    created_challenges?: ChallengeUncheckedUpdateManyWithoutCreatorNestedInput
+    evaluations?: EvaluationUncheckedUpdateManyWithoutEvaluatorNestedInput
+    uploaded_evidence?: EvidenceUncheckedUpdateManyWithoutUploaderNestedInput
+    notifications?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    approved_decisions?: ScaleDecisionUncheckedUpdateManyWithoutApproverNestedInput
+    verified_documents?: StartupDocumentUncheckedUpdateManyWithoutVerifierNestedInput
+    startups?: StartupUncheckedUpdateManyWithoutUserNestedInput
+    validations?: ValidationUncheckedUpdateManyWithoutValidatorNestedInput
+    evaluator_profile?: EvaluatorProfileUncheckedUpdateOneWithoutUserNestedInput
+    conflict_declarations?: ConflictDeclarationUncheckedUpdateManyWithoutEvaluatorNestedInput
+    verified_startups?: StartupUncheckedUpdateManyWithoutVerifierNestedInput
+    verified_evaluators?: EvaluatorProfileUncheckedUpdateManyWithoutVerifierNestedInput
+    verified_compliance?: ComplianceItemUncheckedUpdateManyWithoutVerifierNestedInput
+    reviewed_access_requests?: AccessRequestUncheckedUpdateManyWithoutReviewerNestedInput
+    nominated_access_requests?: AccessRequestUncheckedUpdateManyWithoutNominatorNestedInput
+    evaluator_assignments?: EvaluatorAssignmentUncheckedUpdateManyWithoutEvaluatorNestedInput
+    created_evaluator_assignments?: EvaluatorAssignmentUncheckedUpdateManyWithoutAssignerNestedInput
+    initiated_procurements?: ProcurementRecordUncheckedUpdateManyWithoutInitiatorNestedInput
+    approved_procurements?: ProcurementRecordUncheckedUpdateManyWithoutApproverNestedInput
+    accepted_deliveries?: ProcurementRecordUncheckedUpdateManyWithoutAcceptorNestedInput
+    reviewed_startups?: StartupUncheckedUpdateManyWithoutReviewerNestedInput
+    application_documents?: ApplicationDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    evaluator_applications?: EvaluatorApplicationUncheckedUpdateManyWithoutEvaluatorNestedInput
+    reviewed_evaluator_apps?: EvaluatorApplicationUncheckedUpdateManyWithoutReviewerNestedInput
+    evaluator_pool_memberships?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutEvaluatorNestedInput
+    added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
+    evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
+    eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type PilotCreateWithoutValidationsInput = {
@@ -82351,6 +84519,7 @@ export namespace Prisma {
     startup: StartupCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
   }
@@ -82383,6 +84552,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
   }
@@ -82442,6 +84612,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutValidationsInput = {
@@ -82494,6 +84665,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutValidationsInput = {
@@ -82540,6 +84712,7 @@ export namespace Prisma {
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
   }
@@ -82572,6 +84745,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
   }
@@ -82637,6 +84811,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutValidationsInput = {
@@ -82689,6 +84864,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type MilestoneCreateWithoutPaymentsInput = {
@@ -82751,6 +84927,7 @@ export namespace Prisma {
     startup: StartupCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
@@ -82783,6 +84960,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
@@ -82963,6 +85141,7 @@ export namespace Prisma {
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
@@ -82995,6 +85174,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
@@ -83149,6 +85329,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutApproved_decisionsInput = {
@@ -83201,6 +85382,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutApproved_decisionsInput = {
@@ -83236,6 +85418,7 @@ export namespace Prisma {
     startup: StartupCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
   }
@@ -83268,6 +85451,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
   }
@@ -83338,6 +85522,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutApproved_decisionsInput = {
@@ -83390,6 +85575,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PilotUpsertWithoutScale_decisionsInput = {
@@ -83431,6 +85617,7 @@ export namespace Prisma {
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
   }
@@ -83463,6 +85650,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
   }
@@ -83494,6 +85682,7 @@ export namespace Prisma {
     startup: StartupCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
@@ -83526,6 +85715,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
@@ -83586,6 +85776,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutVerified_complianceInput = {
@@ -83638,6 +85829,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutVerified_complianceInput = {
@@ -83683,6 +85875,7 @@ export namespace Prisma {
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
@@ -83715,6 +85908,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
@@ -83781,6 +85975,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutVerified_complianceInput = {
@@ -83833,6 +86028,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PilotCreateWithoutFeedbackInput = {
@@ -83862,6 +86058,7 @@ export namespace Prisma {
     startup: StartupCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordCreateNestedManyWithoutPilotInput
@@ -83894,6 +86091,7 @@ export namespace Prisma {
     compliance_items?: ComplianceItemUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
     procurements?: ProcurementRecordUncheckedCreateNestedManyWithoutPilotInput
@@ -83942,6 +86140,7 @@ export namespace Prisma {
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
@@ -83974,6 +86173,7 @@ export namespace Prisma {
     compliance_items?: ComplianceItemUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
@@ -84029,6 +86229,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -84081,6 +86282,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -84149,6 +86351,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -84201,6 +86404,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutAudit_logsInput = {
@@ -84253,6 +86457,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAudit_logsInput = {
@@ -84305,6 +86510,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAudit_logsInput = {
@@ -84373,6 +86579,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAudit_logsInput = {
@@ -84425,6 +86632,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type DepartmentCreateWithoutAccess_requestsInput = {
@@ -84518,6 +86726,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutReviewed_access_requestsInput = {
@@ -84570,6 +86779,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutReviewed_access_requestsInput = {
@@ -84627,6 +86837,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutNominated_access_requestsInput = {
@@ -84679,6 +86890,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutNominated_access_requestsInput = {
@@ -84794,6 +87006,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReviewed_access_requestsInput = {
@@ -84846,6 +87059,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutNominated_access_requestsInput = {
@@ -84909,6 +87123,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutNominated_access_requestsInput = {
@@ -84961,6 +87176,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ApplicationCreateWithoutEvaluator_assignmentsInput = {
@@ -85056,6 +87272,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutEvaluator_assignmentsInput = {
@@ -85108,6 +87325,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutEvaluator_assignmentsInput = {
@@ -85165,6 +87383,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreated_evaluator_assignmentsInput = {
@@ -85217,6 +87436,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreated_evaluator_assignmentsInput = {
@@ -85334,6 +87554,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEvaluator_assignmentsInput = {
@@ -85386,6 +87607,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutCreated_evaluator_assignmentsInput = {
@@ -85449,6 +87671,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreated_evaluator_assignmentsInput = {
@@ -85501,6 +87724,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PilotCreateWithoutProcurementsInput = {
@@ -85531,6 +87755,7 @@ export namespace Prisma {
     startup: StartupCreateNestedOneWithoutPilotsInput
     risks?: RiskCreateNestedManyWithoutPilotInput
     issues?: PilotIssueCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionCreateNestedManyWithoutPilotInput
     validations?: ValidationCreateNestedManyWithoutPilotInput
   }
@@ -85563,6 +87788,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedCreateNestedManyWithoutPilotInput
     risks?: RiskUncheckedCreateNestedManyWithoutPilotInput
     issues?: PilotIssueUncheckedCreateNestedManyWithoutPilotInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutPilotInput
     scale_decisions?: ScaleDecisionUncheckedCreateNestedManyWithoutPilotInput
     validations?: ValidationUncheckedCreateNestedManyWithoutPilotInput
   }
@@ -85863,6 +88089,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutInitiated_procurementsInput = {
@@ -85915,6 +88142,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutInitiated_procurementsInput = {
@@ -85972,6 +88200,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutApproved_procurementsInput = {
@@ -86024,6 +88253,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutApproved_procurementsInput = {
@@ -86081,6 +88311,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAccepted_deliveriesInput = {
@@ -86133,6 +88364,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedCreateNestedManyWithoutAdderInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedCreateNestedManyWithoutEvaluatorInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedCreateNestedManyWithoutReviewerInput
+    progress_updates?: PilotProgressUpdateUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAccepted_deliveriesInput = {
@@ -86219,6 +88451,7 @@ export namespace Prisma {
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
   }
@@ -86251,6 +88484,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
   }
@@ -86575,6 +88809,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutInitiated_procurementsInput = {
@@ -86627,6 +88862,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutApproved_procurementsInput = {
@@ -86690,6 +88926,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutApproved_procurementsInput = {
@@ -86742,6 +88979,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutAccepted_deliveriesInput = {
@@ -86805,6 +89043,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAccepted_deliveriesInput = {
@@ -86857,6 +89096,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PaymentUpsertWithWhereUniqueWithoutProcurementInput = {
@@ -87463,6 +89703,15 @@ export namespace Prisma {
     remarks?: string | null
     checks: JsonNullValueInput | InputJsonValue
     reviewed_at?: Date | string
+    updated_at?: Date | string
+  }
+
+  export type PilotProgressUpdateCreateManyUserInput = {
+    id?: string
+    pilot_id: string
+    title?: string
+    description: string
+    created_at?: Date | string
     updated_at?: Date | string
   }
 
@@ -89297,6 +91546,33 @@ export namespace Prisma {
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type PilotProgressUpdateUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    pilot?: PilotUpdateOneRequiredWithoutProgress_updatesNestedInput
+  }
+
+  export type PilotProgressUpdateUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pilot_id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PilotProgressUpdateUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pilot_id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ChallengeCreateManyDepartmentInput = {
     id?: string
     title: string
@@ -89606,6 +91882,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutDepartmentInput = {
@@ -89658,6 +91935,7 @@ export namespace Prisma {
     added_evaluator_pools?: ChallengeEvaluatorPoolUncheckedUpdateManyWithoutAdderNestedInput
     evaluator_match_scores?: EvaluatorMatchScoreUncheckedUpdateManyWithoutEvaluatorNestedInput
     eligibility_reviews?: ChallengeEligibilityReviewUncheckedUpdateManyWithoutReviewerNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutDepartmentInput = {
@@ -90146,6 +92424,7 @@ export namespace Prisma {
     startup?: StartupUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
@@ -90178,6 +92457,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
@@ -90668,6 +92948,7 @@ export namespace Prisma {
     challenge?: ChallengeUpdateOneRequiredWithoutPilotsNestedInput
     risks?: RiskUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUpdateManyWithoutPilotNestedInput
     validations?: ValidationUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUpdateManyWithoutPilotNestedInput
@@ -90700,6 +92981,7 @@ export namespace Prisma {
     feedback?: PilotFeedbackUncheckedUpdateManyWithoutPilotNestedInput
     risks?: RiskUncheckedUpdateManyWithoutPilotNestedInput
     issues?: PilotIssueUncheckedUpdateManyWithoutPilotNestedInput
+    progress_updates?: PilotProgressUpdateUncheckedUpdateManyWithoutPilotNestedInput
     scale_decisions?: ScaleDecisionUncheckedUpdateManyWithoutPilotNestedInput
     validations?: ValidationUncheckedUpdateManyWithoutPilotNestedInput
     procurements?: ProcurementRecordUncheckedUpdateManyWithoutPilotNestedInput
@@ -91225,6 +93507,15 @@ export namespace Prisma {
     updated_at?: Date | string
   }
 
+  export type PilotProgressUpdateCreateManyPilotInput = {
+    id?: string
+    user_id?: string | null
+    title?: string
+    description: string
+    created_at?: Date | string
+    updated_at?: Date | string
+  }
+
   export type ScaleDecisionCreateManyPilotInput = {
     id?: string
     decision: $Enums.ScaleDecisionType
@@ -91643,6 +93934,33 @@ export namespace Prisma {
     resolution?: NullableStringFieldUpdateOperationsInput | string | null
     reported_at?: DateTimeFieldUpdateOperationsInput | Date | string
     resolved_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PilotProgressUpdateUpdateWithoutPilotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneWithoutProgress_updatesNestedInput
+  }
+
+  export type PilotProgressUpdateUncheckedUpdateWithoutPilotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PilotProgressUpdateUncheckedUpdateManyWithoutPilotInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    user_id?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }

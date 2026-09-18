@@ -25,7 +25,7 @@ import {
   Lock,
   Pencil,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   getPilots,
   getPilotDashboard,
@@ -38,11 +38,14 @@ import {
   createPilotIssue,
   getPilotIssues,
   updatePilotIssue,
+  getPilotProgressUpdates,
+  createPilotProgressUpdate,
 } from "../../services/pilotService.js";
 import { openDocumentSecurely } from "../../utils/documentUtils.js";
 
 function StartupPilot() {
   const navigate = useNavigate();
+  const { id: routePilotId } = useParams();
   const fileInputRef = useRef(null);
 
   const [activePilot, setActivePilot] = useState(null);
@@ -55,6 +58,8 @@ function StartupPilot() {
   const [updates, setUpdates] = useState([]);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [updateText, setUpdateText] = useState("");
+  const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false);
+  const [updateError, setUpdateError] = useState("");
 
   const [showEvidenceForm, setShowEvidenceForm] = useState(false);
   const [evidenceType, setEvidenceType] = useState("DEPLOYMENT_REPORT");
@@ -86,20 +91,42 @@ function StartupPilot() {
     (m) => m.status === "COMPLETED" || m.status === "Completed"
   ).length;
 
-  const handleAddUpdate = () => {
+  const handleAddUpdate = async (e) => {
+    if (e) e.preventDefault();
     if (!updateText.trim()) return;
-    const newUpdate = {
-      id: Date.now(),
-      date: formatCurrentDate(),
-      title: "Startup Progress Update",
-      description: updateText.trim(),
-    };
-    setUpdates((prev) => [newUpdate, ...prev]);
-    setUpdateText("");
-    setShowUpdateForm(false);
+    if (!activePilot?.id) {
+      setUpdateError("No active pilot selected to record progress update.");
+      return;
+    }
+
+    try {
+      setIsSubmittingUpdate(true);
+      setUpdateError("");
+      const res = await createPilotProgressUpdate(activePilot.id, {
+        title: "Startup Progress Update",
+        description: updateText.trim(),
+      });
+
+      const savedUpdate = res?.data?.update || res?.data || {
+        id: Date.now().toString(),
+        title: "Startup Progress Update",
+        description: updateText.trim(),
+        date: formatCurrentDate(),
+        created_at: new Date().toISOString(),
+      };
+
+      setUpdates((prev) => [savedUpdate, ...prev]);
+      setUpdateText("");
+      setShowUpdateForm(false);
+    } catch (err) {
+      console.error("Failed to post progress update:", err);
+      setUpdateError(err?.message || "Failed to post progress update. Please try again.");
+    } finally {
+      setIsSubmittingUpdate(false);
+    }
   };
 
-  // Load pilot, evidence, compliance, issues & feedback from Backend
+  // Load pilot, evidence, compliance, issues, feedback & progress updates from Backend
   useEffect(() => {
     let mounted = true;
     const fetchPilotData = async () => {
@@ -108,16 +135,19 @@ function StartupPilot() {
         const pilotsRes = await getPilots();
         const pilots = pilotsRes?.data?.pilots || [];
         if (pilots.length > 0 && mounted) {
-          const firstPilot = pilots[0];
-          setActivePilot(firstPilot);
+          const selectedPilot = routePilotId
+            ? (pilots.find((p) => p.id === routePilotId) || pilots[0])
+            : pilots[0];
+          setActivePilot(selectedPilot);
 
-          // Fetch evidence, compliance checklist, feedback, and issues
+          // Fetch evidence, compliance checklist, feedback, issues & persistent updates
           try {
-            const [evRes, compRes, fbRes, issuesRes] = await Promise.all([
-              getPilotEvidence(firstPilot.id).catch(() => ({ data: { evidence: [] } })),
-              getComplianceChecklist(firstPilot.id).catch(() => ({ data: { compliance_items: [] } })),
-              getPilotFeedbacks(firstPilot.id).catch(() => ({ data: { feedback: [] } })),
-              getPilotIssues(firstPilot.id).catch(() => ({ data: { issues: [] } })),
+            const [evRes, compRes, fbRes, issuesRes, updatesRes] = await Promise.all([
+              getPilotEvidence(selectedPilot.id).catch(() => ({ data: { evidence: [] } })),
+              getComplianceChecklist(selectedPilot.id).catch(() => ({ data: { compliance_items: [] } })),
+              getPilotFeedbacks(selectedPilot.id).catch(() => ({ data: { feedback: [] } })),
+              getPilotIssues(selectedPilot.id).catch(() => ({ data: { issues: [] } })),
+              getPilotProgressUpdates(selectedPilot.id).catch(() => ({ data: { updates: [] } })),
             ]);
 
             if (mounted) {
@@ -126,6 +156,8 @@ function StartupPilot() {
               const fbItems = fbRes?.data?.feedback || fbRes?.data?.feedbacks || [];
               if (Array.isArray(fbItems)) setFeedbackList(fbItems);
               if (issuesRes?.data?.issues) setIssuesList(issuesRes.data.issues);
+              const upItems = updatesRes?.data?.updates || updatesRes?.data || [];
+              if (Array.isArray(upItems)) setUpdates(upItems);
             }
           } catch (err) {
             console.warn("Pilot extra fetch warning:", err);
@@ -140,7 +172,7 @@ function StartupPilot() {
 
     fetchPilotData();
     return () => { mounted = false; };
-  }, []);
+  }, [routePilotId]);
 
   const handleToggleCompliance = async (item) => {
     if (!activePilot?.id || !item?.id) return;
@@ -478,35 +510,52 @@ function StartupPilot() {
                 Progress Update
               </label>
 
+              {updateError && (
+                <div className="mt-2 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-2.5 text-xs font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{updateError}</span>
+                </div>
+              )}
+
               <textarea
                 value={updateText}
-                onChange={(event) =>
-                  setUpdateText(
-                    event.target.value
-                  )
-                }
+                onChange={(event) => {
+                  setUpdateText(event.target.value);
+                  if (updateError) setUpdateError("");
+                }}
+                disabled={isSubmittingUpdate}
                 rows={3}
                 placeholder="Describe the latest progress, achievements or issues..."
-                className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-xs text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-xs text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white disabled:opacity-60"
               />
 
               <div className="mt-3 flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() =>
-                    setShowUpdateForm(false)
-                  }
-                  className="rounded-xl px-4 py-2 text-xs font-bold text-slate-500 hover:bg-white dark:hover:bg-slate-900"
+                  disabled={isSubmittingUpdate}
+                  onClick={() => {
+                    setShowUpdateForm(false);
+                    setUpdateError("");
+                  }}
+                  className="rounded-xl px-4 py-2 text-xs font-bold text-slate-500 hover:bg-white dark:hover:bg-slate-900 disabled:opacity-50"
                 >
                   Cancel
                 </button>
 
                 <button
                   type="button"
+                  disabled={isSubmittingUpdate || !updateText.trim()}
                   onClick={handleAddUpdate}
-                  className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700"
+                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 disabled:opacity-50"
                 >
-                  Post Update
+                  {isSubmittingUpdate ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Posting...</span>
+                    </>
+                  ) : (
+                    "Post Update"
+                  )}
                 </button>
               </div>
             </motion.div>
@@ -1339,32 +1388,38 @@ function StartupPilot() {
         </div>
 
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
-          {updates.map((update) => (
-            <div
-              key={update.id}
-              className="p-5 sm:p-6"
-            >
-              <div className="flex gap-4">
-                <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-indigo-500" />
+          {updates.length === 0 ? (
+            <div className="p-6 text-center text-xs text-slate-400">
+              No progress updates posted yet. Click &quot;Add Progress Update&quot; above to record milestone progress or updates.
+            </div>
+          ) : (
+            updates.map((update) => (
+              <div
+                key={update.id}
+                className="p-5 sm:p-6"
+              >
+                <div className="flex gap-4">
+                  <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-indigo-500" />
 
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                      {update.title}
-                    </h3>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {update.title || "Startup Progress Update"}
+                      </h3>
 
-                    <span className="text-[9px] text-slate-400">
-                      {update.date}
-                    </span>
+                      <span className="text-[9px] text-slate-400">
+                        {update.date || (update.created_at ? new Date(update.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "Recent")}
+                      </span>
+                    </div>
+
+                    <p className="mt-1.5 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                      {update.description}
+                    </p>
                   </div>
-
-                  <p className="mt-1.5 text-xs leading-5 text-slate-500 dark:text-slate-400">
-                    {update.description}
-                  </p>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </section>
     </motion.div>

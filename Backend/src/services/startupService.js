@@ -478,7 +478,8 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
     'readiness_level',
     'years_experience',
     'previous_deployments',
-    'location'
+    'location',
+    'phone'
   ];
 
   // Map address_line1 / address_line2 to registered_address if provided
@@ -489,6 +490,15 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
   // Map trl alias to readiness_level if provided
   if (data.trl !== undefined && data.readiness_level === undefined) {
     data.readiness_level = data.trl;
+  }
+
+  // If user phone is provided, sync to User record
+  if (data.phone !== undefined && startup.user_id) {
+    const cleanPhone = data.phone ? String(data.phone).trim() : null;
+    await prisma.user.update({
+      where: { id: startup.user_id },
+      data: { phone: cleanPhone }
+    });
   }
 
   const updateData = {};
@@ -645,6 +655,15 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
     where: { id },
     data: updateData,
     include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          is_verified: true
+        }
+      },
       documents: true,
       bank_details: true
     }

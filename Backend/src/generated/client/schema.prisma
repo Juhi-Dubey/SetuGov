@@ -62,6 +62,7 @@ model User {
   added_evaluator_pools         ChallengeEvaluatorPool[]     @relation("EvaluatorPoolAdder")
   evaluator_match_scores        EvaluatorMatchScore[]        @relation("EvaluatorMatched")
   eligibility_reviews           ChallengeEligibilityReview[] @relation("ChallengeEligibilityReviewer")
+  progress_updates              PilotProgressUpdate[]        @relation("ProgressUpdateAuthor")
 
   @@index([role])
   @@index([department_id])
@@ -469,24 +470,24 @@ model ChallengeEvaluatorPool {
 }
 
 model Pilot {
-  id                       String              @id @default(uuid())
+  id                       String                @id @default(uuid())
   challenge_id             String
   startup_id               String
   location                 String
   start_date               DateTime
   end_date                 DateTime
-  budget                   Decimal             @db.Decimal(14, 2)
-  status                   PilotStatus         @default(PLANNED)
+  budget                   Decimal               @db.Decimal(14, 2)
+  status                   PilotStatus           @default(PLANNED)
   overall_score            Float?
   final_recommendation     String?
-  data_classification      String?             @default("INTERNAL")
+  data_classification      String?               @default("INTERNAL")
   data_access_requirements String?
   data_retention_period    String?
-  ip_ownership             String?             @default("STARTUP_OWNED")
+  ip_ownership             String?               @default("STARTUP_OWNED")
   licensing_terms          String?
   confidentiality_terms    String?
-  created_at               DateTime            @default(now())
-  updated_at               DateTime            @updatedAt
+  created_at               DateTime              @default(now())
+  updated_at               DateTime              @updatedAt
   evidence                 Evidence[]
   milestones               Milestone[]
   payments                 Payment[]
@@ -494,10 +495,11 @@ model Pilot {
   measurements             PilotMeasurement[]
   compliance_items         ComplianceItem[]
   feedback                 PilotFeedback[]
-  challenge                Challenge           @relation(fields: [challenge_id], references: [id])
-  startup                  Startup             @relation(fields: [startup_id], references: [id])
+  challenge                Challenge             @relation(fields: [challenge_id], references: [id])
+  startup                  Startup               @relation(fields: [startup_id], references: [id])
   risks                    Risk[]
   issues                   PilotIssue[]
+  progress_updates         PilotProgressUpdate[]
   scale_decisions          ScaleDecision[]
   validations              Validation[]
   procurements             ProcurementRecord[]
@@ -613,6 +615,22 @@ model PilotIssue {
   pilot       Pilot     @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
 
   @@map("pilot_issues")
+}
+
+model PilotProgressUpdate {
+  id          String   @id @default(uuid())
+  pilot_id    String
+  user_id     String?
+  title       String   @default("Startup Progress Update")
+  description String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  pilot       Pilot    @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+  user        User?    @relation("ProgressUpdateAuthor", fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([pilot_id])
+  @@index([created_at])
+  @@map("pilot_progress_updates")
 }
 
 model Validation {

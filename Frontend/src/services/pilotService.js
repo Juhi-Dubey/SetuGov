@@ -208,6 +208,18 @@ export const updatePilotIssue = async (pilotId, issueId, issueData) => {
   });
 };
 
+// Pilot Progress Updates
+export const getPilotProgressUpdates = async (pilotId) => {
+  return apiRequest(`/pilots/${pilotId}/progress-updates`);
+};
+
+export const createPilotProgressUpdate = async (pilotId, updateData) => {
+  return apiRequest(`/pilots/${pilotId}/progress-updates`, {
+    method: "POST",
+    body: JSON.stringify(updateData),
+  });
+};
+
 export default {
   getPilots,
   getPilotById,
@@ -241,6 +253,8 @@ export default {
   createPilotIssue,
   getPilotIssues,
   updatePilotIssue,
+  getPilotProgressUpdates,
+  createPilotProgressUpdate,
 };
 
 

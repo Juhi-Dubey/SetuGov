@@ -37,6 +37,7 @@ import ChallengeAudit from "../pages/government/ChallengeAudit";
 import GovernmentReports from "../pages/government/GovernmentReports";
 import GovernmentEvaluators from "../pages/government/GovernmentEvaluators";
 import GovernmentEvaluatorDetail from "../pages/government/GovernmentEvaluatorDetail";
+import GovernmentMyPage from "../pages/government/GovernmentMyPage";
 
 // =====================================================
 // STARTUP
@@ -47,7 +48,9 @@ import StartupApplication from "../pages/startup/StartupApplication";
 import StartupDocuments from "../pages/startup/StartupDocuments";
 import StartupPayments from "../pages/startup/StartupPayments";
 import StartupProfile from "../pages/startup/StartupProfile";
+import StartupRegistration from "../pages/startup/StartupRegistration";
 import StartupPilot from "../pages/startup/StartupPilot";
+import StartupMyPage from "../pages/startup/StartupMyPage";
 
 // =====================================================
 // EVALUATOR
@@ -56,6 +59,7 @@ import EvaluatorDashboard from "../pages/evaluator/EvaluatorDashboard";
 import EvaluatorAssignments from "../pages/evaluator/EvaluatorAssignments";
 import EvaluatorEvaluations from "../pages/evaluator/EvaluatorEvaluations";
 import EvaluationDetail from "../pages/evaluator/EvaluationDetail";
+import EvaluatorMyPage from "../pages/evaluator/EvaluatorMyPage";
 
 // =====================================================
 // ADMIN
@@ -69,6 +73,7 @@ import AdminAudit from "../pages/admin/AdminAudit";
 import AdminSettings from "../pages/admin/AdminSettings";
 import AdminAccessRequests from "../pages/admin/AdminAccessRequests";
 import AdminEvaluators from "../pages/admin/AdminEvaluators";
+import AdminMyPage from "../pages/admin/AdminMyPage";
 
 // =====================================================
 // SHARED / GENERAL
@@ -90,6 +95,34 @@ function DashboardRedirect() {
     }[normalizedRole] || "/role-selection";
 
   return <Navigate to={defaultDashboard} replace />;
+}
+
+function MyPageRedirect() {
+  const { user, role } = useAuth();
+  const normalizedRole = String(role || user?.role || "").toUpperCase();
+  const defaultMyPage =
+    {
+      ADMIN: "/admin/my-page",
+      GOVERNMENT: "/government/my-page",
+      STARTUP: "/startup/my-page",
+      EVALUATOR: "/evaluator/my-page",
+    }[normalizedRole] || "/login";
+
+  return <Navigate to={defaultMyPage} replace />;
+}
+
+function ProfileRedirect() {
+  const { user, role } = useAuth();
+  const normalizedRole = String(role || user?.role || "").toUpperCase();
+  const defaultProfile =
+    {
+      ADMIN: "/admin/my-page",
+      GOVERNMENT: "/government/my-page",
+      STARTUP: "/startup/profile",
+      EVALUATOR: "/evaluator/my-page",
+    }[normalizedRole] || "/login";
+
+  return <Navigate to={defaultProfile} replace />;
 }
 
 function AppRoutes() {
@@ -128,10 +161,22 @@ function AppRoutes() {
         }
       />
 
-      {/* Common Profile Route */}
+      {/* Common Dynamic My Page & Profile Routes */}
+      <Route
+        path="/my-page"
+        element={
+          <ProtectedRoute>
+            <MyPageRedirect />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/profile"
-        element={<Navigate to="/startup/profile" replace />}
+        element={
+          <ProtectedRoute>
+            <ProfileRedirect />
+          </ProtectedRoute>
+        }
       />
 
       {/* =====================================================
@@ -408,6 +453,22 @@ function AppRoutes() {
         }
       />
 
+      {/* Government My Page & Profile */}
+      <Route
+        path="/government/my-page"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
+              <GovernmentMyPage />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/government/profile"
+        element={<Navigate to="/government/my-page" replace />}
+      />
+
       {/* =====================================================
           STARTUP ROUTES (Role: STARTUP, GOVERNMENT, ADMIN, EVALUATOR)
       ===================================================== */}
@@ -523,17 +584,46 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      {/* Startup My Page */}
+      <Route
+        path="/startup/my-page"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+              <StartupMyPage />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Startup Profile */}
       <Route
         path="/startup/profile"
         element={
           <ProtectedRoute>
-            <RoleRoute allowedRoles={["STARTUP", "GOVERNMENT", "EVALUATOR", "ADMIN"]}>
+            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
               <AppLayout role="startup">
                 <StartupProfile />
               </AppLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
+      />
+
+      {/* Startup 9-Step Onboarding Registration Flow (Startup & Admin only) */}
+      <Route
+        path="/startup/registration"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["STARTUP", "ADMIN"]}>
+              <StartupRegistration />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/startup/onboarding"
+        element={<Navigate to="/startup/registration" replace />}
       />
       <Route
         path="/startup/pilot"
@@ -664,6 +754,22 @@ function AppRoutes() {
         }
       />
 
+      {/* Evaluator My Page & Profile */}
+      <Route
+        path="/evaluator/my-page"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["EVALUATOR", "ADMIN"]}>
+              <EvaluatorMyPage />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/evaluator/profile"
+        element={<Navigate to="/evaluator/my-page" replace />}
+      />
+
       {/* =====================================================
           ADMIN ROUTES (Role: ADMIN)
       ===================================================== */}
@@ -778,6 +884,22 @@ function AppRoutes() {
             </RoleRoute>
           </ProtectedRoute>
         }
+      />
+
+      {/* Admin My Page & Profile */}
+      <Route
+        path="/admin/my-page"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["ADMIN"]}>
+              <AdminMyPage />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/profile"
+        element={<Navigate to="/admin/my-page" replace />}
       />
 
       {/* =====================================================

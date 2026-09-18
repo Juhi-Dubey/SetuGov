@@ -62,6 +62,7 @@ model User {
   added_evaluator_pools        ChallengeEvaluatorPool[] @relation("EvaluatorPoolAdder")
   evaluator_match_scores       EvaluatorMatchScore[]    @relation("EvaluatorMatched")
   eligibility_reviews          ChallengeEligibilityReview[] @relation("ChallengeEligibilityReviewer")
+  progress_updates             PilotProgressUpdate[]    @relation("ProgressUpdateAuthor")
 
   @@index([role])
   @@index([department_id])
@@ -498,6 +499,7 @@ model Pilot {
   startup                    Startup            @relation(fields: [startup_id], references: [id])
   risks                      Risk[]
   issues                     PilotIssue[]
+  progress_updates           PilotProgressUpdate[]
   scale_decisions            ScaleDecision[]
   validations                Validation[]
   procurements               ProcurementRecord[]
@@ -613,6 +615,22 @@ model PilotIssue {
   pilot        Pilot       @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
 
   @@map("pilot_issues")
+}
+
+model PilotProgressUpdate {
+  id           String      @id @default(uuid())
+  pilot_id     String
+  user_id      String?
+  title        String      @default("Startup Progress Update")
+  description  String
+  created_at   DateTime    @default(now())
+  updated_at   DateTime    @updatedAt
+  pilot        Pilot       @relation(fields: [pilot_id], references: [id], onDelete: Cascade)
+  user         User?       @relation("ProgressUpdateAuthor", fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([pilot_id])
+  @@index([created_at])
+  @@map("pilot_progress_updates")
 }
 
 model Validation {

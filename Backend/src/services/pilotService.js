@@ -245,6 +245,9 @@ export const getPilotById = async (id, user = null) => {
       issues: {
         orderBy: { created_at: 'desc' }
       },
+      progress_updates: {
+        orderBy: { created_at: 'desc' }
+      },
       validations: {
         include: {
           validator: {
@@ -945,6 +948,105 @@ export const updatePilotIssue = async (pilotId, issueId, data, user, ip_address 
   return updated;
 };
 
+const formatUpdateDate = (date) => {
+  return new Intl.DateTimeFormat('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).format(new Date(date));
+};
+
+/**
+ * Create a persistent progress update for a pilot project
+ */
+export const createProgressUpdate = async (pilotId, data, user, ip_address = null) => {
+  await verifyPilotAccess(pilotId, user, 'PROGRESS_UPDATE_CREATE');
+
+  const rawDescription = (data.description || data.updateText || '').trim();
+  if (!rawDescription) {
+    throw new BadRequestError('Progress update description cannot be empty.');
+  }
+
+  const title = (data.title || 'Startup Progress Update').trim();
+
+  const update = await prisma.pilotProgressUpdate.create({
+    data: {
+      pilot_id: pilotId,
+      user_id: user ? user.id : null,
+      title,
+      description: rawDescription
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true
+        }
+      }
+    }
+  });
+
+  await createAuditLog({
+    user_id: user ? user.id : null,
+    action: 'PILOT_PROGRESS_UPDATE_CREATED',
+    entity_type: 'PILOT_PROGRESS_UPDATE',
+    entity_id: update.id,
+    details: {
+      pilot_id: pilotId,
+      title: update.title
+    },
+    ip_address
+  });
+
+  return {
+    id: update.id,
+    pilot_id: update.pilot_id,
+    title: update.title,
+    description: update.description,
+    date: formatUpdateDate(update.created_at),
+    created_at: update.created_at,
+    updated_at: update.updated_at,
+    user: update.user
+  };
+};
+
+/**
+ * Get all persistent progress updates for a pilot project
+ */
+export const getProgressUpdates = async (pilotId, user = null) => {
+  if (user) {
+    await verifyPilotAccess(pilotId, user, 'READ');
+  }
+
+  const updates = await prisma.pilotProgressUpdate.findMany({
+    where: { pilot_id: pilotId },
+    orderBy: { created_at: 'desc' },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true
+        }
+      }
+    }
+  });
+
+  return updates.map((u) => ({
+    id: u.id,
+    pilot_id: u.pilot_id,
+    title: u.title,
+    description: u.description,
+    date: formatUpdateDate(u.created_at),
+    created_at: u.created_at,
+    updated_at: u.updated_at,
+    user: u.user
+  }));
+};
+
 export default {
   createPilot,
   getPilots,
@@ -959,7 +1061,9 @@ export default {
   getPilotFeedbacks,
   createPilotIssue,
   getPilotIssues,
-  updatePilotIssue
+  updatePilotIssue,
+  createProgressUpdate,
+  getProgressUpdates
 };
 
 
