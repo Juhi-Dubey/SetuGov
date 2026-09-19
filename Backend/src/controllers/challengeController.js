@@ -63,6 +63,17 @@ export const publishChallenge = async (req, res, next) => {
   }
 };
 
+export const startChallengeEvaluation = async (req, res, next) => {
+  try {
+    const challengeId = req.params.challenge_id || req.params.id;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const challenge = await challengeService.startChallengeEvaluation(challengeId, req.user, ip_address);
+    return successResponse(res, { challenge }, 'Challenge evaluation stage started successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const closeChallenge = async (req, res, next) => {
   try {
     const challengeId = req.params.challenge_id || req.params.id;
@@ -162,6 +173,7 @@ export default {
   updateChallenge,
   deleteChallenge,
   publishChallenge,
+  startChallengeEvaluation,
   closeChallenge,
   shortlistStartup,
   getChallengeApplications,

@@ -48,9 +48,19 @@ export const updatePaymentStatus = async (req, res, next) => {
   }
 };
 
+export const getPayments = async (req, res, next) => {
+  try {
+    const result = await paymentService.getPayments(req.query, req.user);
+    return successResponse(res, result, 'Payments retrieved successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   createPayment,
   getPilotPayments,
+  getPayments,
   getPaymentById,
   updatePaymentStatus
 };

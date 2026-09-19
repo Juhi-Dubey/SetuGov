@@ -72,7 +72,7 @@ function AIChallengeCopilot({ formData, onAutofill }) {
               : `${roughPrompt} — Government operational problem requiring innovation.`,
           current_process: formData?.currentProcess || null,
           baseline: formData?.currentBaseline || null,
-          location: formData?.location || "Maharashtra",
+          location: formData?.location || null,
         },
         outcome: {
           desired_outcome: formData?.desiredOutcome || null,

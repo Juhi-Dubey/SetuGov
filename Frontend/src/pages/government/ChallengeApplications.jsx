@@ -41,6 +41,7 @@ import {
   shortlistStartup,
   closeChallenge,
   getChallengeDecisions,
+  startChallengeEvaluation,
 } from "../../services/challengeService";
 import { updateApplicationStatus } from "../../services/applicationService";
 import {
@@ -524,8 +525,11 @@ function ChallengeApplications() {
     if (e && e.preventDefault) e.preventDefault();
     if (!selectedAppForDecision) return;
 
-    const dec = decisions[selectedAppForDecision.id];
-    const rec = dec?.recommendation;
+    // Gating: Challenge must be in EVALUATION status to select a startup
+    if (challengeDetails?.status !== "EVALUATION") {
+      setSelectionError("Selection blocked: Challenge must be transitioned to the EVALUATION phase before selecting a winning startup.");
+      return;
+    }
 
     // Gating: EVALUATION_PENDING_QUORUM cannot be selected
     if (rec === "EVALUATION_PENDING_QUORUM") {
@@ -559,12 +563,33 @@ function ChallengeApplications() {
     }
   };
 
+  const [transitionLoading, setTransitionLoading] = useState(false);
+
+  const handleStartEvaluation = async () => {
+    if (!id) return;
+    try {
+      setTransitionLoading(true);
+      await startChallengeEvaluation(id);
+      setActionMessage("Challenge transitioned to EVALUATION phase successfully.");
+      await loadData();
+    } catch (err) {
+      console.error("Failed to start evaluation:", err);
+      alert(err?.response?.data?.message || err?.message || "Failed to start evaluation.");
+    } finally {
+      setTransitionLoading(false);
+    }
+  };
+
   const handleStatusChange = async (appId, newStatus) => {
     if (challengeDetails?.status === "CLOSED") {
       alert("Problem Statement is closed. Lifecycle status cannot be modified.");
       return;
     }
     if (newStatus === "SELECTED") {
+      if (challengeDetails?.status !== "EVALUATION") {
+        alert("Challenge must be transitioned to the EVALUATION phase before selecting a winning startup.");
+        return;
+      }
       const targetApp = applications.find((a) => a.id === appId);
       if (targetApp) {
         handleOpenSelectionModal(targetApp);
@@ -1478,6 +1503,22 @@ function ChallengeApplications() {
 
             {/* Action Buttons: Vertically Stacked & Right Aligned */}
             <div className="flex flex-col items-stretch sm:items-end gap-2.5 shrink-0">
+              {challengeDetails?.status === "PUBLISHED" && (
+                <button
+                  type="button"
+                  onClick={handleStartEvaluation}
+                  disabled={transitionLoading || isClosed}
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-emerald-600 bg-emerald-600 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50 whitespace-nowrap"
+                >
+                  {transitionLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <ClipboardCheck className="h-3.5 w-3.5" />
+                  )}
+                  Start Evaluation Phase
+                </button>
+              )}
+
               {!isClosed && (
                 <button
                   type="button"
@@ -1877,7 +1918,7 @@ function ChallengeApplications() {
                     onChange={(e) => setProposalStatusFilter(e.target.value)}
                     className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
-                    <option value="all">All Application Statuses</option>
+                    <option value="all">All Application Status</option>
                     <option value="SUBMITTED">Submitted</option>
                     <option value="SHORTLISTED">Shortlisted</option>
                     <option value="SELECTED">Selected</option>
@@ -1893,7 +1934,7 @@ function ChallengeApplications() {
                     onChange={(e) => setProposalEvaluationFilter(e.target.value)}
                     className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
-                    <option value="all">All Evaluation Statuses</option>
+                    <option value="all">All Evaluation Status</option>
                     <option value="RECOMMENDED_FOR_PILOT">Recommended for Pilot</option>
                     <option value="RESERVE_CANDIDATE">Reserve Candidate</option>
                     <option value="EVALUATION_PENDING_QUORUM">Pending Quorum</option>
@@ -1972,15 +2013,15 @@ function ChallengeApplications() {
             ) : (
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
+                  <table className="w-full min-w-[1050px] text-left text-xs">
                     <thead className="border-b border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                       <tr>
-                        <th className="px-5 py-3.5 font-semibold">Startup Name</th>
-                        <th className="px-5 py-3.5 font-semibold">Proposal Summary</th>
-                        <th className="px-5 py-3.5 font-semibold">Assigned Evaluators</th>
-                        <th className="px-5 py-3.5 font-semibold">Decision Engine</th>
-                        <th className="px-5 py-3.5 font-semibold">Status</th>
-                        <th className="px-5 py-3.5 text-right font-semibold">Actions</th>
+                        <th className="px-5 py-3.5 font-semibold whitespace-nowrap">Startup Name</th>
+                        <th className="px-5 py-3.5 font-semibold whitespace-nowrap">Proposal Summary</th>
+                        <th className="px-5 py-3.5 font-semibold whitespace-nowrap">Assigned Evaluators</th>
+                        <th className="px-5 py-3.5 font-semibold whitespace-nowrap">Decision Engine</th>
+                        <th className="px-5 py-3.5 font-semibold whitespace-nowrap">Status</th>
+                        <th className="px-5 py-3.5 text-right font-semibold whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -1992,17 +2033,19 @@ function ChallengeApplications() {
                         const evalAssess = dec?.evaluation_assessment;
 
                         return (
-                          <tr key={app.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
-                            <td className="px-5 py-4 font-bold text-slate-900 dark:text-white">
+                          <tr key={app.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                            <td className="px-5 py-4 font-bold text-slate-900 dark:text-white whitespace-nowrap align-middle">
                               {app.startup?.company_name || app.startup?.name || "Startup Entity"}
                             </td>
-                            <td className="px-5 py-4 max-w-xs truncate text-slate-600 dark:text-slate-300">
-                              {app.proposal_summary || app.proposal || "—"}
+                            <td className="px-5 py-4 max-w-xs align-middle">
+                              <p className="truncate text-slate-600 dark:text-slate-300" title={app.proposal_summary || app.proposal || ""}>
+                                {app.proposal_summary || app.proposal || "—"}
+                              </p>
                             </td>
-                            <td className="px-5 py-4">
+                            <td className="px-5 py-4 whitespace-nowrap align-middle">
                               <div className="space-y-1">
                                 {assignments.length === 0 ? (
-                                  <span className="text-[11px] text-slate-400">Unassigned</span>
+                                  <span className="text-xs text-slate-400">Unassigned</span>
                                 ) : (
                                   assignments.map((a) => (
                                     <div key={a.id} className="flex items-center gap-1.5 text-[11px]">
@@ -2034,9 +2077,9 @@ function ChallengeApplications() {
                                 )}
                               </div>
                             </td>
-                            <td className="px-5 py-4">
+                            <td className="px-5 py-4 whitespace-nowrap align-middle">
                               {!dec ? (
-                                <span className="text-[11px] text-slate-400">Pending Evaluation</span>
+                                <span className="text-xs text-slate-400">Pending Evaluation</span>
                               ) : (
                                 <div className="space-y-1">
                                   <span
@@ -2063,9 +2106,9 @@ function ChallengeApplications() {
                                 </div>
                               )}
                             </td>
-                            <td className="px-5 py-4">
+                            <td className="px-5 py-4 whitespace-nowrap align-middle">
                               <span
-                                className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                                className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold ${
                                   app.status === "SHORTLISTED"
                                     ? "bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300"
                                     : app.status === "SELECTED"
@@ -2076,30 +2119,32 @@ function ChallengeApplications() {
                                 {app.status}
                               </span>
                             </td>
-                            <td className="px-5 py-4 text-right space-x-2">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenAssignModal(app)}
-                                className="rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700 hover:bg-purple-100 dark:border-purple-900/40 dark:bg-purple-950/40 dark:text-purple-300"
-                              >
-                                {assignments.length > 0 ? "+ Assign Evaluator" : "Assign Evaluator"}
-                              </button>
-                              <button
-                                type="button"
-                                disabled={isClosed || app.status === "SHORTLISTED"}
-                                onClick={() => handleStatusChange(app.id, "SHORTLISTED")}
-                                className="rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-indigo-950/50 dark:text-indigo-300"
-                              >
-                                Shortlist
-                              </button>
-                              <button
-                                type="button"
-                                disabled={isClosed || app.status === "SELECTED"}
-                                onClick={() => handleOpenSelectionModal(app)}
-                                className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-emerald-950/50 dark:text-emerald-300"
-                              >
-                                Select for Pilot
-                              </button>
+                            <td className="px-5 py-4 text-right whitespace-nowrap align-middle">
+                              <div className="inline-flex items-center justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenAssignModal(app)}
+                                  className="inline-flex items-center rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700 hover:bg-purple-100 dark:border-purple-900/40 dark:bg-purple-950/40 dark:text-purple-300 transition-colors"
+                                >
+                                  {assignments.length > 0 ? "+ Assign Evaluator" : "Assign Evaluator"}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={isClosed || app.status === "SHORTLISTED"}
+                                  onClick={() => handleStatusChange(app.id, "SHORTLISTED")}
+                                  className="inline-flex items-center rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-indigo-950/50 dark:text-indigo-300 transition-colors"
+                                >
+                                  Shortlist
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={isClosed || app.status === "SELECTED"}
+                                  onClick={() => handleOpenSelectionModal(app)}
+                                  className="inline-flex items-center rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-emerald-950/50 dark:text-emerald-300 transition-colors"
+                                >
+                                  Select for Pilot
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -2250,14 +2295,14 @@ function ChallengeApplications() {
                 </div>
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-                  <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                  <table className="w-full min-w-[850px] text-left text-xs text-slate-600 dark:text-slate-300">
                     <thead className="border-b border-slate-100 bg-slate-50 text-[11px] font-semibold text-slate-400 dark:border-slate-800 dark:bg-slate-950">
                       <tr>
-                        <th className="py-3 px-4">Evaluator</th>
-                        <th className="py-3 px-4">Organization & Role</th>
-                        <th className="py-3 px-4">Source</th>
-                        <th className="py-3 px-4">Approval Notes</th>
-                        <th className="py-3 px-4 text-right">Actions</th>
+                        <th className="py-3 px-4 whitespace-nowrap">Evaluator</th>
+                        <th className="py-3 px-4 whitespace-nowrap">Organization & Role</th>
+                        <th className="py-3 px-4 whitespace-nowrap">Source</th>
+                        <th className="py-3 px-4 whitespace-nowrap">Approval Notes</th>
+                        <th className="py-3 px-4 text-right whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -2265,30 +2310,30 @@ function ChallengeApplications() {
                         const ev = p.evaluator;
                         const prof = ev?.evaluator_profile;
                         return (
-                          <tr key={p.id}>
-                            <td className="py-3 px-4 font-semibold text-slate-900 dark:text-white">
+                          <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                            <td className="py-3 px-4 font-semibold text-slate-900 dark:text-white align-middle">
                               {ev?.name || "Evaluator"}
                               <span className="block text-[11px] text-slate-400 font-normal">{ev?.email}</span>
                             </td>
-                            <td className="py-3 px-4">
+                            <td className="py-3 px-4 align-middle">
                               {prof?.designation || "Specialist"} — {prof?.organization || "Independent"}
                               <span className="block text-[11px] text-slate-400">
                                 {Array.isArray(prof?.domain_expertise) ? prof.domain_expertise.join(", ") : "Domain Specialist"}
                               </span>
                             </td>
-                            <td className="py-3 px-4">
+                            <td className="py-3 px-4 align-middle whitespace-nowrap">
                               <span className="inline-flex rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase">
                                 {p.source || "MATCHED"}
                               </span>
                             </td>
-                            <td className="py-3 px-4 text-slate-500 italic">
+                            <td className="py-3 px-4 text-slate-500 italic align-middle">
                               {p.notes || "Approved into pool"}
                             </td>
-                            <td className="py-3 px-4 text-right">
+                            <td className="py-3 px-4 text-right align-middle whitespace-nowrap">
                               <button
                                 type="button"
                                 onClick={() => handleRemoveFromPool(p.evaluator_id)}
-                                className="text-red-500 hover:text-red-700 font-semibold text-xs"
+                                className="text-red-500 hover:text-red-700 font-semibold text-xs transition-colors"
                               >
                                 Remove
                               </button>

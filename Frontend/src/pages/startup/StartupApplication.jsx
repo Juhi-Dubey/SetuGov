@@ -248,7 +248,11 @@ function StartupApplication() {
         evidence_attachments: documents.map((d) => d.name || "document.pdf"),
       };
 
-      await submitApplication(id || "1", payload);
+      if (!id) {
+        throw new Error("Invalid challenge identifier. Please select a valid challenge to submit a proposal.");
+      }
+
+      await submitApplication(id, payload);
 
       setSubmitState("submitted");
       setSuccessMessage(

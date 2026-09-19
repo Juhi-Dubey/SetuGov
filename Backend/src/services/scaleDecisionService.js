@@ -12,7 +12,28 @@ export const createScaleDecision = async (pilotId, data, user, ip_address = null
   }
 
   // P0-3: Verify tenant authorization for the pilot project
+  // P0-3: Verify tenant authorization for the pilot project
   const pilot = await verifyPilotAccess(pilotId, user, 'SCALE_DECISION');
+
+  // Governance Gate: Pilot must have reached VALIDATION stage with an existing validation record
+  const validationRecord = await prisma.validation.findFirst({
+    where: { pilot_id: pilotId }
+  });
+
+  if (!validationRecord) {
+    throw new BadRequestError(
+      'Cannot finalize scale decision: Pilot project has not been validated. An authoritative independent evaluation report is required before a scale decision can be made.'
+    );
+  }
+
+  // Prevent duplicate competing finalized decisions unless the lifecycle explicitly permits another decision after EXTEND
+  const existingFinalized = await prisma.scaleDecision.findFirst({
+    where: { pilot_id: pilotId, status: 'FINALIZED' }
+  });
+
+  if (existingFinalized && pilot.status !== 'EXTENDED') {
+    throw new BadRequestError('A finalized scale decision has already been recorded for this pilot project.');
+  }
 
   // Determine target pilot lifecycle state
   let targetPilotStatus;

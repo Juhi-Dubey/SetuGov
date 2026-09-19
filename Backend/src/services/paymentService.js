@@ -155,11 +155,20 @@ export const updatePaymentStatus = async (id, dataOrStatus, userOrPaymentDate, i
   // P0-3: Verify user has PAYMENT_MANAGE access to parent pilot
   await verifyPilotAccess(payment.pilot_id, user, 'PAYMENT_MANAGE');
 
+  // Prevent duplicate disbursal: already PAID payments cannot be disbursed again or mutated
+  if (payment.status === 'PAID') {
+    throw new BadRequestError('Payment has already been disbursed (PAID). Duplicate disbursal is rejected.');
+  }
+
+  if (payment.status === status) {
+    throw new BadRequestError(`Payment is already in '${status}' status.`);
+  }
+
   // Milestone Review & Approval Enforcement before Payment Disbursal
   if (status === 'PAID' && payment.milestone) {
-    if (payment.milestone.status !== 'COMPLETED' && (Number(payment.milestone.completion_percentage) || 0) < 100) {
+    if (payment.milestone.status !== 'COMPLETED' || (Number(payment.milestone.completion_percentage) || 0) < 100) {
       throw new BadRequestError(
-        `Cannot disburse payment (${payment.milestone.payment_percentage}%). Milestone "${payment.milestone.name}" must be reviewed and marked COMPLETED with verified evidence first.`
+        `Cannot disburse payment (${payment.milestone.payment_percentage}%). Milestone "${payment.milestone.name}" must be reviewed and marked COMPLETED with 100% verified completion first.`
       );
     }
   }
@@ -202,9 +211,105 @@ export const updatePaymentStatus = async (id, dataOrStatus, userOrPaymentDate, i
   return updated;
 };
 
+export const getPayments = async (query = {}, user = null) => {
+  const {
+    status,
+    pilot_id,
+    page = 1,
+    limit = 20,
+    search
+  } = query;
+
+  const safePage = Math.max(1, parseInt(page, 10) || 1);
+  const safeLimit = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+  const skip = (safePage - 1) * safeLimit;
+  const take = safeLimit;
+
+  const where = {};
+  if (status && status !== 'ALL') where.status = status;
+  if (pilot_id) where.pilot_id = pilot_id;
+
+  // Role scoping: Government sees payments for pilots in their department; Startup sees their own pilots
+  if (user) {
+    if (user.role === 'GOVERNMENT') {
+      if (!user.department_id) {
+        throw new ForbiddenError('Government official must be assigned to a department to list payments.');
+      }
+      where.pilot = {
+        challenge: { department_id: user.department_id }
+      };
+    } else if (user.role === 'STARTUP') {
+      where.pilot = {
+        startup: { user_id: user.id }
+      };
+    }
+  }
+
+  if (search && typeof search === 'string' && search.trim()) {
+    const term = search.trim();
+    where.OR = [
+      { reference_number: { contains: term, mode: 'insensitive' } },
+      { pilot: { startup: { company_name: { contains: term, mode: 'insensitive' } } } },
+      { pilot: { challenge: { title: { contains: term, mode: 'insensitive' } } } }
+    ];
+  }
+
+  const [total, payments] = await Promise.all([
+    prisma.payment.count({ where }),
+    prisma.payment.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { created_at: 'desc' },
+      include: {
+        milestone: {
+          select: {
+            id: true,
+            name: true,
+            completion_percentage: true,
+            status: true
+          }
+        },
+        pilot: {
+          select: {
+            id: true,
+            status: true,
+            location: true,
+            budget: true,
+            challenge: {
+              select: {
+                id: true,
+                title: true,
+                department: true
+              }
+            },
+            startup: {
+              select: {
+                id: true,
+                company_name: true
+              }
+            }
+          }
+        }
+      }
+    })
+  ]);
+
+  return {
+    payments,
+    pagination: {
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages: Math.ceil(total / safeLimit)
+    }
+  };
+};
+
 export default {
   createPayment,
   getPilotPayments,
+  getPayments,
   getPaymentById,
   updatePaymentStatus
 };

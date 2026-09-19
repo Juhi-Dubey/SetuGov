@@ -112,7 +112,7 @@ function ChallengePilot() {
   };
 
   const handleSelectPilotFromList = (pilotId) => {
-    setActiveSelectedPilotId(pilotId);
+    navigate(`/government/pilots/${pilotId}`);
   };
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -308,7 +308,14 @@ function ChallengePilot() {
 
         setPilotsList(rawPilots);
         setPilotsPagination(rawPagination);
-        // Leave resolvedPilot = null — the card grid renders and the user explicitly selects a pilot
+        // Clean reset for pilots list route
+        setChallenge(null);
+        setSelectedApp(null);
+        setAiAnalysis(null);
+        setScaleRecommendation(null);
+        setComplianceList([]);
+        setFeedbackList([]);
+        setIssuesList([]);
         resolvedPilot = null;
       }
 
@@ -750,7 +757,7 @@ function ChallengePilot() {
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                   Startup:{" "}
                   <span className="font-semibold text-slate-900 dark:text-white">
-                    {pilot?.startup?.company_name || "Assigned Startup"}
+                    {pilot?.startup?.company_name || "Not specified"}
                   </span>{" "}
                   · Location: {pilot?.location || "Not specified"}
                 </p>

@@ -53,7 +53,7 @@ export default function GovernmentAccessRequestPage() {
     phone: "",
     department_name: "",
     designation: "",
-    state: "Maharashtra",
+    state: "",
     department_code: "",
     official_website: "",
     supporting_document_url: "",
@@ -77,6 +77,7 @@ export default function GovernmentAccessRequestPage() {
     }
     if (!formData.department_name.trim()) errs.department_name = "Department name is required";
     if (!formData.designation.trim()) errs.designation = "Designation / Role is required";
+    if (!formData.state.trim()) errs.state = "State is required";
     if (!formData.reason.trim()) errs.reason = "Please provide the official purpose or challenges to be posted";
 
     setErrors(errs);

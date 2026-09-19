@@ -1,43 +1,29 @@
 import { prisma } from '../config/prisma.js';
-import { NotFoundError } from '../utils/errors.js';
+import { NotFoundError, BadRequestError } from '../utils/errors.js';
 import { validateTransition } from '../utils/lifecycle.js';
 import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
 import { notifyPilotOutcome } from './notificationService.js';
 
+export const CANONICAL_VALIDATION_STATUSES = ['VALIDATED', 'VALIDATED_WITH_CONDITIONS', 'NOT_VALIDATED'];
+
 export const createValidation = async (pilotId, data, user, ip_address = null) => {
   // P0-3: Verify user has VALIDATION_MANAGE access to this pilot
   const pilot = await verifyPilotAccess(pilotId, user, 'VALIDATION_MANAGE');
+
+  // Enforce canonical validation statuses
+  const targetValidationStatus = data.status || 'VALIDATED';
+  if (!CANONICAL_VALIDATION_STATUSES.includes(targetValidationStatus)) {
+    throw new BadRequestError(
+      `Invalid validation status: '${targetValidationStatus}'. Must be one of: [${CANONICAL_VALIDATION_STATUSES.join(', ')}].`
+    );
+  }
 
   // P2-9: Canonical lifecycle transition verification
   // Derive allowed state transitions strictly from the canonical state machine in lifecycle.js
   if (pilot.status !== 'VALIDATION') {
     validateTransition('PILOT', pilot.status, 'VALIDATION');
   }
-
-  const validation = await prisma.validation.create({
-    data: {
-      pilot_id: pilotId,
-      validator_id: user.id,
-      performance_score: data.performance_score,
-      kpi_achievement_score: data.kpi_achievement_score,
-      evidence_quality_score: data.evidence_quality_score,
-      technical_stability_score: data.technical_stability_score,
-      user_satisfaction_score: data.user_satisfaction_score,
-      comments: data.comments?.trim() || null,
-      status: data.status || 'VALIDATED'
-    },
-    include: {
-      validator: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true
-        }
-      }
-    }
-  });
 
   // Calculate combined overall validation score
   const overallValidationScore = parseFloat((
@@ -48,12 +34,41 @@ export const createValidation = async (pilotId, data, user, ip_address = null) =
      data.user_satisfaction_score * 0.15)
   ).toFixed(2));
 
-  await prisma.pilot.update({
-    where: { id: pilotId },
-    data: {
-      status: 'VALIDATION',
-      overall_score: overallValidationScore
-    }
+  // Atomic transaction: Create validation report and transition pilot to VALIDATION stage
+  const validation = await prisma.$transaction(async (tx) => {
+    const createdValidation = await tx.validation.create({
+      data: {
+        pilot_id: pilotId,
+        validator_id: user.id,
+        performance_score: data.performance_score,
+        kpi_achievement_score: data.kpi_achievement_score,
+        evidence_quality_score: data.evidence_quality_score,
+        technical_stability_score: data.technical_stability_score,
+        user_satisfaction_score: data.user_satisfaction_score,
+        comments: data.comments?.trim() || null,
+        status: targetValidationStatus
+      },
+      include: {
+        validator: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true
+          }
+        }
+      }
+    });
+
+    await tx.pilot.update({
+      where: { id: pilotId },
+      data: {
+        status: 'VALIDATION',
+        overall_score: overallValidationScore
+      }
+    });
+
+    return createdValidation;
   });
 
   await createAuditLog({

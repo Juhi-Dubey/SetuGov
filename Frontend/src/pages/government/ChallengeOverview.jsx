@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
-import { getChallengeById, runChallengeMatching } from "../../services/challengeService";
+import { getChallengeById, runChallengeMatching, startChallengeEvaluation } from "../../services/challengeService";
 import { formatPublishDate } from "../../utils/filterUtils";
 
 const workflowItems = [
@@ -86,27 +86,49 @@ const workflowItems = [
 function ChallengeOverview() {
   const navigate = useNavigate();
   const { id: paramId, challengeId } = useParams();
-  const id = paramId || challengeId || "1";
+  const id = paramId || challengeId;
 
   const [challenge, setChallenge] = useState(null);
   const [loading, setLoading] = useState(true);
   const [matchingLoading, setMatchingLoading] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   useEffect(() => {
-    loadChallenge();
+    if (id) {
+      loadChallenge();
+    } else {
+      setLoading(false);
+    }
   }, [id]);
 
   const loadChallenge = async () => {
     try {
       setLoading(true);
+      setActionError("");
       const res = await getChallengeById(id);
       if (res?.data) {
         setChallenge(res.data?.challenge || res.data);
       }
     } catch (err) {
-      console.warn("Challenge load fallback:", err);
+      console.warn("Challenge load error:", err);
+      setChallenge(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStartEvaluation = async () => {
+    try {
+      setTransitioning(true);
+      setActionError("");
+      await startChallengeEvaluation(id);
+      await loadChallenge();
+    } catch (err) {
+      console.error("Failed to start evaluation:", err);
+      setActionError(err?.response?.data?.message || err?.message || "Failed to start evaluation.");
+    } finally {
+      setTransitioning(false);
     }
   };
 
@@ -123,10 +145,44 @@ function ChallengeOverview() {
     }
   };
 
+  if (!id) {
+    return (
+      <AppLayout role="government">
+        <div className="mx-auto max-w-7xl py-12 text-center">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">No Challenge Selected</h2>
+          <p className="mt-2 text-slate-500 dark:text-slate-400">Please select a valid challenge from the repository.</p>
+          <button
+            onClick={() => navigate("/government/challenges")}
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-900 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 transition"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Challenges
+          </button>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (!loading && !challenge) {
+    return (
+      <AppLayout role="government">
+        <div className="mx-auto max-w-7xl py-12 text-center">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Challenge Not Found</h2>
+          <p className="mt-2 text-slate-500 dark:text-slate-400">The requested challenge could not be found or you do not have permission to view it.</p>
+          <button
+            onClick={() => navigate("/government/challenges")}
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-900 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 transition"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Challenges
+          </button>
+        </div>
+      </AppLayout>
+    );
+  }
+
   const apps = challenge?.applications || [];
   const appCount = challenge?.applications?.length ?? challenge?._count?.applications ?? 0;
-  const eligibleCount = apps.filter(a => ['ELIGIBLE', 'SHORTLISTED', 'SELECTED'].includes(a.status)).length;
-  const evaluatedCount = apps.filter(a => ['EVALUATED', 'SHORTLISTED', 'SELECTED'].includes(a.status)).length;
+  const eligibleCount = apps.filter(a => ['UNDER_REVIEW', 'SHORTLISTED', 'ACCEPTED', 'SELECTED'].includes(a.status)).length;
+  const evaluatedCount = apps.filter(a => (a.evaluations && a.evaluations.length > 0) || ['SHORTLISTED', 'ACCEPTED', 'SELECTED'].includes(a.status)).length;
   const evalProgress = appCount > 0 ? Math.round((evaluatedCount / appCount) * 100) : 0;
 
   const displayData = {
@@ -201,7 +257,7 @@ function ChallengeOverview() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {challenge?.status === "DRAFT" && (
                 <button
                   type="button"
@@ -210,6 +266,22 @@ function ChallengeOverview() {
                 >
                   <FileText className="h-4 w-4" />
                   Edit Draft
+                </button>
+              )}
+
+              {challenge?.status === "PUBLISHED" && (
+                <button
+                  type="button"
+                  onClick={handleStartEvaluation}
+                  disabled={transitioning}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  {transitioning ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ClipboardCheck className="h-4 w-4" />
+                  )}
+                  Start Evaluation Phase
                 </button>
               )}
 
@@ -238,6 +310,12 @@ function ChallengeOverview() {
             </div>
           </div>
         </motion.div>
+
+        {actionError && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800/40 dark:bg-red-950/30 dark:text-red-300">
+            {actionError}
+          </div>
+        )}
 
         {/* SUMMARY CARDS */}
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

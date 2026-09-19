@@ -45,10 +45,10 @@ export const normalizeChallengePayload = (raw = {}) => {
     return isNaN(d.getTime()) ? null : d.toISOString();
   };
 
-  const title = extractString(raw.title, "Government Innovation Challenge");
+  const title = extractString(raw.title, "");
   const problem_description = extractString(
     raw.problemDescription || raw.problem_description,
-    "Operational challenge statement created through SetuGov platform."
+    ""
   );
   const current_process = extractString(
     raw.currentProcess || raw.current_process,
@@ -56,16 +56,16 @@ export const normalizeChallengePayload = (raw = {}) => {
   );
   const current_baseline = extractString(
     raw.currentBaseline || raw.current_baseline,
-    "Manual departmental process baseline"
+    ""
   );
   const desired_outcome = extractString(
     raw.desiredOutcome || raw.desired_outcome,
-    "Digitized measurable operational target"
+    ""
   );
-  const location = extractString(raw.location, "Maharashtra");
+  const location = extractString(raw.location, "");
   const pilot_location = extractString(
     raw.pilotLocation || raw.pilot_location || raw.location,
-    location
+    ""
   );
   const startup_requirements = extractString(
     raw.startup || raw.startupRequirements || raw.startup_requirements,
@@ -80,25 +80,24 @@ export const normalizeChallengePayload = (raw = {}) => {
     ""
   );
 
-  // Numeric budgets
-  const budget_min = Math.max(
-    0,
-    Number(raw.budgetMin ?? raw.budget_min ?? 100000) || 100000
-  );
-  let budget_max = Number(raw.budgetMax ?? raw.budget_max ?? raw.budget ?? 2500000);
-  if (isNaN(budget_max) || budget_max <= 0) {
-    budget_max = 2500000;
-  }
-  if (budget_max < budget_min) {
-    budget_max = budget_min * 2;
-  }
+  // Numeric budgets - preserve actual user input without inventing dummy values
+  const rawBudgetMin = raw.budgetMin ?? raw.budget_min;
+  const rawBudgetMax = raw.budgetMax ?? raw.budget_max ?? raw.budget;
+  const budget_min = rawBudgetMin !== undefined && rawBudgetMin !== null && rawBudgetMin !== ""
+    ? Number(rawBudgetMin)
+    : undefined;
+  const budget_max = rawBudgetMax !== undefined && rawBudgetMax !== null && rawBudgetMax !== ""
+    ? Number(rawBudgetMax)
+    : undefined;
 
   // Integer positive pilot duration
-  let pilot_duration_days = parseInt(
-    raw.pilotDurationDays ?? raw.pilot_duration_days,
-    10
-  );
-  if (isNaN(pilot_duration_days) || pilot_duration_days <= 0) {
+  let pilot_duration_days = undefined;
+  const rawDuration = raw.pilotDurationDays ?? raw.pilot_duration_days;
+  if (rawDuration !== undefined && rawDuration !== null && rawDuration !== "") {
+    const parsedDays = parseInt(rawDuration, 10);
+    if (!isNaN(parsedDays) && parsedDays > 0) pilot_duration_days = parsedDays;
+  }
+  if (!pilot_duration_days) {
     const sDate = raw.pilotStartDate || raw.pilot_start_date;
     const eDate = raw.pilotEndDate || raw.pilot_end_date;
     if (sDate && eDate) {
@@ -107,11 +106,8 @@ export const normalizeChallengePayload = (raw = {}) => {
       if (diffDays > 0) pilot_duration_days = diffDays;
     }
   }
-  if (isNaN(pilot_duration_days) || pilot_duration_days <= 0) {
-    pilot_duration_days = 60;
-  }
 
-  // Required technologies: strictly array of strings (flatten from objects if needed)
+  // Required technologies: strictly array of strings from user/copilot input
   const techSource =
     raw.requiredTechnologies ||
     raw.required_technologies ||
@@ -137,34 +133,19 @@ export const normalizeChallengePayload = (raw = {}) => {
       })
       .filter((t) => t.length > 0);
   }
-  if (required_technologies.length === 0) {
-    required_technologies = [
-      "Artificial Intelligence & ML",
-      "Cloud Computing",
-    ];
-  }
 
   const payload = {
-    title: title.length >= 5 ? title : `${title} - Project`,
-    problem_description:
-      problem_description.length >= 20
-        ? problem_description
-        : `${problem_description} — Detailed operational problem statement.`,
-    current_baseline:
-      current_baseline.length >= 5
-        ? current_baseline
-        : `${current_baseline} baseline metrics`,
-    desired_outcome:
-      desired_outcome.length >= 5
-        ? desired_outcome
-        : `${desired_outcome} target outcome`,
-    location: location.length >= 2 ? location : "Maharashtra",
-    budget_min,
-    budget_max,
-    pilot_duration_days,
+    title,
+    problem_description,
+    current_baseline,
+    desired_outcome,
+    location,
     required_technologies,
   };
 
+  if (budget_min !== undefined) payload.budget_min = budget_min;
+  if (budget_max !== undefined) payload.budget_max = budget_max;
+  if (pilot_duration_days !== undefined) payload.pilot_duration_days = pilot_duration_days;
   if (current_process) payload.current_process = current_process;
   if (pilot_location) payload.pilot_location = pilot_location;
   if (startup_requirements) payload.startup_requirements = startup_requirements;
@@ -246,6 +227,12 @@ export const closeChallenge = async (id) => {
   });
 };
 
+export const startChallengeEvaluation = async (id) => {
+  return apiRequest(`/challenges/${id}/start-evaluation`, {
+    method: "POST",
+  });
+};
+
 export const getChallengeApplications = async (challengeId) => {
   return apiRequest(`/challenges/${challengeId}/applications`);
 };
@@ -323,6 +310,7 @@ export default {
   deleteChallenge,
   publishChallenge,
   closeChallenge,
+  startChallengeEvaluation,
   shortlistStartup,
   getChallengeApplications,
   runChallengeMatching,

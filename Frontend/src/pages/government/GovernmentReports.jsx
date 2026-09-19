@@ -186,7 +186,7 @@ function GovernmentReports() {
         list.push({
           id: pay.id,
           pilotTitle: p.title || p.challenge?.title || "Pilot Project",
-          startupName: p.startup?.company_name || "Assigned Startup",
+          startupName: p.startup?.company_name || "Not specified",
           amount: pay.amount || 0,
           status: pay.status || "PENDING",
           trancheNumber: pay.tranche_number,

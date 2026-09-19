@@ -25,6 +25,18 @@ export const createPilot = async (data, user, ip_address = null) => {
     throw new BadRequestError('Cannot create pilot for a CLOSED challenge.');
   }
 
+  // Canonical Challenge lifecycle validation: Challenge must be in EVALUATION stage
+  if (challenge.status !== 'EVALUATION' && challenge.status !== 'PILOT') {
+    throw new BadRequestError(
+      `Cannot create pilot: Problem Statement is in '${challenge.status}' stage. It must be transitioned to 'EVALUATION' stage first.`
+    );
+  }
+
+  // Authoritatively validate transition: EVALUATION -> PILOT
+  if (challenge.status !== 'PILOT') {
+    validateTransition('CHALLENGE', challenge.status, 'PILOT');
+  }
+
   // Tenant check for GOVERNMENT role
   if (user.role === 'GOVERNMENT') {
     if (!user.department_id || challenge.department_id !== user.department_id) {
@@ -341,6 +353,11 @@ export const startPilot = async (id, user, ip_address = null, options = {}) => {
 
   // P0-3: Verify tenant authorization for the pilot project
   const pilot = await verifyPilotAccess(id, user, 'PILOT_LIFECYCLE');
+
+  // Closed challenge freeze rule: prohibited from initiating new downstream operations on CLOSED challenge
+  if (pilot.challenge?.status === 'CLOSED') {
+    throw new BadRequestError('Cannot start pilot: The associated Problem Statement is CLOSED. Downstream initiation is prohibited.');
+  }
 
   if (pilot.status === 'RUNNING') {
     throw new BadRequestError('Pilot project is already in RUNNING status.');

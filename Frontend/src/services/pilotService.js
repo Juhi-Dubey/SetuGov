@@ -146,6 +146,17 @@ export const getPilotPayments = async (pilotId) => {
   return apiRequest(`/pilots/${pilotId}/payments`);
 };
 
+export const getPayments = async (params = {}) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.append(key, value);
+    }
+  });
+  const queryString = query.toString();
+  return apiRequest(`/payments${queryString ? `?${queryString}` : ""}`);
+};
+
 export const updatePaymentStatus = async (paymentId, statusData) => {
   return apiRequest(`/payments/${paymentId}/status`, {
     method: "PATCH",

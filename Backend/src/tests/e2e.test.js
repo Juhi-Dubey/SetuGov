@@ -144,6 +144,12 @@ const runE2ETests = async () => {
     }
     logger.info('✅ Startup successfully viewed challenge details');
 
+    // Ensure startup is verified in DB
+    await prisma.startup.updateMany({
+      where: { user: { email: 'vikas@mediqueue.ai' } },
+      data: { verification_status: 'VERIFIED' }
+    });
+
     // ----------------------------------------------------
     // STEP 6: Startup Submits Application
     // ----------------------------------------------------
@@ -161,6 +167,16 @@ const runE2ETests = async () => {
     }
     const application = appRes.body.data.application;
     logger.info(`✅ Application submitted (ID: ${application.id}, status: ${application.status})`);
+
+    // ----------------------------------------------------
+    // STEP 6b: Government Transitions Challenge to EVALUATION Phase
+    // ----------------------------------------------------
+    logger.info('Step 6b: Government starting Evaluation Phase on Challenge...');
+    const startEvalRes = await request('POST', `/api/v1/challenges/${challenge.id}/start-evaluation`, null, govToken);
+    if (startEvalRes.statusCode !== 200 || startEvalRes.body.data.challenge.status !== 'EVALUATION') {
+      throw new Error(`Start evaluation failed: ${JSON.stringify(startEvalRes.body)}`);
+    }
+    logger.info('✅ Challenge transitioned to EVALUATION phase');
 
     // ----------------------------------------------------
     // STEP 7: Governed Evaluator Pool Curation, Assignment, COI & Independent Evaluations

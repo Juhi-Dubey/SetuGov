@@ -28,6 +28,7 @@ import { getChallengeById, getChallengePilot } from "../../services/challengeSer
 import {
   getPilotMilestones,
   getPilotPayments,
+  getPayments,
   createPayment,
   updatePaymentStatus,
 } from "../../services/pilotService";
@@ -58,13 +59,22 @@ function ChallengePayments() {
 
   // Load real pilot, milestones, and payments from PostgreSQL
   const loadData = useCallback(async () => {
-    if (!routeId) return;
-
     setLoading(true);
     setError(null);
     setActionError(null);
 
     try {
+      if (!routeId) {
+        // Global department payments page
+        const paymentsRes = await getPayments({ limit: 100 }).catch(() => ({ data: { payments: [] } }));
+        const fetched = paymentsRes?.data?.payments || paymentsRes?.payments || (Array.isArray(paymentsRes?.data) ? paymentsRes.data : []) || [];
+        setPayments(fetched);
+        setMilestones([]);
+        setPilot(null);
+        setChallenge(null);
+        return;
+      }
+
       // 1. Fetch challenge info if routeId is challenge ID
       const chRes = await getChallengeById(routeId).catch(() => null);
       const chData = chRes?.data?.challenge || chRes?.data || chRes;
@@ -123,16 +133,23 @@ function ChallengePayments() {
   }, [milestones, payments]);
 
   const allPaymentItems = useMemo(() => {
+    if (!routeId) {
+      return payments.map((p) => ({
+        type: "payment",
+        payment: p,
+        id: p.id,
+      }));
+    }
     const items = [];
     milestones.forEach((m) => {
       const payment = payments.find((p) => p.milestone_id === m.id);
       items.push({ type: "milestone", milestone: m, payment, id: m.id });
     });
     unlinkedPayments.forEach((p) => {
-      items.push({ type: "unlinked", payment: p, id: p.id });
+      items.push({ type: "payment", payment: p, id: p.id });
     });
     return items;
-  }, [milestones, payments, unlinkedPayments]);
+  }, [milestones, payments, unlinkedPayments, routeId]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -255,12 +272,14 @@ function ChallengePayments() {
             <button
               type="button"
               onClick={() =>
-                navigate(`/government/challenges/${routeId}/overview`)
+                routeId
+                  ? navigate(`/government/challenges/${routeId}/overview`)
+                  : navigate("/government/dashboard")
               }
               className="back-nav"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Challenge Overview
+              {routeId ? "Back to Challenge Overview" : "Back to Dashboard"}
             </button>
 
             <button
@@ -282,13 +301,15 @@ function ChallengePayments() {
               </div>
 
               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl text-slate-900 dark:text-white">
-                Challenge Payments & Escrow Releases
+                {routeId ? "Challenge Payments & Escrow Releases" : "Department Payments & Treasury Releases"}
               </h1>
 
               <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                {pilot
-                  ? `Track milestone payments, verified deliverable completion, and treasury disbursals for pilot: ${pilot.title || pilot.startup?.company_name || "Active Pilot"}`
-                  : "Track milestone-based payments and financial progress for this challenge."}
+                {routeId
+                  ? (pilot
+                      ? `Track milestone payments, verified deliverable completion, and treasury disbursals for pilot: ${pilot.title || pilot.startup?.company_name || "Active Pilot"}`
+                      : "Track milestone-based payments and financial progress for this challenge.")
+                  : "Consolidated register of milestone releases, verified deliverable completion, and treasury disbursals across all departmental pilots and procurements."}
               </p>
             </div>
 
@@ -382,8 +403,8 @@ function ChallengePayments() {
           </div>
         )}
 
-        {/* NO PILOT STATE */}
-        {!loading && !error && !pilot && (
+        {/* NO PILOT STATE (Challenge View Only) */}
+        {!loading && !error && !pilot && routeId && (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
               <AlertTriangle className="h-6 w-6" />
@@ -405,7 +426,7 @@ function ChallengePayments() {
         )}
 
         {/* MAIN FINANCIAL CONTENT */}
-        {!loading && !error && pilot && (
+        {!loading && !error && (pilot || !routeId) && (
           <>
             {/* SUMMARY CARDS */}
             <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -484,21 +505,25 @@ function ChallengePayments() {
                 </div>
               </div>
 
-              {milestones.length === 0 && unlinkedPayments.length === 0 ? (
+              {allPaymentItems.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-slate-500 dark:border-slate-800 dark:text-slate-400">
                   <Clock3 className="mx-auto h-8 w-8 text-slate-400" />
                   <p className="mt-2 text-sm font-bold text-slate-800 dark:text-slate-200">
-                    No Payment Milestones Scheduled
+                    No Payment Records Scheduled
                   </p>
                   <p className="mt-1 text-xs text-slate-400">
-                    Milestone deliverables and payment schedules will appear here once configured in Pilot Management.
+                    {routeId
+                      ? "Milestone deliverables and payment schedules will appear here once configured in Pilot Management."
+                      : "No payment records found across active pilots or contracts in your department."}
                   </p>
-                  <Link
-                    to={`/government/challenges/${routeId}/pilot`}
-                    className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:underline"
-                  >
-                    Configure Pilot Milestones <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
-                  </Link>
+                  {routeId && (
+                    <Link
+                      to={`/government/challenges/${routeId}/pilot`}
+                      className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:underline"
+                    >
+                      Configure Pilot Milestones <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
+                    </Link>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -886,6 +911,10 @@ function MilestoneRow({
 
 function UnlinkedPaymentRow({ payment, onMarkPaid, isProcessing }) {
   const isPaid = payment.status === "PAID";
+  const pilotTitle = payment.pilot?.title || payment.pilot?.challenge?.title || payment.procurement?.contract_title;
+  const startupName = payment.pilot?.startup?.company_name || payment.procurement?.startup?.company_name;
+  const milestoneName = payment.milestone?.name;
+  const displayTitle = milestoneName || pilotTitle || "General Scheduled Disbursal";
 
   return (
     <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
@@ -908,15 +937,15 @@ function UnlinkedPaymentRow({ payment, onMarkPaid, isProcessing }) {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                General Scheduled Disbursal
+                {displayTitle}
               </h3>
               <span className="inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                Direct Tranche
+                {milestoneName ? "Milestone Tranche" : (pilotTitle ? "Pilot Tranche" : "Direct Tranche")}
               </span>
             </div>
 
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Status: {payment.status}
+              {startupName ? `Startup: ${startupName} • ` : ""}Status: {payment.status}
               {payment.payment_date
                 ? ` • Disbursed: ${formatDate(payment.payment_date)}`
                 : ""}

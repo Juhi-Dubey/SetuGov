@@ -140,7 +140,7 @@ function ChallengeContract() {
     gem_officer_name: "",
     gem_notes: "",
     gem_supporting_doc: "",
-    gem_handoff_status: "HANDED_OFF",
+    gem_handoff_status: "READY",
   });
 
   // Stage 4: Contract / PO Issuance
@@ -235,7 +235,7 @@ function ChallengeContract() {
             gem_officer_name: currentProc.gem_officer_name || "",
             gem_notes: currentProc.gem_notes || "",
             gem_supporting_doc: currentProc.gem_supporting_doc || "",
-            gem_handoff_status: currentProc.gem_handoff_status || "HANDED_OFF",
+            gem_handoff_status: currentProc.gem_handoff_status || "READY",
           });
           setContractForm((prev) => ({
             ...prev,
@@ -355,7 +355,7 @@ function ChallengeContract() {
       const res = await generateDocumentDraftWithAI({
         document_type: "PROCUREMENT_CONTRACT_AGREEMENT",
         challenge_title: challenge?.title || "Innovation Procurement Pilot",
-        startup_name: pilot?.startup?.company_name || "Deep-Tech Startup",
+        startup_name: pilot?.startup?.company_name || "",
         pilot_duration: `${contractForm.contract_duration_days || 90} days`,
         pilot_budget: `₹${Number(contractForm.final_contract_value || 0).toLocaleString("en-IN")}`,
         objectives: [challenge?.desired_outcome || challenge?.problem_description || "State innovation deployment"],
@@ -639,7 +639,7 @@ function ChallengeContract() {
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <span className="text-xs text-slate-500">Selected Startup</span>
                 <p className="mt-2 text-base font-bold text-slate-900 dark:text-white">
-                  {pilot.startup?.company_name || "Deep-Tech Startup"}
+                  {pilot.startup?.company_name || "Not specified"}
                 </p>
                 <p className="text-[11px] text-slate-400">
                   {pilot.startup?.domain || "Innovation Vendor"}
@@ -948,7 +948,7 @@ function ChallengeContract() {
                   <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-xs text-emerald-800 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-300">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                     <span>
-                      Officially sanctioned by <strong>{procurement.approver?.name || "Nodal Authority"}</strong> on{" "}
+                      Officially sanctioned by <strong>{procurement.approver?.name || "Not specified"}</strong> on{" "}
                       {new Date(procurement.approved_at).toLocaleDateString("en-IN", { dateStyle: "long" })}.
                       {procurement.approval_notes && ` Note: "${procurement.approval_notes}"`}
                     </span>
@@ -1072,13 +1072,13 @@ function ChallengeContract() {
                     <div>
                       <span className="text-slate-400">Sanction / Reference:</span>
                       <p className="mt-1 font-bold text-slate-900 dark:text-white">
-                        {procurement.gem_reference_number || "Direct Sanction"}
+                        {procurement.gem_reference_number || "Not specified"}
                       </p>
                     </div>
                     <div>
                       <span className="text-slate-400">Handoff Officer:</span>
                       <p className="mt-1 font-bold text-slate-900 dark:text-white">
-                        {procurement.gem_officer_name || "Nodal Authority"}
+                        {procurement.gem_officer_name || "Not specified"}
                       </p>
                     </div>
                     <div>
@@ -1423,7 +1423,7 @@ function ChallengeContract() {
                       Statutory Delivery Acceptance Recorded
                     </div>
                     <p className="text-emerald-800 dark:text-emerald-300">
-                      Accepted by <strong>{procurement.acceptor?.name || "State Authority"}</strong> on{" "}
+                      Accepted by <strong>{procurement.acceptor?.name || "Not specified"}</strong> on{" "}
                       {procurement.accepted_at ? new Date(procurement.accepted_at).toLocaleDateString("en-IN", { dateStyle: "long" }) : "Recently"}.
                     </p>
                     {procurement.acceptance_remarks && (

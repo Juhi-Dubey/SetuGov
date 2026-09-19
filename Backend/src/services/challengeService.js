@@ -437,6 +437,54 @@ export const publishChallenge = async (id, user, ip_address = null) => {
   return updated;
 };
 
+export const startChallengeEvaluation = async (id, user, ip_address = null) => {
+  const challenge = await prisma.challenge.findUnique({ where: { id } });
+  if (!challenge) {
+    throw new NotFoundError(`Challenge with ID ${id} not found.`);
+  }
+
+  // Authorization: ADMIN or GOVERNMENT within the same department
+  if (user.role === 'ADMIN') {
+    // Admin has cross-department management authorization
+  } else if (user.role === 'GOVERNMENT') {
+    if (!user.department_id || challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You can only start evaluation for challenges belonging to your assigned department.');
+    }
+  } else {
+    throw new ForbiddenError('You are not authorized to start evaluation for this challenge.');
+  }
+
+  // Canonical state transition check: only PUBLISHED -> EVALUATION is valid
+  validateTransition('CHALLENGE', challenge.status, 'EVALUATION');
+
+  const updated = await prisma.challenge.update({
+    where: { id },
+    data: { status: 'EVALUATION' },
+    include: {
+      department: true
+    }
+  });
+
+  await createAuditLog({
+    user_id: user.id,
+    action: 'CHALLENGE_EVALUATION_STARTED',
+    entity_type: 'CHALLENGE',
+    entity_id: id,
+    details: { previousStatus: challenge.status, newStatus: 'EVALUATION' },
+    ip_address
+  });
+
+  await sendNotification({
+    user_id: user.id,
+    title: 'Evaluation Stage Started',
+    message: `Problem Statement "${challenge.title}" has entered the EVALUATION stage. Proposal review and evaluator scoring are now officially authorized.`,
+    type: 'CHALLENGE_EVALUATION_STARTED',
+    link: `/government/challenges/${id}/applications`
+  });
+
+  return updated;
+};
+
 export const closeChallenge = async (id, user, ip_address = null) => {
   const challenge = await prisma.challenge.findUnique({ where: { id } });
   if (!challenge) {
@@ -1179,6 +1227,7 @@ export default {
   updateChallenge,
   deleteChallenge,
   publishChallenge,
+  startChallengeEvaluation,
   closeChallenge,
   transitionChallengeStatus,
   shortlistStartup,

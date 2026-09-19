@@ -360,9 +360,13 @@ export const assignEvaluatorToApplication = async (applicationId, data, currentU
     throw new NotFoundError(`Application with ID ${applicationId} not found.`);
   }
 
-  // Enforce CLOSED challenge freeze
+  // Enforce CLOSED challenge freeze & eligible challenge lifecycle stage
   if (application.challenge.status === 'CLOSED') {
     throw new BadRequestError('Cannot assign evaluators: Problem Statement is CLOSED.');
+  }
+
+  if (application.challenge.status !== 'PUBLISHED' && application.challenge.status !== 'EVALUATION') {
+    throw new BadRequestError(`Cannot assign evaluators: Problem Statement is in '${application.challenge.status}' status. Evaluator assignments can only be made when the Problem Statement is in PUBLISHED or EVALUATION stage.`);
   }
 
   if (application.status !== 'SUBMITTED' && application.status !== 'SHORTLISTED') {

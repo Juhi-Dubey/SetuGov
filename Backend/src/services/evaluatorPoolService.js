@@ -73,8 +73,8 @@ export const applyToEvaluateChallenge = async (challengeId, data, user, ip_addre
     throw new BadRequestError('Cannot apply: This Problem Statement is CLOSED.');
   }
 
-  if (challenge.status !== 'PUBLISHED') {
-    throw new BadRequestError(`Cannot apply to challenge in '${challenge.status}' status. Only PUBLISHED challenges accept evaluator applications.`);
+  if (challenge.status !== 'PUBLISHED' && challenge.status !== 'EVALUATION') {
+    throw new BadRequestError(`Cannot apply to challenge in '${challenge.status}' status. Only PUBLISHED and EVALUATION challenges accept evaluator applications.`);
   }
 
   // Verify evaluator verification status

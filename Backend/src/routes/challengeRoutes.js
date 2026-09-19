@@ -6,6 +6,7 @@ import {
   updateChallenge,
   deleteChallenge,
   publishChallenge,
+  startChallengeEvaluation,
   closeChallenge,
   shortlistStartup,
   getChallengeApplications,
@@ -65,6 +66,9 @@ router.post('/:challenge_id/brain1/generate', authenticate, authorizeRoles('GOVE
 
 // Publish Challenge (DRAFT -> PUBLISHED)
 router.post('/:challenge_id/publish', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), publishChallenge);
+
+// Start Evaluation (PUBLISHED -> EVALUATION)
+router.post('/:challenge_id/start-evaluation', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), startChallengeEvaluation);
 
 // Close Challenge (PUBLISHED/EVALUATION -> CLOSED)
 router.post('/:challenge_id/close', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), closeChallenge);

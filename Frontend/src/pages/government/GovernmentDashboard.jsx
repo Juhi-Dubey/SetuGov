@@ -92,11 +92,11 @@ function GovernmentDashboard() {
         return sum + count;
       }, 0);
 
-      // Pilot status counts — prefer authoritative backend metrics
+      // Pilot status counts — derive accurately from pilot statuses
       const atRiskPilots = analyticsData?.metrics?.pilots_at_risk ?? rawPilots.filter((p) => p.status === "AT_RISK").length;
       const activePilots = analyticsData?.metrics?.active_pilots ?? rawPilots.filter((p) => ["PLANNED", "RUNNING", "VALIDATION"].includes(p.status)).length;
-      const onTrackPilots = analyticsData?.metrics?.active_pilots ?? rawPilots.filter((p) => ["RUNNING", "VALIDATION", "SCALED", "COMPLETED"].includes(p.status)).length;
-      const criticalPilots = analyticsData?.metrics?.completed_pilots ?? rawPilots.filter((p) => p.status === "STOPPED").length;
+      const onTrackPilots = rawPilots.filter((p) => ["RUNNING", "VALIDATION"].includes(p.status)).length;
+      const criticalPilots = rawPilots.filter((p) => p.status === "STOPPED").length;
 
       const formattedChallenges = rawChallenges.map((ch) => ({
         id: ch.id,

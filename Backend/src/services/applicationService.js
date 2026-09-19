@@ -375,6 +375,13 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
 
   // Phase 11, 12, 13: Governance Gates for SELECTED transition
   if (nextStatus === 'SELECTED') {
+    // Challenge lifecycle gate: Challenge must be in EVALUATION stage
+    if (application.challenge.status !== 'EVALUATION') {
+      throw new BadRequestError(
+        `Cannot select startup: Problem Statement is in '${application.challenge.status}' stage. It must be transitioned to 'EVALUATION' stage before selecting a startup.`
+      );
+    }
+
     const decision = await evaluateApplicationDecision(id, user);
 
     // 1. Quorum Verification: minimum 2 independent evaluations

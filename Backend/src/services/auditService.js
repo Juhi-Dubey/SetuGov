@@ -214,6 +214,122 @@ export const getDepartmentEntities = async (departmentId) => {
 };
 
 /**
+ * Resolve all entity IDs belonging to a challenge and its downstream children:
+ * applications, evaluator assignments, evaluations, pilots, KPIs, milestones,
+ * evidence, risks, issues, validations, scale decisions, procurements, and payments.
+ */
+export const getChallengeDescendantEntityIds = async (challengeId) => {
+  if (!challengeId) return new Set();
+
+  const [applications, pools, pilots, procurements] = await Promise.all([
+    prisma.application.findMany({
+      where: { challenge_id: challengeId },
+      select: { id: true }
+    }),
+    prisma.challengeEvaluatorPool.findMany({
+      where: { challenge_id: challengeId },
+      select: { id: true }
+    }),
+    prisma.pilot.findMany({
+      where: { challenge_id: challengeId },
+      select: { id: true }
+    }),
+    prisma.procurementRecord.findMany({
+      where: { challenge_id: challengeId },
+      select: { id: true }
+    })
+  ]);
+
+  const applicationIds = applications.map((a) => a.id);
+  const poolIds = pools.map((p) => p.id);
+  const pilotIds = pilots.map((p) => p.id);
+  const procurementIds = procurements.map((p) => p.id);
+
+  const [
+    assignments,
+    evaluations,
+    appDocs,
+    milestones,
+    kpis,
+    evidence,
+    risks,
+    issues,
+    validations,
+    scaleDecisions,
+    payments
+  ] = await Promise.all([
+    prisma.evaluatorAssignment.findMany({
+      where: { application_id: { in: applicationIds } },
+      select: { id: true }
+    }),
+    prisma.evaluation.findMany({
+      where: { application_id: { in: applicationIds } },
+      select: { id: true }
+    }),
+    prisma.applicationDocument.findMany({
+      where: { application_id: { in: applicationIds } },
+      select: { id: true }
+    }),
+    prisma.milestone.findMany({
+      where: { pilot_id: { in: pilotIds } },
+      select: { id: true }
+    }),
+    prisma.pilotKpi.findMany({
+      where: { pilot_id: { in: pilotIds } },
+      select: { id: true }
+    }),
+    prisma.evidence.findMany({
+      where: { pilot_id: { in: pilotIds } },
+      select: { id: true }
+    }),
+    prisma.risk.findMany({
+      where: { pilot_id: { in: pilotIds } },
+      select: { id: true }
+    }),
+    prisma.pilotIssue.findMany({
+      where: { pilot_id: { in: pilotIds } },
+      select: { id: true }
+    }),
+    prisma.validation.findMany({
+      where: { pilot_id: { in: pilotIds } },
+      select: { id: true }
+    }),
+    prisma.scaleDecision.findMany({
+      where: { pilot_id: { in: pilotIds } },
+      select: { id: true }
+    }),
+    prisma.payment.findMany({
+      where: {
+        OR: [
+          { pilot_id: { in: pilotIds } },
+          { procurement_id: { in: procurementIds } }
+        ]
+      },
+      select: { id: true }
+    })
+  ]);
+
+  return new Set([
+    challengeId,
+    ...applicationIds,
+    ...poolIds,
+    ...pilotIds,
+    ...procurementIds,
+    ...assignments.map((a) => a.id),
+    ...evaluations.map((e) => e.id),
+    ...appDocs.map((d) => d.id),
+    ...milestones.map((m) => m.id),
+    ...kpis.map((k) => k.id),
+    ...evidence.map((e) => e.id),
+    ...risks.map((r) => r.id),
+    ...issues.map((i) => i.id),
+    ...validations.map((v) => v.id),
+    ...scaleDecisions.map((s) => s.id),
+    ...payments.map((p) => p.id)
+  ]);
+};
+
+/**
  * Create an audit log entry.
  */
 export const createAuditLog = async ({
@@ -259,6 +375,7 @@ export const getAuditLogs = async (query = {}, user = null) => {
     action,
     entity_type,
     entity_id,
+    challenge_id,
     user_id,
     start_date,
     startDate,
@@ -315,8 +432,26 @@ export const getAuditLogs = async (query = {}, user = null) => {
     }
 
     const deptScope = await getDepartmentEntities(user.department_id);
+    const targetChallengeId = challenge_id || (entity_id && deptScope.challengeIds.has(entity_id) ? entity_id : null);
 
-    if (entity_id) {
+    if (targetChallengeId) {
+      if (!deptScope.challengeIds.has(targetChallengeId)) {
+        return {
+          logs: [],
+          pagination: {
+            total: 0,
+            page: safePage,
+            limit: safeLimit,
+            totalPages: 0
+          }
+        };
+      }
+      const descendantIds = await getChallengeDescendantEntityIds(targetChallengeId);
+      where.OR = [
+        { entity_id: { in: Array.from(descendantIds) } },
+        { details: { path: ['challenge_id'], equals: targetChallengeId } }
+      ];
+    } else if (entity_id) {
       if (!deptScope.entityIds.has(entity_id)) {
         return {
           logs: [],
@@ -346,17 +481,35 @@ export const getAuditLogs = async (query = {}, user = null) => {
       where.user_id = user_id;
     }
 
-    if (!entity_id && !user_id) {
+    if (!targetChallengeId && !entity_id && !user_id) {
       where.OR = [
         { entity_id: { in: Array.from(deptScope.entityIds) } },
         { user_id: { in: Array.from(deptScope.userIds) } }
       ];
     }
   } else if (user && user.role === 'ADMIN') {
-    if (entity_id) where.entity_id = entity_id;
+    let targetChallengeId = challenge_id;
+    if (!targetChallengeId && entity_id) {
+      const ch = await prisma.challenge.findUnique({
+        where: { id: entity_id },
+        select: { id: true }
+      });
+      if (ch) targetChallengeId = ch.id;
+    }
+
+    if (targetChallengeId) {
+      const descendantIds = await getChallengeDescendantEntityIds(targetChallengeId);
+      where.OR = [
+        { entity_id: { in: Array.from(descendantIds) } },
+        { details: { path: ['challenge_id'], equals: targetChallengeId } }
+      ];
+    } else if (entity_id) {
+      where.entity_id = entity_id;
+    }
+
     if (user_id) where.user_id = user_id;
 
-    if (department_id) {
+    if (department_id && !targetChallengeId && !entity_id) {
       const deptScope = await getDepartmentEntities(department_id);
       where.OR = [
         { entity_id: { in: Array.from(deptScope.entityIds) } },
@@ -365,7 +518,25 @@ export const getAuditLogs = async (query = {}, user = null) => {
     }
   } else {
     // Unauthenticated or general fallback
-    if (entity_id) where.entity_id = entity_id;
+    let targetChallengeId = challenge_id;
+    if (!targetChallengeId && entity_id) {
+      const ch = await prisma.challenge.findUnique({
+        where: { id: entity_id },
+        select: { id: true }
+      });
+      if (ch) targetChallengeId = ch.id;
+    }
+
+    if (targetChallengeId) {
+      const descendantIds = await getChallengeDescendantEntityIds(targetChallengeId);
+      where.OR = [
+        { entity_id: { in: Array.from(descendantIds) } },
+        { details: { path: ['challenge_id'], equals: targetChallengeId } }
+      ];
+    } else if (entity_id) {
+      where.entity_id = entity_id;
+    }
+
     if (user_id) where.user_id = user_id;
   }
 
