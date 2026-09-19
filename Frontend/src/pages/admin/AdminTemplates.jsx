@@ -18,6 +18,7 @@ import {
   updateAdminTemplate,
   deleteAdminTemplate,
 } from "../../services/adminService";
+import Pagination from "../../components/common/Pagination";
 
 function AdminTemplates() {
   const navigate = useNavigate();
@@ -31,6 +32,8 @@ function AdminTemplates() {
   const [deleteId, setDeleteId] = useState(null);
   const [typeFilter, setTypeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9);
 
   const [form, setForm] = useState({
     name: "",
@@ -64,6 +67,10 @@ function AdminTemplates() {
     }
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [typeFilter, statusFilter]);
+
   const activeCount = templates.filter((item) => item.status === "Active").length;
   const inactiveCount = templates.filter((item) => item.status === "Inactive").length;
 
@@ -74,6 +81,11 @@ function AdminTemplates() {
     const matchesStatus = statusFilter === "All" || template.status === statusFilter;
     return matchesType && matchesStatus;
   });
+
+  const paginatedTemplates = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredTemplates.slice(start, start + pageSize);
+  }, [filteredTemplates, currentPage, pageSize]);
 
   const openAddModal = () => {
     setEditingTemplate(null);
@@ -336,7 +348,7 @@ function AdminTemplates() {
       {/* TEMPLATE GRID */}
 
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {filteredTemplates.map(
+        {paginatedTemplates.map(
           (template, index) => (
             <TemplateCard
               key={template.id}
@@ -381,11 +393,20 @@ function AdminTemplates() {
           </h3>
 
           <p className="mt-1 text-xs text-slate-400">
-            Try changing your filters or create
-            a new template.
+            Try changing your search or filters.
           </p>
         </section>
       )}
+
+      {/* PAGINATION */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={filteredTemplates.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        itemName="templates"
+      />
 
       {/* VIEW MODAL */}
 

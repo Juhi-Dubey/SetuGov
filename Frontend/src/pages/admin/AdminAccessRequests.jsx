@@ -26,6 +26,7 @@ import {
   rejectAccessRequest,
 } from "../../services/accessRequestService";
 import { formatEmploymentType } from "../../utils/filterUtils";
+import Pagination from "../../components/common/Pagination";
 
 function AdminAccessRequests() {
   const [requests, setRequests] = useState([]);
@@ -35,6 +36,8 @@ function AdminAccessRequests() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [sourceFilter, setSourceFilter] = useState("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Detail Modal State
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -71,6 +74,10 @@ function AdminAccessRequests() {
     }
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, roleFilter, sourceFilter, search]);
+
   const filteredRequests = useMemo(() => {
     return requests.filter((req) => {
       const q = search.toLowerCase().trim();
@@ -83,6 +90,11 @@ function AdminAccessRequests() {
       );
     });
   }, [requests, search]);
+
+  const paginatedRequests = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredRequests.slice(start, start + pageSize);
+  }, [filteredRequests, currentPage, pageSize]);
 
   const handleReview = async (id) => {
     try {
@@ -288,7 +300,7 @@ function AdminAccessRequests() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                {filteredRequests.map((req) => (
+                {paginatedRequests.map((req) => (
                   <tr key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="py-3.5 px-4 font-medium text-slate-900 dark:text-white">
                       <div>{req.name}</div>
@@ -354,6 +366,16 @@ function AdminAccessRequests() {
           </div>
         )}
       </div>
+
+      {/* PAGINATION */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={filteredRequests.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        itemName="requests"
+      />
 
       {/* =====================================================
           REQUEST DETAIL & VERIFICATION MODAL

@@ -14,6 +14,8 @@ import {
   FolderOpen
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { getStartupPilots } from "../../services/startupService.js";
+import Pagination from "../../components/common/Pagination";
 import { getPilots, getPilotPayments, getPilotMilestones } from "../../services/pilotService";
 
 function StartupPayments() {
@@ -28,6 +30,13 @@ function StartupPayments() {
     paid: 0,
     pending: 0
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const paginatedTransactions = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return transactions.slice(start, start + pageSize);
+  }, [transactions, currentPage, pageSize]);
 
   useEffect(() => {
     let mounted = true;
@@ -330,7 +339,7 @@ function StartupPayments() {
             </thead>
 
             <tbody>
-              {transactions.map(
+              {paginatedTransactions.map(
                 (transaction) => (
                   <tr
                     key={transaction.id}
@@ -374,15 +383,10 @@ function StartupPayments() {
                     <td className="px-5 py-4 text-right sm:px-6">
                       <button
                         type="button"
-                        onClick={() =>
-                          setSelectedTransaction(
-                            transaction
-                          )
-                        }
                         className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
                       >
-                        View
-                        <ArrowRight className="h-3 w-3" />
+                        Receipt
+                        <ExternalLink className="h-3 w-3" />
                       </button>
                     </td>
                   </tr>
@@ -392,6 +396,16 @@ function StartupPayments() {
           </table>
         </div>
       </section>
+
+      {/* PAGINATION */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={transactions.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        itemName="transactions"
+      />
 
       {/* ================================================= */}
       {/* PAYMENT DOCUMENTS                                 */}

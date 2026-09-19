@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { getEvaluators, verifyEvaluator } from "../../services/evaluatorService";
 import { formatEmploymentType } from "../../utils/filterUtils";
+import Pagination from "../../components/common/Pagination";
 
 function AdminEvaluators() {
   const [evaluators, setEvaluators] = useState([]);
@@ -25,6 +26,8 @@ function AdminEvaluators() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [actionLoading, setActionLoading] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     fetchEvaluators();
@@ -46,6 +49,10 @@ function AdminEvaluators() {
     }
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, search]);
+
   const filteredEvaluators = useMemo(() => {
     return evaluators.filter((item) => {
       const q = search.toLowerCase().trim();
@@ -58,6 +65,11 @@ function AdminEvaluators() {
       );
     });
   }, [evaluators, search]);
+
+  const paginatedEvaluators = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredEvaluators.slice(start, start + pageSize);
+  }, [filteredEvaluators, currentPage, pageSize]);
 
   const handleStatusChange = async (profileId, newStatus) => {
     try {
@@ -161,7 +173,7 @@ function AdminEvaluators() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                {filteredEvaluators.map((profile) => (
+                {paginatedEvaluators.map((profile) => (
                   <tr key={profile.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="py-3.5 px-4 font-medium text-slate-900 dark:text-white">
                       <div>{profile.user?.name}</div>
@@ -237,6 +249,16 @@ function AdminEvaluators() {
           </div>
         )}
       </div>
+
+      {/* PAGINATION */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={filteredEvaluators.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        itemName="evaluators"
+      />
     </div>
   );
 }

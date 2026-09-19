@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getUsers, updateUserStatus, updateUserRole, verifyEvaluator } from "../../services/adminService";
+import Pagination from "../../components/common/Pagination";
 
 function AdminUsers() {
   const navigate = useNavigate();
@@ -58,6 +59,12 @@ function AdminUsers() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedUser, setSelectedUser] = useState(null);
   const [openMenu, setOpenMenu] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, roleFilter, statusFilter]);
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
@@ -77,6 +84,11 @@ function AdminUsers() {
       return matchesSearch && matchesRole && matchesStatus;
     });
   }, [users, search, roleFilter, statusFilter]);
+
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredUsers.slice(start, start + pageSize);
+  }, [filteredUsers, currentPage, pageSize]);
 
   const handleToggleStatus = async (id) => {
     const target = users.find((u) => u.id === id);
@@ -325,7 +337,7 @@ function AdminUsers() {
             </thead>
 
             <tbody>
-              {filteredUsers.map(
+              {paginatedUsers.map(
                 (user, index) => (
                   <UserRow
                     key={user.id}
@@ -369,6 +381,16 @@ function AdminUsers() {
           </div>
         )}
       </section>
+
+      {/* PAGINATION */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={filteredUsers.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        itemName="users"
+      />
 
       {/* USER MODAL */}
 

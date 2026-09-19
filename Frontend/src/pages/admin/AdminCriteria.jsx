@@ -21,6 +21,7 @@ import {
   updateAdminCriterion,
   deleteAdminCriterion
 } from "../../services/adminService";
+import Pagination from "../../components/common/Pagination";
 
 function AdminCriteria() {
   const navigate = useNavigate();
@@ -31,6 +32,8 @@ function AdminCriteria() {
   const [showModal, setShowModal] = useState(false);
   const [editingCriteria, setEditingCriteria] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [form, setForm] = useState({
     name: "",
@@ -156,95 +159,87 @@ function AdminCriteria() {
     }
   };
 
+  const paginatedCriteria = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return criteria.slice(start, start + pageSize);
+  }, [criteria, currentPage, pageSize]);
+
   return (
     <motion.div
-      initial={{
-        opacity: 0,
-        y: 12,
-      }}
-      animate={{
-        opacity: 1,
-        y: 0,
-      }}
-      transition={{
-        duration: 0.35,
-      }}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
       className="space-y-6"
     >
       {/* HEADER */}
-
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-8">
         <button
           type="button"
-          onClick={() =>
-            navigate("/admin/dashboard")
-          }
+          onClick={() => navigate("/admin/dashboard")}
           className="back-nav"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Admin Dashboard
         </button>
 
-        <div className="mt-2 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-              <FileText className="h-6 w-6" />
-            </div>
+        <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+              Evaluation Engine
+            </p>
 
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                Administration
-              </p>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+              Criteria Settings
+            </h1>
 
-              <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-                Evaluation Criteria
-              </h1>
-
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                Configure the criteria used by
-                evaluators to assess startup
-                applications and solutions.
-              </p>
-            </div>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+              Configure weights and rubrics used for startup proposal scoring across all challenges.
+            </p>
           </div>
 
           <button
             type="button"
             onClick={openAddModal}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-bold text-white hover:bg-indigo-700"
+            className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white shadow-lg shadow-indigo-600/20 transition-all hover:bg-indigo-700"
           >
             <Plus className="h-4 w-4" />
-            Add Criteria
+            Add Criterion
           </button>
         </div>
       </section>
 
-      {/* SUMMARY */}
+      {/* SUMMARY STATS */}
 
       <section className="grid gap-4 sm:grid-cols-3">
-        <SummaryCard
-          title="Total Criteria"
-          value={criteria.length}
-          icon={FileText}
-        />
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+            Total Criteria
+          </p>
 
-        <SummaryCard
-          title="Active Criteria"
-          value={activeCount}
-          icon={CheckCircle2}
-          type="success"
-        />
+          <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
+            {criteria.length}
+          </p>
+        </div>
 
-        <SummaryCard
-          title="Active Weightage"
-          value={`${totalWeight}%`}
-          icon={Scale}
-          type={
-            totalWeight === 100
-              ? "success"
-              : "warning"
-          }
-        />
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+            Active Criteria
+          </p>
+
+          <p className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+            {activeCount}
+          </p>
+        </div>
+
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+            Total Active Weight
+          </p>
+
+          <p className="mt-2 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+            {totalWeight}%
+          </p>
+        </div>
       </section>
 
       {/* WEIGHTAGE WARNING */}
@@ -304,7 +299,7 @@ function AdminCriteria() {
         </div>
 
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
-          {criteria.map(
+          {paginatedCriteria.map(
             (item, index) => (
               <CriteriaRow
                 key={item.id}
@@ -346,6 +341,16 @@ function AdminCriteria() {
           </div>
         )}
       </section>
+
+      {/* PAGINATION */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={criteria.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        itemName="criteria"
+      />
 
       {/* ADD / EDIT MODAL */}
 

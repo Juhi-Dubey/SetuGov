@@ -15,7 +15,13 @@ import {
   Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getStartups, getStartupDocuments, addStartupDocument } from "../../services/startupService.js";
+import {
+  getStartups,
+  getStartupDocuments,
+  addStartupDocument,
+  uploadStartupDocument,
+} from "../../services/startupService.js";
+import Pagination from "../../components/common/Pagination";
 import { openDocumentSecurely } from "../../utils/documentUtils.js";
 
 const documentTypeOptions = [
@@ -208,6 +214,13 @@ function StartupDocuments() {
     }
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, categoryFilter]);
+
   const filteredDocuments =
     documents.filter((document) => {
       const matchesSearch =
@@ -232,6 +245,11 @@ function StartupDocuments() {
         matchesCategory
       );
     });
+
+  const paginatedDocuments = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredDocuments.slice(start, start + pageSize);
+  }, [filteredDocuments, currentPage, pageSize]);
 
   const verifiedCount =
     documents.filter(
@@ -427,7 +445,7 @@ function StartupDocuments() {
           />
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {filteredDocuments.map(
+            {paginatedDocuments.map(
               (document, index) => (
                 <DocumentRow
                   key={document.id}
@@ -444,6 +462,16 @@ function StartupDocuments() {
           </div>
         )}
       </section>
+
+      {/* PAGINATION */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={filteredDocuments.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        itemName="documents"
+      />
 
       {/* ================================================= */}
       {/* DOCUMENT REQUIREMENTS                             */}

@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Pagination from "../../components/common/Pagination";
 
 const initialAuditLogs = [
   {
@@ -634,60 +635,16 @@ function AdminAudit() {
           </div>
         )}
 
-        {/* PAGINATION */}
-
-        {filteredLogs.length > 0 && (
-          <div className="flex flex-col gap-3 border-t border-slate-100 p-4 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-[10px] text-slate-400">
-              Page {safePage} of {totalPages}
-            </p>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={safePage === 1}
-                onClick={() =>
-                  setPage(
-                    (current) =>
-                      Math.max(
-                        1,
-                        current - 1
-                      )
-                  )
-                }
-                className="inline-flex h-9 items-center gap-1 rounded-xl border border-slate-200 px-3 text-[10px] font-bold text-slate-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:text-slate-300"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-                Previous
-              </button>
-
-              <div className="flex h-9 min-w-9 items-center justify-center rounded-xl bg-indigo-600 px-3 text-[10px] font-bold text-white">
-                {safePage}
-              </div>
-
-              <button
-                type="button"
-                disabled={
-                  safePage === totalPages
-                }
-                onClick={() =>
-                  setPage(
-                    (current) =>
-                      Math.min(
-                        totalPages,
-                        current + 1
-                      )
-                  )
-                }
-                className="inline-flex h-9 items-center gap-1 rounded-xl border border-slate-200 px-3 text-[10px] font-bold text-slate-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:text-slate-300"
-              >
-                Next
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
       </section>
+
+      {/* PAGINATION */}
+      <Pagination
+        currentPage={safePage}
+        totalItems={filteredLogs.length}
+        pageSize={logsPerPage}
+        onPageChange={setPage}
+        itemName="audit logs"
+      />
 
       {/* DETAILS MODAL */}
 

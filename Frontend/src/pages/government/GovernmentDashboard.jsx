@@ -27,6 +27,7 @@ import { getChallenges, getGovernmentAnalytics } from "../../services/challengeS
 import { getPilots } from "../../services/pilotService";
 import { useAuth } from "../../context/AuthContext";
 import { formatPublishDate } from "../../utils/filterUtils";
+import Pagination from "../../components/common/Pagination";
 
 const kpiIcons = {
   challenges: FileText,
@@ -630,103 +631,15 @@ function ChallengeTable({ challenges, onCreateChallenge, onSelectChallenge }) {
           </table>
 
           {/* Pagination Controls */}
-          {filteredChallenges.length > 0 && (
-            <div className="flex flex-col gap-3 border-t border-slate-200 px-5 py-3.5 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
-              {/* Count & Page Size */}
-              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                <span>
-                  Showing{" "}
-                  <strong className="font-semibold text-slate-900 dark:text-white">
-                    {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, filteredChallenges.length)}
-                  </strong>{" "}
-                  of{" "}
-                  <strong className="font-semibold text-slate-900 dark:text-white">
-                    {filteredChallenges.length}
-                  </strong>{" "}
-                  challenges
-                </span>
-
-                <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3 dark:border-slate-700">
-                  <span className="text-slate-400">Per page:</span>
-                  <select
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                  >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Page Buttons */}
-              {totalPages > 1 && (
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    disabled={safePage === 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    aria-label="Previous Page"
-                    className="inline-flex h-8 items-center gap-1 rounded-xl border border-slate-200 px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Previous</span>
-                  </button>
-
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
-                      if (
-                        totalPages > 7 &&
-                        pageNum !== 1 &&
-                        pageNum !== totalPages &&
-                        Math.abs(pageNum - safePage) > 1
-                      ) {
-                        if (pageNum === 2 || pageNum === totalPages - 1) {
-                          return (
-                            <span key={pageNum} className="px-1 text-xs text-slate-400">
-                              ...
-                            </span>
-                          );
-                        }
-                        return null;
-                      }
-
-                      const isActive = pageNum === safePage;
-                      return (
-                        <button
-                          key={pageNum}
-                          type="button"
-                          onClick={() => setCurrentPage(pageNum)}
-                          className={`flex h-8 min-w-[32px] items-center justify-center rounded-xl px-2 text-xs font-semibold transition-all ${
-                            isActive
-                              ? "bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900"
-                              : "border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={safePage === totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    aria-label="Next Page"
-                    className="inline-flex h-8 items-center gap-1 rounded-xl border border-slate-200 px-2.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
-                  >
-                    <span className="hidden sm:inline">Next</span>
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+          <Pagination
+            currentPage={safePage}
+            totalItems={filteredChallenges.length}
+            pageSize={pageSize}
+            pageSizeOptions={[5, 10, 20]}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            itemName="challenges"
+          />
         </div>
       )}
     </motion.section>

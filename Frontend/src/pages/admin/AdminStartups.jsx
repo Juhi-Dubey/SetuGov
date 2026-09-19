@@ -32,6 +32,7 @@ import {
   reviewStartupVerification,
   verifyStartupDocument,
 } from "../../services/adminService.js";
+import Pagination from "../../components/common/Pagination";
 
 const STATUS_CONFIG = {
   DRAFT: { label: "Draft", color: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300" },
@@ -75,6 +76,17 @@ export default function AdminStartups() {
   const [actionModal, setActionModal] = useState(null); // { type: 'REJECT' | 'CORRECTION', notes: '' }
   const [submittingAction, setSubmittingAction] = useState(false);
   const [revealBankAccounts, setRevealBankAccounts] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, orgTypeFilter, search]);
+
+  const paginatedStartups = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return startups.slice(start, start + pageSize);
+  }, [startups, currentPage, pageSize]);
 
   const loadStartups = async () => {
     try {
@@ -290,7 +302,7 @@ export default function AdminStartups() {
             </thead>
 
             <tbody>
-              {startups.map((s, index) => {
+              {paginatedStartups.map((s, index) => {
                 const statusInfo = STATUS_CONFIG[s.verification_status] || { label: s.verification_status, color: "bg-slate-100 text-slate-700" };
                 const isEmailVerified = s.user?.email_verified_at || s.user?.is_verified;
 
@@ -375,6 +387,16 @@ export default function AdminStartups() {
           </div>
         )}
       </section>
+
+      {/* PAGINATION */}
+      <Pagination
+        currentPage={currentPage}
+        totalItems={startups.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        itemName="sellers"
+      />
 
       {/* COMPREHENSIVE DOSSIER MODAL */}
       <AnimatePresence>
