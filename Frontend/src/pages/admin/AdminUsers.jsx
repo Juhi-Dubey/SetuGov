@@ -6,18 +6,15 @@ import {
   UserCheck,
   UserX,
   ShieldCheck,
-  Building2,
-  UserRound,
   MoreVertical,
   CheckCircle2,
-  XCircle,
   Clock,
   Eye,
   X,
   ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getUsers, updateUserStatus, updateUserRole, verifyEvaluator } from "../../services/adminService";
+import { getUsers, updateUserStatus } from "../../services/adminService";
 import Pagination from "../../components/common/Pagination";
 
 function AdminUsers() {
@@ -29,14 +26,16 @@ function AdminUsers() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const res = await getUsers();
+      const res = await getUsers({ role: "GOVERNMENT", limit: 100 });
       const list = res?.data?.users || res?.data || [];
-      const mapped = list.map((u) => ({
+      // Strictly guarantee only government users are loaded
+      const govUsers = list.filter((u) => String(u.role).toUpperCase() === "GOVERNMENT");
+      const mapped = govUsers.map((u) => ({
         id: u.id,
         name: u.name,
         email: u.email,
-        role: u.role === "GOVERNMENT" ? "Government" : u.role === "STARTUP" ? "Startup" : u.role === "EVALUATOR" ? "Evaluator" : "Admin",
-        organization: u.department?.name || (u.role === "STARTUP" ? "Startup Enterprise" : "SetuGov Administration"),
+        role: "Government",
+        organization: u.department?.name || "Government Department",
         status: u.is_active ? "Active" : "Inactive",
         is_active: u.is_active,
         verified: u.is_verified,
@@ -56,7 +55,6 @@ function AdminUsers() {
   }, []);
 
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedUser, setSelectedUser] = useState(null);
   const [openMenu, setOpenMenu] = useState(null);
@@ -65,7 +63,7 @@ function AdminUsers() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, roleFilter, statusFilter]);
+  }, [search, statusFilter]);
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
@@ -76,15 +74,12 @@ function AdminUsers() {
         user.email.toLowerCase().includes(searchText) ||
         user.organization?.toLowerCase().includes(searchText);
 
-      const matchesRole =
-        roleFilter === "All" || user.role === roleFilter;
-
       const matchesStatus =
         statusFilter === "All" || user.status === statusFilter;
 
-      return matchesSearch && matchesRole && matchesStatus;
+      return matchesSearch && matchesStatus;
     });
-  }, [users, search, roleFilter, statusFilter]);
+  }, [users, search, statusFilter]);
 
   const paginatedUsers = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -137,9 +132,9 @@ function AdminUsers() {
       className="space-y-6"
       onClick={() => setOpenMenu(null)}
     >
-      {/* HEADER */}
+      {/* HEADER & NAVIGATION */}
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-8">
+      <div className="space-y-3">
         <button
           type="button"
           onClick={(event) => {
@@ -152,7 +147,7 @@ function AdminUsers() {
           Back to Admin Dashboard
         </button>
 
-        <div className="mt-2 flex items-start gap-4">
+        <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
             <Users className="h-6 w-6" />
           </div>
@@ -166,32 +161,32 @@ function AdminUsers() {
               Government Users & Platform Directory
             </h1>
 
-            <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+            <p className="mt-1.5 max-w-3xl text-sm leading-6 text-slate-500 dark:text-slate-400">
               Govern government nodal officers, department affiliations, and verified user accounts across the platform.
             </p>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* SUMMARY */}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
           icon={Users}
-          title="Total Users"
+          title="Total Officials"
           value={totalUsers}
         />
 
         <SummaryCard
           icon={UserCheck}
-          title="Active Users"
+          title="Active Officials"
           value={activeUsers}
           type="success"
         />
 
         <SummaryCard
           icon={ShieldCheck}
-          title="Verified Users"
+          title="Verified Officials"
           value={verifiedUsers}
           type="verified"
         />
@@ -227,42 +222,12 @@ function AdminUsers() {
                     event.target.value
                   )
                 }
-                placeholder="Search name, email or organization..."
+                placeholder="Search government official, email or department..."
                 className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-              <select
-                value={roleFilter}
-                onChange={(event) =>
-                  setRoleFilter(
-                    event.target.value
-                  )
-                }
-                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-              >
-                <option value="All">
-                  All Roles
-                </option>
-
-                <option value="Government">
-                  Government
-                </option>
-
-                <option value="Startup">
-                  Startup
-                </option>
-
-                <option value="Evaluator">
-                  Evaluator
-                </option>
-
-                <option value="Admin">
-                  Admin
-                </option>
-              </select>
-
+            <div className="flex items-center gap-2">
               <select
                 value={statusFilter}
                 onChange={(event) =>
@@ -299,11 +264,7 @@ function AdminUsers() {
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50">
                 <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  User
-                </th>
-
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Role
+                  Government Official
                 </th>
 
                 <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -360,11 +321,11 @@ function AdminUsers() {
             </div>
 
             <h3 className="mt-4 text-sm font-bold text-slate-800 dark:text-slate-200">
-              No users found
+              No government officials found
             </h3>
 
             <p className="mt-1 text-xs text-slate-400">
-              Try changing your search or filters.
+              Try changing your search or status filter.
             </p>
           </div>
         )}
@@ -377,7 +338,7 @@ function AdminUsers() {
         pageSize={pageSize}
         onPageChange={setCurrentPage}
         onPageSizeChange={setPageSize}
-        itemName="users"
+        itemName="officials"
       />
 
       {/* USER MODAL */}
@@ -388,10 +349,6 @@ function AdminUsers() {
           onClose={() =>
             setSelectedUser(null)
           }
-          onRoleChange={() => {
-            loadUsers();
-            setSelectedUser(null);
-          }}
           onToggleStatus={() => {
             handleToggleStatus(
               selectedUser.id
@@ -472,20 +429,6 @@ function UserRow({
   onVerify,
   onToggleStatus,
 }) {
-  const getIcon = () => {
-    if (user.role === "Startup") {
-      return Building2;
-    }
-
-    if (user.role === "Government") {
-      return ShieldCheck;
-    }
-
-    return UserRound;
-  };
-
-  const Icon = getIcon();
-
   return (
     <motion.tr
       initial={{
@@ -503,8 +446,8 @@ function UserRow({
 
       <td className="px-5 py-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-            <Icon className="h-4 w-4" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
+            <ShieldCheck className="h-4 w-4" />
           </div>
 
           <div className="min-w-0">
@@ -513,22 +456,16 @@ function UserRow({
             </p>
 
             <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-slate-500 dark:text-slate-400">
-              <span className="truncate max-w-[220px]">{user.email}</span>
+              <span title={user.email}>{user.email}</span>
               {user.organization && (
                 <>
                   <span className="text-slate-300 dark:text-slate-600" aria-hidden="true">•</span>
-                  <span className="truncate max-w-[200px]">{user.organization}</span>
+                  <span title={user.organization}>{user.organization}</span>
                 </>
               )}
             </div>
           </div>
         </div>
-      </td>
-
-      {/* ROLE */}
-
-      <td className="px-5 py-3">
-        <RoleBadge role={user.role} />
       </td>
 
       {/* STATUS */}
@@ -620,35 +557,6 @@ function UserRow({
 }
 
 /* ===================================================== */
-/* ROLE BADGE                                            */
-/* ===================================================== */
-
-function RoleBadge({
-  role,
-}) {
-  const classes = {
-    Startup:
-      "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300",
-    Government:
-      "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300",
-    Evaluator:
-      "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300",
-    Admin:
-      "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  };
-
-  return (
-    <span
-      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-        classes[role] || classes.Admin
-      }`}
-    >
-      {role}
-    </span>
-  );
-}
-
-/* ===================================================== */
 /* STATUS BADGE                                          */
 /* ===================================================== */
 
@@ -657,11 +565,11 @@ function StatusBadge({
 }) {
   const classes = {
     Active:
-      "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
+      "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400",
     Inactive:
       "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
     Pending:
-      "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+      "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400",
   };
 
   return (
@@ -704,26 +612,7 @@ function UserDetailsModal({
   user,
   onClose,
   onToggleStatus,
-  onRoleChange,
 }) {
-  const [selectedRole, setSelectedRole] = useState(
-    user.role === "Government" ? "GOVERNMENT" : user.role === "Startup" ? "STARTUP" : user.role === "Evaluator" ? "EVALUATOR" : "ADMIN"
-  );
-  const [updatingRole, setUpdatingRole] = useState(false);
-
-  const handleSaveRole = async () => {
-    try {
-      setUpdatingRole(true);
-      await updateUserRole(user.id, selectedRole);
-      if (onRoleChange) onRoleChange(user.id, selectedRole);
-      alert(`User role updated to ${selectedRole} successfully!`);
-    } catch (err) {
-      alert(`Error updating role: ${err.message}`);
-    } finally {
-      setUpdatingRole(false);
-    }
-  };
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
@@ -746,12 +635,12 @@ function UserDetailsModal({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-              <UserRound className="h-5 w-5" />
+              <ShieldCheck className="h-5 w-5" />
             </div>
 
             <div>
               <p className="text-[9px] font-bold uppercase tracking-wider text-indigo-500">
-                User Details & Role Governance
+                Government Official Profile
               </p>
 
               <h2 className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
@@ -776,36 +665,9 @@ function UserDetailsModal({
           />
 
           <Detail
-            label="Organization"
+            label="Department / Organization"
             value={user.organization}
           />
-
-          {/* ROLE MODIFICATION */}
-          <div className="rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 dark:border-indigo-900/40 dark:bg-indigo-950/20">
-            <label className="text-xs font-semibold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
-              Platform Role Assignment
-            </label>
-            <div className="mt-2 flex items-center gap-2">
-              <select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                className="h-9 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-900 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-white"
-              >
-                <option value="STARTUP">Startup Innovator</option>
-                <option value="GOVERNMENT">Government Procurement Officer</option>
-                <option value="EVALUATOR">Technical / Financial Evaluator</option>
-                <option value="ADMIN">System Administrator</option>
-              </select>
-              <button
-                type="button"
-                onClick={handleSaveRole}
-                disabled={updatingRole}
-                className="h-9 rounded-xl bg-indigo-600 px-3.5 text-xs font-semibold text-white shadow hover:bg-indigo-700 disabled:opacity-50 transition"
-              >
-                {updatingRole ? "Saving..." : "Change Role"}
-              </button>
-            </div>
-          </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Detail
@@ -836,8 +698,8 @@ function UserDetailsModal({
             className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900 transition"
           >
             {user.status === "Active"
-              ? "Deactivate User"
-              : "Activate User"}
+              ? "Deactivate Account"
+              : "Activate Account"}
           </button>
 
           <button
