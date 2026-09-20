@@ -174,17 +174,17 @@ function StartupChallenges() {
       transition={{
         duration: 0.35,
       }}
-      className="space-y-6"
+      className="space-y-4"
     >
       {/* ================================================= */}
       {/* HEADER                                            */}
       {/* ================================================= */}
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
                 <Sparkles className="h-4 w-4" />
               </div>
 
@@ -193,19 +193,17 @@ function StartupChallenges() {
               </span>
             </div>
 
-            <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+            <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
               Explore Challenges
             </h1>
 
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-              Discover government challenges that
-              match your startup's technology and
-              expertise.
+            <p className="mt-1 max-w-2xl text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+              Discover government challenges that match your startup's technology and expertise.
             </p>
           </div>
 
-          <div className="rounded-2xl bg-indigo-50 px-5 py-4 dark:bg-indigo-500/10">
-            <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+          <div className="rounded-2xl bg-indigo-50 px-4 py-3 dark:bg-indigo-500/10">
+            <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
               {challengesList.length}
             </p>
 

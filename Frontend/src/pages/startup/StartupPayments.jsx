@@ -142,7 +142,7 @@ function StartupPayments() {
                 <WalletCards className="h-5 w-5" />
               </div>
 
-              <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+              <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
                 Financial Management
               </span>
             </div>
@@ -159,7 +159,7 @@ function StartupPayments() {
           </div>
 
           <div className="rounded-2xl bg-emerald-50 px-5 py-4 dark:bg-emerald-500/10">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
               Payment Status
             </p>
 
@@ -242,7 +242,7 @@ function StartupPayments() {
           />
         </div>
 
-        <div className="mt-3 flex justify-between text-[10px] text-slate-400">
+        <div className="mt-3 flex justify-between text-xs text-slate-400">
           <span>
             {paidPercentage}% released
           </span>
@@ -274,11 +274,11 @@ function StartupPayments() {
 
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
           {paymentMilestones.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-900">
-                <Clock3 className="h-6 w-6" />
+            <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-900">
+                <Clock3 className="h-5 w-5" />
               </div>
-              <h3 className="mt-3 text-sm font-bold text-slate-700 dark:text-slate-200">
+              <h3 className="mt-2 text-sm font-bold text-slate-700 dark:text-slate-200">
                 No Payment Milestones Scheduled
               </h3>
               <p className="mt-1 max-w-sm text-xs text-slate-400">
@@ -317,7 +317,7 @@ function StartupPayments() {
             {transactions.length > 0 && (
               <button
                 type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
               >
                 <Download className="h-3.5 w-3.5" />
                 Export History
@@ -330,23 +330,23 @@ function StartupPayments() {
           <table className="w-full min-w-[720px]">
             <thead>
               <tr className="border-b border-slate-100 text-left dark:border-slate-800">
-                <th className="px-5 py-3 text-[9px] font-bold uppercase tracking-wider text-slate-400 sm:px-6">
+                <th className="px-5 py-3 text-xs font-semibold text-slate-400 sm:px-6">
                   Transaction
                 </th>
 
-                <th className="px-5 py-3 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3 text-xs font-semibold text-slate-400">
                   Date
                 </th>
 
-                <th className="px-5 py-3 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3 text-xs font-semibold text-slate-400">
                   Amount
                 </th>
 
-                <th className="px-5 py-3 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3 text-xs font-semibold text-slate-400">
                   Status
                 </th>
 
-                <th className="px-5 py-3 text-right text-[9px] font-bold uppercase tracking-wider text-slate-400 sm:px-6">
+                <th className="px-5 py-3 text-right text-xs font-semibold text-slate-400 sm:px-6">
                   Action
                 </th>
               </tr>
@@ -355,13 +355,13 @@ function StartupPayments() {
             <tbody>
               {paginatedTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center">
+                  <td colSpan={5} className="py-8 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <Receipt className="h-8 w-8 text-slate-300 dark:text-slate-600" />
                       <p className="mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
                         No Transactions Found
                       </p>
-                      <p className="mt-0.5 text-[11px] text-slate-400">
+                      <p className="mt-1 text-xs text-slate-400">
                         Payment disbursements and receipts will be recorded here as pilot milestones are completed.
                       </p>
                     </div>
@@ -384,7 +384,7 @@ function StartupPayments() {
                             {transaction.description}
                           </p>
 
-                          <p className="mt-0.5 text-[9px] text-slate-400">
+                          <p className="mt-0.5 text-xs text-slate-400">
                             {transaction.id}
                           </p>
                         </div>
@@ -400,7 +400,7 @@ function StartupPayments() {
                     </td>
 
                     <td className="px-5 py-4">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                         <CheckCircle2 className="h-3 w-3" />
                         {transaction.status}
                       </span>
@@ -410,7 +410,7 @@ function StartupPayments() {
                       <button
                         type="button"
                         onClick={() => setSelectedTransaction(transaction)}
-                        className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
                       >
                         Receipt
                         <ExternalLink className="h-3 w-3" />
@@ -441,21 +441,15 @@ function StartupPayments() {
       {/* ================================================= */}
 
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-6">
-        <div className="flex items-start gap-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-            <FileText className="h-5 w-5" />
-          </div>
+        <div className="border-b border-slate-100 pb-4 dark:border-slate-800">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">
+            Payment Documents
+          </h2>
 
-          <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">
-              Payment Documents
-            </h2>
-
-            <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-              Access invoices, payment receipts and
-              other financial documents.
-            </p>
-          </div>
+          <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+            Access invoices, payment receipts and
+            other financial documents.
+          </p>
         </div>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -515,28 +509,30 @@ function PaymentCard({
   status,
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-      <div
-        className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-          status === "paid"
-            ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-            : status === "pending"
-            ? "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
-            : "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
-        }`}
-      >
-        <Icon className="h-5 w-5" />
+    <div className="flex flex-col justify-between h-full rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+      <div>
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+            status === "paid"
+              ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+              : status === "pending"
+              ? "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
+              : "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
+          }`}
+        >
+          <Icon className="h-5 w-5" />
+        </div>
+
+        <p className="mt-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
+          {title}
+        </p>
+
+        <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          {formatCurrency(amount)}
+        </p>
       </div>
 
-      <p className="mt-5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-        {title}
-      </p>
-
-      <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-        {formatCurrency(amount)}
-      </p>
-
-      <p className="mt-1 text-[10px] text-slate-400">
+      <p className="mt-2 text-xs text-slate-400">
         {description}
       </p>
     </div>
@@ -590,7 +586,7 @@ function PaymentMilestone({
           </h3>
 
           <span
-            className={`rounded-full px-2 py-1 text-[9px] font-bold ${
+            className={`rounded-full px-2 py-1 text-xs font-semibold ${
               paid
                 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
                 : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
@@ -600,11 +596,11 @@ function PaymentMilestone({
           </span>
         </div>
 
-        <p className="mt-1 text-[10px] leading-5 text-slate-400">
+        <p className="mt-1 text-xs leading-5 text-slate-400">
           {milestone.description}
         </p>
 
-        <div className="mt-2 flex items-center gap-1.5 text-[9px] text-slate-400">
+        <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
           <Clock3 className="h-3 w-3" />
           {milestone.date}
         </div>
@@ -617,7 +613,7 @@ function PaymentMilestone({
           )}
         </p>
 
-        <p className="mt-1 text-[9px] text-slate-400">
+        <p className="mt-1 text-xs text-slate-400">
           Milestone {index + 1}
         </p>
       </div>
@@ -644,7 +640,7 @@ function DocumentCard({
           {title}
         </h3>
 
-        <p className="mt-1 text-[9px] leading-4 text-slate-400">
+        <p className="mt-1 text-xs leading-4 text-slate-400">
           {description}
         </p>
       </div>

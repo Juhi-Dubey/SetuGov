@@ -268,7 +268,10 @@ function Topbar({ onMenuClick, role = "government", hideSearch = false }) {
   const isReportsPage =
     location.pathname === "/government/reports" ||
     location.pathname.startsWith("/government/reports");
-  const shouldHideSearch = hideSearch || isReportsPage;
+  const isChallengesOrAppsPage =
+    location.pathname.endsWith("/challenges") ||
+    location.pathname.endsWith("/applications");
+  const shouldHideSearch = hideSearch || isReportsPage || isChallengesOrAppsPage;
   const { user: authUser, logout } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -521,7 +524,7 @@ function Topbar({ onMenuClick, role = "government", hideSearch = false }) {
               }}
               onFocus={() => setSearchOpen(true)}
               placeholder="Search challenges, startups, pages..."
-              className="h-9 w-60 rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-8 text-xs sm:text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950 lg:w-72"
+              className="h-9 w-72 md:w-80 lg:w-96 rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-8 text-xs sm:text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
             />
 
             {searchQuery && (
