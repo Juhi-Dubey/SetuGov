@@ -3,10 +3,14 @@ import { prisma } from '../src/config/prisma.js';
 
 async function testAll() {
   const rolesToTest = [
-    { email: 'govt1@setugov.in', role: 'GOVERNMENT' },
-    { email: 'startup1@setugov.in', role: 'STARTUP' },
-    { email: 'evaluator1@setugov.in', role: 'EVALUATOR' },
-    { email: 'admin1@setugov.in', role: 'ADMIN' },
+    { email: 'admin@setugov.in', role: 'ADMIN (Canonical)' },
+    { email: 'ramesh.kumar@health.gov.in', role: 'GOVERNMENT (Canonical)' },
+    { email: 'anita.desai@evaluators.setugov.in', role: 'EVALUATOR (Canonical)' },
+    { email: 'vikas@mediqueue.ai', role: 'STARTUP (Canonical)' },
+    { email: 'govt1@setugov.in', role: 'GOVERNMENT (Govt1)' },
+    { email: 'startup1@setugov.in', role: 'STARTUP (Startup1)' },
+    { email: 'evaluator1@setugov.in', role: 'EVALUATOR (Evaluator1)' },
+    { email: 'admin1@setugov.in', role: 'ADMIN (Admin1)' },
   ];
 
   for (const item of rolesToTest) {
