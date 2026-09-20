@@ -3,7 +3,7 @@ import { Plus, Trash2, CalendarDays, Rocket } from "lucide-react";
 
 import FormField from "../ui/FormField";
 
-const milestoneStatuses = [
+const milestonestatus = [
   {
     value: "not_started",
     label: "Not Started",
@@ -192,9 +192,8 @@ function PilotForm({
                         )
                       }
                       className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10"
-                      aria-label={`Remove milestone ${
-                        index + 1
-                      }`}
+                      aria-label={`Remove milestone ${index + 1
+                        }`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -303,7 +302,7 @@ function PilotForm({
                         }
                         className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-900 outline-none transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                       >
-                        {milestoneStatuses.map(
+                        {milestonestatus.map(
                           (status) => (
                             <option
                               key={status.value}

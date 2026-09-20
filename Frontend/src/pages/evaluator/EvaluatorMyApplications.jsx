@@ -152,7 +152,7 @@ function EvaluatorMyApplications() {
             onChange={(e) => setStatusFilter(e.target.value)}
             className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           >
-            <option value="All">All Statuses</option>
+            <option value="All">All status</option>
             <option value="SUBMITTED">Under Review</option>
             <option value="SHORTLISTED">Shortlisted / Selected</option>
             <option value="REJECTED">Not Selected</option>

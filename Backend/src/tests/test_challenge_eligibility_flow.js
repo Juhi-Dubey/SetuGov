@@ -133,7 +133,7 @@ async function runTests() {
     }
     console.log('TEST 1 PASSED: Initial pending/empty states loaded accurately.');
 
-    console.log('\n--- TEST 2: Set several eligibility checks to different statuses & Save ---');
+    console.log('\n--- TEST 2: Set several eligibility checks to different status & Save ---');
     const savePayload = {
       checks: [
         { id: 'crit-1', title: 'DPIIT Registered Startup', status: 'PASSED', required: true },
@@ -169,7 +169,7 @@ async function runTests() {
     if (!reloadedA.has_review || reloadedA.decision !== 'CLARIFICATION' || reloadedA.checks[1].status !== 'FAILED') {
       throw new Error('TEST 3 Failed: Reloaded data from PostgreSQL does not match saved review');
     }
-    console.log('TEST 3 PASSED: Exact saved statuses retrieved from database on reload.');
+    console.log('TEST 3 PASSED: Exact saved status retrieved from database on reload.');
 
     console.log('\n--- TEST 4: Save again after changing one check (Update vs Insert) ---');
     const updatedPayload = {

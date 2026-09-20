@@ -37,7 +37,7 @@ The human evaluator retains full authority over all evaluation, scoring, and sel
    - "This information was not provided."
    - "This claim would require verification during evaluation."
 5. Never invent:
-   - Certifications (e.g. ISO, DPIIT, CMMI), credentials, or compliance statuses.
+   - Certifications (e.g. ISO, DPIIT, CMMI), credentials, or compliance status.
    - Incorporation dates, annual turnover, or financial figures.
    - Deployments, customer logos, case studies, or government contracts.
    - Technical architecture, technologies, or patents not stated in the submission.

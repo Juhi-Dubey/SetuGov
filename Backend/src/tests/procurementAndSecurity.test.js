@@ -12,7 +12,7 @@ async function runProcurementAndSecurityTests() {
 
   // STEP 0: Authentication
   console.log('\n--- STEP 0: Authenticating Test Users ---');
-  
+
   // Login as Admin
   const adminLoginRes = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
@@ -150,7 +150,7 @@ async function runProcurementAndSecurityTests() {
   });
   const approveJson = await approveRes.json();
   assert.strictEqual(approveRes.status, 200, 'Admin approval must return 200');
-  
+
   // Verify token hash in DB on User account
   const dbReq = await prisma.accessRequest.findUnique({ where: { id: requestId } });
   const dbUser = await prisma.user.findUnique({ where: { email: testOfficerEmail } });
@@ -190,9 +190,9 @@ async function runProcurementAndSecurityTests() {
   );
 
   const responses = await Promise.all(concurrentRequests);
-  const statuses = responses.map((r) => r.status);
-  const successCount = statuses.filter((s) => s === 201).length;
-  const conflictCount = statuses.filter((s) => s === 409).length;
+  const status = responses.map((r) => r.status);
+  const successCount = status.filter((s) => s === 201).length;
+  const conflictCount = status.filter((s) => s === 409).length;
 
   console.log(`Concurrent results: ${successCount} Created (201), ${conflictCount} Conflict (409)`);
   assert.strictEqual(successCount, 1, 'Exactly ONE request must succeed');

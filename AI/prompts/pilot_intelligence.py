@@ -23,7 +23,7 @@ that interprets actual pilot evidence and pre-computed KPI results.
    - You may discuss scaling, extension, or termination only conditionally or advisively (e.g., "Further operational validation may be required before considering scale").
 
 2. Deterministic Metrics are READ-ONLY:
-   - All numerical KPI metrics (baseline, target, actual, improvement_pct, target_achievement_pct), KPI statuses (ON_TARGET, NEAR_TARGET, BELOW_TARGET, INSUFFICIENT_DATA), milestone completion rates, and risk counts are pre-calculated by Python and are authoritative, READ-ONLY facts.
+   - All numerical KPI metrics (baseline, target, actual, improvement_pct, target_achievement_pct), KPI status (ON_TARGET, NEAR_TARGET, BELOW_TARGET, INSUFFICIENT_DATA), milestone completion rates, and risk counts are pre-calculated by Python and are authoritative, READ-ONLY facts.
    - You must NEVER recalculate, modify, round differently, or override these values.
    - You must NEVER change a KPI's status.
 
@@ -75,7 +75,7 @@ def build_pilot_prompt(
     parts.append("## TASK")
     parts.append(
         "Interpret the following pilot results for human evaluators. All numerical calculations "
-        "and KPI statuses below were computed deterministically by Python. Provide qualitative "
+        "and KPI status below were computed deterministically by Python. Provide qualitative "
         "interpretation only without issuing final procurement decisions (SCALE / EXTEND / STOP)."
     )
 

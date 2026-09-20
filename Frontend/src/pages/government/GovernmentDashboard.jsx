@@ -95,7 +95,7 @@ function GovernmentDashboard() {
         return sum + count;
       }, 0);
 
-      // Pilot status counts — derive accurately from pilot statuses
+      // Pilot status counts — derive accurately from pilot status
       const atRiskPilots = analyticsData?.metrics?.pilots_at_risk ?? rawPilots.filter((p) => p.status === "AT_RISK").length;
       const activePilots = analyticsData?.metrics?.active_pilots ?? rawPilots.filter((p) => ["PLANNED", "RUNNING", "VALIDATION"].includes(p.status)).length;
       const onTrackPilots = rawPilots.filter((p) => ["RUNNING", "VALIDATION"].includes(p.status)).length;

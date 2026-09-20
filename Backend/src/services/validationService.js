@@ -5,17 +5,17 @@ import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
 import { notifyPilotOutcome } from './notificationService.js';
 
-export const CANONICAL_VALIDATION_STATUSES = ['VALIDATED', 'VALIDATED_WITH_CONDITIONS', 'NOT_VALIDATED'];
+export const CANONICAL_VALIDATION_status = ['VALIDATED', 'VALIDATED_WITH_CONDITIONS', 'NOT_VALIDATED'];
 
 export const createValidation = async (pilotId, data, user, ip_address = null) => {
   // P0-3: Verify user has VALIDATION_MANAGE access to this pilot
   const pilot = await verifyPilotAccess(pilotId, user, 'VALIDATION_MANAGE');
 
-  // Enforce canonical validation statuses
+  // Enforce canonical validation status
   const targetValidationStatus = data.status || 'VALIDATED';
-  if (!CANONICAL_VALIDATION_STATUSES.includes(targetValidationStatus)) {
+  if (!CANONICAL_VALIDATION_status.includes(targetValidationStatus)) {
     throw new BadRequestError(
-      `Invalid validation status: '${targetValidationStatus}'. Must be one of: [${CANONICAL_VALIDATION_STATUSES.join(', ')}].`
+      `Invalid validation status: '${targetValidationStatus}'. Must be one of: [${CANONICAL_VALIDATION_status.join(', ')}].`
     );
   }
 
@@ -28,10 +28,10 @@ export const createValidation = async (pilotId, data, user, ip_address = null) =
   // Calculate combined overall validation score
   const overallValidationScore = parseFloat((
     (data.performance_score * 0.25 +
-     data.kpi_achievement_score * 0.25 +
-     data.evidence_quality_score * 0.20 +
-     data.technical_stability_score * 0.15 +
-     data.user_satisfaction_score * 0.15)
+      data.kpi_achievement_score * 0.25 +
+      data.evidence_quality_score * 0.20 +
+      data.technical_stability_score * 0.15 +
+      data.user_satisfaction_score * 0.15)
   ).toFixed(2));
 
   // Atomic transaction: Create validation report and transition pilot to VALIDATION stage

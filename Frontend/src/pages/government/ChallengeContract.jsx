@@ -54,7 +54,7 @@ const PROCUREMENT_ROUTES = [
   { value: "OFFLINE_HANDOFF", label: "Offline Handoff", desc: "Manual statutory department file processing and physical sanction order" },
 ];
 
-const GEM_HANDOFF_STATUSES = [
+const GEM_HANDOFF_status = [
   { value: "NOT_STARTED", label: "Not Started" },
   { value: "READY", label: "Ready for Handoff" },
   { value: "HANDED_OFF", label: "Handed Off to GeM" },
@@ -63,7 +63,7 @@ const GEM_HANDOFF_STATUSES = [
   { value: "FAILED_RETURNED", label: "Failed / Returned" },
 ];
 
-const ACCEPTANCE_STATUSES = [
+const ACCEPTANCE_status = [
   { value: "ACCEPTED", label: "Accept Full Delivery", desc: "Statutory inspection verified. Deliverables satisfy all RFP specifications." },
   { value: "CONDITIONAL_ACCEPTANCE", label: "Conditional Acceptance", desc: "Minor rectification or telemetry telemetry tuning required within 15 days." },
   { value: "REJECTED", label: "Reject Delivery", desc: "Delivered solution fails to meet essential pilot performance standards." },
@@ -213,7 +213,7 @@ function ChallengeContract() {
         const procList = procRes?.data?.procurements || procRes?.data || [];
 
         // Status priority: prefer an in-progress record, then DRAFT, never COMPLETED/CANCELLED/REJECTED
-        const ACTIVE_STATUSES = [
+        const ACTIVE_status = [
           "READINESS_CHECK",
           "APPROVED",
           "HANDED_OFF",
@@ -222,7 +222,7 @@ function ChallengeContract() {
           "ACCEPTED",
         ];
         const currentProc =
-          (Array.isArray(procList) && procList.find((p) => ACTIVE_STATUSES.includes(p.status))) ||
+          (Array.isArray(procList) && procList.find((p) => ACTIVE_status.includes(p.status))) ||
           (Array.isArray(procList) && procList.find((p) => p.status === "DRAFT")) ||
           null;
         // Never reopen COMPLETED, CANCELLED, or REJECTED as the current active procurement
@@ -694,13 +694,12 @@ function ChallengeContract() {
                   return (
                     <div
                       key={step.key}
-                      className={`relative flex flex-col rounded-xl border p-3 transition-all ${
-                        isCurrent
+                      className={`relative flex flex-col rounded-xl border p-3 transition-all ${isCurrent
                           ? "border-indigo-600 bg-indigo-50/50 shadow-sm dark:border-indigo-500 dark:bg-indigo-950/30"
                           : isPast
-                          ? "border-emerald-200 bg-emerald-50/30 dark:border-emerald-900/30 dark:bg-emerald-950/20"
-                          : "border-slate-100 bg-slate-50/50 opacity-60 dark:border-slate-800 dark:bg-slate-950"
-                      }`}
+                            ? "border-emerald-200 bg-emerald-50/30 dark:border-emerald-900/30 dark:bg-emerald-950/20"
+                            : "border-slate-100 bg-slate-50/50 opacity-60 dark:border-slate-800 dark:bg-slate-950"
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-bold text-slate-400">Step {idx + 1}</span>
@@ -750,11 +749,10 @@ function ChallengeContract() {
                         <div
                           key={r.value}
                           onClick={() => setReadinessForm((prev) => ({ ...prev, route: r.value }))}
-                          className={`cursor-pointer rounded-xl border p-4 transition ${
-                            readinessForm.route === r.value
+                          className={`cursor-pointer rounded-xl border p-4 transition ${readinessForm.route === r.value
                               ? "border-indigo-600 bg-indigo-50/40 shadow-sm dark:border-indigo-500 dark:bg-indigo-950/40"
                               : "border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700"
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-slate-900 dark:text-white">{r.label}</span>
@@ -762,7 +760,7 @@ function ChallengeContract() {
                               type="radio"
                               name="route"
                               checked={readinessForm.route === r.value}
-                              onChange={() => {}}
+                              onChange={() => { }}
                               className="text-indigo-600"
                             />
                           </div>
@@ -1021,7 +1019,7 @@ function ChallengeContract() {
                           onChange={(e) => setGemForm((prev) => ({ ...prev, gem_handoff_status: e.target.value }))}
                           className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
                         >
-                          {GEM_HANDOFF_STATUSES.map((s) => (
+                          {GEM_HANDOFF_status.map((s) => (
                             <option key={s.value} value={s.value}>
                               {s.label}
                             </option>
@@ -1303,11 +1301,10 @@ function ChallengeContract() {
                       Delivery Verification & Formal Acceptance
                     </h3>
                   </div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${
-                    procurement.acceptance_status === "ACCEPTED"
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${procurement.acceptance_status === "ACCEPTED"
                       ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                       : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                  }`}>
+                    }`}>
                     Acceptance: {procurement.acceptance_status || "PENDING"}
                   </span>
                 </div>
@@ -1360,19 +1357,18 @@ function ChallengeContract() {
                           Statutory Acceptance Inspection Decision *
                         </label>
                         <div className="grid gap-3 sm:grid-cols-3">
-                          {ACCEPTANCE_STATUSES.map((a) => (
+                          {ACCEPTANCE_status.map((a) => (
                             <div
                               key={a.value}
                               onClick={() => setAcceptanceForm((prev) => ({ ...prev, acceptance_status: a.value }))}
-                              className={`cursor-pointer rounded-xl border p-3 transition ${
-                                acceptanceForm.acceptance_status === a.value
+                              className={`cursor-pointer rounded-xl border p-3 transition ${acceptanceForm.acceptance_status === a.value
                                   ? a.value === "ACCEPTED"
                                     ? "border-emerald-600 bg-emerald-50/50 dark:border-emerald-500 dark:bg-emerald-950/40"
                                     : a.value === "REJECTED"
-                                    ? "border-rose-600 bg-rose-50/50 dark:border-rose-500 dark:bg-rose-950/40"
-                                    : "border-amber-600 bg-amber-50/50 dark:border-amber-500 dark:bg-amber-950/40"
+                                      ? "border-rose-600 bg-rose-50/50 dark:border-rose-500 dark:bg-rose-950/40"
+                                      : "border-amber-600 bg-amber-50/50 dark:border-amber-500 dark:bg-amber-950/40"
                                   : "border-slate-200 hover:border-slate-300 dark:border-slate-800"
-                              }`}
+                                }`}
                             >
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold text-slate-900 dark:text-white">{a.label}</span>
@@ -1380,7 +1376,7 @@ function ChallengeContract() {
                                   type="radio"
                                   name="acceptance_status"
                                   checked={acceptanceForm.acceptance_status === a.value}
-                                  onChange={() => {}}
+                                  onChange={() => { }}
                                   className="text-indigo-600"
                                 />
                               </div>

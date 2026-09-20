@@ -489,7 +489,7 @@ function ChallengePilot() {
     }
   };
 
-  // Update Compliance Item (Canonical statuses: COMPLIED, PENDING, NON_COMPLIANT)
+  // Update Compliance Item (Canonical status: COMPLIED, PENDING, NON_COMPLIANT)
   const handleUpdateComplianceStatus = async (item, status) => {
     if (!pilot?.id || !item?.id) return;
     try {

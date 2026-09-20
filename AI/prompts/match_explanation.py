@@ -32,7 +32,7 @@ highlight profile-stated strengths, flag legitimate concerns, and identify missi
    - "The startup states..."
    - "The supplied information shows..."
    - "The capabilities listed in the profile..."
-5. Never invent certifications (e.g., ISO, DPIIT, HIPAA), credentials, or compliance statuses.
+5. Never invent certifications (e.g., ISO, DPIIT, HIPAA), credentials, or compliance status.
 6. Never invent deployments, customer logos, case studies, or government track records.
 7. Never invent technical capabilities, features, or patents not stated in the startup profile.
 8. Do NOT infer that stated experience automatically proves successful implementation or operational effectiveness.

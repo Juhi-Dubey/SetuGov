@@ -244,7 +244,7 @@ export const handoffToGeM = async (procurementId, data, user, ip_address = null)
     throw new BadRequestError(`Procurement must be in "APPROVED" status before handoff. Current status: ${procurement.status}`);
   }
 
-  const CANONICAL_HANDOFF_STATUSES = ['NOT_STARTED', 'READY', 'HANDED_OFF', 'EXTERNAL_PROCESSING', 'COMPLETED', 'FAILED_RETURNED'];
+  const CANONICAL_HANDOFF_status = ['NOT_STARTED', 'READY', 'HANDED_OFF', 'EXTERNAL_PROCESSING', 'COMPLETED', 'FAILED_RETURNED'];
   const {
     gem_reference_number,
     gem_officer_name,
@@ -254,8 +254,8 @@ export const handoffToGeM = async (procurementId, data, user, ip_address = null)
   } = data;
 
   const validHandoffStatus = gem_handoff_status || 'HANDED_OFF';
-  if (!CANONICAL_HANDOFF_STATUSES.includes(validHandoffStatus)) {
-    throw new BadRequestError(`Invalid GeM handoff status "${validHandoffStatus}". Valid statuses are: ${CANONICAL_HANDOFF_STATUSES.join(', ')}.`);
+  if (!CANONICAL_HANDOFF_status.includes(validHandoffStatus)) {
+    throw new BadRequestError(`Invalid GeM handoff status "${validHandoffStatus}". Valid status are: ${CANONICAL_HANDOFF_status.join(', ')}.`);
   }
 
   const updated = await prisma.procurementRecord.update({
