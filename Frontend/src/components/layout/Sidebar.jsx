@@ -244,7 +244,7 @@ function Sidebar({ role = "government", isOpen, onClose }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-initial max-h-[calc(100vh-10rem)] overflow-y-auto px-3 py-3 sm:py-4">
+        <nav className="flex-1 min-h-0 overflow-y-auto px-3 pt-5 pb-4">
           {(() => {
             const sections = [];
             items.forEach((item) => {
@@ -259,7 +259,7 @@ function Sidebar({ role = "government", isOpen, onClose }) {
 
             return sections.map((sec, idx) => (
               <div key={sec.name} className={idx > 0 ? "mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60" : ""}>
-                <p className="mt-1 mb-2 px-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <p className="mb-2 px-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   {sec.name}
                 </p>
                 <div className="space-y-0.5">
@@ -302,7 +302,7 @@ function Sidebar({ role = "government", isOpen, onClose }) {
         </nav>
 
         {/* Bottom Security Card */}
-        <div className="mt-2 shrink-0 border-t border-slate-200 p-2.5 dark:border-slate-800">
+        <div className="mt-auto shrink-0 border-t border-slate-200 p-2.5 dark:border-slate-800">
           <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-900">
             <div className="mb-1 flex items-center gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />

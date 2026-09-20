@@ -35,6 +35,7 @@ const lifecycleSteps = [
     description: "State departments identify operational bottlenecks, civic pain points, and modernization goals.",
     icon: Building2,
     color: "from-blue-500/20 to-indigo-500/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/50",
+    textColor: "text-blue-600 dark:text-blue-400",
   },
   {
     step: "02",
@@ -43,6 +44,7 @@ const lifecycleSteps = [
     description: "Challenges are structured with clear KPIs, evaluation rubrics, eligibility criteria, and pilot budgets.",
     icon: Sparkles,
     color: "from-amber-500/20 to-orange-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/50",
+    textColor: "text-amber-600 dark:text-amber-400",
   },
   {
     step: "03",
@@ -51,6 +53,7 @@ const lifecycleSteps = [
     description: "Verified deep-tech startups submit technical architectures, timelines, and impact projections.",
     icon: Rocket,
     color: "from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50",
+    textColor: "text-emerald-600 dark:text-emerald-400",
   },
   {
     step: "04",
@@ -59,6 +62,7 @@ const lifecycleSteps = [
     description: "Independent domain experts score submissions with AI advisory screening and conflict-of-interest safeguards.",
     icon: ClipboardCheck,
     color: "from-purple-500/20 to-pink-500/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900/50",
+    textColor: "text-purple-600 dark:text-purple-400",
   },
   {
     step: "05",
@@ -67,6 +71,7 @@ const lifecycleSteps = [
     description: "Winning startups deploy working prototypes in live sandbox environments with tranche-based payouts.",
     icon: Cpu,
     color: "from-cyan-500/20 to-blue-500/20 text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-900/50",
+    textColor: "text-cyan-600 dark:text-cyan-400",
   },
   {
     step: "06",
@@ -75,6 +80,7 @@ const lifecycleSteps = [
     description: "Successful pilots transition into department-wide adoption, institutional procurement, and state scaling.",
     icon: Award,
     color: "from-rose-500/20 to-red-500/20 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50",
+    textColor: "text-rose-600 dark:text-rose-400",
   },
 ];
 
@@ -256,28 +262,30 @@ export default function LandingPage() {
               transition={{ delay: 0.3, duration: 0.6 }}
               className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
             >
+              {/* Primary Call to Action */}
               <Link
                 to="/signup"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700 hover:-translate-y-0.5 dark:bg-emerald-600 dark:text-white dark:hover:bg-emerald-500"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition hover:bg-emerald-700 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:bg-emerald-600 dark:text-white dark:hover:bg-emerald-500"
               >
                 <Rocket className="h-4 w-4" />
                 Register as Startup
                 <ArrowRight className="h-4 w-4" />
               </Link>
 
+              {/* Secondary Navigation Actions */}
               <Link
                 to="/government/request-access"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 hover:-translate-y-0.5 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white/90 px-5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white"
               >
-                <Building2 className="h-4 w-4" />
+                <Building2 className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                 Government Officer Access
               </Link>
 
               <Link
                 to="/evaluator/apply"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50/70 px-5 text-sm font-bold text-purple-700 shadow-sm transition hover:bg-purple-100 dark:border-purple-900/50 dark:bg-purple-950/30 dark:text-purple-300 dark:hover:bg-purple-900/40"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white/90 px-5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white"
               >
-                <ClipboardCheck className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                <ClipboardCheck className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                 Apply as Evaluator
               </Link>
             </motion.div>
@@ -361,7 +369,7 @@ export default function LandingPage() {
                   <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">
                     {step.title}
                   </h3>
-                  <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+                  <p className={`text-sm font-semibold ${step.textColor}`}>
                     {step.subtitle}
                   </p>
 
@@ -371,11 +379,6 @@ export default function LandingPage() {
                 </div>
               );
             })}
-          </div>
-
-          {/* Flow Connector Banner */}
-          <div className="mt-10 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 text-center text-xs font-medium text-indigo-800 dark:border-indigo-900/30 dark:bg-indigo-950/20 dark:text-indigo-300">
-            ⚡ <strong>Government</strong> → <strong>Challenge</strong> → <strong>Startup</strong> → <strong>Evaluation</strong> → <strong>Pilot</strong> → <strong>Outcome</strong>
           </div>
         </div>
       </section>
@@ -399,7 +402,11 @@ export default function LandingPage() {
 
           {/* Stakeholder Tabs */}
           <div className="mt-10 flex justify-center">
-            <div className="inline-flex rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div
+              role="tablist"
+              aria-label="Stakeholder categories"
+              className="inline-flex rounded-2xl border border-slate-200 bg-white p-1.5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            >
               {Object.keys(stakeholderBenefits).map((key) => {
                 const item = stakeholderBenefits[key];
                 const Icon = item.icon;
@@ -407,15 +414,20 @@ export default function LandingPage() {
                 return (
                   <button
                     key={key}
+                    id={`tab-${key}`}
                     type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    aria-controls={`panel-${key}`}
+                    tabIndex={isSelected ? 0 : -1}
                     onClick={() => setActiveTab(key)}
-                    className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                       isSelected
                         ? "bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900"
-                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                        : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/80"
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className={`h-4 w-4 ${isSelected ? "" : "text-slate-500 dark:text-slate-400"}`} />
                     {item.title}
                   </button>
                 );
@@ -428,7 +440,12 @@ export default function LandingPage() {
             const activeData = stakeholderBenefits[activeTab];
             const Icon = activeData.icon;
             return (
-              <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+              <div
+                id={`panel-${activeTab}`}
+                role="tabpanel"
+                aria-labelledby={`tab-${activeTab}`}
+                className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-950"
+              >
                 <div className="grid gap-8 lg:grid-cols-12 lg:items-center">
                   <div className="lg:col-span-7">
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
@@ -463,31 +480,41 @@ export default function LandingPage() {
                     </div>
                   </div>
 
-                  <div className="lg:col-span-5 flex justify-center">
-                    <div className={`w-full max-w-sm rounded-3xl border p-6 ${activeData.color}`}>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white">
-                          <Icon className="h-6 w-6" />
+                  <div className="lg:col-span-5">
+                    <div className={`w-full rounded-3xl border p-6 sm:p-7 shadow-sm ${activeData.color}`}>
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-900 shadow-md dark:bg-slate-900 dark:text-white">
+                          <Icon className="h-7 w-7" />
                         </div>
                         <div>
                           <p className="text-xs font-bold uppercase tracking-wider opacity-75">
-                            SetuGov Module
+                            SetuGov Dedicated Module
                           </p>
-                          <p className="text-base font-bold">
+                          <p className="text-lg font-bold">
                             {activeData.title}
                           </p>
                         </div>
                       </div>
 
-                      <div className="mt-6 rounded-2xl bg-white/80 p-4 backdrop-blur dark:bg-slate-900/80">
-                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                          Key Operational Principle
-                        </p>
-                        <p className="mt-1 text-xs text-slate-800 dark:text-slate-200">
-                          {activeTab === "government" && "Zero unverified accounts. Formal department mapping & official domain email verification."}
-                          {activeTab === "startup" && "Open public self-signup with DPIIT documentation and instant challenge discovery."}
-                          {activeTab === "evaluator" && "Strict conflict-of-interest declarations with automated recusal guarantees."}
-                        </p>
+                      <div className="mt-6 space-y-3">
+                        <div className="rounded-2xl bg-white/85 p-4 shadow-sm backdrop-blur dark:bg-slate-900/85">
+                          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Key Operational Principle
+                          </p>
+                          <p className="mt-1.5 text-sm leading-relaxed text-slate-800 dark:text-slate-200 font-medium">
+                            {activeTab === "government" && "Zero unverified accounts. Formal department mapping & official domain email verification."}
+                            {activeTab === "startup" && "Open public self-signup with DPIIT documentation and instant challenge discovery."}
+                            {activeTab === "evaluator" && "Strict conflict-of-interest declarations with automated recusal guarantees."}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-xl bg-white/60 px-4 py-2.5 text-xs font-semibold backdrop-blur dark:bg-slate-900/60">
+                          <span className="text-slate-600 dark:text-slate-400">Environment Access</span>
+                          <span className="inline-flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400">
+                            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                            Production Verified
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
