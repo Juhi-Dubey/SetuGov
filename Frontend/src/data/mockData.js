@@ -1,48 +1,8 @@
-
-export const governmentDashboardData = {
-  user: {
-    name: "Demo User",
-    email: "demo@govinnov.gov.in",
-    role: "Government Officer",
-  },
-
-  kpis: [
-    {
-      id: "challenges",
-      label: "Challenges",
-      value: 0,
-      change: 0,
-      trend: "neutral",
-    },
-    {
-      id: "applications",
-      label: "Applications",
-      value: 0,
-      change: 0,
-      trend: "neutral",
-    },
-    {
-      id: "pilots",
-      label: "Pilots",
-      value: 0,
-      change: 0,
-      trend: "neutral",
-    },
-    {
-      id: "at-risk",
-      label: "At Risk",
-      value: 0,
-      change: 0,
-      trend: "neutral",
-    },
-  ],
-
-  challenges: [],
-
-  pilotHealth: {
-    onTrack: 0,
-    atRisk: 0,
-    critical: 0,
-  },
-};
-
+/**
+ * DEPRECATED & DISCONTINUED
+ *
+ * SetuGov enforces strict Global Data Consistency & Single Source of Truth.
+ * All business state, KPIs, challenges, pilots, and user records must originate
+ * from PostgreSQL via authoritative Express API endpoints.
+ */
+export const governmentDashboardData = null;

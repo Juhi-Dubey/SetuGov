@@ -33,26 +33,26 @@ import {
   getApplicationAssignments
 } from '../controllers/evaluatorController.js';
 
-// Direct Submit Application (accepts challenge_id in body, STARTUP or ADMIN)
-router.post('/', authenticate, authorizeRoles('STARTUP', 'ADMIN'), validate(createApplicationSchema), createApplication);
+// Direct Submit Application (accepts challenge_id in body, STARTUP only)
+router.post('/', authenticate, authorizeRoles('STARTUP'), validate(createApplicationSchema), createApplication);
 
 // Get specific application by ID
 router.get('/:application_id', authenticate, getApplicationById);
 
-// Assign Evaluator to Application (GOVERNMENT or ADMIN)
-router.post('/:application_id/assign-evaluator', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), assignEvaluatorToApplication);
+// Assign Evaluator to Application (GOVERNMENT only)
+router.post('/:application_id/assign-evaluator', authenticate, authorizeRoles('GOVERNMENT'), assignEvaluatorToApplication);
 
 // Get Evaluator Assignments for Application (GOVERNMENT, ADMIN, EVALUATOR)
 router.get('/:application_id/assignments', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN', 'EVALUATOR'), getApplicationAssignments);
 
-// Update DRAFT application (Owner or ADMIN)
+// Update DRAFT application (Owner only)
 router.patch('/:application_id', authenticate, validate(updateApplicationSchema), updateApplication);
 
-// Delete DRAFT application (Owner or ADMIN)
+// Delete DRAFT application (Owner only)
 router.delete('/:application_id', authenticate, deleteApplication);
 
-// Update application lifecycle status (GOVERNMENT or ADMIN)
-router.patch('/:application_id/status', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(updateApplicationStatusSchema), updateApplicationStatus);
+// Update application lifecycle status (GOVERNMENT only)
+router.patch('/:application_id/status', authenticate, authorizeRoles('GOVERNMENT'), validate(updateApplicationStatusSchema), updateApplicationStatus);
 
 // Conflict of Interest declaration (EVALUATOR submits; EVALUATOR/ADMIN can view)
 router.get('/:application_id/conflict-declaration', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), getConflictDeclaration);
@@ -71,10 +71,10 @@ router.get('/:application_id/decision-recommendation', authenticate, authorizeRo
 import { uploadDocument, getDocuments, deleteDocument, finalizeSubmission } from '../controllers/applicationDocumentController.js';
 import { uploadSingle } from '../middleware/upload.js';
 
-router.post('/:application_id/documents', authenticate, authorizeRoles('STARTUP', 'ADMIN'), uploadSingle('file'), uploadDocument);
+router.post('/:application_id/documents', authenticate, authorizeRoles('STARTUP'), uploadSingle('file'), uploadDocument);
 router.get('/:application_id/documents', authenticate, getDocuments);
-router.delete('/:application_id/documents/:document_id', authenticate, authorizeRoles('STARTUP', 'ADMIN'), deleteDocument);
-router.post('/:application_id/finalize-submission', authenticate, authorizeRoles('STARTUP', 'ADMIN'), finalizeSubmission);
+router.delete('/:application_id/documents/:document_id', authenticate, authorizeRoles('STARTUP'), deleteDocument);
+router.post('/:application_id/finalize-submission', authenticate, authorizeRoles('STARTUP'), finalizeSubmission);
 
 export default router;
 

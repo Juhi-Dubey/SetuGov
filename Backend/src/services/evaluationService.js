@@ -117,6 +117,10 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
   }
 
   // Calculate weighted total score
+  const isDraft = Boolean(data.is_draft);
+  const is_submitted = !isDraft;
+
+  // Calculate weighted total score
   const total_score = calculateTotalScore(data);
 
   // Upsert evaluation for this evaluator and application
@@ -135,7 +139,7 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
       cost_score: data.cost_score,
       total_score,
       comments: data.comments?.trim() || null,
-      is_submitted: true
+      is_submitted
     },
     create: {
       application_id: applicationId,
@@ -147,7 +151,7 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
       cost_score: data.cost_score,
       total_score,
       comments: data.comments?.trim() || null,
-      is_submitted: true
+      is_submitted
     },
     include: {
       evaluator: {
@@ -161,39 +165,54 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
     }
   });
 
-  // Mark evaluator assignment as COMPLETED if it exists
-  await prisma.evaluatorAssignment.updateMany({
-    where: {
-      application_id: applicationId,
-      evaluator_id: user.id
-    },
-    data: {
-      status: 'COMPLETED',
-      completed_at: new Date()
+  if (!isDraft) {
+    // Mark evaluator assignment as COMPLETED if it exists
+    await prisma.evaluatorAssignment.updateMany({
+      where: {
+        application_id: applicationId,
+        evaluator_id: user.id
+      },
+      data: {
+        status: 'COMPLETED',
+        completed_at: new Date()
+      }
+    }).catch(() => { });
+
+    await createAuditLog({
+      user_id: user.id,
+      action: 'EVALUATION_SUBMITTED',
+      entity_type: 'EVALUATION',
+      entity_id: evaluation.id,
+      details: {
+        application_id: applicationId,
+        challenge_id: application.challenge_id,
+        total_score
+      },
+      ip_address
+    });
+
+    // Notify the government official managing the challenge
+    if (application.challenge?.created_by) {
+      await sendNotification({
+        user_id: application.challenge.created_by,
+        title: 'Evaluation Scorecard Submitted',
+        message: `Scorecard of ${total_score}% submitted for "${application.startup?.company_name || 'Startup'}" on challenge "${application.challenge?.title}".`,
+        type: 'EVALUATION_SUBMITTED',
+        link: `/government/challenges/${application.challenge_id}/evaluation`
+      });
     }
-  }).catch(() => { });
-
-  await createAuditLog({
-    user_id: user.id,
-    action: 'EVALUATION_SUBMITTED',
-    entity_type: 'EVALUATION',
-    entity_id: evaluation.id,
-    details: {
-      application_id: applicationId,
-      challenge_id: application.challenge_id,
-      total_score
-    },
-    ip_address
-  });
-
-  // Notify the government official managing the challenge
-  if (application.challenge?.created_by) {
-    await sendNotification({
-      user_id: application.challenge.created_by,
-      title: 'Evaluation Scorecard Submitted',
-      message: `Scorecard of ${total_score}% submitted for "${application.startup?.company_name || 'Startup'}" on challenge "${application.challenge?.title}".`,
-      type: 'EVALUATION_SUBMITTED',
-      link: `/government/challenges/${application.challenge_id}/evaluation`
+  } else {
+    await createAuditLog({
+      user_id: user.id,
+      action: 'EVALUATION_DRAFT_SAVED',
+      entity_type: 'EVALUATION',
+      entity_id: evaluation.id,
+      details: {
+        application_id: applicationId,
+        challenge_id: application.challenge_id,
+        total_score
+      },
+      ip_address
     });
   }
 

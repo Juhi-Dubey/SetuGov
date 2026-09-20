@@ -159,6 +159,18 @@ export const getPilots = async (query = {}, user = null) => {
       where.challenge = { department_id: user.department_id };
     } else if (user.role === 'STARTUP') {
       where.startup = { user_id: user.id };
+    } else if (user.role === 'EVALUATOR') {
+      where.challenge = {
+        applications: {
+          some: {
+            evaluator_assignments: {
+              some: {
+                evaluator_id: user.id
+              }
+            }
+          }
+        }
+      };
     }
   }
 

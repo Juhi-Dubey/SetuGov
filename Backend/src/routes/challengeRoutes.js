@@ -46,8 +46,8 @@ import { createApplicationSchema } from '../schemas/applicationSchemas.js';
 
 const router = Router();
 
-// Create Challenge (GOVERNMENT or ADMIN)
-router.post('/', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(createChallengeSchema), createChallenge);
+// Create Challenge (GOVERNMENT only)
+router.post('/', authenticate, authorizeRoles('GOVERNMENT'), validate(createChallengeSchema), createChallenge);
 
 // List Challenges (Public/Authenticated)
 router.get('/', optionalAuthenticate, getChallenges);
@@ -55,36 +55,36 @@ router.get('/', optionalAuthenticate, getChallenges);
 // Get Challenge by ID
 router.get('/:challenge_id', optionalAuthenticate, getChallengeById);
 
-// Update Challenge (GOVERNMENT or ADMIN)
-router.patch('/:challenge_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(updateChallengeSchema), updateChallenge);
+// Update Challenge (GOVERNMENT only)
+router.patch('/:challenge_id', authenticate, authorizeRoles('GOVERNMENT'), validate(updateChallengeSchema), updateChallenge);
 
 // Delete DRAFT Challenge
-router.delete('/:challenge_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), deleteChallenge);
+router.delete('/:challenge_id', authenticate, authorizeRoles('GOVERNMENT'), deleteChallenge);
 
 // Brain 1 AI assistance retry / enhancement for DRAFT challenge
-router.post('/:challenge_id/brain1/generate', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), generateChallengeBrain1);
+router.post('/:challenge_id/brain1/generate', authenticate, authorizeRoles('GOVERNMENT'), generateChallengeBrain1);
 
 // Publish Challenge (DRAFT -> PUBLISHED)
-router.post('/:challenge_id/publish', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), publishChallenge);
+router.post('/:challenge_id/publish', authenticate, authorizeRoles('GOVERNMENT'), publishChallenge);
 
 // Start Evaluation (PUBLISHED -> EVALUATION)
-router.post('/:challenge_id/start-evaluation', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), startChallengeEvaluation);
+router.post('/:challenge_id/start-evaluation', authenticate, authorizeRoles('GOVERNMENT'), startChallengeEvaluation);
 
 // Close Challenge (PUBLISHED/EVALUATION -> CLOSED)
-router.post('/:challenge_id/close', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), closeChallenge);
+router.post('/:challenge_id/close', authenticate, authorizeRoles('GOVERNMENT'), closeChallenge);
 
-// Shortlist Startup for Challenge (GOVERNMENT or ADMIN)
-router.post('/:challenge_id/shortlist/:startup_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), shortlistStartup);
-router.post('/:challenge_id/shortlist', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), shortlistStartup);
+// Shortlist Startup for Challenge (GOVERNMENT only)
+router.post('/:challenge_id/shortlist/:startup_id', authenticate, authorizeRoles('GOVERNMENT'), shortlistStartup);
+router.post('/:challenge_id/shortlist', authenticate, authorizeRoles('GOVERNMENT'), shortlistStartup);
 
 // Submit Application for Challenge (STARTUP role only)
-router.post('/:challenge_id/applications', authenticate, authorizeRoles('STARTUP', 'ADMIN'), validate(createApplicationSchema), createApplication);
+router.post('/:challenge_id/applications', authenticate, authorizeRoles('STARTUP'), validate(createApplicationSchema), createApplication);
 
 // Get Applications for a Challenge (GOVERNMENT or ADMIN)
 router.get('/:challenge_id/applications', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), getChallengeApplications);
 
-// Trigger pgvector + 5-factor Matching Algorithm (GOVERNMENT or ADMIN)
-router.post('/:challenge_id/match', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), runChallengeMatching);
+// Trigger pgvector + 5-factor Matching Algorithm (GOVERNMENT only)
+router.post('/:challenge_id/match', authenticate, authorizeRoles('GOVERNMENT'), runChallengeMatching);
 
 // Get Match Scores for a Challenge (GOVERNMENT or ADMIN)
 router.get('/:challenge_id/matches', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), getChallengeMatches);

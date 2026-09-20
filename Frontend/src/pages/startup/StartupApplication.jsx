@@ -29,6 +29,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import {
   submitApplication,
+  updateApplication,
   uploadSolutionDocument,
   getApplicationDocuments,
   deleteSolutionDocument,
@@ -195,21 +196,41 @@ function StartupApplication() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSaveDraft = () => {
-    setSaveState("saving");
-    localStorage.setItem(
-      `startup_application_draft_${id || "new"}`,
-      JSON.stringify({
-        challengeId: id,
-        form,
-        documents,
-        savedAt: new Date().toISOString(),
-      })
-    );
+  const [draftAppId, setDraftAppId] = useState(null);
 
-    setTimeout(() => {
+  const handleSaveDraft = async () => {
+    setSaveState("saving");
+    try {
+      const payload = {
+        proposal_summary: form.problemUnderstanding?.trim() || form.solutionName?.trim() || "Draft Proposal Summary",
+        technical_approach: form.proposedSolution?.trim() || form.technology?.trim() || "Draft Technical Approach",
+        expected_impact: form.expectedImpact?.trim() || "Draft Expected Impact Description",
+        proposed_budget: Number(form.proposedBudget || 100000),
+        proposed_timeline_days: Number(form.proposedTimeline || 30),
+        status: "DRAFT"
+      };
+
+      if (draftAppId) {
+        await updateApplication(draftAppId, payload);
+      } else if (id) {
+        const res = await submitApplication(id, payload);
+        const createdId = res?.data?.application?.id || res?.application?.id;
+        if (createdId) setDraftAppId(createdId);
+      }
       setSaveState("saved");
-    }, 600);
+    } catch (err) {
+      console.warn("Could not persist draft to database, saving locally as backup:", err);
+      localStorage.setItem(
+        `startup_application_draft_${id || "new"}`,
+        JSON.stringify({
+          challengeId: id,
+          form,
+          documents,
+          savedAt: new Date().toISOString(),
+        })
+      );
+      setSaveState("saved");
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -1416,8 +1437,9 @@ function MyApplicationsListView({ user, navigate }) {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await getStartupApplications();
-      const data = res?.data || res || [];
+      const startupId = user?.startups?.[0]?.id || "my";
+      const res = await getStartupApplications(startupId);
+      const data = res?.data?.applications || res?.data || res || [];
       if (Array.isArray(data) && data.length > 0) {
         const mapped = data.map((app) => ({
           id: app.id,
@@ -1431,7 +1453,7 @@ function MyApplicationsListView({ user, navigate }) {
           expected_impact: app.expected_impact || "Significant public sector process improvement.",
           estimated_cost: app.proposed_budget
             ? `₹${Number(app.proposed_budget).toLocaleString("en-IN")}`
-            : app.estimated_cost || "₹3,50,000",
+            : (app.estimated_cost ? `₹${Number(app.estimated_cost).toLocaleString("en-IN")}` : "Not specified"),
           status: app.status || "SUBMITTED",
           created_at: app.created_at || new Date().toISOString(),
           submitted_at: app.submitted_at || null,
@@ -1441,15 +1463,17 @@ function MyApplicationsListView({ user, navigate }) {
               ? "Pilot Phase Active"
               : app.status === "SHORTLISTED"
               ? "Finalist Solution Package"
+              : app.status === "DRAFT"
+              ? "Draft In Progress"
               : "Under Department Review"),
         }));
         setApplications(mapped);
       } else {
-        setApplications(defaultStartupApplications);
+        setApplications([]);
       }
     } catch (err) {
-      console.warn("Could not fetch applications from API, using demo data:", err);
-      setApplications(defaultStartupApplications);
+      console.warn("Could not fetch applications from API:", err);
+      setApplications([]);
     } finally {
       setLoading(false);
     }
@@ -1628,12 +1652,14 @@ function MyApplicationsListView({ user, navigate }) {
                       <Building2 className="h-3.5 w-3.5" /> {app.department} • {app.state}
                     </span>
                     <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400">
-                      <CalendarDays className="h-3.5 w-3.5" /> Submitted{" "}
-                      {new Date(app.submitted_at).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
+                      <CalendarDays className="h-3.5 w-3.5" />{" "}
+                      {app.submitted_at
+                        ? `Submitted ${new Date(app.submitted_at).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}`
+                        : "Draft In Progress"}
                     </span>
                   </div>
 

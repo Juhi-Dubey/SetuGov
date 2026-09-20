@@ -312,7 +312,8 @@ export const getGovernmentAnalytics = async (user, query = {}) => {
         payments: true,
         kpis: true,
         scale_decisions: true,
-        validations: true
+        validations: true,
+        milestones: true
       }
     }),
     prisma.pilot.count({ where: wherePilot }),
@@ -368,6 +369,15 @@ export const getGovernmentAnalytics = async (user, query = {}) => {
   });
 
   const remainingBudget = Math.max(0, totalAllocatedBudget - totalPaidAmount);
+  const budgetUtilizationRate = totalAllocatedBudget > 0 ? Math.round((totalPaidAmount / totalAllocatedBudget) * 100) : 0;
+
+  // Authoritative milestone analytics
+  const allMilestones = pilotsList.flatMap(p => p.milestones || []);
+  const totalMilestones = allMilestones.length;
+  const completedMilestones = allMilestones.filter(m => m.status === 'COMPLETED').length;
+  const inProgressMilestones = allMilestones.filter(m => m.status === 'IN_PROGRESS').length;
+  const pendingMilestones = allMilestones.filter(m => m.status === 'PENDING' || !m.status).length;
+  const milestoneCompletionRate = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
 
   // Authoritative average validation score
   let avgValidationScore = 0;
@@ -405,7 +415,22 @@ export const getGovernmentAnalytics = async (user, query = {}) => {
       paid_amount: totalPaidAmount,
       pending_amount: totalPendingAmount,
       remaining_amount: remainingBudget,
-      utilization_percentage: totalAllocatedBudget > 0 ? Math.round((totalPaidAmount / totalAllocatedBudget) * 100) : 0
+      utilization_percentage: budgetUtilizationRate
+    },
+    financials: {
+      total_allocated_budget: totalAllocatedBudget,
+      total_pilot_budget: totalPilotBudget,
+      total_paid_budget: totalPaidAmount,
+      total_pending_budget: totalPendingAmount,
+      remaining_budget: remainingBudget,
+      budget_utilization_rate: budgetUtilizationRate
+    },
+    milestone_analytics: {
+      total_milestones: totalMilestones,
+      completed_milestones: completedMilestones,
+      in_progress_milestones: inProgressMilestones,
+      pending_milestones: pendingMilestones,
+      completion_rate: milestoneCompletionRate
     },
     status_breakdowns: {
       challenges: challengesByStatus.reduce((acc, c) => ({ ...acc, [c.status]: c._count.id }), {}),

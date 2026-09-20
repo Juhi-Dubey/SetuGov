@@ -325,8 +325,8 @@ function Topbar({ onMenuClick, role = "government", hideSearch = false }) {
   };
 
   const user = {
-    name: authUser?.name || "Demo User",
-    email: authUser?.email || "demo@setugov.in",
+    name: authUser?.name || "Authorized User",
+    email: authUser?.email || "user@setugov.in",
     role: roleNames[authUser?.role] || roleNames[role] || "Government Officer",
   };
 
@@ -597,7 +597,7 @@ function Topbar({ onMenuClick, role = "government", hideSearch = false }) {
       </div>
 
       {/* RIGHT */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2 sm:gap-2.5">
 
         {/* MOBILE SEARCH */}
         {!shouldHideSearch && (
@@ -806,11 +806,14 @@ function Topbar({ onMenuClick, role = "government", hideSearch = false }) {
 
             {/* USER NAME + ROLE */}
             <div className="hidden text-left lg:block">
-              <p className="max-w-32 truncate text-xs font-semibold text-slate-900 dark:text-white">
+              <p
+                title={user.name}
+                className="max-w-56 sm:max-w-64 truncate text-xs font-semibold text-slate-900 dark:text-white"
+              >
                 {user.name}
               </p>
 
-              <p className="max-w-32 truncate text-[10px] text-slate-400">
+              <p className="max-w-56 sm:max-w-64 truncate text-xs text-slate-400">
                 {user.role}
               </p>
             </div>

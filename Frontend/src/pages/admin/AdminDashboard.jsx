@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getAdminDashboard } from "../../services/adminService";
+import ArchitectureStatus from "../../components/admin/ArchitectureStatus";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -215,6 +216,11 @@ function AdminDashboard() {
           );
         })}
       </div>
+
+      {/* ARCHITECTURE STATUS OBSERVABILITY SECTION */}
+      <section>
+        <ArchitectureStatus />
+      </section>
 
       {/* RECENT AUDIT LOGS PREVIEW */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">

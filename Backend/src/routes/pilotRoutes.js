@@ -69,8 +69,8 @@ const prepareEvidenceUpload = (req, _res, next) => {
   next();
 };
 
-// Create Pilot (GOVERNMENT or ADMIN)
-router.post('/', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(createPilotSchema), createPilot);
+// Create Pilot (GOVERNMENT only)
+router.post('/', authenticate, authorizeRoles('GOVERNMENT'), validate(createPilotSchema), createPilot);
 
 // List Pilots
 router.get('/', authenticate, getPilots);
@@ -78,14 +78,14 @@ router.get('/', authenticate, getPilots);
 // Get Pilot by ID
 router.get('/:pilot_id', authenticate, getPilotById);
 
-// Update Pilot
-router.patch('/:pilot_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(updatePilotSchema), updatePilot);
+// Update Pilot (GOVERNMENT only)
+router.patch('/:pilot_id', authenticate, authorizeRoles('GOVERNMENT'), validate(updatePilotSchema), updatePilot);
 
 // Start Pilot (PLANNED -> RUNNING)
-router.post('/:pilot_id/start', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), startPilot);
+router.post('/:pilot_id/start', authenticate, authorizeRoles('GOVERNMENT'), startPilot);
 
 // Complete Pilot (VALIDATION -> COMPLETED)
-router.post('/:pilot_id/complete', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), completePilot);
+router.post('/:pilot_id/complete', authenticate, authorizeRoles('GOVERNMENT'), completePilot);
 
 // Comprehensive Pilot Dashboard
 router.get('/:pilot_id/dashboard', authenticate, getPilotDashboard);
@@ -96,22 +96,22 @@ router.get('/:pilot_id/dashboard', authenticate, getPilotDashboard);
 
 // Security & Compliance Checklist
 router.get('/:pilot_id/compliance', authenticate, getComplianceChecklist);
-router.patch('/:pilot_id/compliance/:item_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN', 'EVALUATOR'), updateComplianceItem);
+router.patch('/:pilot_id/compliance/:item_id', authenticate, authorizeRoles('GOVERNMENT', 'EVALUATOR'), updateComplianceItem);
 
 // Beneficiary / Citizen Feedback
 router.post('/:pilot_id/feedback', addPilotFeedback); // Open or authenticated
 router.get('/:pilot_id/feedback', authenticate, getPilotFeedbacks);
 
-// KPIs
-router.post('/:pilot_id/kpis', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(createKpiSchema), createKpi);
+// KPIs (GOVERNMENT only)
+router.post('/:pilot_id/kpis', authenticate, authorizeRoles('GOVERNMENT'), validate(createKpiSchema), createKpi);
 router.get('/:pilot_id/kpis', authenticate, getPilotKpis);
 
 // Measurements
 router.post('/:pilot_id/measurements', authenticate, validate(createMeasurementSchema), createMeasurement);
 router.get('/:pilot_id/measurements', authenticate, getPilotMeasurements);
 
-// Milestones
-router.post('/:pilot_id/milestones', authenticate, authorizeRoles('GOVERNMENT', 'STARTUP', 'ADMIN'), validate(createMilestoneSchema), createMilestone);
+// Milestones (GOVERNMENT or STARTUP)
+router.post('/:pilot_id/milestones', authenticate, authorizeRoles('GOVERNMENT', 'STARTUP'), validate(createMilestoneSchema), createMilestone);
 router.get('/:pilot_id/milestones', authenticate, getPilotMilestones);
 
 // Evidence (accepts multipart with 'file' or JSON with 'file_url')
@@ -127,16 +127,16 @@ router.post('/:pilot_id/issues', authenticate, authorizeRoles('GOVERNMENT', 'STA
 router.get('/:pilot_id/issues', authenticate, getPilotIssues);
 router.patch('/:pilot_id/issues/:issue_id', authenticate, authorizeRoles('GOVERNMENT', 'STARTUP', 'ADMIN'), updatePilotIssue);
 
-// Validations
-router.post('/:pilot_id/validation', authenticate, authorizeRoles('GOVERNMENT', 'EVALUATOR', 'ADMIN'), validate(createValidationSchema), createValidation);
+// Validations (GOVERNMENT or EVALUATOR)
+router.post('/:pilot_id/validation', authenticate, authorizeRoles('GOVERNMENT', 'EVALUATOR'), validate(createValidationSchema), createValidation);
 router.get('/:pilot_id/validation', authenticate, getPilotValidations);
 
-// Payments
-router.post('/:pilot_id/payments', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(createPaymentSchema), createPayment);
+// Payments (GOVERNMENT only)
+router.post('/:pilot_id/payments', authenticate, authorizeRoles('GOVERNMENT'), validate(createPaymentSchema), createPayment);
 router.get('/:pilot_id/payments', authenticate, getPilotPayments);
 
-// Scale Decisions
-router.post('/:pilot_id/scale-decision', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(createScaleDecisionSchema), createScaleDecision);
+// Scale Decisions (GOVERNMENT only)
+router.post('/:pilot_id/scale-decision', authenticate, authorizeRoles('GOVERNMENT'), validate(createScaleDecisionSchema), createScaleDecision);
 router.get('/:pilot_id/scale-decision', authenticate, getScaleDecision);
 
 // Progress Updates (Persistent updates submitted by Startup/Gov/Admin)

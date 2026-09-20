@@ -262,59 +262,62 @@ function StartupDashboard() {
             </div>
 
             <div className="mt-4 space-y-3">
-              {(applications.length > 0 ? applications : [
-                {
-                  id: "1",
-                  challenge: { title: "AI-Based Citizen Grievance Management" },
-                  status: "UNDER_REVIEW",
-                  created_at: new Date().toISOString(),
-                },
-                {
-                  id: "2",
-                  challenge: { title: "Smart Waste Collection System" },
-                  status: "SELECTED",
-                  created_at: new Date().toISOString(),
-                },
-              ])
-                .slice((applicationsPage - 1) * applicationsPageSize, applicationsPage * applicationsPageSize)
-                .map((app, idx) => (
-                  <div
-                    key={app.id || idx}
-                    className="flex items-center justify-between rounded-xl border border-slate-100 p-4 dark:border-slate-800"
+              {applications.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center dark:border-slate-800">
+                  <FileText className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
+                  <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-300">No Applications Submitted</p>
+                  <p className="mt-1 text-xs text-slate-400">Discover open problem statements and submit your first procurement proposal.</p>
+                  <button
+                    onClick={() => navigate("/startup/challenges")}
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700"
                   >
-                    <div>
-                      <h3 className="text-sm font-semibold">
-                        {app.challenge?.title || "Department Innovation Pilot"}
-                      </h3>
-                      <p className="text-xs text-slate-400">
-                        Submitted: {app.created_at ? new Date(app.created_at).toLocaleDateString() : "Recent"}
-                      </p>
-                    </div>
+                    Explore Challenges <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                applications
+                  .slice((applicationsPage - 1) * applicationsPageSize, applicationsPage * applicationsPageSize)
+                  .map((app, idx) => (
+                    <div
+                      key={app.id || idx}
+                      className="flex items-center justify-between rounded-xl border border-slate-100 p-4 dark:border-slate-800"
+                    >
+                      <div>
+                        <h3 className="text-sm font-semibold">
+                          {app.challenge?.title || "Department Innovation Pilot"}
+                        </h3>
+                        <p className="text-xs text-slate-400">
+                          Submitted: {app.created_at ? new Date(app.created_at).toLocaleDateString("en-IN") : "Recent"}
+                        </p>
+                      </div>
 
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                      app.status === "SELECTED"
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                        : app.status === "REJECTED"
-                        ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
-                        : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                    }`}>
-                      {formatApplicationStatus(app.status)}
-                    </span>
-                  </div>
-                ))}
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                        app.status === "SELECTED"
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                          : app.status === "REJECTED"
+                          ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
+                          : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                      }`}>
+                        {formatApplicationStatus(app.status)}
+                      </span>
+                    </div>
+                  ))
+              )}
             </div>
           </div>
 
-          <Pagination
-            currentPage={applicationsPage}
-            totalItems={(applications.length > 0 ? applications : [1, 2]).length}
-            pageSize={applicationsPageSize}
-            pageSizeOptions={[2, 4, 8, 12]}
-            onPageChange={setApplicationsPage}
-            onPageSizeChange={setApplicationsPageSize}
-            itemName="applications"
-            className="mt-4 border-t-0 p-2 sm:p-3"
-          />
+          {applications.length > applicationsPageSize && (
+            <Pagination
+              currentPage={applicationsPage}
+              totalItems={applications.length}
+              pageSize={applicationsPageSize}
+              pageSizeOptions={[2, 4, 8, 12]}
+              onPageChange={setApplicationsPage}
+              onPageSizeChange={setApplicationsPageSize}
+              itemName="applications"
+              className="mt-4 border-t-0 p-2 sm:p-3"
+            />
+          )}
         </div>
       </div>
 
@@ -338,7 +341,7 @@ function StartupDashboard() {
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              {performance?.dpiit_verified ? "DPIIT Recognized Startup" : "Verified Enterprise"}
+              {performance?.dpiit_verified ? "DPIIT Recognized Startup" : (user?.verification_status === "VERIFIED" ? "Verified Enterprise" : "Registered Startup")}
             </span>
           </div>
         </div>
@@ -347,33 +350,35 @@ function StartupDashboard() {
           <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-800/40">
             <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Pilots Completed / Scaled</p>
             <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-              {performance?.completed_pilots_count ?? 1} <span className="text-xs font-normal text-slate-400">/ {performance?.total_pilots_count ?? 2}</span>
+              {performance ? performance.completed_pilots ?? 0 : 0} <span className="text-xs font-normal text-slate-400">/ {performance ? performance.total_pilots ?? 0 : 0}</span>
             </p>
-            <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">Valid sandbox field validation</p>
+            <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">Validated sandbox field deployments</p>
           </div>
 
           <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-800/40">
-            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Milestone Achievement</p>
+            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Average Validation Score</p>
             <p className="mt-2 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-              {performance?.milestone_completion_rate ? `${performance.milestone_completion_rate}%` : "92%"}
+              {performance?.average_validation_score != null && performance?.average_validation_score > 0
+                ? `${performance.average_validation_score} / 100`
+                : "N/A"}
             </p>
-            <p className="mt-1 text-[11px] text-slate-400">On-time milestone delivery</p>
+            <p className="mt-1 text-[11px] text-slate-400">Independent expert pilot evaluation</p>
           </div>
 
           <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-800/40">
-            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Proposal Success Rate</p>
+            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Scale-Ready Pilots</p>
             <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-              {performance?.selection_rate ? `${performance.selection_rate}%` : "66%"}
+              {performance ? performance.scale_ready_count ?? 0 : 0}
             </p>
-            <p className="mt-1 text-[11px] text-slate-400">Government challenge selection</p>
+            <p className="mt-1 text-[11px] text-slate-400">Authorized for statewide rollout</p>
           </div>
 
           <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-800/40">
-            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Gov Compliance Rating</p>
+            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Gov Compliance Status</p>
             <p className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-              Tier 1
+              {user?.verification_status === "VERIFIED" ? "Verified" : (user?.verification_status || "Pending Verification")}
             </p>
-            <p className="mt-1 text-[11px] text-slate-400">Ready for statewide scale</p>
+            <p className="mt-1 text-[11px] text-slate-400">Government procurement readiness</p>
           </div>
         </div>
       </div>

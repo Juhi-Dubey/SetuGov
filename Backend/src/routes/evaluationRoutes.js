@@ -9,7 +9,7 @@ import { updateEvaluationSchema } from '../schemas/evaluationSchemas.js';
 
 const router = Router();
 
-// Update Evaluation (Evaluator or ADMIN)
-router.patch('/:evaluation_id', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), validate(updateEvaluationSchema), updateEvaluation);
+// Update Evaluation (EVALUATOR only)
+router.patch('/:evaluation_id', authenticate, authorizeRoles('EVALUATOR'), validate(updateEvaluationSchema), updateEvaluation);
 
 export default router;

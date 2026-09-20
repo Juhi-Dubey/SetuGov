@@ -1156,18 +1156,35 @@ export const verifyStartup = async (startupId, data, user, ip_address = null) =>
   );
 };
 
-export const getStartupApplications = async (startupId, user = null) => {
+const resolveStartupRecord = async (startupId, user) => {
+  if (!startupId || startupId === 'my' || startupId === 'me' || startupId === 'undefined' || startupId === 'null') {
+    if (user && user.role === 'STARTUP') {
+      const startup = await prisma.startup.findFirst({ where: { user_id: user.id } });
+      if (!startup) {
+        throw new NotFoundError('No registered startup profile found for this user account.');
+      }
+      return startup;
+    }
+    throw new BadRequestError('A valid startup ID must be provided.');
+  }
+
   const startup = await prisma.startup.findUnique({ where: { id: startupId } });
   if (!startup) {
     throw new NotFoundError(`Startup with ID ${startupId} not found.`);
   }
 
   if (user && user.role === 'STARTUP' && startup.user_id !== user.id) {
-    throw new ForbiddenError('You can only view your own applications.');
+    throw new ForbiddenError('You can only view your own startup records.');
   }
 
+  return startup;
+};
+
+export const getStartupApplications = async (startupId, user = null) => {
+  const startup = await resolveStartupRecord(startupId, user);
+
   return prisma.application.findMany({
-    where: { startup_id: startupId },
+    where: { startup_id: startup.id },
     include: {
       challenge: {
         include: {
@@ -1180,17 +1197,10 @@ export const getStartupApplications = async (startupId, user = null) => {
 };
 
 export const getStartupPilots = async (startupId, user = null) => {
-  const startup = await prisma.startup.findUnique({ where: { id: startupId } });
-  if (!startup) {
-    throw new NotFoundError(`Startup with ID ${startupId} not found.`);
-  }
-
-  if (user && user.role === 'STARTUP' && startup.user_id !== user.id) {
-    throw new ForbiddenError('You can only view your own pilots.');
-  }
+  const startup = await resolveStartupRecord(startupId, user);
 
   return prisma.pilot.findMany({
-    where: { startup_id: startupId },
+    where: { startup_id: startup.id },
     include: {
       challenge: true,
       department: true,
@@ -1201,8 +1211,10 @@ export const getStartupPilots = async (startupId, user = null) => {
 };
 
 export const getStartupPerformance = async (startupId, user = null) => {
-  const startup = await prisma.startup.findUnique({
-    where: { id: startupId },
+  const startup = await resolveStartupRecord(startupId, user);
+
+  const startupWithPilots = await prisma.startup.findUnique({
+    where: { id: startup.id },
     include: {
       pilots: {
         include: {
@@ -1214,22 +1226,19 @@ export const getStartupPerformance = async (startupId, user = null) => {
     }
   });
 
-  if (!startup) {
-    throw new NotFoundError(`Startup with ID ${startupId} not found.`);
-  }
-
-  const completedPilots = startup.pilots.filter(p => p.status === 'COMPLETED' || p.status === 'SCALED');
-  const validations = startup.pilots.flatMap(p => p.validations);
+  const pilots = startupWithPilots?.pilots || [];
+  const completedPilots = pilots.filter(p => p.status === 'COMPLETED' || p.status === 'SCALED');
+  const validations = pilots.flatMap(p => p.validations);
 
   const avgScore = validations.length > 0
     ? validations.reduce((sum, v) => sum + v.performance_score, 0) / validations.length
     : 0;
 
   return {
-    total_pilots: startup.pilots.length,
+    total_pilots: pilots.length,
     completed_pilots: completedPilots.length,
     average_validation_score: Number(avgScore.toFixed(2)),
-    scale_ready_count: startup.pilots.filter(p => p.status === 'SCALED').length
+    scale_ready_count: pilots.filter(p => p.status === 'SCALED').length
   };
 };
 

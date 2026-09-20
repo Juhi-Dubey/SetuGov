@@ -18,7 +18,7 @@ export const getOpenChallengesForEvaluator = async (user, query = {}) => {
 
   const challenges = await prisma.challenge.findMany({
     where: {
-      status: 'PUBLISHED'
+      status: { in: ['PUBLISHED', 'EVALUATION'] }
     },
     orderBy: { created_at: 'desc' },
     include: {

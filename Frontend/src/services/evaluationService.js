@@ -46,9 +46,31 @@ export const getEvaluationById = async (id) => {
   return apiRequest(`/applications/${id}`);
 };
 
-export const saveEvaluationDraft = async (id, evaluationData) => {
-  // Evaluations in SetuGov are officially submitted via submitEvaluation (POST /applications/:id/evaluations)
-  return { success: true, message: "Draft handling is managed by active session state." };
+export const saveEvaluationDraft = async (applicationId, evaluationData) => {
+  const payload = {
+    technical_score: Number(
+      evaluationData.technical_score ?? evaluationData.technicalFeasibility ?? evaluationData.scores?.technicalFeasibility ?? 0
+    ),
+    innovation_score: Number(
+      evaluationData.innovation_score ?? evaluationData.innovation ?? evaluationData.scores?.innovation ?? 0
+    ),
+    impact_score: Number(
+      evaluationData.impact_score ?? evaluationData.expectedImpact ?? evaluationData.scores?.expectedImpact ?? 0
+    ),
+    scalability_score: Number(
+      evaluationData.scalability_score ?? evaluationData.scalability ?? evaluationData.scores?.scalability ?? 0
+    ),
+    cost_score: Number(
+      evaluationData.cost_score ?? evaluationData.costEffectiveness ?? evaluationData.scores?.costEffectiveness ?? 0
+    ),
+    comments: evaluationData.comments || "",
+    is_draft: true,
+  };
+
+  return apiRequest(`/applications/${applicationId}/evaluations`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 };
 
 export const declareConflictOfInterest = async (applicationId, data) => {

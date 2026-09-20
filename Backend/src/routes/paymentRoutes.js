@@ -7,7 +7,7 @@ import { updatePaymentStatusSchema } from '../schemas/paymentSchemas.js';
 
 const router = Router();
 
-router.get('/', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN', 'STARTUP'), getPayments);
+router.get('/', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN', 'STARTUP', 'EVALUATOR'), getPayments);
 router.get('/:payment_id', authenticate, getPaymentById);
 router.patch('/:payment_id/status', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(updatePaymentStatusSchema), updatePaymentStatus);
 

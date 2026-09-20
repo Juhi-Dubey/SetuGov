@@ -163,12 +163,11 @@ function AdminUsers() {
               </p>
 
               <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-                User Management
+                Government Users & Platform Directory
               </h1>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                Manage government officers, startups,
-                evaluators and other platform users.
+                Govern government nodal officers, department affiliations, and verified user accounts across the platform.
               </p>
             </div>
           </div>

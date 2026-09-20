@@ -127,11 +127,11 @@ function EvaluationDetail() {
             challengeTitle: raw.challenge?.title || raw.challengeTitle || "Challenge Application",
             startupName: raw.startup?.company_name || raw.startupName || "Startup",
             domain: raw.challenge?.domain || raw.domain || "Technology",
-            suitability: propData.suitability || raw.suitability,
-            technicalApproach: propData.technical_approach || propData.technicalApproach || raw.technicalApproach,
-            expectedImpact: propData.expected_impact || propData.expectedImpact || raw.expectedImpact,
-            estimatedCost: propData.estimated_cost || propData.estimatedCost || raw.estimatedCost,
-            timeline: propData.timeline || raw.timeline,
+            suitability: raw.proposal || propData.suitability || raw.suitability,
+            technicalApproach: raw.technical_approach || propData.technical_approach || propData.technicalApproach || raw.technicalApproach,
+            expectedImpact: raw.expected_impact || propData.expected_impact || propData.expectedImpact || raw.expectedImpact,
+            estimatedCost: raw.estimated_cost != null ? `₹${Number(raw.estimated_cost).toLocaleString('en-IN')}` : (propData.estimated_cost || propData.estimatedCost),
+            timeline: raw.timeline || propData.timeline || raw.timeline,
             documents: raw.startup?.documents || raw.documents || [],
             ...raw,
           };
@@ -149,7 +149,7 @@ function EvaluationDetail() {
               costEffectiveness: myEval.cost_score ?? "",
             });
             if (myEval.comments) setComments(myEval.comments);
-            setSubmissionState("Submitted");
+            setSubmissionState(myEval.is_submitted ? "Submitted" : "Draft");
           } else if (raw.scores) {
             setScores({
               technicalFeasibility: raw.scores.technicalFeasibility ?? raw.scores.technical_score ?? "",

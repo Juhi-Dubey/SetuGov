@@ -190,7 +190,7 @@ function Login() {
                   <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
                     SetuGov
                   </h1>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Government Innovation Procurement OS
                   </p>
                 </div>
@@ -254,18 +254,19 @@ function Login() {
         {/* Login Section */}
         <div className="relative flex items-center justify-center px-6 py-8 sm:px-8 lg:px-10">
           {/* Top Header Controls */}
-          <div className="absolute right-6 top-6 flex items-center gap-2">
+          <div className="absolute right-6 top-6 lg:right-10 lg:top-10 flex items-center gap-2">
             <Link
               to="/"
-              className="back-nav"
+              className="back-nav mb-0 inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               Back to Home
             </Link>
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex h-8.5 w-8.5 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
@@ -286,7 +287,7 @@ function Login() {
 
                 <div>
                   <h1 className="text-lg font-bold">SetuGov</h1>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Innovation Procurement OS
                   </p>
                 </div>
@@ -295,7 +296,7 @@ function Login() {
 
             {/* Heading */}
             <div className="mb-4">
-              <p className="mb-0.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+              <p className="mb-0.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Welcome back
               </p>
 
@@ -448,16 +449,17 @@ function Login() {
               <button
                 type="button"
                 onClick={() => setShowDemoAccounts((prev) => !prev)}
-                className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-900 dark:hover:text-slate-300"
+                aria-expanded={showDemoAccounts}
+                className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-800"
               >
-                <span className="flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-indigo-500/70" />
+                <span className="flex items-center gap-2">
+                  <Sparkles className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" aria-hidden="true" />
                   Fast Test Accounts (Demo / Evaluation Mode)
                 </span>
                 {showDemoAccounts ? (
-                  <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
+                  <ChevronUp className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" aria-hidden="true" />
                 ) : (
-                  <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+                  <ChevronDown className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" aria-hidden="true" />
                 )}
               </button>
 

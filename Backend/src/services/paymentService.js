@@ -242,6 +242,20 @@ export const getPayments = async (query = {}, user = null) => {
       where.pilot = {
         startup: { user_id: user.id }
       };
+    } else if (user.role === 'EVALUATOR') {
+      where.pilot = {
+        challenge: {
+          applications: {
+            some: {
+              evaluator_assignments: {
+                some: {
+                  evaluator_id: user.id
+                }
+              }
+            }
+          }
+        }
+      };
     }
   }
 
