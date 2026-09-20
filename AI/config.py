@@ -29,7 +29,12 @@ class Settings(BaseSettings):
 
     # CORS — restrict to known frontend origins in production
     # Override via ALLOWED_ORIGINS env var: ALLOWED_ORIGINS=["https://app.setugov.in"]
-    allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:8080"]
+    allowed_origins: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
 
     # Logging
     log_level: str = "INFO"

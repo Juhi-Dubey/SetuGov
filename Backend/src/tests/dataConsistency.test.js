@@ -89,7 +89,7 @@ async function runDataConsistencyTests() {
       data: {
         user_id: startupUser.id,
         company_name: `Consistency Tech ${suffix}`,
-        description: 'Enterprise AI solutions for public administration.',
+        description: 'Enterprise AI solutions for civic operations.',
         domain: 'GovTech',
         location: 'Mumbai, Maharashtra',
         pan_number: `CONST${suffix.toString().slice(-5)}`,

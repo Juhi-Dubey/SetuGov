@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
+import { useAuth } from "../../context/AuthContext";
 import ChallengeStepper from "../../components/challenge/ChallengeStepper";
 import ChallengeForm from "../../components/challenge/ChallengeForm";
 import OutcomeForm from "../../components/challenge/OutcomeForm";
@@ -64,10 +65,18 @@ function CreateChallenge() {
   const navigate = useNavigate();
   const { id: paramId } = useParams();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const userDepartment =
+    user?.department?.name ||
+    user?.department_name ||
+    (typeof user?.department === "string" ? user?.department : "");
 
   const [currentStep, setCurrentStep] = useState(1);
   const [draftId, setDraftId] = useState(paramId || searchParams.get("draftId") || null);
-  const [formData, setFormData] = useState(initialFormData);
+  const [formData, setFormData] = useState(() => ({
+    ...initialFormData,
+    department: userDepartment || "",
+  }));
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState("");
   const [saveSuccessMsg, setSaveSuccessMsg] = useState("");
@@ -81,6 +90,15 @@ function CreateChallenge() {
       loadExistingDraft(idToLoad);
     }
   }, [paramId, searchParams]);
+
+  useEffect(() => {
+    if (!draftId && userDepartment && !formData.department) {
+      setFormData((prev) => ({
+        ...prev,
+        department: userDepartment,
+      }));
+    }
+  }, [userDepartment, draftId, formData.department]);
 
   const loadExistingDraft = async (id) => {
     try {
@@ -839,6 +857,7 @@ function CreateChallenge() {
     setFormData((previous) => ({
       ...previous,
       ...mappedData,
+      department: userDepartment || previous.department || mappedData.department || "",
     }));
     setErrors({});
   };

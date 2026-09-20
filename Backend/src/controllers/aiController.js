@@ -3,7 +3,7 @@ import { successResponse } from '../utils/response.js';
 
 export const generateChallenge = async (req, res, next) => {
   try {
-    const result = await aiService.generateChallenge(req.body);
+    const result = await aiService.generateChallenge(req.body, req.user);
     return successResponse(res, result, 'AI challenge copilot analysis completed', 200);
   } catch (error) {
     next(error);

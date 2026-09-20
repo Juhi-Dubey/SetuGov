@@ -1102,7 +1102,7 @@ function StartupPilot() {
                   type="text"
                   value={feedbackRole}
                   onChange={(e) => setFeedbackRole(e.target.value)}
-                  placeholder="e.g. Ward Officer, Hospital Doctor, Citizen"
+                  placeholder="e.g. Ward Officer, Field Inspector, Citizen"
                   className="mt-1 h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950"
                 />
               </div>

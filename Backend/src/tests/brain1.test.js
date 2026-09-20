@@ -121,7 +121,7 @@ const runBrain1Tests = async () => {
       },
       pilot: {
         duration: '60 days',
-        sites: ['District Civil Hospital, Pune'],
+        sites: ['District Demonstration Center, Pune'],
         budget: '5,00,000 INR'
       },
       requirements: {
@@ -293,6 +293,8 @@ const runBrain1Tests = async () => {
     logger.info('─── G. Brain 1 Unavailable / Offline Workflow Tests ───');
 
     // 1. Simulate AI offline / unavailable
+    const originalAiUrl = config.AI_SERVICE_URL;
+    config.AI_SERVICE_URL = 'http://127.0.0.1:59999';
     config.AI_MOCK_MODE = false;
 
     const unavailRes = await request('POST', '/api/v1/ai/challenges/generate', validBody, govToken);
@@ -335,6 +337,7 @@ const runBrain1Tests = async () => {
     assert(unauthRetry.statusCode === 403, 'G11: Unauthorized STARTUP role blocked from Brain 1 retry (403)');
 
     // 5. When AI becomes available again, retry succeeds
+    config.AI_SERVICE_URL = originalAiUrl;
     config.AI_MOCK_MODE = true;
     const retryOnlineRes = await request('POST', `/api/v1/challenges/${createdChallenge.id}/brain1/generate`, {}, govToken);
     assert(retryOnlineRes.statusCode === 200, 'G12: Retry endpoint returns 200 when AI is restored');

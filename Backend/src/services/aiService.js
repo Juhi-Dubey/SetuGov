@@ -73,10 +73,20 @@ const callExternalAiService = async (endpoint, payload) => {
  * Input must match ChallengeCopilotRequest schema.
  * Returns ChallengeCopilotResponse fields.
  */
-export const generateChallenge = async (input) => {
+export const generateChallenge = async (input, user = null) => {
+  const userDept = user?.department?.name || user?.department_name || (typeof user?.department === 'string' ? user?.department : '');
+
+  // If user department is available and domain is not specified in requirements, propagate it
+  if (userDept && (!input.requirements?.domain || input.requirements.domain.trim() === '')) {
+    input.requirements = {
+      ...(input.requirements || {}),
+      domain: userDept
+    };
+  }
+
   // If Mock mode is explicitly configured, provide deterministic mock schema for testing
   if (config.AI_MOCK_MODE) {
-    return _buildMockChallengeCopilotResponse(input);
+    return _buildMockChallengeCopilotResponse(input, user);
   }
 
   // Attempt real AI service call
@@ -84,8 +94,19 @@ export const generateChallenge = async (input) => {
     const externalResult = await callExternalAiService('/ai/challenge', input);
 
     if (externalResult && externalResult.success && externalResult.data) {
+      const data = externalResult.data;
+      const title = input.problem?.title || 'Government Innovation Challenge';
+      const description = input.problem?.description || '';
       return {
-        ...externalResult.data,
+        ...data,
+        domain: data.domain || userDept || input.requirements?.domain || '',
+        refined_title: data.refined_title || (data.problem_summary && data.problem_summary.length > 70 ? `${data.problem_summary.slice(0, 67)}...` : data.problem_summary) || title,
+        refined_problem_statement: data.refined_problem_statement || data.problem_summary || description,
+        current_baseline: data.current_baseline || input.problem?.baseline || 'Current operational baseline: manual registration workflows with unmeasured throughput delays',
+        desired_outcome: data.desired_outcome || input.outcome?.desired_outcome || 'Achieve measurable efficiency gains and automated real-time service tracking',
+        expected_impact: data.expected_impact || data.success_definition || 'Significant reduction in citizen turnaround times, digitized data audit trail, and improved operational throughput',
+        possible_constraints: data.possible_constraints || input.problem?.constraints || [],
+        suggested_eligibility_criteria: data.suggested_eligibility_criteria || data.eligibility_considerations || [],
         status: 'AVAILABLE',
         success: true,
         ai_metadata: { mode: 'live' }
@@ -104,7 +125,7 @@ export const generateChallenge = async (input) => {
   }
 };
 
-const _buildMockChallengeCopilotResponse = (input) => {
+const _buildMockChallengeCopilotResponse = (input, user = null) => {
   const title = input.problem?.title || 'Government Innovation Challenge';
   const description = input.problem?.description || '';
   const currentBaseline = input.problem?.baseline || 'Current operational baseline: manual registration workflows with unmeasured throughput delays';
@@ -197,12 +218,14 @@ const _buildMockChallengeCopilotResponse = (input) => {
       ],
     pilot_recommendation: {
       suggested_duration: input.pilot?.duration || '60 days',
-      suggested_sites: input.pilot?.sites || ['District Headquarters'],
+      suggested_sites: (input.pilot?.sites && input.pilot.sites.length > 0)
+        ? input.pilot.sites
+        : (input.problem?.location ? [input.problem.location] : ['District Pilot Zone']),
       suggested_budget_considerations: input.pilot?.budget || '₹15,00,000',
       rationale: 'Standard 60-day sandbox pilot duration for empirical field validation.'
     },
     technology_categories: input.requirements?.technologies || ['AI / ML', 'Cloud Platform', 'Mobile Interface'],
-    domain: input.requirements?.domain || 'Public Administration',
+    domain: input.requirements?.domain || user?.department?.name || user?.department_name || (typeof user?.department === 'string' ? user?.department : '') || '',
     eligibility_considerations: eligibility,
     suggested_documents: [
       'Technical architecture document',
@@ -243,8 +266,15 @@ export const explainMatch = async (input) => {
   try {
     const externalResult = await callExternalAiService('/ai/match', input);
     if (externalResult && externalResult.success && externalResult.data) {
+      const data = externalResult.data;
       return {
-        ...externalResult.data,
+        ...data,
+        why_matched: data.why_matched || data.explanation || 'Startup demonstrates relevant operational capabilities for the challenge.',
+        explanation: data.explanation || data.why_matched || 'Startup demonstrates relevant operational capabilities for the challenge.',
+        strengths: data.strengths || data.key_strengths || [],
+        key_strengths: data.key_strengths || data.strengths || [],
+        concerns: data.concerns || data.recommended_considerations || [],
+        recommended_considerations: data.recommended_considerations || data.concerns || [],
         ai_metadata: { mode: 'live' }
       };
     }
@@ -711,8 +741,13 @@ export const analyzeProposal = async (input) => {
   try {
     const externalResult = await callExternalAiService('/ai/proposal', input);
     if (externalResult && externalResult.success && externalResult.data) {
+      const data = externalResult.data;
       return {
-        ...externalResult.data,
+        ...data,
+        technical_feasibility_assessment: data.technical_feasibility_assessment || data.technical_feasibility || data.technical_approach || 'The proposed architecture is technically viable for a pilot deployment.',
+        technical_feasibility: data.technical_feasibility || data.technical_feasibility_assessment || data.technical_approach || 'The proposed architecture is technically viable for a pilot deployment.',
+        recommended_questions_for_evaluator: data.recommended_questions_for_evaluator || data.questions_for_evaluator || [],
+        questions_for_evaluator: data.questions_for_evaluator || data.recommended_questions_for_evaluator || [],
         ai_metadata: { mode: 'live' }
       };
     }

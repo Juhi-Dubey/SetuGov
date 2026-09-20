@@ -1916,7 +1916,7 @@ function ChallengePilot() {
                           <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Scaling Scope *</label>
                           <input
                             type="text"
-                            placeholder="e.g. 5 District Municipal Hospitals"
+                            placeholder="e.g. 5 Municipal Administrative Zones"
                             value={govDecision.scaling_scope}
                             onChange={(e) => setGovDecision({ ...govDecision, scaling_scope: e.target.value })}
                             className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
@@ -2009,7 +2009,7 @@ function ChallengePilot() {
                       type="text"
                       value={createForm.location}
                       onChange={(e) => setCreateForm({ ...createForm, location: e.target.value })}
-                      placeholder="e.g. Pune Urban Health Center"
+                      placeholder="e.g. Pune Demonstration Facility"
                       className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                       required
                     />

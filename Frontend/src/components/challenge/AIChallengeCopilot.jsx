@@ -8,6 +8,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { generateChallengeWithAI } from "../../services/aiService";
+import { useAuth } from "../../context/AuthContext";
 
 const PROMPT_EXAMPLES = [
   {
@@ -28,6 +29,12 @@ const PROMPT_EXAMPLES = [
 ];
 
 function AIChallengeCopilot({ formData, onAutofill }) {
+  const { user } = useAuth();
+  const userDepartment =
+    user?.department?.name ||
+    user?.department_name ||
+    (typeof user?.department === "string" ? user?.department : "");
+
   const [roughPrompt, setRoughPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState("");
@@ -97,7 +104,7 @@ function AIChallengeCopilot({ formData, onAutofill }) {
           technologies: (formData?.requiredTechnologies || []).map((t) =>
             typeof t === "string" ? t : t.name
           ),
-          domain: formData?.department || "Public Administration",
+          domain: userDepartment || formData?.department || "",
         },
       };
 
@@ -129,30 +136,31 @@ function AIChallengeCopilot({ formData, onAutofill }) {
             : "") ||
           roughPrompt.split("\n")[0].slice(0, 80),
         department:
+          userDepartment ||
           formData.department ||
           data.domain ||
-          "Department of Public Health",
+          "",
         location:
           formData.location ||
           data.pilot_recommendation?.suggested_sites?.[0] ||
-          "District Civil Hospital, Pune",
+          "",
         problemDescription: data.refined_problem_statement || data.problem_summary || roughPrompt,
         currentProcess:
           data.root_cause_hypotheses && data.root_cause_hypotheses.length > 0
             ? `Current Operational Bottlenecks:\n• ${data.root_cause_hypotheses.join("\n• ")}`
-            : "Manual registration queues and uncoordinated doctor schedules causing peak-hour congestion.",
+            : "Manual registration workflows and uncoordinated service schedules causing peak-hour bottlenecks.",
         currentBaseline:
           data.current_baseline ||
           data.baseline ||
           (data.suggested_kpis?.[0]?.baseline != null
-            ? `Average waiting time is ${data.suggested_kpis[0].baseline} ${data.suggested_kpis[0].unit || "mins"} with 100% manual processing`
-            : "Average waiting time: 90 minutes; 100% manual check-in"),
+            ? `Average turnaround time is ${data.suggested_kpis[0].baseline} ${data.suggested_kpis[0].unit || "mins"} with manual processing`
+            : "Average turnaround time: 90 minutes; 100% manual operations"),
 
         // Step 2: Outcome & KPIs
         desiredOutcome:
           data.desired_outcome ||
           data.success_definition ||
-          "Reduce average OPD waiting time by 40% with smart automated queue management and triage.",
+          "Reduce average operational turnaround time by 40% with automated workflow intelligence.",
         expectedImpact: data.expected_impact || "Digitized public workflow and reduced citizen turnaround delays.",
         kpis:
           data.suggested_kpis && data.suggested_kpis.length > 0
@@ -173,7 +181,7 @@ function AIChallengeCopilot({ formData, onAutofill }) {
             : [
                 {
                   id: crypto.randomUUID(),
-                  name: "Average OPD Waiting Time",
+                  name: "Average Service Turnaround Time",
                   unit: "minutes",
                   baseline: "90",
                   target: "45",
@@ -182,7 +190,7 @@ function AIChallengeCopilot({ formData, onAutofill }) {
                 },
                 {
                   id: crypto.randomUUID(),
-                  name: "Digital Queue Adoption Rate",
+                  name: "Digital Workflow Adoption Rate",
                   unit: "%",
                   baseline: "0",
                   target: "85",
@@ -191,7 +199,7 @@ function AIChallengeCopilot({ formData, onAutofill }) {
                 },
                 {
                   id: crypto.randomUUID(),
-                  name: "Patient Satisfaction Index",
+                  name: "Citizen Satisfaction Index",
                   unit: "/5",
                   baseline: "2.4",
                   target: "4.5",
@@ -205,7 +213,7 @@ function AIChallengeCopilot({ formData, onAutofill }) {
         pilotLocation:
           data.pilot_recommendation?.suggested_sites?.[0] ||
           formData.location ||
-          "District Civil Hospital, Pune",
+          "",
         pilotStartDate:
           formData.pilotStartDate ||
           new Date().toISOString().split("T")[0],
@@ -224,9 +232,9 @@ function AIChallengeCopilot({ formData, onAutofill }) {
             : [
                 {
                   id: crypto.randomUUID(),
-                  name: "Phase 1: Architecture & Queue Integration",
+                  name: "Phase 1: Architecture & Integration",
                   description:
-                    "Deploy edge kiosks, mobile queue link, and integrate with hospital registration.",
+                    "Deploy edge infrastructure, telemetry links, and integrate with departmental systems.",
                   dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
                     .toISOString()
                     .split("T")[0],
@@ -235,9 +243,9 @@ function AIChallengeCopilot({ formData, onAutofill }) {
                 },
                 {
                   id: crypto.randomUUID(),
-                  name: "Phase 2: Live Pilot Triage & Routing",
+                  name: "Phase 2: Live Pilot Deployment & Telemetry",
                   description:
-                    "Live rollout with 1,000+ daily OPD patients and real-time dashboard telemetry.",
+                    "Live rollout across pilot operational sites with real-time dashboard telemetry.",
                   dueDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000)
                     .toISOString()
                     .split("T")[0],
@@ -404,7 +412,7 @@ function AIChallengeCopilot({ formData, onAutofill }) {
           }}
           disabled={isGenerating}
           rows={4}
-          placeholder="Describe the problem you want to solve, who is affected, and what improvement you hope to achieve (e.g. 'Civil hospital OPD wait times exceed 90 minutes. We need an AI smart queue routing system to reduce wait times by 40%...')"
+          placeholder="Describe the problem you want to solve, who is affected, and what improvement you hope to achieve (e.g. 'Urban traffic congestion delays peak commute times by 45 minutes. We need an AI-powered smart signal system to reduce congestion by 30%...')"
           className="w-full rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
         />
 
