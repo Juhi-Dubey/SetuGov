@@ -950,7 +950,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "D:\\Hackathon\\SetuGov\\Backend\\src\\generated\\client",
+      "value": "C:\\Users\\swara\\OneDrive\\Desktop\\setugovH\\SetuGov\\Backend\\src\\generated\\client",
       "fromEnvVar": null
     },
     "config": {
@@ -966,7 +966,7 @@ const config = {
     "previewFeatures": [
       "postgresqlExtensions"
     ],
-    "sourceFilePath": "D:\\Hackathon\\SetuGov\\Backend\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\swara\\OneDrive\\Desktop\\setugovH\\SetuGov\\Backend\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -980,6 +980,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
