@@ -13,7 +13,8 @@ import {
   Search,
   Filter,
   RefreshCw,
-  ExternalLink,
+  ChevronRight,
+  Info,
   X,
   Copy,
   Check,
@@ -405,23 +406,23 @@ function ChallengeAudit() {
               <button
                 type="button"
                 onClick={() => navigate(`/government/challenges/${id}/overview`)}
-                className="back-nav inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition mb-1"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-3.5 w-3.5" />
                 Back to Challenge Overview
               </button>
             ) : (
               <button
                 type="button"
                 onClick={() => navigate("/government/dashboard")}
-                className="back-nav inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition mb-1"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-3.5 w-3.5" />
                 Back to Dashboard
               </button>
             )}
 
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
               Government Audit Trail
             </h1>
 
@@ -434,7 +435,7 @@ function ChallengeAudit() {
             type="button"
             onClick={fetchLogs}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white disabled:opacity-50 shrink-0"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh Trail
           </button>
@@ -609,7 +610,7 @@ function ChallengeAudit() {
                       </div>
 
                       {/* Event Card */}
-                      <div className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white p-4.5 shadow-xs transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700">
+                      <div className="group min-w-0 flex-1 rounded-xl border border-slate-200 bg-white p-4.5 shadow-xs transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                           <div>
                             <div className="flex items-center gap-2">
@@ -622,7 +623,7 @@ function ChallengeAudit() {
                             </div>
 
                             {/* Human-readable primary resource */}
-                            <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
+                            <div className="mt-1 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
                               <span className="font-semibold text-slate-700 dark:text-slate-200">{primaryResource.type}:</span>
                               <span>{primaryResource.name || "General Operation"}</span>
                             </div>
@@ -631,22 +632,24 @@ function ChallengeAudit() {
                           <button
                             type="button"
                             onClick={() => setSelectedLog(log)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 shrink-0"
+                            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:text-indigo-300 dark:hover:bg-indigo-950/40 transition shrink-0 self-start"
                           >
-                            <ExternalLink className="h-3 w-3" /> Technical Details
+                            <Info className="h-3.5 w-3.5 text-indigo-500" />
+                            Technical Details
+                            <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                           </button>
                         </div>
 
                         {/* Sanitized Context Badges (Human-Readable) */}
                         {summaryTags.length > 0 && (
-                          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
                             {summaryTags.map((tag, tIdx) => (
                               <span
                                 key={tIdx}
-                                className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] text-slate-700 dark:bg-slate-800/80 dark:text-slate-300"
+                                className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-2.5 py-1 text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                               >
                                 <span className="font-medium text-slate-500 dark:text-slate-400">{tag.label}:</span>
-                                <span className="font-semibold">{tag.value}</span>
+                                <span className="font-semibold text-slate-900 dark:text-slate-100">{tag.value}</span>
                               </span>
                             ))}
                           </div>
@@ -668,7 +671,7 @@ function ChallengeAudit() {
                           </span>
 
                           {log.ip_address && (
-                            <span className="text-[11px] text-slate-400 font-mono">
+                            <span className="text-xs text-slate-400 font-mono">
                               IP: {log.ip_address}
                             </span>
                           )}

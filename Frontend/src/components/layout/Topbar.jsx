@@ -521,7 +521,7 @@ function Topbar({ onMenuClick, role = "government", hideSearch = false }) {
               }}
               onFocus={() => setSearchOpen(true)}
               placeholder="Search challenges, startups, pages..."
-              className="h-9 w-60 rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-8 text-xs sm:text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950 lg:w-72"
+              className="h-9 w-52 md:w-56 lg:w-64 rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-8 text-xs sm:text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
             />
 
             {searchQuery && (

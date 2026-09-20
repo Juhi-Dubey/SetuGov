@@ -134,11 +134,17 @@ function ChallengePayments() {
 
   const allPaymentItems = useMemo(() => {
     if (!routeId) {
-      return payments.map((p) => ({
+      const items = payments.map((p) => ({
         type: "payment",
         payment: p,
         id: p.id,
       }));
+      // Sort actionable (non-paid) first, then paid
+      return items.sort((a, b) => {
+        const aPaid = a.payment?.status === "PAID" ? 1 : 0;
+        const bPaid = b.payment?.status === "PAID" ? 1 : 0;
+        return aPaid - bPaid;
+      });
     }
     const items = [];
     milestones.forEach((m) => {
@@ -148,7 +154,20 @@ function ChallengePayments() {
     unlinkedPayments.forEach((p) => {
       items.push({ type: "payment", payment: p, id: p.id });
     });
-    return items;
+
+    // Prioritize actionable/pending payments at the top:
+    // 1: Pending payment actionable (has payment, not paid)
+    // 2: Needs payment scheduled (no payment, not completed)
+    // 3: Paid/Completed
+    return items.sort((a, b) => {
+      const getPriority = (item) => {
+        const p = item.payment;
+        if (p && p.status !== "PAID") return 0; // Highest: ready/pending action
+        if (!p) return 1; // Needs schedule
+        return 2; // Already paid
+      };
+      return getPriority(a) - getPriority(b);
+    });
   }, [milestones, payments, unlinkedPayments, routeId]);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -464,10 +483,10 @@ function ChallengePayments() {
             <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-400">
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">
                     Disbursal Progression
                   </h2>
-                  <p className="mt-0.5 text-xs text-slate-600">
+                  <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
                     Statutory milestone tranche releases
                   </p>
                 </div>
@@ -725,7 +744,7 @@ function PaymentSummary({ icon: Icon, label, value, description, highlightColor 
       </p>
 
       {description && (
-        <p className="mt-0.5 text-[11px] text-slate-400">{description}</p>
+        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{description}</p>
       )}
     </div>
   );
@@ -747,6 +766,16 @@ function MilestoneRow({
   const isPaid = payment?.status === "PAID";
   const hasPayment = !!payment;
 
+  // Ensure milestone naming has consistent 'Milestone X:' convention when order_index exists
+  const formattedMilestoneName = useMemo(() => {
+    const name = milestone.name || "Milestone Deliverable";
+    if (/^milestone\s+\d+/i.test(name)) return name;
+    if (milestone.order_index != null) {
+      return `Milestone ${milestone.order_index}: ${name}`;
+    }
+    return name;
+  }, [milestone.name, milestone.order_index]);
+
   // Compute display amount from real Payment record when available
   const displayAmount = hasPayment
     ? Number(payment.amount) || 0
@@ -762,7 +791,11 @@ function MilestoneRow({
     (Number(milestone.completion_percentage) || 0) >= 100;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm transition-all hover:border-slate-300 dark:hover:border-slate-700">
+    <div className={`rounded-2xl border bg-white p-5 dark:bg-slate-900 shadow-sm transition-all hover:border-slate-300 dark:hover:border-slate-700 ${
+      !isPaid && hasPayment
+        ? "border-amber-300 ring-1 ring-amber-300/40 dark:border-amber-800 dark:ring-amber-800/30"
+        : "border-slate-200 dark:border-slate-800"
+    }`}>
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-start gap-4">
           <div
@@ -786,8 +819,15 @@ function MilestoneRow({
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                {milestone.name}
+                {formattedMilestoneName}
               </h3>
+
+              {/* Action priority highlight tag */}
+              {!isPaid && hasPayment && (
+                <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                  Action Required
+                </span>
+              )}
 
               {/* Milestone verification status tag */}
               <span
@@ -844,7 +884,7 @@ function MilestoneRow({
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="text-left sm:text-right">
-            <p className="text-[11px] text-slate-400">Tranche Amount</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Tranche Amount</p>
             <p className="text-base font-bold text-slate-900 dark:text-white">
               {formatCurrency(displayAmount)}
             </p>
@@ -866,8 +906,8 @@ function MilestoneRow({
               Schedule Payment
             </button>
           ) : isPaid ? (
-            <div className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-50 px-4 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-              <CheckCircle2 className="h-4 w-4" />
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+              <CheckCircle2 className="h-3.5 w-3.5" />
               Paid
             </div>
           ) : (
@@ -966,15 +1006,15 @@ function UnlinkedPaymentRow({ payment, onMarkPaid, isProcessing }) {
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="text-left sm:text-right">
-            <p className="text-[11px] text-slate-400">Amount</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Amount</p>
             <p className="text-base font-bold text-slate-900 dark:text-white">
               {formatCurrency(payment.amount)}
             </p>
           </div>
 
           {isPaid ? (
-            <div className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-50 px-4 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-              <CheckCircle2 className="h-4 w-4" />
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+              <CheckCircle2 className="h-3.5 w-3.5" />
               Paid
             </div>
           ) : (
