@@ -735,9 +735,9 @@ function ChallengePilot() {
                   navigate("/government/dashboard");
                 }
               }}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-3.5 w-3.5" />
               {challenge?.id && location.pathname.includes("/challenges/") ? "Back to Challenge Applications" : isDirectPilotRoute ? "All Pilots" : "Back to Dashboard"}
             </button>
           </div>
@@ -776,7 +776,7 @@ function ChallengePilot() {
                       type="button"
                       onClick={handleStartPilot}
                       disabled={isSaving}
-                      className="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-semibold text-white shadow hover:bg-emerald-500 disabled:opacity-60"
+                      className="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 disabled:opacity-60 transition"
                     >
                       <Play className="h-3.5 w-3.5" /> Start Pilot Sandbox
                     </button>
@@ -785,7 +785,7 @@ function ChallengePilot() {
                       <button
                         type="button"
                         onClick={() => setShowOverrideModal(true)}
-                        className="inline-flex h-10 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 text-xs font-semibold text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                        className="inline-flex h-10 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 transition"
                       >
                         <ShieldAlert className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                         Start with Readiness Override
@@ -799,7 +799,7 @@ function ChallengePilot() {
                     type="button"
                     onClick={handleCompletePilot}
                     disabled={isSaving}
-                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white shadow hover:bg-blue-500 disabled:opacity-60"
+                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white shadow-sm hover:bg-blue-500 disabled:opacity-60 transition"
                   >
                     <CheckCheck className="h-3.5 w-3.5" /> Conclude & Validate
                   </button>
@@ -809,7 +809,7 @@ function ChallengePilot() {
                   type="button"
                   onClick={handleRunBrain4Analysis}
                   disabled={isAnalyzing}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-semibold text-white shadow hover:bg-indigo-500 disabled:opacity-60"
+                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 transition"
                 >
                   {isAnalyzing ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -826,57 +826,59 @@ function ChallengePilot() {
         {/* PILOT STATUS FILTER TOOLBAR (Shown on /government/pilots list and direct pilot route) */}
         {!isChallengeRoute && (
           <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              {/* Status Filter Tabs */}
-              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-                {pilotStatusTabs.map((tab) => {
-                  const isActive = (statusParam || "ALL") === tab.id;
-                  const count =
-                    tab.id === "ALL"
-                      ? pilotsList.length
-                      : pilotsList.filter((p) => p.status === tab.id).length;
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              {/* Status Filter Tabs & Proximity Count */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                  {pilotStatusTabs.map((tab) => {
+                    const isActive = (statusParam || "ALL") === tab.id;
+                    const count =
+                      tab.id === "ALL"
+                        ? pilotsList.length
+                        : pilotsList.filter((p) => p.status === tab.id).length;
 
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => handleStatusFilterChange(tab.id)}
-                      className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${isActive
-                          ? tab.id === "AT_RISK"
-                            ? "bg-amber-600 text-white shadow-sm shadow-amber-600/20"
-                            : "bg-indigo-600 text-white shadow-sm shadow-indigo-600/20"
-                          : "bg-slate-50 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
-                        }`}
-                    >
-                      {tab.id === "AT_RISK" && <AlertTriangle className="h-3.5 w-3.5" />}
-                      {tab.label}
-                      <span
-                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${isActive
-                            ? "bg-white/20 text-white"
-                            : "bg-slate-200/80 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => handleStatusFilterChange(tab.id)}
+                        className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${isActive
+                            ? tab.id === "AT_RISK"
+                              ? "bg-amber-600 text-white shadow-sm shadow-amber-600/20"
+                              : "bg-indigo-600 text-white shadow-sm shadow-indigo-600/20"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200/70 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                           }`}
                       >
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Pilot count summary */}
-              {isPilotsListRoute && pilotsList.length > 0 && (
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    {displayedPilots.length} of {pilotsPagination?.total ?? pilotsList.length} pilot{(pilotsPagination?.total ?? pilotsList.length) !== 1 ? "s" : ""}
-                  </span>
-                  {pilotsPagination?.total > 100 && (
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
-                      <AlertTriangle className="h-3 w-3" />
-                      Showing first 100
-                    </span>
-                  )}
+                        {tab.id === "AT_RISK" && <AlertTriangle className="h-3.5 w-3.5" />}
+                        {tab.label}
+                        <span
+                          className={`rounded-full px-1.5 py-0.2 text-[10px] font-semibold ${isActive
+                              ? "bg-white/20 text-white"
+                              : "bg-slate-200/80 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                            }`}
+                        >
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
+
+                {/* Pilot count summary in proximity */}
+                {isPilotsListRoute && pilotsList.length > 0 && (
+                  <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700 shrink-0">
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                      {displayedPilots.length} of {pilotsPagination?.total ?? pilotsList.length} pilot{(pilotsPagination?.total ?? pilotsList.length) !== 1 ? "s" : ""}
+                    </span>
+                    {pilotsPagination?.total > 100 && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
+                        <AlertTriangle className="h-3 w-3" />
+                        Showing first 100
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -887,9 +889,9 @@ function ChallengePilot() {
             {displayedPilots.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <AlertTriangle className="mx-auto h-10 w-10 text-amber-400" />
-                <h3 className="mt-3 text-base font-bold text-slate-900 dark:text-white">
+                <h2 className="mt-3 text-base font-bold text-slate-900 dark:text-white">
                   No {statusParam ? formatPilotStatus(statusParam) : ""} Pilots Found
-                </h3>
+                </h2>
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                   No pilots match this filter. Try a different status or view all pilots.
                 </p>
@@ -934,7 +936,7 @@ function ChallengePilot() {
                     >
                       {/* Status badge */}
                       <div className="flex items-start justify-between gap-2 mb-3">
-                        <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide ${statusColor}`}>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusColor}`}>
                           {p.status === "AT_RISK" && <AlertTriangle className="mr-1 h-3 w-3" />}
                           {formatPilotStatus(p.status)}
                         </span>
@@ -942,9 +944,9 @@ function ChallengePilot() {
                       </div>
 
                       {/* Challenge title */}
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2 mb-1">
+                      <h2 className="text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2 mb-1">
                         {challengeTitle}
-                      </h3>
+                      </h2>
 
                       {/* Startup */}
                       <div className="flex items-center gap-1.5 mb-3">
@@ -954,16 +956,16 @@ function ChallengePilot() {
 
                       {/* Meta info */}
                       <div className="mt-auto space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-                          <MapPin className="h-3 w-3 shrink-0" />
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                          <MapPin className="h-3.5 w-3.5 shrink-0" />
                           <span className="truncate">{pilotLocation}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-                          <Clock3 className="h-3 w-3 shrink-0" />
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                          <Clock3 className="h-3.5 w-3.5 shrink-0" />
                           <span>{startDate} → {endDate}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-                          <DollarSign className="h-3 w-3 shrink-0" />
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                          <DollarSign className="h-3.5 w-3.5 shrink-0" />
                           <span className="font-semibold text-slate-700 dark:text-slate-300">{budget}</span>
                         </div>
                       </div>
@@ -979,14 +981,14 @@ function ChallengePilot() {
         {!loading && !fetchError && isPilotsListRoute && pilotsList.length === 0 && (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900 mb-6">
             <FlaskConical className="mx-auto h-14 w-14 text-indigo-400 dark:text-indigo-600" />
-            <h3 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">No Pilot Projects Yet</h3>
+            <h2 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">No Pilot Projects Yet</h2>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
               Pilot projects appear here once a startup application has been awarded SELECTED status and a pilot sandbox has been created.
             </p>
             <button
               type="button"
               onClick={() => navigate("/government/challenges")}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500 transition"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 transition"
             >
               View Challenges
               <ArrowRight className="h-4 w-4" />

@@ -311,7 +311,7 @@ function StartupDocuments() {
           onClick={() =>
             navigate("/startup")
           }
-          className="back-nav"
+          className="back-nav mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
@@ -324,11 +324,11 @@ function StartupDocuments() {
             </div>
 
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+              <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
                 Startup Workspace
               </p>
 
-              <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
                 Documents
               </h1>
 
@@ -345,7 +345,7 @@ function StartupDocuments() {
             onClick={() =>
               setShowUpload(true)
             }
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-bold text-white transition-colors hover:bg-indigo-700"
+            className="h-12 inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-xs font-bold text-white transition-colors hover:bg-indigo-700 self-start lg:self-center"
           >
             <Plus className="h-4 w-4" />
             Upload Document
@@ -412,18 +412,18 @@ function StartupDocuments() {
 
       <section className="rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="border-b border-slate-200 p-5 dark:border-slate-800 sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="shrink-0">
               <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 My Documents
               </h2>
 
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                 All official documents and certificates uploaded by your startup.
               </p>
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
               <input
                 type="search"
                 value={search}
@@ -433,7 +433,7 @@ function StartupDocuments() {
                   )
                 }
                 placeholder="Search documents..."
-                className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                className="h-10 w-full sm:w-64 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white transition"
               />
 
               <select
@@ -443,7 +443,7 @@ function StartupDocuments() {
                     event.target.value
                   )
                 }
-                className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white transition"
               >
                 {documentCategories.map(
                   (cat) => (
@@ -594,7 +594,7 @@ function SummaryCard({
         {title}
       </p>
 
-      <p className="mt-1 text-[10px] text-slate-400">
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
         {description}
       </p>
     </div>
@@ -889,7 +889,7 @@ function EmptyState({
       <button
         type="button"
         onClick={onUpload}
-        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-indigo-700"
+        className="mt-5 h-12 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-xs font-bold text-white hover:bg-indigo-700 transition-colors"
       >
         <Plus className="h-4 w-4" />
         Upload Document

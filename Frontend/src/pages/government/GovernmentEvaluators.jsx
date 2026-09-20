@@ -118,13 +118,15 @@ function GovernmentEvaluators() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-0.5 text-xs font-semibold text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 mb-2">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Verified Expert Directory
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                Official Evaluator Registry
+              </h1>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700 dark:bg-purple-950/40 dark:text-purple-300">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Verified Expert Directory
+              </div>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Official Evaluator Registry
-            </h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Browse administrator-verified technical evaluators for scoring innovation proposals or nominate new experts.
             </p>
@@ -133,7 +135,7 @@ function GovernmentEvaluators() {
           <div className="flex items-center gap-2">
             <button
               onClick={fetchVerifiedEvaluators}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
               Refresh
@@ -145,7 +147,7 @@ function GovernmentEvaluators() {
                 setNominateSuccess(false);
                 setNominateError("");
               }}
-              className="btn-primary inline-flex items-center gap-2 rounded-xl bg-blue-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-900 px-4 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
             >
               <UserPlus className="h-4 w-4" />
               Nominate Evaluator
@@ -196,7 +198,7 @@ function GovernmentEvaluators() {
         ) : filteredEvaluators.length === 0 ? (
           <div className="p-12 text-center rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
             <ClipboardCheck className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-700 mb-2" />
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">No Verified Evaluators Found</h3>
+            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">No Verified Evaluators Found</h2>
             <p className="text-xs text-slate-500 mt-1">
               Evaluators become available once verified by SetuGov administrators. You can nominate domain specialists anytime.
             </p>
@@ -219,22 +221,22 @@ function GovernmentEvaluators() {
                     navigate(`/government/evaluators/${profile.id}`);
                   }
                 }}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between cursor-pointer transition-all duration-200 hover:border-purple-400 hover:shadow-md hover:shadow-purple-100/50 dark:hover:border-purple-700 dark:hover:shadow-purple-900/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2"
+                className="group rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between cursor-pointer transition-all duration-200 hover:border-purple-400 hover:shadow-md hover:shadow-purple-100/50 dark:hover:border-purple-700 dark:hover:shadow-purple-900/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2"
               >
                 <div>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-bold text-slate-900 dark:text-white text-base group-hover:text-purple-700">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <h2 className="font-bold text-slate-900 dark:text-white text-base transition-colors group-hover:text-purple-700 dark:group-hover:text-purple-400">
                         {profile.user?.name}
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      </h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                         {[profile.designation, profile.organization].filter(Boolean).join(" · ") || "—"}
                       </p>
                     </div>
 
                     {/* Verified badge — pointer-events-none so it doesn't interfere with card click */}
                     <span
-                      className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 pointer-events-none flex-shrink-0"
+                      className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 pointer-events-none flex-shrink-0"
                     >
                       <CheckCircle2 className="h-3 w-3" /> Verified
                     </span>
@@ -249,7 +251,7 @@ function GovernmentEvaluators() {
                       profile.domain_expertise.map((exp, idx) => (
                         <span
                           key={idx}
-                          className="rounded-md bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 pointer-events-none"
+                          className="rounded-md bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 pointer-events-none"
                         >
                           {exp}
                         </span>
@@ -258,13 +260,20 @@ function GovernmentEvaluators() {
                 </div>
 
                 <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                  <span>
-                    {profile.years_experience != null
-                      ? `Experience: ${profile.years_experience} yr${profile.years_experience !== 1 ? "s" : ""}`
-                      : "Experience: —"}
-                  </span>
-                  <span>
-                    {formatEmploymentType(profile.employment_type)}
+                  <div className="flex items-center gap-3">
+                    <span>
+                      {profile.years_experience != null
+                        ? `Experience: ${profile.years_experience} yr${profile.years_experience !== 1 ? "s" : ""}`
+                        : "Experience: —"}
+                    </span>
+                    <span>•</span>
+                    <span>
+                      {formatEmploymentType(profile.employment_type)}
+                    </span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 font-semibold text-purple-700 dark:text-purple-400 group-hover:underline">
+                    View Profile
+                    <ExternalLink className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                   </span>
                 </div>
               </motion.div>
@@ -279,6 +288,7 @@ function GovernmentEvaluators() {
             onPageChange={setCurrentPage}
             onPageSizeChange={setPageSize}
             itemName="evaluators"
+            className="border-t border-slate-200 bg-transparent shadow-none px-0 py-4 rounded-none dark:border-slate-800 dark:bg-transparent"
           />
         </div>
       )}

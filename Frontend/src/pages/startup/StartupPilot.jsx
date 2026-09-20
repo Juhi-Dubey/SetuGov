@@ -402,13 +402,16 @@ function StartupPilot() {
         <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
           <Rocket className="h-8 w-8" />
         </div>
-        <h2 className="mt-4 text-lg font-bold text-slate-900 dark:text-white">No Active Pilot Projects Sanctioned</h2>
-        <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-slate-500 dark:text-slate-400">
-          When your startup proposal is selected by a government department, your verified pilot workspace, milestone tracking, compliance checklist, and evidence submission will be activated here.
+        <h1 className="mt-4 text-lg font-bold text-slate-900 dark:text-white sm:text-xl">
+          No Active Pilot Projects Sanctioned
+        </h1>
+        <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-slate-500 dark:text-slate-400">
+          Once selected by a government department, your active pilot workspace, milestone tracking, and evidence submission will be activated here.
         </p>
         <button
+          type="button"
           onClick={() => navigate('/startup/challenges')}
-          className="btn-primary mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-900 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700"
         >
           Explore Challenges & Apply
         </button>
