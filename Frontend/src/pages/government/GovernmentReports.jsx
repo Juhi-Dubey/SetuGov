@@ -277,26 +277,26 @@ function GovernmentReports() {
           <button
             type="button"
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
-            <Download className="h-4 w-4 text-slate-500" /> Export CSV
+            <Download className="h-3.5 w-3.5 text-slate-500" /> Export CSV
           </button>
           <button
             type="button"
             onClick={handlePrint}
-            className="btn-primary inline-flex items-center gap-2 rounded-xl bg-blue-900 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
-            <Printer className="h-4 w-4 text-white" /> Print / Save PDF
+            <Printer className="h-3.5 w-3.5 text-slate-500" /> Print / Save PDF
           </button>
         </div>
       </div>
 
       {/* DATE RANGE FILTER BAR */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 print:hidden">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
             <Calendar className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-            <span>Date Filter:</span>
+            <span>Date:</span>
             <div className="flex flex-wrap items-center gap-1">
               {[
                 { id: "ALL", label: "All Time" },
@@ -308,9 +308,9 @@ function GovernmentReports() {
                   key={p.id}
                   type="button"
                   onClick={() => handleDatePresetChange(p.id)}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                  className={`h-9 rounded-lg px-2.5 text-xs font-medium transition ${
                     datePreset === p.id
-                      ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300"
+                      ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 font-semibold"
                       : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                   }`}
                 >
@@ -320,7 +320,7 @@ function GovernmentReports() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5 sm:border-l sm:border-slate-200 sm:pl-4 dark:sm:border-slate-700">
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <span>From:</span>
               <input
@@ -330,7 +330,7 @@ function GovernmentReports() {
                   setDatePreset("CUSTOM");
                   setStartDate(e.target.value);
                 }}
-                className="h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -342,16 +342,16 @@ function GovernmentReports() {
                   setDatePreset("CUSTOM");
                   setEndDate(e.target.value);
                 }}
-                className="h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
             <button
               type="button"
               onClick={fetchReportData}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-50"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-50 transition"
             >
-              <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} /> Apply
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Apply
             </button>
           </div>
         </div>
@@ -418,7 +418,7 @@ function GovernmentReports() {
             ₹{Number(metrics.totalDisbursed).toLocaleString("en-IN")}
           </p>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            of ₹{Number(metrics.totalAllocated).toLocaleString("en-IN")} allocated ({metrics.utilizationPercentage}% utilized)
+            {metrics.totalAllocated > 0 ? `${metrics.utilizationPercentage}% of total sanction` : "Disbursed milestone funds"}
           </p>
         </motion.div>
 
@@ -429,52 +429,52 @@ function GovernmentReports() {
           className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
         >
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-medium">Avg Validation Score</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
-              <ShieldCheck className="h-4 w-4" />
+            <span className="text-xs font-medium">Empirical Success Rate</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400">
+              <TrendingUp className="h-4 w-4" />
             </div>
           </div>
           <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-            {metrics.avgValidationScore}%
+            {metrics.successRate}%
           </p>
-          <p className="mt-1 text-xs text-indigo-600 dark:text-indigo-400">
-            Verified stage-gate validations
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            {metrics.avgValidationScore > 0 ? `Avg validation score: ${metrics.avgValidationScore}%` : "Based on verified evaluations"}
           </p>
         </motion.div>
       </div>
 
-      {/* NAVIGATION TABS */}
-      <div className="flex items-center rounded-2xl border border-slate-200 bg-white p-2.5 shadow-xs dark:border-slate-800 dark:bg-slate-900 print:hidden">
-        <div className="flex flex-wrap items-center gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+      {/* TABS NAVIGATION */}
+      <div className="border-b border-slate-200 dark:border-slate-800 print:hidden">
+        <div className="flex gap-4">
           <button
             type="button"
             onClick={() => setActiveTab("overview")}
-            className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+            className={`border-b-2 py-3 text-xs font-semibold transition ${
               activeTab === "overview"
-                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
-                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
+                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
             }`}
           >
-            Overview & Analytics
+            Overview & Summary
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("pilots")}
-            className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+            className={`border-b-2 py-3 text-xs font-semibold transition ${
               activeTab === "pilots"
-                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
-                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
+                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
             }`}
           >
-            Pilot Status Matrix
+            Pilot Matrix ({filteredPilots.length})
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("disbursements")}
-            className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition ${
+            className={`border-b-2 py-3 text-xs font-semibold transition ${
               activeTab === "disbursements"
-                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-700 dark:text-white"
-                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
+                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
             }`}
           >
             Milestone Disbursements
@@ -489,9 +489,9 @@ function GovernmentReports() {
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">
                   Stage-Gate Validation Summary
-                </h3>
+                </h2>
                 <p className="text-xs text-slate-400">Authoritative status counts from database</p>
               </div>
               <span className="rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-semibold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
@@ -554,9 +554,9 @@ function GovernmentReports() {
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">
                   Budget Utilization
-                </h3>
+                </h2>
                 <p className="text-xs text-slate-400">Verified payment records</p>
               </div>
               <span className="text-xs font-semibold text-slate-900 dark:text-white">
@@ -596,11 +596,11 @@ function GovernmentReports() {
               </div>
             </div>
 
-            <div className="mt-8 border-t border-slate-100 pt-4 dark:border-slate-800">
+            <div className="mt-8 flex justify-end border-t border-slate-100 pt-4 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => navigate("/government/payments")}
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition"
               >
                 Manage Tranche Payments <ChevronRight className="h-3.5 w-3.5" />
               </button>
@@ -614,9 +614,9 @@ function GovernmentReports() {
         <div className="rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
           <div className="flex flex-col gap-4 border-b border-slate-100 p-6 dark:border-slate-800 md:flex-row md:items-center md:justify-between">
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 Active & Completed Pilot Deployments
-              </h3>
+              </h2>
               <p className="mt-0.5 text-xs text-slate-400">
                 Tracking startup deliverables, milestone completions, and empirical evaluation scores from database
               </p>
@@ -745,9 +745,9 @@ function GovernmentReports() {
       {/* TAB 3: MILESTONE DISBURSEMENTS */}
       {activeTab === "disbursements" && (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">
             Procurement Tranche & Disbursement History
-          </h3>
+          </h2>
           <p className="mt-1 text-xs text-slate-400">
             Real Payment records recorded for departmental pilots
           </p>
