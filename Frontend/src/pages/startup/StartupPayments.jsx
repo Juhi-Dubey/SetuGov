@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -7,6 +7,7 @@ import {
   Clock3,
   CreditCard,
   Download,
+  ExternalLink,
   FileText,
   IndianRupee,
   Receipt,
@@ -272,14 +273,26 @@ function StartupPayments() {
         </div>
 
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
-          {paymentMilestones.map(
-            (milestone, index) => (
+          {paymentMilestones.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-900">
+                <Clock3 className="h-6 w-6" />
+              </div>
+              <h3 className="mt-3 text-sm font-bold text-slate-700 dark:text-slate-200">
+                No Payment Milestones Scheduled
+              </h3>
+              <p className="mt-1 max-w-sm text-xs text-slate-400">
+                Milestone payment tranches will appear here once an active pilot is initiated and approved.
+              </p>
+            </div>
+          ) : (
+            paymentMilestones.map((milestone, index) => (
               <PaymentMilestone
                 key={milestone.id}
                 milestone={milestone}
                 index={index}
               />
-            )
+            ))
           )}
         </div>
       </section>
@@ -297,18 +310,19 @@ function StartupPayments() {
               </h2>
 
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                Record of payments released by the
-                government.
+                Record of payments released by the government.
               </p>
             </div>
 
-            <button
-              type="button"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
-            >
-              <Download className="h-3.5 w-3.5" />
-              Export History
-            </button>
+            {transactions.length > 0 && (
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Export History
+              </button>
+            )}
           </div>
         </div>
 
@@ -339,8 +353,22 @@ function StartupPayments() {
             </thead>
 
             <tbody>
-              {paginatedTransactions.map(
-                (transaction) => (
+              {paginatedTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <Receipt className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                      <p className="mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                        No Transactions Found
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-slate-400">
+                        Payment disbursements and receipts will be recorded here as pilot milestones are completed.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                paginatedTransactions.map((transaction) => (
                   <tr
                     key={transaction.id}
                     className="border-b border-slate-100 last:border-0 dark:border-slate-800"
@@ -368,9 +396,7 @@ function StartupPayments() {
                     </td>
 
                     <td className="px-5 py-4 text-xs font-bold text-slate-800 dark:text-slate-200">
-                      {formatCurrency(
-                        transaction.amount
-                      )}
+                      {formatCurrency(transaction.amount)}
                     </td>
 
                     <td className="px-5 py-4">
@@ -383,6 +409,7 @@ function StartupPayments() {
                     <td className="px-5 py-4 text-right sm:px-6">
                       <button
                         type="button"
+                        onClick={() => setSelectedTransaction(transaction)}
                         className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
                       >
                         Receipt
@@ -390,7 +417,7 @@ function StartupPayments() {
                       </button>
                     </td>
                   </tr>
-                )
+                ))
               )}
             </tbody>
           </table>
@@ -398,14 +425,16 @@ function StartupPayments() {
       </section>
 
       {/* PAGINATION */}
-      <Pagination
-        currentPage={currentPage}
-        totalItems={transactions.length}
-        pageSize={pageSize}
-        onPageChange={setCurrentPage}
-        onPageSizeChange={setPageSize}
-        itemName="transactions"
-      />
+      {transactions.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={transactions.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          itemName="transactions"
+        />
+      )}
 
       {/* ================================================= */}
       {/* PAYMENT DOCUMENTS                                 */}
