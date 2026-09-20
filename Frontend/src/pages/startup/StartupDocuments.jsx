@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -15,8 +15,10 @@ import {
   Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
   getStartups,
+  getMyRegistration,
   getStartupDocuments,
   addStartupDocument,
   uploadStartupDocument,
@@ -53,6 +55,7 @@ const documentCategories = [
 
 function StartupDocuments() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const fileInputRef = useRef(null);
 
   const [startupId, setStartupId] = useState(null);
@@ -75,14 +78,34 @@ function StartupDocuments() {
     const fetchStartupAndDocs = async () => {
       try {
         setLoading(true);
-        const startupsRes = await getStartups({ limit: 50 });
-        const startups = startupsRes?.data?.startups || [];
-        if (startups.length > 0 && mounted) {
-          const s = startups[0];
-          setStartupId(s.id);
 
-          const docsRes = await getStartupDocuments(s.id);
-          const rawDocs = docsRes?.data?.documents || [];
+        // First attempt to get the logged-in startup user's exact profile
+        let currentStartupId = null;
+        try {
+          const regRes = await getMyRegistration();
+          const regStartup = regRes?.data?.startup || regRes?.startup || regRes?.data;
+          if (regStartup?.id) {
+            currentStartupId = regStartup.id;
+          }
+        } catch (e) {
+          // Ignore registration lookup error and fall back to startup list
+        }
+
+        // Fallback: list startups and match current user ID or pick first
+        if (!currentStartupId) {
+          const startupsRes = await getStartups({ limit: 50 });
+          const startups = startupsRes?.data?.startups || [];
+          const s = (user?.id ? startups.find(st => st.user_id === user.id) : null) || startups[0];
+          if (s?.id) {
+            currentStartupId = s.id;
+          }
+        }
+
+        if (currentStartupId && mounted) {
+          setStartupId(currentStartupId);
+
+          const docsRes = await getStartupDocuments(currentStartupId);
+          const rawDocs = docsRes?.data?.documents || docsRes?.documents || [];
           const formatted = rawDocs.map((d) => {
             const meta = reverseTypeMap[d.document_type] || {
               name: d.document_type?.replace(/_/g, " "),
@@ -121,7 +144,7 @@ function StartupDocuments() {
 
     fetchStartupAndDocs();
     return () => { mounted = false; };
-  }, []);
+  }, [user?.id]);
 
   const handleFileSelect = (event) => {
     setUploadError("");
@@ -464,14 +487,16 @@ function StartupDocuments() {
       </section>
 
       {/* PAGINATION */}
-      <Pagination
-        currentPage={currentPage}
-        totalItems={filteredDocuments.length}
-        pageSize={pageSize}
-        onPageChange={setCurrentPage}
-        onPageSizeChange={setPageSize}
-        itemName="documents"
-      />
+      {filteredDocuments.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredDocuments.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          itemName="documents"
+        />
+      )}
 
       {/* ================================================= */}
       {/* DOCUMENT REQUIREMENTS                             */}

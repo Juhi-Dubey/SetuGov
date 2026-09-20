@@ -873,7 +873,7 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={["ADMIN"]}>
-              <AppLayout role="admin">
+              <AppLayout role="admin" hideSearch={true}>
                 <AdminUsers />
               </AppLayout>
             </RoleRoute>
