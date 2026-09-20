@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { prisma } from '../src/config/prisma.js';
 import { logger } from '../src/utils/logger.js';
+import { seedTestUsers, testUsersConfig } from '../scripts/seedTestUsers.js';
 
 /**
  * Baseline System Settings
@@ -146,23 +147,37 @@ const seedDatabase = async () => {
     'admin@setugov.in',
     'ramesh.kumar@health.gov.in',
     'anita.desai@evaluators.setugov.in',
-    'vikas@mediqueue.ai'
+    'vikas@mediqueue.ai',
+    ...testUsersConfig.government.map(u => u.email),
+    ...testUsersConfig.startup.map(u => u.email),
+    ...testUsersConfig.evaluator.map(u => u.email),
+    ...testUsersConfig.admin.map(u => u.email)
+  ];
+
+  const demoStartupEmails = [
+    'vikas@mediqueue.ai',
+    ...testUsersConfig.startup.map(u => u.email)
   ];
 
   // Remove non-demo startups
   await prisma.startup.deleteMany({
     where: {
       user: {
-        email: { not: 'vikas@mediqueue.ai' }
+        email: { notIn: demoStartupEmails }
       }
     }
   });
+
+  const demoEvaluatorEmails = [
+    'anita.desai@evaluators.setugov.in',
+    ...testUsersConfig.evaluator.map(u => u.email)
+  ];
 
   // Remove non-demo evaluator profiles
   await prisma.evaluatorProfile.deleteMany({
     where: {
       user: {
-        email: { not: 'anita.desai@evaluators.setugov.in' }
+        email: { notIn: demoEvaluatorEmails }
       }
     }
   });
@@ -398,6 +413,9 @@ const seedDatabase = async () => {
       });
     }
   }
+
+  // 7. Seed / Upsert the 20 Additional Test Users (Govt1-5, Startup1-5, Evaluator1-5, Admin1-5)
+  await seedTestUsers();
 
   logger.info('✅ SetuGov Clean Baseline Seeding Completed Successfully!');
   logger.info('====================================================');
