@@ -23,30 +23,201 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 
 const demoAccounts = [
+  // Government Test Accounts
   {
     role: "Government",
+    name: "Dr. Ramesh Kumar (Director)",
     email: "ramesh.kumar@health.gov.in",
     password: "Password123!",
     icon: Building2,
     badgeColor: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-blue-200 dark:border-blue-800/60",
   },
   {
+    role: "Government",
+    name: "Govt1",
+    email: "govt1@setugov.in",
+    password: "Password123!",
+    icon: Building2,
+    badgeColor: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-blue-200 dark:border-blue-800/60",
+  },
+  {
+    role: "Government",
+    name: "Govt2",
+    email: "govt2@setugov.in",
+    password: "Password123!",
+    icon: Building2,
+    badgeColor: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-blue-200 dark:border-blue-800/60",
+  },
+  {
+    role: "Government",
+    name: "Govt3",
+    email: "govt3@setugov.in",
+    password: "Password123!",
+    icon: Building2,
+    badgeColor: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-blue-200 dark:border-blue-800/60",
+  },
+  {
+    role: "Government",
+    name: "Govt4",
+    email: "govt4@setugov.in",
+    password: "Password123!",
+    icon: Building2,
+    badgeColor: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-blue-200 dark:border-blue-800/60",
+  },
+  {
+    role: "Government",
+    name: "Govt5",
+    email: "govt5@setugov.in",
+    password: "Password123!",
+    icon: Building2,
+    badgeColor: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-blue-200 dark:border-blue-800/60",
+  },
+
+  // Startup Test Accounts
+  {
     role: "Startup",
+    name: "Vikas Sharma (MediQueue)",
     email: "vikas@mediqueue.ai",
     password: "Password123!",
     icon: Rocket,
     badgeColor: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60",
   },
   {
+    role: "Startup",
+    name: "Startup1",
+    email: "startup1@setugov.in",
+    password: "Password123!",
+    icon: Rocket,
+    badgeColor: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60",
+  },
+  {
+    role: "Startup",
+    name: "Startup2",
+    email: "startup2@setugov.in",
+    password: "Password123!",
+    icon: Rocket,
+    badgeColor: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60",
+  },
+  {
+    role: "Startup",
+    name: "Startup3",
+    email: "startup3@setugov.in",
+    password: "Password123!",
+    icon: Rocket,
+    badgeColor: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60",
+  },
+  {
+    role: "Startup",
+    name: "Startup4",
+    email: "startup4@setugov.in",
+    password: "Password123!",
+    icon: Rocket,
+    badgeColor: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60",
+  },
+  {
+    role: "Startup",
+    name: "Startup5",
+    email: "startup5@setugov.in",
+    password: "Password123!",
+    icon: Rocket,
+    badgeColor: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60",
+  },
+
+  // Evaluator Test Accounts
+  {
     role: "Evaluator",
+    name: "Dr. Anita Desai (NHA)",
     email: "anita.desai@evaluators.setugov.in",
     password: "Password123!",
     icon: ClipboardCheck,
     badgeColor: "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 border-purple-200 dark:border-purple-800/60",
   },
   {
+    role: "Evaluator",
+    name: "Evaluator1",
+    email: "evaluator1@setugov.in",
+    password: "Password123!",
+    icon: ClipboardCheck,
+    badgeColor: "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 border-purple-200 dark:border-purple-800/60",
+  },
+  {
+    role: "Evaluator",
+    name: "Evaluator2",
+    email: "evaluator2@setugov.in",
+    password: "Password123!",
+    icon: ClipboardCheck,
+    badgeColor: "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 border-purple-200 dark:border-purple-800/60",
+  },
+  {
+    role: "Evaluator",
+    name: "Evaluator3",
+    email: "evaluator3@setugov.in",
+    password: "Password123!",
+    icon: ClipboardCheck,
+    badgeColor: "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 border-purple-200 dark:border-purple-800/60",
+  },
+  {
+    role: "Evaluator",
+    name: "Evaluator4",
+    email: "evaluator4@setugov.in",
+    password: "Password123!",
+    icon: ClipboardCheck,
+    badgeColor: "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 border-purple-200 dark:border-purple-800/60",
+  },
+  {
+    role: "Evaluator",
+    name: "Evaluator5",
+    email: "evaluator5@setugov.in",
+    password: "Password123!",
+    icon: ClipboardCheck,
+    badgeColor: "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 border-purple-200 dark:border-purple-800/60",
+  },
+
+  // Admin Test Accounts
+  {
     role: "Admin",
+    name: "Priya Sharma (State Admin)",
     email: "admin@setugov.in",
+    password: "Password123!",
+    icon: Shield,
+    badgeColor: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-amber-200 dark:border-amber-800/60",
+  },
+  {
+    role: "Admin",
+    name: "Admin1",
+    email: "admin1@setugov.in",
+    password: "Password123!",
+    icon: Shield,
+    badgeColor: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-amber-200 dark:border-amber-800/60",
+  },
+  {
+    role: "Admin",
+    name: "Admin2",
+    email: "admin2@setugov.in",
+    password: "Password123!",
+    icon: Shield,
+    badgeColor: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-amber-200 dark:border-amber-800/60",
+  },
+  {
+    role: "Admin",
+    name: "Admin3",
+    email: "admin3@setugov.in",
+    password: "Password123!",
+    icon: Shield,
+    badgeColor: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-amber-200 dark:border-amber-800/60",
+  },
+  {
+    role: "Admin",
+    name: "Admin4",
+    email: "admin4@setugov.in",
+    password: "Password123!",
+    icon: Shield,
+    badgeColor: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-amber-200 dark:border-amber-800/60",
+  },
+  {
+    role: "Admin",
+    name: "Admin5",
+    email: "admin5@setugov.in",
     password: "Password123!",
     icon: Shield,
     badgeColor: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-amber-200 dark:border-amber-800/60",
@@ -69,6 +240,7 @@ function Login() {
   const [authError, setAuthError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showDemoAccounts, setShowDemoAccounts] = useState(false);
+  const [demoRoleFilter, setDemoRoleFilter] = useState("ALL");
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -472,24 +644,54 @@ function Login() {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="mt-2.5 grid grid-cols-2 gap-2 pb-1">
-                      {demoAccounts.map((account) => {
-                        const Icon = account.icon;
-                        return (
-                          <button
-                            key={account.role}
-                            type="button"
-                            onClick={() => handleQuickFill(account)}
-                            className={`flex items-center gap-2 rounded-xl border p-2.5 text-left text-xs font-medium transition-all hover:opacity-90 ${account.badgeColor}`}
-                          >
-                            <Icon className="h-4 w-4 shrink-0" />
-                            <div className="min-w-0 flex-1">
-                              <p className="font-semibold truncate leading-tight">{account.role}</p>
-                              <p className="text-[10px] opacity-75 truncate">{account.email.split("@")[0]}</p>
-                            </div>
-                          </button>
-                        );
-                      })}
+                    {/* Role Filter Tabs */}
+                    <div className="mt-2.5 flex flex-wrap gap-1.5 pb-1">
+                      {[
+                        { id: "ALL", label: "All Users" },
+                        { id: "GOVERNMENT", label: "Govt (1-5)" },
+                        { id: "STARTUP", label: "Startup (1-5)" },
+                        { id: "EVALUATOR", label: "Evaluator (1-5)" },
+                        { id: "ADMIN", label: "Admin (1-5)" },
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setDemoRoleFilter(tab.id)}
+                          className={`rounded-lg px-2 py-0.5 text-[11px] font-medium transition-all ${
+                            demoRoleFilter === tab.id
+                              ? "bg-blue-900 text-white shadow-sm dark:bg-blue-600"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Test Accounts Grid */}
+                    <div className="mt-2 grid max-h-56 grid-cols-2 gap-2 overflow-y-auto pr-1 pb-1">
+                      {demoAccounts
+                        .filter((acc) => demoRoleFilter === "ALL" || acc.role.toUpperCase() === demoRoleFilter)
+                        .map((account) => {
+                          const Icon = account.icon;
+                          const isSelected = formData.email === account.email;
+                          return (
+                            <button
+                              key={account.email}
+                              type="button"
+                              onClick={() => handleQuickFill(account)}
+                              className={`flex items-center gap-2 rounded-xl border p-2 text-left text-xs font-medium transition-all hover:opacity-90 ${
+                                account.badgeColor
+                              } ${isSelected ? "ring-2 ring-indigo-500 shadow-sm" : ""}`}
+                            >
+                              <Icon className="h-4 w-4 shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="font-semibold truncate leading-tight">{account.name || account.role}</p>
+                                <p className="text-[10px] opacity-75 truncate">{account.email}</p>
+                              </div>
+                            </button>
+                          );
+                        })}
                     </div>
                   </motion.div>
                 )}

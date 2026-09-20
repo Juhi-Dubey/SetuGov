@@ -464,10 +464,10 @@ function ChallengePayments() {
             <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-slate-400">
                     Disbursal Progression
                   </h2>
-                  <p className="mt-0.5 text-xs text-slate-400">
+                  <p className="mt-0.5 text-xs text-slate-600">
                     Statutory milestone tranche releases
                   </p>
                 </div>
@@ -486,7 +486,7 @@ function ChallengePayments() {
                 />
               </div>
 
-              <div className="mt-3 flex justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div className="mt-3 flex justify-between text-xs text-slate-700 dark:text-slate-400">
                 <span>Disbursed: <strong>{formatCurrency(paidAmount)}</strong></span>
                 <span>Remaining: <strong>{formatCurrency(pendingAmount)}</strong></span>
               </div>
@@ -499,7 +499,7 @@ function ChallengePayments() {
                   <h2 className="text-base font-bold text-slate-900 dark:text-white">
                     Contract Milestones & Disbursal Tranches
                   </h2>
-                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                  <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
                     Disbursals require verified milestone completion and evidence review under public procurement rules.
                   </p>
                 </div>
