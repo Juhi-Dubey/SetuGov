@@ -11,6 +11,7 @@ import {
   Building2,
   Calendar,
   IndianRupee,
+  Wallet,
   Users,
   FlaskConical,
   ChevronLeft,
@@ -293,7 +294,7 @@ export default function GovernmentChallenges() {
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 Total Challenges
               </span>
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
@@ -308,7 +309,7 @@ export default function GovernmentChallenges() {
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                 Open for Proposals
               </span>
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
@@ -323,7 +324,7 @@ export default function GovernmentChallenges() {
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+              <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">
                 In Evaluation
               </span>
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400">
@@ -338,7 +339,7 @@ export default function GovernmentChallenges() {
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+              <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
                 Active Pilots
               </span>
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
@@ -353,12 +354,12 @@ export default function GovernmentChallenges() {
 
           <div className="col-span-2 rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-sm transition-all hover:shadow-md lg:col-span-1 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 Total Budget
               </span>
 
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-500/10 dark:text-slate-400">
-                <IndianRupee className="h-4 w-4" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <Wallet className="h-4 w-4" />
               </div>
             </div>
 
@@ -375,15 +376,15 @@ export default function GovernmentChallenges() {
         {/* Filter & Search Toolbar */}
         <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="flex flex-wrap lg:flex-nowrap items-center gap-3">
-            {/* Search Input (flexible, 220-260px minimum) */}
-            <div className="relative w-full flex-1 min-w-[200px] lg:min-w-[220px]">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            {/* Search Input with tightened icon proximity */}
+            <div className="relative w-full flex-1 min-w-[220px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search challenges, keywords..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-8 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-8 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
               />
               {searchQuery && (
                 <button
@@ -397,22 +398,11 @@ export default function GovernmentChallenges() {
               )}
             </div>
 
-            {/* Filters: Status (140-150px) & Department (210-225px) */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-10 w-full sm:w-[145px] lg:w-[145px] shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 cursor-pointer"
-            >
-              {statusTabs.map((tab) => (
-                <option key={tab.id} value={tab.id}>
-                  {tab.id === "ALL" ? "All Status" : tab.label}
-                </option>
-              ))}
-            </select>
-
+            {/* Department Filter Dropdown */}
             <select
               value={selectedDept}
               onChange={(e) => setSelectedDept(e.target.value)}
+              aria-label="Filter by department"
               className="h-10 w-full sm:w-[220px] lg:w-[220px] shrink-0 truncate rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 cursor-pointer"
             >
               {departments.map((dept) => (
@@ -422,11 +412,12 @@ export default function GovernmentChallenges() {
               ))}
             </select>
 
-            {/* Sort Dropdown (150-160px) */}
+            {/* Sort Dropdown */}
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="h-10 w-full sm:w-[155px] lg:w-[155px] shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 cursor-pointer"
+              aria-label="Sort challenges"
+              className="h-10 w-full sm:w-[165px] lg:w-[165px] shrink-0 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 cursor-pointer"
             >
               <option value="newest">Newest First</option>
               <option value="budget-desc">Budget: High to Low</option>
@@ -435,12 +426,13 @@ export default function GovernmentChallenges() {
             </select>
 
             {/* Actions: Refresh & Segmented Grid/List Toggle */}
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2.5 shrink-0">
               <button
                 type="button"
                 onClick={fetchChallenges}
                 title="Refresh challenges"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white transition-colors"
+                aria-label="Refresh challenges"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white transition-colors"
               >
                 <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
               </button>
@@ -455,6 +447,7 @@ export default function GovernmentChallenges() {
                       : "text-slate-400 hover:text-slate-600"
                   }`}
                   title="Card Grid View"
+                  aria-label="Card Grid View"
                 >
                   <Grid className="h-4 w-4" />
                 </button>
@@ -467,6 +460,7 @@ export default function GovernmentChallenges() {
                       : "text-slate-400 hover:text-slate-600"
                   }`}
                   title="Table View"
+                  aria-label="Table View"
                 >
                   <List className="h-4 w-4" />
                 </button>
@@ -475,7 +469,7 @@ export default function GovernmentChallenges() {
           </div>
 
           {/* Status Tabs */}
-          <div className="mt-5 flex gap-2 overflow-x-auto border-t border-slate-100 pt-4 scrollbar-none dark:border-slate-800/80">
+          <div className="mt-4 flex gap-2 overflow-x-auto border-t border-slate-100 pt-3.5 scrollbar-none dark:border-slate-800/80">
             {statusTabs.map((tab) => {
               const count =
                 tab.id === "ALL"
@@ -489,15 +483,15 @@ export default function GovernmentChallenges() {
                   onClick={() => setStatusFilter(tab.id)}
                   className={`flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all ${
                     isActive
-                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-500/20"
-                      : "bg-slate-50 text-slate-600 hover:bg-slate-100 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
+                      ? "bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900"
+                      : "bg-slate-100/70 text-slate-600 hover:bg-slate-200/70 dark:bg-slate-800/60 dark:text-slate-400 dark:hover:bg-slate-800"
                   }`}
                 >
                   {tab.label}
                   <span
                     className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
                       isActive
-                        ? "bg-white/20 text-white"
+                        ? "bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900"
                         : "bg-slate-200/80 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
                     }`}
                   >
@@ -507,6 +501,59 @@ export default function GovernmentChallenges() {
               );
             })}
           </div>
+
+          {/* Active Filter Indicators */}
+          {(searchQuery.trim() || statusFilter !== "ALL" || selectedDept !== "ALL") && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/60">
+              <span className="text-[11px] font-semibold text-slate-400">Active Filters:</span>
+              {searchQuery.trim() && (
+                <span className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
+                  Search: "{searchQuery}"
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="hover:text-indigo-900 dark:hover:text-white"
+                    aria-label="Remove search filter"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {statusFilter !== "ALL" && (
+                <span className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
+                  Status: {statusTabs.find((t) => t.id === statusFilter)?.label || statusFilter}
+                  <button
+                    onClick={() => setStatusFilter("ALL")}
+                    className="hover:text-indigo-900 dark:hover:text-white"
+                    aria-label="Remove status filter"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {selectedDept !== "ALL" && (
+                <span className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
+                  Dept: {selectedDept}
+                  <button
+                    onClick={() => setSelectedDept("ALL")}
+                    className="hover:text-indigo-900 dark:hover:text-white"
+                    aria-label="Remove department filter"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setStatusFilter("ALL");
+                  setSelectedDept("ALL");
+                }}
+                className="text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400 ml-1"
+              >
+                Reset all
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Content Section */}
@@ -524,9 +571,9 @@ export default function GovernmentChallenges() {
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-400">
               <FileText className="h-7 w-7" />
             </div>
-            <h3 className="mt-4 text-base font-bold text-slate-900 dark:text-white">
+            <h2 className="mt-4 text-base font-bold text-slate-900 dark:text-white">
               No matching challenges found
-            </h3>
+            </h2>
             <p className="mt-1.5 max-w-sm text-xs text-slate-500 dark:text-slate-400">
               Try adjusting your search query, department filter, or status tab.
             </p>
@@ -537,7 +584,7 @@ export default function GovernmentChallenges() {
                   setStatusFilter("ALL");
                   setSelectedDept("ALL");
                 }}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
               >
                 Clear Filters
               </button>
@@ -672,7 +719,7 @@ export default function GovernmentChallenges() {
                             onClick={() =>
                               navigate(`/government/challenges/${challenge.id}/overview`)
                             }
-                            className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-900 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-indigo-500/20 dark:hover:text-indigo-300"
+                            className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                           >
                             Pipeline
                             <ChevronRight className="h-3.5 w-3.5" />
@@ -885,7 +932,7 @@ function ChallengeCard({
               e.stopPropagation();
               navigate(`/government/challenges/${challenge.id}/overview`);
             }}
-            className="btn-primary inline-flex items-center gap-1 rounded-xl bg-blue-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+            className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             Pipeline
             <ChevronRight className="h-3.5 w-3.5" />
