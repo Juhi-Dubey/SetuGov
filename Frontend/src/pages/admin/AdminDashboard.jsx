@@ -117,7 +117,7 @@ function AdminDashboard() {
           <button
             type="button"
             onClick={() => navigate("/admin/users")}
-            className="btn-primary inline-flex h-9.5 items-center gap-2 rounded-xl bg-blue-900 px-4 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700"
           >
             <Users className="h-4 w-4" /> Manage Directory & Roles
           </button>
@@ -137,9 +137,9 @@ function AdminDashboard() {
                 <AlertCircle className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
                   {pendingVerifications.total} Official Verification Request(s) Pending Review
-                </h3>
+                </h2>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                   Government Departments: {pendingVerifications.government} | Startups (DPIIT): {pendingVerifications.startups} | Evaluators: {pendingVerifications.evaluators}
                 </p>
@@ -151,7 +151,7 @@ function AdminDashboard() {
                 <button
                   type="button"
                   onClick={() => navigate("/admin/startups")}
-                  className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700"
+                  className="rounded-xl bg-amber-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 transition"
                 >
                   Review Startups
                 </button>
@@ -159,7 +159,7 @@ function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => navigate("/admin/users")}
-                className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:bg-amber-50 dark:border-amber-800 dark:bg-slate-900 dark:text-slate-200"
+                className="rounded-xl bg-amber-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 transition"
               >
                 Review Directory
               </button>
@@ -181,7 +181,7 @@ function AdminDashboard() {
               className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-4.5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-400">{item.title}</span>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{item.title}</span>
                 <div className="flex h-8.5 w-8.5 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                   <Icon className="h-4 w-4" />
                 </div>
@@ -206,7 +206,7 @@ function AdminDashboard() {
               className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-4.5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-400">{item.title}</span>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{item.title}</span>
                 <div className="flex h-8.5 w-8.5 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
                   <Icon className="h-4 w-4" />
                 </div>
@@ -242,19 +242,20 @@ function AdminDashboard() {
 
         <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
           {activities.length === 0 ? (
-            <p className="py-4 text-xs text-slate-400">No recent audit logs recorded.</p>
+            <p className="py-4 text-xs text-slate-500 dark:text-slate-400">No recent audit logs recorded.</p>
           ) : (
             activities.map((log) => (
-              <div key={log.id} className="py-3 flex items-center justify-between">
-                <div>
-                  <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <div key={log.id} className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2 min-w-0">
+                  <span className="font-mono text-xs font-semibold text-slate-900 dark:text-white">
                     {log.action}
                   </span>
-                  <span className="ml-2 text-xs text-slate-400">
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
                     by {log.user?.name || "System"} ({log.user?.role || "ADMIN"})
                   </span>
                 </div>
-                <span className="text-xs text-slate-400 font-mono">
+                <span className="text-xs text-slate-400 font-mono shrink-0">
                   {new Date(log.created_at).toLocaleString()}
                 </span>
               </div>

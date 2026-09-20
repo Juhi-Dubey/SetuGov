@@ -11,6 +11,7 @@ import {
   MoreVertical,
   CheckCircle2,
   XCircle,
+  Clock,
   Eye,
   X,
   ArrowLeft,
@@ -151,34 +152,22 @@ function AdminUsers() {
           Back to Admin Dashboard
         </button>
 
-        <div className="mt-2 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-              <Users className="h-6 w-6" />
-            </div>
-
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                Administration
-              </p>
-
-              <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-                Government Users & Platform Directory
-              </h1>
-
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                Govern government nodal officers, department affiliations, and verified user accounts across the platform.
-              </p>
-            </div>
+        <div className="mt-2 flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+            <Users className="h-6 w-6" />
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-              Showing
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+              Administration
             </p>
 
-            <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
-              {filteredUsers.length} of {totalUsers} users
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+              Government Users & Platform Directory
+            </h1>
+
+            <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+              Govern government nodal officers, department affiliations, and verified user accounts across the platform.
             </p>
           </div>
         </div>
@@ -208,8 +197,8 @@ function AdminUsers() {
         />
 
         <SummaryCard
-          icon={UserX}
-          title="Pending"
+          icon={Clock}
+          title="Pending Verification"
           value={pendingUsers}
           type="warning"
         />
@@ -225,9 +214,9 @@ function AdminUsers() {
       >
         {/* FILTERS */}
 
-        <div className="border-b border-slate-200 p-5 dark:border-slate-800 sm:p-6">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="relative w-full xl:max-w-md">
+        <div className="border-b border-slate-200 p-4 dark:border-slate-800 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:max-w-xs md:max-w-sm">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
               <input
@@ -239,11 +228,11 @@ function AdminUsers() {
                   )
                 }
                 placeholder="Search name, email or organization..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-3 text-xs outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-2 sm:flex">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
               <select
                 value={roleFilter}
                 onChange={(event) =>
@@ -251,7 +240,7 @@ function AdminUsers() {
                     event.target.value
                   )
                 }
-                className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-600 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
               >
                 <option value="All">
                   All Roles
@@ -281,7 +270,7 @@ function AdminUsers() {
                     event.target.value
                   )
                 }
-                className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-600 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
               >
                 <option value="All">
                   All Status
@@ -309,27 +298,27 @@ function AdminUsers() {
           <table className="w-full min-w-[850px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50">
-                <th className="px-6 py-4 text-left text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   User
                 </th>
 
-                <th className="px-6 py-4 text-left text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Role
                 </th>
 
-                <th className="px-6 py-4 text-left text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Status
                 </th>
 
-                <th className="px-6 py-4 text-left text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Verification
                 </th>
 
-                <th className="px-6 py-4 text-left text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Joined
                 </th>
 
-                <th className="px-6 py-4 text-right text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Action
                 </th>
               </tr>
@@ -463,7 +452,7 @@ function SummaryCard({
         {value}
       </p>
 
-      <p className="mt-1 text-xs font-bold text-slate-700 dark:text-slate-300">
+      <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
         {title}
       </p>
     </div>
@@ -512,51 +501,53 @@ function UserRow({
     >
       {/* USER */}
 
-      <td className="px-6 py-4">
+      <td className="px-5 py-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-900 dark:text-slate-400">
             <Icon className="h-4 w-4" />
           </div>
 
           <div className="min-w-0">
-            <p className="max-w-[250px] truncate text-xs font-bold text-slate-800 dark:text-slate-200">
+            <p className="text-xs font-semibold text-slate-900 dark:text-white" title={user.name}>
               {user.name}
             </p>
 
-            <p className="mt-1 max-w-[250px] truncate text-[9px] text-slate-400">
-              {user.email}
-            </p>
-
-            <p className="mt-1 max-w-[250px] truncate text-[9px] text-slate-400">
-              {user.organization}
-            </p>
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-slate-500 dark:text-slate-400">
+              <span className="truncate max-w-[220px]">{user.email}</span>
+              {user.organization && (
+                <>
+                  <span className="text-slate-300 dark:text-slate-600" aria-hidden="true">•</span>
+                  <span className="truncate max-w-[200px]">{user.organization}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </td>
 
       {/* ROLE */}
 
-      <td className="px-6 py-4">
+      <td className="px-5 py-3">
         <RoleBadge role={user.role} />
       </td>
 
       {/* STATUS */}
 
-      <td className="px-6 py-4">
+      <td className="px-5 py-3">
         <StatusBadge status={user.status} />
       </td>
 
       {/* VERIFICATION */}
 
-      <td className="px-6 py-4">
+      <td className="px-5 py-3">
         {user.verified ? (
-          <span className="inline-flex items-center gap-1.5 text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="h-3.5 w-3.5" />
             Verified
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-[9px] font-bold text-amber-600 dark:text-amber-400">
-            <XCircle className="h-3.5 w-3.5" />
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+            <Clock className="h-3.5 w-3.5" />
             Pending
           </span>
         )}
@@ -564,13 +555,13 @@ function UserRow({
 
       {/* DATE */}
 
-      <td className="px-6 py-4 text-[10px] text-slate-400">
+      <td className="px-5 py-3 text-xs text-slate-500 dark:text-slate-400">
         {user.joined}
       </td>
 
       {/* ACTION */}
 
-      <td className="relative px-6 py-4 text-right">
+      <td className="relative px-5 py-3 text-right">
         <button
           type="button"
           onClick={(event) => {
@@ -637,18 +628,18 @@ function RoleBadge({
 }) {
   const classes = {
     Startup:
-      "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400",
+      "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300",
     Government:
-      "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
+      "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300",
     Evaluator:
-      "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400",
+      "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300",
     Admin:
       "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
   };
 
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-[9px] font-bold ${
+      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
         classes[role] || classes.Admin
       }`}
     >
@@ -666,17 +657,17 @@ function StatusBadge({
 }) {
   const classes = {
     Active:
-      "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
+      "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
     Inactive:
       "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
     Pending:
-      "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
+      "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
   };
 
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-1 text-[9px] font-bold ${
-        classes[status]
+      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+        classes[status] || classes.Inactive
       }`}
     >
       {status}
@@ -791,7 +782,7 @@ function UserDetailsModal({
 
           {/* ROLE MODIFICATION */}
           <div className="rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 dark:border-indigo-900/40 dark:bg-indigo-950/20">
-            <label className="text-[9px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
+            <label className="text-xs font-semibold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
               Platform Role Assignment
             </label>
             <div className="mt-2 flex items-center gap-2">
@@ -809,7 +800,7 @@ function UserDetailsModal({
                 type="button"
                 onClick={handleSaveRole}
                 disabled={updatingRole}
-                className="h-9 rounded-xl bg-indigo-600 px-3 text-xs font-bold text-white shadow hover:bg-indigo-700 disabled:opacity-50"
+                className="h-9 rounded-xl bg-indigo-600 px-3.5 text-xs font-semibold text-white shadow hover:bg-indigo-700 disabled:opacity-50 transition"
               >
                 {updatingRole ? "Saving..." : "Change Role"}
               </button>
@@ -842,7 +833,7 @@ function UserDetailsModal({
           <button
             type="button"
             onClick={onToggleStatus}
-            className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-[10px] font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"
+            className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900 transition"
           >
             {user.status === "Active"
               ? "Deactivate User"
@@ -852,7 +843,7 @@ function UserDetailsModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl bg-slate-900 px-4 py-3 text-[10px] font-bold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+            className="flex-1 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 transition"
           >
             Close
           </button>
@@ -872,11 +863,11 @@ function Detail({
 }) {
   return (
     <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-900">
-      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+      <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
         {label}
       </p>
 
-      <p className="mt-1 break-words text-xs font-bold text-slate-700 dark:text-slate-200">
+      <p className="mt-1 break-words text-xs font-semibold text-slate-900 dark:text-white">
         {value}
       </p>
     </div>
