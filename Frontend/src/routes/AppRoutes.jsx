@@ -429,9 +429,7 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={["GOVERNMENT"]}>
-              <AppLayout role="government">
-                <GovernmentReports />
-              </AppLayout>
+              <GovernmentReports />
             </RoleRoute>
           </ProtectedRoute>
         }
