@@ -20,7 +20,7 @@ function PageHeader({
         </h1>
 
         {description && (
-          <p className="mt-1 max-w-2xl text-xs sm:text-sm leading-5 text-slate-500 dark:text-slate-400">
+          <p className="mt-1 max-w-2xl text-xs sm:text-sm leading-5 text-slate-600 dark:text-slate-300">
             {description}
           </p>
         )}
@@ -30,7 +30,7 @@ function PageHeader({
         <button
           type="button"
           onClick={onAction}
-          className="btn-primary inline-flex h-9.5 items-center justify-center gap-2 rounded-xl bg-blue-900 px-4 text-xs sm:text-sm font-semibold text-white shadow-md shadow-blue-900/15 transition-all hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+          className="btn-primary inline-flex h-9.5 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-xs sm:text-sm font-semibold text-white shadow-sm shadow-blue-600/15 transition-all hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
         >
           {ActionIcon && <ActionIcon className="h-4 w-4" />}
           {action}

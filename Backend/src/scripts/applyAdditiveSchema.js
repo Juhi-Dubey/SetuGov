@@ -131,7 +131,14 @@ async function main() {
       CONSTRAINT "pilot_progress_updates_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE
     );`,
     `CREATE INDEX IF NOT EXISTS "pilot_progress_updates_pilot_id_idx" ON "pilot_progress_updates"("pilot_id");`,
-    `CREATE INDEX IF NOT EXISTS "pilot_progress_updates_created_at_idx" ON "pilot_progress_updates"("created_at");`
+    `CREATE INDEX IF NOT EXISTS "pilot_progress_updates_created_at_idx" ON "pilot_progress_updates"("created_at");`,
+
+    // 9. Evaluator recruitment intake and assignment response timestamp
+    `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "evaluator_recruitment_status" VARCHAR(50) DEFAULT 'OPEN';`,
+    `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "required_evaluator_count" INTEGER DEFAULT 3;`,
+    `ALTER TABLE "evaluator_assignments" ADD COLUMN IF NOT EXISTS "responded_at" TIMESTAMP(3);`,
+    `UPDATE "challenges" SET "evaluator_recruitment_status" = 'OPEN' WHERE "evaluator_recruitment_status" IS NULL;`,
+    `UPDATE "challenges" SET "required_evaluator_count" = 3 WHERE "required_evaluator_count" IS NULL;`
   ];
 
   for (const sql of statements) {

@@ -34,7 +34,7 @@ export default function MyPageStatCard({
       }`}
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+        <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
           {title}
         </span>
         <div
@@ -55,7 +55,7 @@ export default function MyPageStatCard({
       </div>
 
       {subtext && (
-        <div className="mt-1 text-xs text-slate-400 dark:text-slate-500 truncate">
+        <div className="mt-1 text-xs text-slate-500 dark:text-slate-400 truncate">
           {subtext}
         </div>
       )}

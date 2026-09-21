@@ -124,8 +124,9 @@ export const getChallenges = async (query = {}, user = null) => {
   // Unauthenticated users must strictly only see PUBLISHED challenges.
   if (!user) {
     where.status = 'PUBLISHED';
+    if (department_id) where.department_id = department_id;
   } else if (user.role === 'STARTUP' || user.role === 'EVALUATOR') {
-    // Startups and Evaluators can view all active and completed non-draft procurement challenges
+    // Startups and Evaluators can view all active and completed non-draft procurement challenges across departments
     if (status) {
       if (status !== 'DRAFT') {
         where.status = status;
@@ -135,26 +136,17 @@ export const getChallenges = async (query = {}, user = null) => {
     } else {
       where.status = { in: ['PUBLISHED', 'EVALUATION', 'PILOT', 'COMPLETED', 'CLOSED'] };
     }
+    if (department_id) where.department_id = department_id;
   } else if (user.role === 'GOVERNMENT') {
-    // Government officers see all published challenges plus draft/internal challenges for their own department
+    // Government officers strictly see challenges belonging to their own department across all statuses
+    where.department_id = user.department_id;
     if (status) {
-      if (status === 'DRAFT') {
-        where.status = 'DRAFT';
-        where.department_id = user.department_id;
-      } else {
-        where.status = status;
-      }
-    } else {
-      where.OR = [
-        { status: 'PUBLISHED' },
-        { department_id: user.department_id }
-      ];
+      where.status = status;
     }
   } else if (user.role === 'ADMIN') {
     if (status) where.status = status;
+    if (department_id) where.department_id = department_id;
   }
-
-  if (department_id) where.department_id = department_id;
   if (search) {
     const searchFilter = [
       { title: { contains: search, mode: 'insensitive' } },
@@ -264,8 +256,8 @@ export const getChallengeById = async (id, user = null) => {
       throw new NotFoundError(`Challenge with ID ${id} not found.`);
     }
   } else if (user.role === 'GOVERNMENT') {
-    if (challenge.status === 'DRAFT' && user.department_id !== challenge.department_id) {
-      throw new ForbiddenError('You do not have permission to view non-published challenges from other departments.');
+    if (challenge.department_id !== user.department_id) {
+      throw new ForbiddenError('You do not have permission to view challenges from other departments.');
     }
   }
 

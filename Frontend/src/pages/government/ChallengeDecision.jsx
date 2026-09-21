@@ -401,7 +401,7 @@ function ChallengeDecision() {
             <div className="mt-6 flex items-center justify-center gap-3">
               <Link
                 to={`/government/challenges/${challengeRouteId}/pilot`}
-                className="inline-flex items-center gap-2 rounded-xl bg-blue-900 px-5 py-2.5 text-xs font-semibold text-white shadow transition hover:bg-blue-800"
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
               >
                 Go to Pilot Creation
               </Link>
@@ -500,7 +500,7 @@ function ChallengeDecision() {
                       onClick={() => setSelectedDecision(key)}
                       className={`relative flex flex-col justify-between rounded-2xl border p-5 text-left transition-all ${
                         isSelected
-                          ? "border-blue-900 bg-blue-900 text-white shadow-lg shadow-blue-900/15 dark:border-blue-600 dark:bg-blue-600"
+                          ? "border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-600/15 dark:border-blue-500 dark:bg-blue-600"
                           : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:bg-slate-800/50"
                       }`}
                     >
@@ -527,7 +527,7 @@ function ChallengeDecision() {
                           Target: {config.targetStatus}
                         </span>
                         {isSelected && (
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-blue-900">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-blue-600">
                             <Check className="h-3 w-3 stroke-[3]" />
                           </span>
                         )}
@@ -572,7 +572,7 @@ function ChallengeDecision() {
                 <button
                   type="submit"
                   disabled={isSubmitting || reasoning.trim().length < 10}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-semibold text-white shadow-lg shadow-blue-900/15 transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-800 dark:hover:bg-blue-700"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-xs font-semibold text-white shadow-md shadow-blue-600/15 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
                 >
                   {isSubmitting ? (
                     <>

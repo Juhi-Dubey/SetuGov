@@ -35,7 +35,7 @@ export default function MyPageActionCard({
           <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate">
             {title}
           </p>
-          <p className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 line-clamp-1">
+          <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-1">
             {description}
           </p>
         </div>

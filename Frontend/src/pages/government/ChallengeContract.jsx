@@ -856,7 +856,7 @@ function ChallengeContract() {
                     <button
                       type="submit"
                       disabled={actionLoading}
-                      className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-semibold text-white shadow-md hover:bg-blue-800 disabled:opacity-50 dark:bg-blue-800 dark:hover:bg-blue-700"
+                      className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-500"
                     >
                       {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                       Initialize Procurement Readiness Package
@@ -1229,7 +1229,7 @@ function ChallengeContract() {
                       <button
                         type="submit"
                         disabled={actionLoading}
-                        className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-900 px-5 text-xs font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-50 dark:bg-blue-800"
+                        className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-500"
                       >
                         {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSignature className="h-4 w-4" />}
                         Record & Issue Contract / PO
@@ -1455,7 +1455,7 @@ function ChallengeContract() {
                       type="button"
                       onClick={handleCompleteProcurement}
                       disabled={actionLoading}
-                      className="inline-flex h-9 items-center gap-2 rounded-xl bg-blue-900 px-4 text-xs font-semibold text-white shadow-sm hover:bg-blue-800 disabled:opacity-50 dark:bg-blue-800"
+                      className="inline-flex h-9 items-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-500"
                     >
                       {actionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                       Conclude Procurement Process

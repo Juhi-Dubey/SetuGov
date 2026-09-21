@@ -256,7 +256,7 @@ export default function StartupSignup() {
 
                   <Link
                     to="/login"
-                    className="btn-primary flex h-10 w-full items-center justify-center rounded-xl bg-blue-900 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                    className="btn-primary flex h-10 w-full items-center justify-center rounded-xl bg-blue-600 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
                   >
                     Back to Sign In
                   </Link>

@@ -495,10 +495,27 @@ export const createProcurementPayment = async (procurementId, data, user, ip_add
     throw new ForbiddenError('Only Government officers and Administrators can authorize procurement payment schedules.');
   }
 
+  // Part 10: Payment must not be created directly with status = PAID
+  if (data.status === 'PAID') {
+    throw new BadRequestError('Payments cannot be created directly with PAID status. They must follow the approval lifecycle.');
+  }
+
   const procurement = await verifyProcurementAccess(procurementId, user, 'CREATE_PAYMENT');
 
   if (procurement.acceptance_status !== 'ACCEPTED') {
     throw new BadRequestError('Payment is not eligible until formal government delivery acceptance is recorded.');
+  }
+
+  // Duplicate protection for the same procurement obligation
+  const existingProcurementPayment = await prisma.payment.findFirst({
+    where: {
+      procurement_id: procurementId,
+      status: { not: 'REJECTED' }
+    }
+  });
+
+  if (existingProcurementPayment) {
+    throw new BadRequestError('A payment schedule already exists for this procurement record.');
   }
 
   const { amount, payment_percentage = 100, reference_number } = data;
@@ -513,8 +530,12 @@ export const createProcurementPayment = async (procurementId, data, user, ip_add
       procurement_id: procurementId,
       amount: amount,
       payment_percentage: parseFloat(payment_percentage) || 100,
-      status: 'PENDING',
+      status: data.status || 'PENDING',
       reference_number: reference_number ? reference_number.trim() : null
+    },
+    include: {
+      procurement: true,
+      pilot: true
     }
   });
 
@@ -526,7 +547,7 @@ export const createProcurementPayment = async (procurementId, data, user, ip_add
     details: {
       procurement_id: procurementId,
       amount: payment.amount,
-      status: 'PENDING'
+      status: payment.status
     },
     ip_address
   });

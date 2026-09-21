@@ -35,7 +35,7 @@ export default function MyPageSection({
               )}
             </div>
             {subtitle && (
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                 {subtitle}
               </p>
             )}

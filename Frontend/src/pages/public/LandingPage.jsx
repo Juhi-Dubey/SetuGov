@@ -421,9 +421,9 @@ export default function LandingPage() {
                     aria-controls={`panel-${key}`}
                     tabIndex={isSelected ? 0 : -1}
                     onClick={() => setActiveTab(key)}
-                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                       isSelected
-                        ? "bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900"
+                        ? "bg-blue-600 text-white shadow-sm dark:bg-blue-600 dark:text-white"
                         : "text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/80"
                     }`}
                   >

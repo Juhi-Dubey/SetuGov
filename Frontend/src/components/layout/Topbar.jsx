@@ -577,7 +577,7 @@ function Topbar({ onMenuClick, role = "government", hideSearch = false }) {
                                     {item.type}
                                   </span>
                                 </div>
-                                <p className="truncate text-[11px] text-slate-400">
+                                <p className="truncate text-xs text-slate-600 dark:text-slate-300">
                                   {item.desc}
                                 </p>
                               </div>
@@ -587,7 +587,7 @@ function Topbar({ onMenuClick, role = "government", hideSearch = false }) {
                         })}
                       </div>
                     ) : (
-                      <div className="py-6 text-center text-xs text-slate-400">
+                      <div className="py-6 text-center text-xs text-slate-500 dark:text-slate-400">
                         No matching results for "{searchQuery}"
                       </div>
                     )}
@@ -716,7 +716,7 @@ function Topbar({ onMenuClick, role = "government", hideSearch = false }) {
                       <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                         No new notifications
                       </p>
-                      <p className="mt-1 text-xs text-slate-400 max-w-xs">
+                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 max-w-xs">
                         You don't have any notifications yet. Important updates about challenges, applications, and pilots will appear here.
                       </p>
                     </div>
@@ -759,7 +759,7 @@ function Topbar({ onMenuClick, role = "government", hideSearch = false }) {
                               </span>
                             </div>
 
-                            <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                               {item.message}
                             </p>
 

@@ -197,7 +197,7 @@ function StartupChallenges() {
               Explore Challenges
             </h1>
 
-            <p className="mt-1 max-w-2xl text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-1 max-w-2xl text-xs sm:text-sm text-slate-600 dark:text-slate-300">
               Discover government challenges that match your startup's technology and expertise.
             </p>
           </div>
@@ -207,7 +207,7 @@ function StartupChallenges() {
               {challengesList.length}
             </p>
 
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-300">
               Open challenges
             </p>
           </div>
@@ -405,7 +405,7 @@ function ChallengeCard({
           </div>
 
           <div className="min-w-0">
-            <p className="text-[10px] font-semibold text-slate-400 truncate">
+            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
               {challenge.department}
             </p>
 
@@ -435,7 +435,7 @@ function ChallengeCard({
 
       {/* DESCRIPTION */}
 
-      <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+      <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-600 dark:text-slate-300">
         {challenge.description}
       </p>
 
@@ -462,30 +462,36 @@ function ChallengeCard({
 
         <InfoBox
           icon={Clock3}
-          label="Time Remaining"
+          label="Time Left"
           value={`${challenge.daysLeft} days left`}
         />
       </div>
 
-      {/* ACTIONS */}
+      {/* FOOTER */}
 
-      <div className="mt-6 flex gap-2 border-t border-slate-100 pt-5 dark:border-slate-800">
+      <div className="mt-5 flex items-center gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
         <button
           type="button"
-          onClick={onView}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-[10px] font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
+          onClick={(e) => {
+            e.stopPropagation();
+            onApply(challenge);
+          }}
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-3 py-2.5 text-[10px] font-bold text-white transition-colors hover:bg-indigo-700"
         >
-          View Challenge
+          Apply Now
           <ArrowRight className="h-3.5 w-3.5" />
         </button>
 
         <button
           type="button"
-          onClick={onApply}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-3 py-2.5 text-[10px] font-bold text-white transition-all hover:bg-indigo-700"
+          onClick={(e) => {
+            e.stopPropagation();
+            onView(challenge);
+          }}
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-[10px] font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
         >
-          Apply Now
-          <ArrowRight className="h-3.5 w-3.5" />
+          View Details
+          <ExternalLink className="h-3.5 w-3.5" />
         </button>
       </div>
     </motion.article>
@@ -506,7 +512,7 @@ function InfoBox({
       <div className="flex items-center gap-1.5">
         <Icon className="h-3 w-3 text-slate-400" />
 
-        <span className="text-[9px] font-medium text-slate-400">
+        <span className="text-[9px] font-medium text-slate-500 dark:text-slate-400">
           {label}
         </span>
       </div>
@@ -579,7 +585,7 @@ function EmptyState({
         No challenges found
       </h2>
 
-      <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-slate-500 dark:text-slate-400">
+      <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-slate-600 dark:text-slate-300">
         {search
           ? "We couldn't find any challenge matching your search."
           : "There are no challenges matching the selected filters."}
@@ -629,7 +635,7 @@ function ChallengeDetailModal({
             </div>
 
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 {challenge.department}
               </p>
               <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -692,7 +698,7 @@ function ChallengeDetailModal({
           <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
             Eligibility & Key Criteria
           </h3>
-          <ul className="mt-2 space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <ul className="mt-2 space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
             <li className="flex items-center gap-2">
               <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
               DPIIT recognized startups or incorporated entities in India

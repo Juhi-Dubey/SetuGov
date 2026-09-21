@@ -193,7 +193,7 @@ export default function EvaluatorApplyPage() {
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 to="/"
-                className="btn-primary inline-flex h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                className="btn-primary inline-flex h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
               >
                 Return to Homepage
               </Link>

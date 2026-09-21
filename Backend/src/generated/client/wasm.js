@@ -190,6 +190,8 @@ exports.Prisma.ChallengeScalarFieldEnum = {
   required_documents: 'required_documents',
   cybersecurity_requirements: 'cybersecurity_requirements',
   data_compliance: 'data_compliance',
+  evaluator_recruitment_status: 'evaluator_recruitment_status',
+  required_evaluator_count: 'required_evaluator_count',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };
@@ -670,6 +672,7 @@ exports.Prisma.EvaluatorAssignmentScalarFieldEnum = {
   notes: 'notes',
   assigned_at: 'assigned_at',
   accepted_at: 'accepted_at',
+  responded_at: 'responded_at',
   completed_at: 'completed_at',
   created_at: 'created_at',
   updated_at: 'updated_at'

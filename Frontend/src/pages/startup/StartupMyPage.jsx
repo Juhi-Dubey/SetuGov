@@ -167,7 +167,7 @@ export default function StartupMyPage() {
           fields={profileFields}
           tags={[companyName, domain, dpiitNumber]}
           onEditProfile={() => navigate("/startup/profile")}
-          editButtonText="Registration Form"
+          editButtonText="Edit Profile"
         />
 
         {/* 9-STEP ONBOARDING TRACKER BANNER */}
@@ -199,7 +199,7 @@ export default function StartupMyPage() {
                       : `Step ${currentStep} of ${totalSteps} (${completionPercentage}%)`}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 max-w-xl">
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 max-w-xl">
                   {verificationStatus === "VERIFIED"
                     ? "Your startup is fully verified and authorized for direct government procurement and sandbox pilot deployments."
                     : "Complete all 9 onboarding steps to qualify for fast-track state procurement and pilot funding."}
@@ -350,7 +350,7 @@ export default function StartupMyPage() {
                       <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
                         {app.challenge?.title || "Challenge Application"}
                       </p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
                         <span className="rounded-md bg-slate-100 px-1.5 py-0.5 font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                           {app.status || "SUBMITTED"}
                         </span>
@@ -401,7 +401,7 @@ export default function StartupMyPage() {
                       <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
                         {pilot.title || pilot.challenge?.title || "Pilot Sandbox"}
                       </p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
                         <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 font-medium text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                           {pilot.status || "RUNNING"}
                         </span>

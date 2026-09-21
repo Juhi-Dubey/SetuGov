@@ -1,3 +1,4 @@
+# Environment & Secrets
 .env
 .env.*
 .env.local
@@ -5,7 +6,9 @@
 !.env.example
 !Backend/.env.example
 !Frontend/.env.example
+!AI/.env.example
 
+# Dependencies
 node_modules/
 
 # Python
@@ -31,10 +34,36 @@ dist/
 build/
 *.egg-info/
 
-# Frontend / Next.js
+# Frontend / Next.js / Build
 .next/
 .pgdata/
 *.log
+dist/
+dist-ssr/
+
+# OS / Editor / Temp Artifacts
+.DS_Store
+Thumbs.db
+*.tmp*
+*.dll.node.tmp*
+.vscode/
+.idea/
+
+# Playwright & Test Artifacts
+playwright-report/
+test-results/
+coverage/
+rbac_security_test_results.json
+scripts/profile_document_security_report.json
+
+# Temporary & Debug Scripts
+scripts/_debug_*.js
+scripts/debug_*.js
+scripts/check_*.js
+scripts/capture_*.js
+Backend/scripts/unlockGovtUsers.js
+Backend/src/scripts/check_status.js
+Backend/src/scripts/list_eval_gov.js
 
 # Uploads / Private Documents
 uploads/*

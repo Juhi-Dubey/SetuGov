@@ -8719,12 +8719,14 @@ export namespace Prisma {
     budget_min: Decimal | null
     budget_max: Decimal | null
     pilot_duration_days: number | null
+    required_evaluator_count: number | null
   }
 
   export type ChallengeSumAggregateOutputType = {
     budget_min: Decimal | null
     budget_max: Decimal | null
     pilot_duration_days: number | null
+    required_evaluator_count: number | null
   }
 
   export type ChallengeMinAggregateOutputType = {
@@ -8756,6 +8758,8 @@ export namespace Prisma {
     startup_requirements: string | null
     cybersecurity_requirements: string | null
     data_compliance: string | null
+    evaluator_recruitment_status: string | null
+    required_evaluator_count: number | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -8789,6 +8793,8 @@ export namespace Prisma {
     startup_requirements: string | null
     cybersecurity_requirements: string | null
     data_compliance: string | null
+    evaluator_recruitment_status: string | null
+    required_evaluator_count: number | null
     created_at: Date | null
     updated_at: Date | null
   }
@@ -8827,6 +8833,8 @@ export namespace Prisma {
     required_documents: number
     cybersecurity_requirements: number
     data_compliance: number
+    evaluator_recruitment_status: number
+    required_evaluator_count: number
     created_at: number
     updated_at: number
     _all: number
@@ -8837,12 +8845,14 @@ export namespace Prisma {
     budget_min?: true
     budget_max?: true
     pilot_duration_days?: true
+    required_evaluator_count?: true
   }
 
   export type ChallengeSumAggregateInputType = {
     budget_min?: true
     budget_max?: true
     pilot_duration_days?: true
+    required_evaluator_count?: true
   }
 
   export type ChallengeMinAggregateInputType = {
@@ -8874,6 +8884,8 @@ export namespace Prisma {
     startup_requirements?: true
     cybersecurity_requirements?: true
     data_compliance?: true
+    evaluator_recruitment_status?: true
+    required_evaluator_count?: true
     created_at?: true
     updated_at?: true
   }
@@ -8907,6 +8919,8 @@ export namespace Prisma {
     startup_requirements?: true
     cybersecurity_requirements?: true
     data_compliance?: true
+    evaluator_recruitment_status?: true
+    required_evaluator_count?: true
     created_at?: true
     updated_at?: true
   }
@@ -8945,6 +8959,8 @@ export namespace Prisma {
     required_documents?: true
     cybersecurity_requirements?: true
     data_compliance?: true
+    evaluator_recruitment_status?: true
+    required_evaluator_count?: true
     created_at?: true
     updated_at?: true
     _all?: true
@@ -9070,6 +9086,8 @@ export namespace Prisma {
     required_documents: JsonValue | null
     cybersecurity_requirements: string | null
     data_compliance: string | null
+    evaluator_recruitment_status: string | null
+    required_evaluator_count: number | null
     created_at: Date
     updated_at: Date
     _count: ChallengeCountAggregateOutputType | null
@@ -9127,6 +9145,8 @@ export namespace Prisma {
     required_documents?: boolean
     cybersecurity_requirements?: boolean
     data_compliance?: boolean
+    evaluator_recruitment_status?: boolean
+    required_evaluator_count?: boolean
     created_at?: boolean
     updated_at?: boolean
     applications?: boolean | Challenge$applicationsArgs<ExtArgs>
@@ -9176,6 +9196,8 @@ export namespace Prisma {
     required_documents?: boolean
     cybersecurity_requirements?: boolean
     data_compliance?: boolean
+    evaluator_recruitment_status?: boolean
+    required_evaluator_count?: boolean
     created_at?: boolean
     updated_at?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
@@ -9216,6 +9238,8 @@ export namespace Prisma {
     required_documents?: boolean
     cybersecurity_requirements?: boolean
     data_compliance?: boolean
+    evaluator_recruitment_status?: boolean
+    required_evaluator_count?: boolean
     created_at?: boolean
     updated_at?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
@@ -9256,11 +9280,13 @@ export namespace Prisma {
     required_documents?: boolean
     cybersecurity_requirements?: boolean
     data_compliance?: boolean
+    evaluator_recruitment_status?: boolean
+    required_evaluator_count?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
 
-  export type ChallengeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "department_id" | "title" | "problem_description" | "current_baseline" | "desired_outcome" | "location" | "budget_min" | "budget_max" | "pilot_duration_days" | "required_technologies" | "application_deadline" | "finalist_submission_start" | "finalist_submission_deadline" | "status" | "created_by" | "data_classification" | "data_access_requirements" | "data_retention_period" | "ip_ownership" | "licensing_terms" | "confidentiality_terms" | "current_process" | "pilot_location" | "pilot_start_date" | "pilot_end_date" | "startup_requirements" | "kpis" | "milestones" | "eligibility_requirements" | "required_documents" | "cybersecurity_requirements" | "data_compliance" | "created_at" | "updated_at", ExtArgs["result"]["challenge"]>
+  export type ChallengeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "department_id" | "title" | "problem_description" | "current_baseline" | "desired_outcome" | "location" | "budget_min" | "budget_max" | "pilot_duration_days" | "required_technologies" | "application_deadline" | "finalist_submission_start" | "finalist_submission_deadline" | "status" | "created_by" | "data_classification" | "data_access_requirements" | "data_retention_period" | "ip_ownership" | "licensing_terms" | "confidentiality_terms" | "current_process" | "pilot_location" | "pilot_start_date" | "pilot_end_date" | "startup_requirements" | "kpis" | "milestones" | "eligibility_requirements" | "required_documents" | "cybersecurity_requirements" | "data_compliance" | "evaluator_recruitment_status" | "required_evaluator_count" | "created_at" | "updated_at", ExtArgs["result"]["challenge"]>
   export type ChallengeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     applications?: boolean | Challenge$applicationsArgs<ExtArgs>
     creator?: boolean | UserDefaultArgs<ExtArgs>
@@ -9331,6 +9357,8 @@ export namespace Prisma {
       required_documents: Prisma.JsonValue | null
       cybersecurity_requirements: string | null
       data_compliance: string | null
+      evaluator_recruitment_status: string | null
+      required_evaluator_count: number | null
       created_at: Date
       updated_at: Date
     }, ExtArgs["result"]["challenge"]>
@@ -9799,6 +9827,8 @@ export namespace Prisma {
     readonly required_documents: FieldRef<"Challenge", 'Json'>
     readonly cybersecurity_requirements: FieldRef<"Challenge", 'String'>
     readonly data_compliance: FieldRef<"Challenge", 'String'>
+    readonly evaluator_recruitment_status: FieldRef<"Challenge", 'String'>
+    readonly required_evaluator_count: FieldRef<"Challenge", 'Int'>
     readonly created_at: FieldRef<"Challenge", 'DateTime'>
     readonly updated_at: FieldRef<"Challenge", 'DateTime'>
   }
@@ -46980,6 +47010,7 @@ export namespace Prisma {
     notes: string | null
     assigned_at: Date | null
     accepted_at: Date | null
+    responded_at: Date | null
     completed_at: Date | null
     created_at: Date | null
     updated_at: Date | null
@@ -46994,6 +47025,7 @@ export namespace Prisma {
     notes: string | null
     assigned_at: Date | null
     accepted_at: Date | null
+    responded_at: Date | null
     completed_at: Date | null
     created_at: Date | null
     updated_at: Date | null
@@ -47008,6 +47040,7 @@ export namespace Prisma {
     notes: number
     assigned_at: number
     accepted_at: number
+    responded_at: number
     completed_at: number
     created_at: number
     updated_at: number
@@ -47024,6 +47057,7 @@ export namespace Prisma {
     notes?: true
     assigned_at?: true
     accepted_at?: true
+    responded_at?: true
     completed_at?: true
     created_at?: true
     updated_at?: true
@@ -47038,6 +47072,7 @@ export namespace Prisma {
     notes?: true
     assigned_at?: true
     accepted_at?: true
+    responded_at?: true
     completed_at?: true
     created_at?: true
     updated_at?: true
@@ -47052,6 +47087,7 @@ export namespace Prisma {
     notes?: true
     assigned_at?: true
     accepted_at?: true
+    responded_at?: true
     completed_at?: true
     created_at?: true
     updated_at?: true
@@ -47139,6 +47175,7 @@ export namespace Prisma {
     notes: string | null
     assigned_at: Date
     accepted_at: Date | null
+    responded_at: Date | null
     completed_at: Date | null
     created_at: Date
     updated_at: Date
@@ -47170,6 +47207,7 @@ export namespace Prisma {
     notes?: boolean
     assigned_at?: boolean
     accepted_at?: boolean
+    responded_at?: boolean
     completed_at?: boolean
     created_at?: boolean
     updated_at?: boolean
@@ -47187,6 +47225,7 @@ export namespace Prisma {
     notes?: boolean
     assigned_at?: boolean
     accepted_at?: boolean
+    responded_at?: boolean
     completed_at?: boolean
     created_at?: boolean
     updated_at?: boolean
@@ -47204,6 +47243,7 @@ export namespace Prisma {
     notes?: boolean
     assigned_at?: boolean
     accepted_at?: boolean
+    responded_at?: boolean
     completed_at?: boolean
     created_at?: boolean
     updated_at?: boolean
@@ -47221,12 +47261,13 @@ export namespace Prisma {
     notes?: boolean
     assigned_at?: boolean
     accepted_at?: boolean
+    responded_at?: boolean
     completed_at?: boolean
     created_at?: boolean
     updated_at?: boolean
   }
 
-  export type EvaluatorAssignmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "application_id" | "evaluator_id" | "assigned_by" | "status" | "notes" | "assigned_at" | "accepted_at" | "completed_at" | "created_at" | "updated_at", ExtArgs["result"]["evaluatorAssignment"]>
+  export type EvaluatorAssignmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "application_id" | "evaluator_id" | "assigned_by" | "status" | "notes" | "assigned_at" | "accepted_at" | "responded_at" | "completed_at" | "created_at" | "updated_at", ExtArgs["result"]["evaluatorAssignment"]>
   export type EvaluatorAssignmentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     application?: boolean | ApplicationDefaultArgs<ExtArgs>
     evaluator?: boolean | UserDefaultArgs<ExtArgs>
@@ -47259,6 +47300,7 @@ export namespace Prisma {
       notes: string | null
       assigned_at: Date
       accepted_at: Date | null
+      responded_at: Date | null
       completed_at: Date | null
       created_at: Date
       updated_at: Date
@@ -47696,6 +47738,7 @@ export namespace Prisma {
     readonly notes: FieldRef<"EvaluatorAssignment", 'String'>
     readonly assigned_at: FieldRef<"EvaluatorAssignment", 'DateTime'>
     readonly accepted_at: FieldRef<"EvaluatorAssignment", 'DateTime'>
+    readonly responded_at: FieldRef<"EvaluatorAssignment", 'DateTime'>
     readonly completed_at: FieldRef<"EvaluatorAssignment", 'DateTime'>
     readonly created_at: FieldRef<"EvaluatorAssignment", 'DateTime'>
     readonly updated_at: FieldRef<"EvaluatorAssignment", 'DateTime'>
@@ -53026,6 +53069,8 @@ export namespace Prisma {
     required_documents: 'required_documents',
     cybersecurity_requirements: 'cybersecurity_requirements',
     data_compliance: 'data_compliance',
+    evaluator_recruitment_status: 'evaluator_recruitment_status',
+    required_evaluator_count: 'required_evaluator_count',
     created_at: 'created_at',
     updated_at: 'updated_at'
   };
@@ -53599,6 +53644,7 @@ export namespace Prisma {
     notes: 'notes',
     assigned_at: 'assigned_at',
     accepted_at: 'accepted_at',
+    responded_at: 'responded_at',
     completed_at: 'completed_at',
     created_at: 'created_at',
     updated_at: 'updated_at'
@@ -54456,6 +54502,8 @@ export namespace Prisma {
     required_documents?: JsonNullableFilter<"Challenge">
     cybersecurity_requirements?: StringNullableFilter<"Challenge"> | string | null
     data_compliance?: StringNullableFilter<"Challenge"> | string | null
+    evaluator_recruitment_status?: StringNullableFilter<"Challenge"> | string | null
+    required_evaluator_count?: IntNullableFilter<"Challenge"> | number | null
     created_at?: DateTimeFilter<"Challenge"> | Date | string
     updated_at?: DateTimeFilter<"Challenge"> | Date | string
     applications?: ApplicationListRelationFilter
@@ -54504,6 +54552,8 @@ export namespace Prisma {
     required_documents?: SortOrderInput | SortOrder
     cybersecurity_requirements?: SortOrderInput | SortOrder
     data_compliance?: SortOrderInput | SortOrder
+    evaluator_recruitment_status?: SortOrderInput | SortOrder
+    required_evaluator_count?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     applications?: ApplicationOrderByRelationAggregateInput
@@ -54555,6 +54605,8 @@ export namespace Prisma {
     required_documents?: JsonNullableFilter<"Challenge">
     cybersecurity_requirements?: StringNullableFilter<"Challenge"> | string | null
     data_compliance?: StringNullableFilter<"Challenge"> | string | null
+    evaluator_recruitment_status?: StringNullableFilter<"Challenge"> | string | null
+    required_evaluator_count?: IntNullableFilter<"Challenge"> | number | null
     created_at?: DateTimeFilter<"Challenge"> | Date | string
     updated_at?: DateTimeFilter<"Challenge"> | Date | string
     applications?: ApplicationListRelationFilter
@@ -54603,6 +54655,8 @@ export namespace Prisma {
     required_documents?: SortOrderInput | SortOrder
     cybersecurity_requirements?: SortOrderInput | SortOrder
     data_compliance?: SortOrderInput | SortOrder
+    evaluator_recruitment_status?: SortOrderInput | SortOrder
+    required_evaluator_count?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     _count?: ChallengeCountOrderByAggregateInput
@@ -54649,6 +54703,8 @@ export namespace Prisma {
     required_documents?: JsonNullableWithAggregatesFilter<"Challenge">
     cybersecurity_requirements?: StringNullableWithAggregatesFilter<"Challenge"> | string | null
     data_compliance?: StringNullableWithAggregatesFilter<"Challenge"> | string | null
+    evaluator_recruitment_status?: StringNullableWithAggregatesFilter<"Challenge"> | string | null
+    required_evaluator_count?: IntNullableWithAggregatesFilter<"Challenge"> | number | null
     created_at?: DateTimeWithAggregatesFilter<"Challenge"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"Challenge"> | Date | string
   }
@@ -57653,6 +57709,7 @@ export namespace Prisma {
     notes?: StringNullableFilter<"EvaluatorAssignment"> | string | null
     assigned_at?: DateTimeFilter<"EvaluatorAssignment"> | Date | string
     accepted_at?: DateTimeNullableFilter<"EvaluatorAssignment"> | Date | string | null
+    responded_at?: DateTimeNullableFilter<"EvaluatorAssignment"> | Date | string | null
     completed_at?: DateTimeNullableFilter<"EvaluatorAssignment"> | Date | string | null
     created_at?: DateTimeFilter<"EvaluatorAssignment"> | Date | string
     updated_at?: DateTimeFilter<"EvaluatorAssignment"> | Date | string
@@ -57670,6 +57727,7 @@ export namespace Prisma {
     notes?: SortOrderInput | SortOrder
     assigned_at?: SortOrder
     accepted_at?: SortOrderInput | SortOrder
+    responded_at?: SortOrderInput | SortOrder
     completed_at?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -57691,6 +57749,7 @@ export namespace Prisma {
     notes?: StringNullableFilter<"EvaluatorAssignment"> | string | null
     assigned_at?: DateTimeFilter<"EvaluatorAssignment"> | Date | string
     accepted_at?: DateTimeNullableFilter<"EvaluatorAssignment"> | Date | string | null
+    responded_at?: DateTimeNullableFilter<"EvaluatorAssignment"> | Date | string | null
     completed_at?: DateTimeNullableFilter<"EvaluatorAssignment"> | Date | string | null
     created_at?: DateTimeFilter<"EvaluatorAssignment"> | Date | string
     updated_at?: DateTimeFilter<"EvaluatorAssignment"> | Date | string
@@ -57708,6 +57767,7 @@ export namespace Prisma {
     notes?: SortOrderInput | SortOrder
     assigned_at?: SortOrder
     accepted_at?: SortOrderInput | SortOrder
+    responded_at?: SortOrderInput | SortOrder
     completed_at?: SortOrderInput | SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -57728,6 +57788,7 @@ export namespace Prisma {
     notes?: StringNullableWithAggregatesFilter<"EvaluatorAssignment"> | string | null
     assigned_at?: DateTimeWithAggregatesFilter<"EvaluatorAssignment"> | Date | string
     accepted_at?: DateTimeNullableWithAggregatesFilter<"EvaluatorAssignment"> | Date | string | null
+    responded_at?: DateTimeNullableWithAggregatesFilter<"EvaluatorAssignment"> | Date | string | null
     completed_at?: DateTimeNullableWithAggregatesFilter<"EvaluatorAssignment"> | Date | string | null
     created_at?: DateTimeWithAggregatesFilter<"EvaluatorAssignment"> | Date | string
     updated_at?: DateTimeWithAggregatesFilter<"EvaluatorAssignment"> | Date | string
@@ -58626,6 +58687,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -58674,6 +58737,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -58718,6 +58783,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -58766,6 +58833,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -58812,6 +58881,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -58848,6 +58919,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -58886,6 +58959,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -62216,6 +62291,7 @@ export namespace Prisma {
     notes?: string | null
     assigned_at?: Date | string
     accepted_at?: Date | string | null
+    responded_at?: Date | string | null
     completed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
@@ -62233,6 +62309,7 @@ export namespace Prisma {
     notes?: string | null
     assigned_at?: Date | string
     accepted_at?: Date | string | null
+    responded_at?: Date | string | null
     completed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
@@ -62244,6 +62321,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_at?: DateTimeFieldUpdateOperationsInput | Date | string
     accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    responded_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -62261,6 +62339,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_at?: DateTimeFieldUpdateOperationsInput | Date | string
     accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    responded_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -62275,6 +62354,7 @@ export namespace Prisma {
     notes?: string | null
     assigned_at?: Date | string
     accepted_at?: Date | string | null
+    responded_at?: Date | string | null
     completed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
@@ -62286,6 +62366,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_at?: DateTimeFieldUpdateOperationsInput | Date | string
     accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    responded_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -62300,6 +62381,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_at?: DateTimeFieldUpdateOperationsInput | Date | string
     accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    responded_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -63426,6 +63508,17 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type ApplicationListRelationFilter = {
     every?: ApplicationWhereInput
     some?: ApplicationWhereInput
@@ -63505,6 +63598,8 @@ export namespace Prisma {
     required_documents?: SortOrder
     cybersecurity_requirements?: SortOrder
     data_compliance?: SortOrder
+    evaluator_recruitment_status?: SortOrder
+    required_evaluator_count?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -63513,6 +63608,7 @@ export namespace Prisma {
     budget_min?: SortOrder
     budget_max?: SortOrder
     pilot_duration_days?: SortOrder
+    required_evaluator_count?: SortOrder
   }
 
   export type ChallengeMaxOrderByAggregateInput = {
@@ -63544,6 +63640,8 @@ export namespace Prisma {
     startup_requirements?: SortOrder
     cybersecurity_requirements?: SortOrder
     data_compliance?: SortOrder
+    evaluator_recruitment_status?: SortOrder
+    required_evaluator_count?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -63577,6 +63675,8 @@ export namespace Prisma {
     startup_requirements?: SortOrder
     cybersecurity_requirements?: SortOrder
     data_compliance?: SortOrder
+    evaluator_recruitment_status?: SortOrder
+    required_evaluator_count?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
   }
@@ -63585,6 +63685,7 @@ export namespace Prisma {
     budget_min?: SortOrder
     budget_max?: SortOrder
     pilot_duration_days?: SortOrder
+    required_evaluator_count?: SortOrder
   }
 
   export type DecimalWithAggregatesFilter<$PrismaModel = never> = {
@@ -63637,6 +63738,22 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedJsonNullableFilter<$PrismaModel>
     _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
   export type JsonFilter<$PrismaModel = never> = 
     | PatchUndefined<
@@ -64049,17 +64166,6 @@ export namespace Prisma {
     updated_at?: SortOrder
   }
 
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
   export type StartupDocumentCountOrderByAggregateInput = {
     id?: SortOrder
     startup_id?: SortOrder
@@ -64114,22 +64220,6 @@ export namespace Prisma {
 
   export type StartupDocumentSumOrderByAggregateInput = {
     file_size?: SortOrder
-  }
-
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type EnumApplicationStatusFilter<$PrismaModel = never> = {
@@ -65683,6 +65773,7 @@ export namespace Prisma {
     notes?: SortOrder
     assigned_at?: SortOrder
     accepted_at?: SortOrder
+    responded_at?: SortOrder
     completed_at?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -65697,6 +65788,7 @@ export namespace Prisma {
     notes?: SortOrder
     assigned_at?: SortOrder
     accepted_at?: SortOrder
+    responded_at?: SortOrder
     completed_at?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -65711,6 +65803,7 @@ export namespace Prisma {
     notes?: SortOrder
     assigned_at?: SortOrder
     accepted_at?: SortOrder
+    responded_at?: SortOrder
     completed_at?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -67683,6 +67776,14 @@ export namespace Prisma {
     set?: $Enums.ChallengeStatus
   }
 
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type ApplicationUpdateManyWithoutChallengeNestedInput = {
     create?: XOR<ApplicationCreateWithoutChallengeInput, ApplicationUncheckedCreateWithoutChallengeInput> | ApplicationCreateWithoutChallengeInput[] | ApplicationUncheckedCreateWithoutChallengeInput[]
     connectOrCreate?: ApplicationCreateOrConnectWithoutChallengeInput | ApplicationCreateOrConnectWithoutChallengeInput[]
@@ -68308,14 +68409,6 @@ export namespace Prisma {
     create?: XOR<UserCreateWithoutVerified_documentsInput, UserUncheckedCreateWithoutVerified_documentsInput>
     connectOrCreate?: UserCreateOrConnectWithoutVerified_documentsInput
     connect?: UserWhereUniqueInput
-  }
-
-  export type NullableIntFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type StartupUpdateOneRequiredWithoutDocumentsNestedInput = {
@@ -70488,6 +70581,33 @@ export namespace Prisma {
     gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
+
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
   export type NestedJsonFilter<$PrismaModel = never> = 
     | PatchUndefined<
         Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
@@ -70560,33 +70680,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumVerificationSourceFilter<$PrismaModel>
     _max?: NestedEnumVerificationSourceFilter<$PrismaModel>
-  }
-
-  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
-  export type NestedFloatNullableFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedEnumApplicationStatusFilter<$PrismaModel = never> = {
@@ -70915,6 +71008,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -70961,6 +71056,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -71743,6 +71840,7 @@ export namespace Prisma {
     notes?: string | null
     assigned_at?: Date | string
     accepted_at?: Date | string | null
+    responded_at?: Date | string | null
     completed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
@@ -71758,6 +71856,7 @@ export namespace Prisma {
     notes?: string | null
     assigned_at?: Date | string
     accepted_at?: Date | string | null
+    responded_at?: Date | string | null
     completed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
@@ -71779,6 +71878,7 @@ export namespace Prisma {
     notes?: string | null
     assigned_at?: Date | string
     accepted_at?: Date | string | null
+    responded_at?: Date | string | null
     completed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
@@ -71794,6 +71894,7 @@ export namespace Prisma {
     notes?: string | null
     assigned_at?: Date | string
     accepted_at?: Date | string | null
+    responded_at?: Date | string | null
     completed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
@@ -72560,6 +72661,8 @@ export namespace Prisma {
     required_documents?: JsonNullableFilter<"Challenge">
     cybersecurity_requirements?: StringNullableFilter<"Challenge"> | string | null
     data_compliance?: StringNullableFilter<"Challenge"> | string | null
+    evaluator_recruitment_status?: StringNullableFilter<"Challenge"> | string | null
+    required_evaluator_count?: IntNullableFilter<"Challenge"> | number | null
     created_at?: DateTimeFilter<"Challenge"> | Date | string
     updated_at?: DateTimeFilter<"Challenge"> | Date | string
   }
@@ -73121,6 +73224,7 @@ export namespace Prisma {
     notes?: StringNullableFilter<"EvaluatorAssignment"> | string | null
     assigned_at?: DateTimeFilter<"EvaluatorAssignment"> | Date | string
     accepted_at?: DateTimeNullableFilter<"EvaluatorAssignment"> | Date | string | null
+    responded_at?: DateTimeNullableFilter<"EvaluatorAssignment"> | Date | string | null
     completed_at?: DateTimeNullableFilter<"EvaluatorAssignment"> | Date | string | null
     created_at?: DateTimeFilter<"EvaluatorAssignment"> | Date | string
     updated_at?: DateTimeFilter<"EvaluatorAssignment"> | Date | string
@@ -73507,6 +73611,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -73553,6 +73659,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -74885,6 +74993,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -74932,6 +75042,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -75102,6 +75214,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -75149,6 +75263,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -75309,6 +75425,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -75356,6 +75474,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -75520,6 +75640,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -75567,6 +75689,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -77507,6 +77631,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     creator: UserCreateNestedOneWithoutCreated_challengesInput
@@ -77554,6 +77680,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     match_scores?: MatchScoreUncheckedCreateNestedManyWithoutChallengeInput
@@ -77751,6 +77879,7 @@ export namespace Prisma {
     notes?: string | null
     assigned_at?: Date | string
     accepted_at?: Date | string | null
+    responded_at?: Date | string | null
     completed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
@@ -77766,6 +77895,7 @@ export namespace Prisma {
     notes?: string | null
     assigned_at?: Date | string
     accepted_at?: Date | string | null
+    responded_at?: Date | string | null
     completed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
@@ -77905,6 +78035,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     creator?: UserUpdateOneRequiredWithoutCreated_challengesNestedInput
@@ -77952,6 +78084,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     match_scores?: MatchScoreUncheckedUpdateManyWithoutChallengeNestedInput
@@ -79727,6 +79861,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -79774,6 +79910,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -79944,6 +80082,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -79991,6 +80131,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -80151,6 +80293,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -80198,6 +80342,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -80479,6 +80625,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -80526,6 +80674,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -80803,6 +80953,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -80850,6 +81002,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -81131,6 +81285,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -81178,6 +81334,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -81707,6 +81865,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -81754,6 +81914,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -82384,6 +82546,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -82431,6 +82595,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -87830,6 +87996,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationCreateNestedManyWithoutChallengeInput
@@ -87877,6 +88045,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
     applications?: ApplicationUncheckedCreateNestedManyWithoutChallengeInput
@@ -88532,6 +88702,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -88579,6 +88751,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -89158,6 +89332,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -89432,6 +89608,7 @@ export namespace Prisma {
     notes?: string | null
     assigned_at?: Date | string
     accepted_at?: Date | string | null
+    responded_at?: Date | string | null
     completed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
@@ -89445,6 +89622,7 @@ export namespace Prisma {
     notes?: string | null
     assigned_at?: Date | string
     accepted_at?: Date | string | null
+    responded_at?: Date | string | null
     completed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
@@ -89777,6 +89955,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -89823,6 +90003,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -89868,6 +90050,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -90688,6 +90872,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_at?: DateTimeFieldUpdateOperationsInput | Date | string
     accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    responded_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90703,6 +90888,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_at?: DateTimeFieldUpdateOperationsInput | Date | string
     accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    responded_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90716,6 +90902,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_at?: DateTimeFieldUpdateOperationsInput | Date | string
     accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    responded_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90727,6 +90914,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_at?: DateTimeFieldUpdateOperationsInput | Date | string
     accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    responded_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90742,6 +90930,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_at?: DateTimeFieldUpdateOperationsInput | Date | string
     accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    responded_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -90755,6 +90944,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_at?: DateTimeFieldUpdateOperationsInput | Date | string
     accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    responded_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -91606,6 +91796,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: string | null
     data_compliance?: string | null
+    evaluator_recruitment_status?: string | null
+    required_evaluator_count?: number | null
     created_at?: Date | string
     updated_at?: Date | string
   }
@@ -91737,6 +91929,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUpdateManyWithoutChallengeNestedInput
@@ -91783,6 +91977,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
     applications?: ApplicationUncheckedUpdateManyWithoutChallengeNestedInput
@@ -91828,6 +92024,8 @@ export namespace Prisma {
     required_documents?: NullableJsonNullValueInput | InputJsonValue
     cybersecurity_requirements?: NullableStringFieldUpdateOperationsInput | string | null
     data_compliance?: NullableStringFieldUpdateOperationsInput | string | null
+    evaluator_recruitment_status?: NullableStringFieldUpdateOperationsInput | string | null
+    required_evaluator_count?: NullableIntFieldUpdateOperationsInput | number | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -93216,6 +93414,7 @@ export namespace Prisma {
     notes?: string | null
     assigned_at?: Date | string
     accepted_at?: Date | string | null
+    responded_at?: Date | string | null
     completed_at?: Date | string | null
     created_at?: Date | string
     updated_at?: Date | string
@@ -93316,6 +93515,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_at?: DateTimeFieldUpdateOperationsInput | Date | string
     accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    responded_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -93331,6 +93531,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_at?: DateTimeFieldUpdateOperationsInput | Date | string
     accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    responded_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -93344,6 +93545,7 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
     assigned_at?: DateTimeFieldUpdateOperationsInput | Date | string
     accepted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    responded_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     completed_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: DateTimeFieldUpdateOperationsInput | Date | string

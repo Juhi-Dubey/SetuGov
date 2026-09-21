@@ -80,15 +80,28 @@ export const normalizeChallengePayload = (raw = {}) => {
     ""
   );
 
-  // Numeric budgets - preserve actual user input without inventing dummy values
-  const rawBudgetMin = raw.budgetMin ?? raw.budget_min;
-  const rawBudgetMax = raw.budgetMax ?? raw.budget_max ?? raw.budget;
-  const budget_min = rawBudgetMin !== undefined && rawBudgetMin !== null && rawBudgetMin !== ""
-    ? Number(rawBudgetMin)
-    : undefined;
-  const budget_max = rawBudgetMax !== undefined && rawBudgetMax !== null && rawBudgetMax !== ""
-    ? Number(rawBudgetMax)
-    : undefined;
+  // Numeric budgets - safely parse and strip currency symbols, commas, and handle 0-overrides
+  const parseCleanNumber = (val) => {
+    if (val === undefined || val === null || val === "") return undefined;
+    if (typeof val === "number") return isNaN(val) ? undefined : val;
+    const cleaned = String(val).replace(/[^0-9.]/g, "");
+    if (!cleaned) return undefined;
+    const num = Number(cleaned);
+    return isNaN(num) ? undefined : num;
+  };
+
+  const parsedBudget = parseCleanNumber(raw.budget);
+  let budget_max = parseCleanNumber(raw.budgetMax ?? raw.budget_max);
+  let budget_min = parseCleanNumber(raw.budgetMin ?? raw.budget_min);
+
+  // If budget_max is non-positive or undefined, fallback to parsed general budget
+  if ((budget_max === undefined || budget_max <= 0) && parsedBudget !== undefined && parsedBudget > 0) {
+    budget_max = parsedBudget;
+  }
+  // Ensure budget_min defaults to 0 if budget_max is present to satisfy backend schema
+  if (budget_min === undefined && budget_max !== undefined) {
+    budget_min = 0;
+  }
 
   // Integer positive pilot duration
   let pilot_duration_days = undefined;

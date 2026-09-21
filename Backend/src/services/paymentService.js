@@ -5,7 +5,11 @@ import { createAuditLog } from './auditService.js';
 
 export const createPayment = async (pilotId, data, user, ip_address = null) => {
   // P0-3: Verify user has PAYMENT_MANAGE access to this pilot
-  await verifyPilotAccess(pilotId, user, 'PAYMENT_MANAGE');
+  const pilot = await verifyPilotAccess(pilotId, user, 'PAYMENT_MANAGE');
+
+  if (pilot.status === 'STOPPED') {
+    throw new BadRequestError('Cannot schedule payments for a STOPPED pilot project.');
+  }
 
   // Part 10: Payment must not be created directly with status = PAID
   if (data.status === 'PAID') {
@@ -40,11 +44,43 @@ export const createPayment = async (pilotId, data, user, ip_address = null) => {
     }
   }
 
+  // Validate procurement relationship if procurement_id is supplied
+  if (data.procurement_id) {
+    const procurement = await prisma.procurementRecord.findUnique({
+      where: { id: data.procurement_id }
+    });
+
+    if (!procurement) {
+      throw new NotFoundError(`Procurement record with ID ${data.procurement_id} not found.`);
+    }
+
+    if (procurement.pilot_id !== pilotId) {
+      throw new BadRequestError(`Procurement ${data.procurement_id} belongs to a different pilot project.`);
+    }
+
+    if (procurement.acceptance_status !== 'ACCEPTED') {
+      throw new BadRequestError('Payment is not eligible until formal government delivery acceptance is recorded.');
+    }
+
+    // Prevent duplicate active payment schedule for the same procurement
+    const existingForProcurement = await prisma.payment.findFirst({
+      where: {
+        procurement_id: data.procurement_id,
+        status: { not: 'REJECTED' }
+      }
+    });
+
+    if (existingForProcurement) {
+      throw new BadRequestError('A payment schedule already exists for this procurement record.');
+    }
+  }
+
   const payment = await prisma.$transaction(async (tx) => {
     const newPayment = await tx.payment.create({
       data: {
         pilot_id: pilotId,
         milestone_id: data.milestone_id || null,
+        procurement_id: data.procurement_id || null,
         amount: data.amount,
         payment_percentage: data.payment_percentage,
         status: data.status || 'UPCOMING',
@@ -53,7 +89,8 @@ export const createPayment = async (pilotId, data, user, ip_address = null) => {
         invoice_url: data.invoice_url ? data.invoice_url.trim() : null
       },
       include: {
-        milestone: true
+        milestone: true,
+        procurement: true
       }
     });
 
@@ -67,14 +104,15 @@ export const createPayment = async (pilotId, data, user, ip_address = null) => {
           pilot_id: pilotId,
           amount: data.amount,
           status: newPayment.status,
-          milestone_id: data.milestone_id
+          milestone_id: data.milestone_id,
+          procurement_id: data.procurement_id
         },
         ip_address
       }
     });
 
     return newPayment;
-  });
+  }, { timeout: 25000, maxWait: 10000 });
 
   return payment;
 };
@@ -94,7 +132,8 @@ export const getPilotPayments = async (pilotId, user = null) => {
           completion_percentage: true,
           status: true
         }
-      }
+      },
+      procurement: true
     },
     orderBy: { created_at: 'asc' }
   });
@@ -106,8 +145,24 @@ export const getPaymentById = async (id, user = null) => {
   const payment = await prisma.payment.findUnique({
     where: { id },
     include: {
-      pilot: true,
-      milestone: true
+      pilot: {
+        include: {
+          challenge: {
+            include: {
+              department: true
+            }
+          },
+          startup: true
+        }
+      },
+      milestone: true,
+      procurement: {
+        include: {
+          department: true,
+          startup: true,
+          challenge: true
+        }
+      }
     }
   });
 
@@ -146,14 +201,18 @@ export const updatePaymentStatus = async (id, dataOrStatus, userOrPaymentDate, i
 
   const payment = await prisma.payment.findUnique({
     where: { id },
-    include: { milestone: true }
+    include: { milestone: true, procurement: true }
   });
   if (!payment) {
     throw new NotFoundError(`Payment with ID ${id} not found.`);
   }
 
   // P0-3: Verify user has PAYMENT_MANAGE access to parent pilot
-  await verifyPilotAccess(payment.pilot_id, user, 'PAYMENT_MANAGE');
+  const pilot = await verifyPilotAccess(payment.pilot_id, user, 'PAYMENT_MANAGE');
+
+  if (pilot.status === 'STOPPED') {
+    throw new BadRequestError('Cannot disburse or mutate payments for a STOPPED pilot project.');
+  }
 
   // Prevent duplicate disbursal: already PAID payments cannot be disbursed again or mutated
   if (payment.status === 'PAID') {
@@ -162,6 +221,11 @@ export const updatePaymentStatus = async (id, dataOrStatus, userOrPaymentDate, i
 
   if (payment.status === status) {
     throw new BadRequestError(`Payment is already in '${status}' status.`);
+  }
+
+  // Block direct disbursal of REJECTED payment
+  if (payment.status === 'REJECTED' && status === 'PAID') {
+    throw new BadRequestError('Cannot disburse a REJECTED payment directly. A new payment schedule must be initiated.');
   }
 
   // Milestone Review & Approval Enforcement before Payment Disbursal
@@ -184,7 +248,8 @@ export const updatePaymentStatus = async (id, dataOrStatus, userOrPaymentDate, i
         approved_by: user.id
       },
       include: {
-        milestone: true
+        milestone: true,
+        procurement: true
       }
     });
 
@@ -199,6 +264,7 @@ export const updatePaymentStatus = async (id, dataOrStatus, userOrPaymentDate, i
           newStatus: status,
           amount: payment.amount,
           milestone_id: payment.milestone_id,
+          procurement_id: payment.procurement_id,
           reference_number: updatedPayment.reference_number
         },
         ip_address: ip
@@ -206,7 +272,7 @@ export const updatePaymentStatus = async (id, dataOrStatus, userOrPaymentDate, i
     });
 
     return updatedPayment;
-  });
+  }, { timeout: 25000, maxWait: 10000 });
 
   return updated;
 };
@@ -282,6 +348,15 @@ export const getPayments = async (query = {}, user = null) => {
             name: true,
             completion_percentage: true,
             status: true
+          }
+        },
+        procurement: {
+          select: {
+            id: true,
+            status: true,
+            route: true,
+            estimated_value: true,
+            acceptance_status: true
           }
         },
         pilot: {

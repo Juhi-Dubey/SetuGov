@@ -222,9 +222,21 @@ function AIChallengeCopilot({ formData, onAutofill }) {
           new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split("T")[0],
-        budget: String(data.pilot_recommendation?.estimated_budget || formData.budget || ""),
-        budgetMin: Number(formData.budgetMin || 0),
-        budgetMax: Number(formData.budgetMax || 0),
+        budget: String(
+          (() => {
+            const rawEst = data.pilot_recommendation?.estimated_budget || formData.budget || "";
+            const num = typeof rawEst === "string" ? Number(rawEst.replace(/[^0-9.]/g, "")) : Number(rawEst || 0);
+            return num > 0 ? num : (formData.budget || "2500000");
+          })()
+        ),
+        budgetMin: Number(formData.budgetMin) > 0 ? Number(formData.budgetMin) : 0,
+        budgetMax: Number(formData.budgetMax) > 0
+          ? Number(formData.budgetMax)
+          : (() => {
+              const rawEst = data.pilot_recommendation?.estimated_budget || formData.budget || "";
+              const num = typeof rawEst === "string" ? Number(rawEst.replace(/[^0-9.]/g, "")) : Number(rawEst || 0);
+              return num > 0 ? num : 2500000;
+            })(),
         pilotDurationDays: Number(data.pilot_recommendation?.duration_days || formData.pilotDurationDays || 60),
         milestones:
           formData.milestones && formData.milestones.length > 0

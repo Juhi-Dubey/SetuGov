@@ -206,7 +206,7 @@ function RoleSelection() {
               type="button"
               disabled={!selectedRole}
               onClick={handleContinue}
-              className="btn-primary inline-flex h-12 items-center gap-2 rounded-xl bg-blue-900 px-8 text-sm font-semibold text-white shadow-lg shadow-blue-900/15 transition-all hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+              className="btn-primary inline-flex h-12 items-center gap-2 rounded-xl bg-blue-600 px-8 text-sm font-semibold text-white shadow-md shadow-blue-600/15 transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
             >
               Continue to Workspace
               <ArrowRight className="h-4 w-4" />

@@ -57,6 +57,7 @@ export const createStartupSchema = z.object({
 
 export const updateStartupSchema = z.object({
   company_name: z.string().min(2).max(150).optional(),
+  phone: z.string().optional().nullable(),
   org_type: orgTypeEnum.optional(),
   registered_address: z.string().optional().nullable(),
   address_line1: z.string().optional().nullable(),

@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const createPaymentSchema = z.object({
   milestone_id: z.string().uuid().optional().nullable(),
+  procurement_id: z.string().uuid().optional().nullable(),
   amount: z.number().positive('Amount must be positive'),
   payment_percentage: z.number().min(0).max(100),
   status: z.enum(['UPCOMING', 'PENDING', 'PAID', 'REJECTED']).default('UPCOMING'),

@@ -258,7 +258,7 @@ export default function StartupProfile() {
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/80">
                   Startup Profile
                 </span>
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
                   Entity ID: {startup?.id ? startup.id.slice(0, 8) : "N/A"}
                 </span>
               </div>
@@ -267,7 +267,7 @@ export default function StartupProfile() {
                 {startup?.company_name || user?.name || "Startup Name"}
               </h1>
 
-              <div className="mt-1 flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-slate-600 dark:text-slate-400">
+              <div className="mt-1 flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-slate-600 dark:text-slate-300">
                 <span className="font-semibold text-slate-800 dark:text-slate-200">
                   {startup?.authorized_person_name || user?.name || "Not provided"}
                 </span>
@@ -359,7 +359,7 @@ export default function StartupProfile() {
             <div className="flex items-center justify-between pb-4 border-b border-emerald-200/60 dark:border-emerald-900/40">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">Quick Edit Profile Details</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Update presentation details visible on your startup profile card.</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300">Update presentation details visible on your startup profile card.</p>
               </div>
               <button
                 type="button"
@@ -374,7 +374,7 @@ export default function StartupProfile() {
 
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Official Website</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Official Website</label>
                 <input
                   type="url"
                   value={editData.official_website}
@@ -385,7 +385,7 @@ export default function StartupProfile() {
               </div>
 
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Core Technologies</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Core Technologies</label>
                 <form onSubmit={handleAddTechTag} className="mt-1 flex gap-2">
                   <input
                     type="text"
@@ -396,7 +396,7 @@ export default function StartupProfile() {
                   />
                   <button
                     type="submit"
-                    className="rounded-xl bg-slate-800 px-3 py-2 text-xs font-bold text-white hover:bg-slate-700 dark:bg-slate-700"
+                    className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700 transition dark:bg-blue-600 dark:hover:bg-blue-500"
                   >
                     Add
                   </button>
@@ -423,7 +423,7 @@ export default function StartupProfile() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Organization Summary / Description</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Organization Summary / Description</label>
                 <textarea
                   rows={3}
                   value={editData.description}
@@ -434,7 +434,7 @@ export default function StartupProfile() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Products & Services</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Products & Services</label>
                 <input
                   type="text"
                   value={editData.products_services}
@@ -462,41 +462,41 @@ export default function StartupProfile() {
               </div>
               <div>
                 <h2 className="text-sm font-bold text-slate-900 dark:text-white">Account Information</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Primary user identity and platform credentials</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300">Primary user identity and platform credentials</p>
               </div>
             </div>
 
             <div className="mt-5 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-xs text-slate-500 dark:text-slate-400">User Full Name</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">User Full Name</span>
                 <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
                   {user?.name || startup?.authorized_person_name || "Not provided"}
                 </span>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Email Address</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Email Address</span>
                 <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
                   {user?.email || startup?.official_email || "Not provided"}
                 </span>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-xs text-slate-500 dark:text-slate-400">System Role</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">System Role</span>
                 <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 mt-0.5 sm:mt-0">
                   {user?.role || "STARTUP"}
                 </span>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Phone Number</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Phone Number</span>
                 <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
                   {user?.phone || startup?.authorized_person_phone || "Not provided"}
                 </span>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Account Auth Status</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Account Auth Status</span>
                 <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-bold mt-0.5 sm:mt-0 ${
                   user?.is_verified
                     ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
@@ -526,13 +526,13 @@ export default function StartupProfile() {
               </div>
               <div>
                 <h2 className="text-sm font-bold text-slate-900 dark:text-white">Verification & Compliance</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Institutional validation & compliance status</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300">Institutional validation & compliance status</p>
               </div>
             </div>
 
             <div className="mt-5 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Verification Status</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Verification Status</span>
                 <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-bold mt-0.5 sm:mt-0 ${
                   vStatus === "VERIFIED"
                     ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
@@ -549,7 +549,7 @@ export default function StartupProfile() {
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Registration Status</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Registration Status</span>
                 <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
                   {startup?.submitted_at
                     ? "Submitted for Verification"
@@ -560,21 +560,21 @@ export default function StartupProfile() {
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-xs text-slate-500 dark:text-slate-400">DPIIT Recognition</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">DPIIT Recognition</span>
                 <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
                   {startup?.dpiit_number || "Not provided"}
                 </span>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5 border-b border-slate-50 dark:border-slate-800/60">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Statutory Certificate No</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Statutory Certificate No</span>
                 <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
                   {startup?.certificate_number || "Not provided"}
                 </span>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1.5">
-                <span className="text-xs text-slate-500 dark:text-slate-400">Last Profile Update</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Last Profile Update</span>
                 <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5 sm:mt-0">
                   {formatDate(startup?.updated_at || startup?.created_at)}
                 </span>
@@ -595,42 +595,42 @@ export default function StartupProfile() {
           </div>
           <div>
             <h2 className="text-sm font-bold text-slate-900 dark:text-white">Organization Information</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Statutory entity credentials, corporate registration, and official address</p>
+            <p className="text-xs text-slate-600 dark:text-slate-300">Statutory entity credentials, corporate registration, and official address</p>
           </div>
         </div>
 
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           
           <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Organization Name</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Organization Name</span>
             <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
               {startup?.company_name || "Not provided"}
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Legal Entity</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Legal Entity</span>
             <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
               {formatOrgType(startup?.org_type)}
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Organization Type</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Organization Type</span>
             <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
               {startup?.org_type || "Not provided"}
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Industry / Sector</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Industry / Sector</span>
             <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
               {startup?.domain || "Not provided"}
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Official Website</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Official Website</span>
             <div className="mt-1">
               {startup?.official_website ? (
                 <a
@@ -650,7 +650,7 @@ export default function StartupProfile() {
           </div>
 
           <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Registered Location</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Registered Location</span>
             <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
               <span>{locationText}</span>
@@ -664,33 +664,33 @@ export default function StartupProfile() {
           <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Registration Details & Identifiers</span>
           <div className="mt-3 max-w-3xl grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
-              <span className="text-xs text-slate-400">Business PAN</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Business PAN</span>
               <p className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                 {startup?.pan_number || "Not provided"}
               </p>
             </div>
             <div>
-              <span className="text-xs text-slate-400">Corporate CIN</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Corporate CIN</span>
               <p className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                 {startup?.cin_number || "Not provided"}
               </p>
             </div>
             <div>
-              <span className="text-xs text-slate-400">GSTIN</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">GSTIN</span>
               <p className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                 {startup?.gstin || "Not provided"}
               </p>
             </div>
             <div>
-              <span className="text-xs text-slate-400">Incorporation Date</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Incorporation Date</span>
               <p className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                 {formatDate(startup?.incorporation_date)}
               </p>
             </div>
           </div>
           {startup?.registered_address && (
-            <div className="mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 text-xs text-slate-600 dark:text-slate-400">
-              <span className="font-semibold text-slate-700 dark:text-slate-300">Registered Office: </span>
+            <div className="mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-800/60 text-xs text-slate-600 dark:text-slate-300">
+              <span className="font-semibold text-slate-700 dark:text-slate-200">Registered Office: </span>
               {startup.registered_address}
             </div>
           )}
@@ -707,7 +707,7 @@ export default function StartupProfile() {
           </div>
           <div>
             <h2 className="text-sm font-bold text-slate-900 dark:text-white">Startup Information</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Technology profile, readiness level, and product catalog</p>
+            <p className="text-xs text-slate-600 dark:text-slate-300">Technology profile, readiness level, and product catalog</p>
           </div>
         </div>
 
@@ -715,7 +715,7 @@ export default function StartupProfile() {
           
           {/* Executive Description */}
           <div>
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Description</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Description</span>
             <p className="mt-1.5 max-w-3xl text-xs text-slate-700 dark:text-slate-300 leading-relaxed rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
               {startup?.description || "Not provided"}
             </p>
@@ -724,14 +724,14 @@ export default function StartupProfile() {
           {/* Technology & Domain */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Domain / Focus Area</span>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Domain / Focus Area</span>
               <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-slate-100">
                 {startup?.domain || "Not provided"}
               </p>
             </div>
 
             <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Founded Year / Experience</span>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Founded Year / Experience</span>
               <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-slate-100">
                 {foundedYear} {startup?.years_experience ? `(${startup.years_experience} yrs in business)` : ""}
               </p>
@@ -740,7 +740,7 @@ export default function StartupProfile() {
 
           {/* Products & Services */}
           <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Products & Services</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Products & Services</span>
             <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-slate-100">
               {startup?.products_services || "Not provided"}
             </p>
@@ -748,7 +748,7 @@ export default function StartupProfile() {
 
           {/* Core Technologies Badges */}
           <div>
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Core Technologies</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Core Technologies</span>
             <div className="mt-2 flex flex-wrap gap-2">
               {technologies.length > 0 ? (
                 technologies.map((t) => (
@@ -769,7 +769,7 @@ export default function StartupProfile() {
           {/* Other Existing Startup Information: TRL and Deployments */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Technology Readiness Level (TRL)</span>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Technology Readiness Level (TRL)</span>
               <div className="mt-1.5 flex items-center gap-2">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-100 text-xs font-black text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                   {startup?.readiness_level ?? "—"}
@@ -783,7 +783,7 @@ export default function StartupProfile() {
             </div>
 
             <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Previous Government / Commercial Pilots</span>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Previous Government / Commercial Pilots</span>
               <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-slate-100">
                 {startup?.previous_deployments !== undefined && startup?.previous_deployments !== null
                   ? `${startup.previous_deployments} Deployments`
@@ -806,7 +806,7 @@ export default function StartupProfile() {
             </div>
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">Profile & Onboarding Status</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Onboarding completion metrics and compliance dossier</p>
+              <p className="text-xs text-slate-600 dark:text-slate-300">Onboarding completion metrics and compliance dossier</p>
             </div>
           </div>
 
@@ -848,14 +848,14 @@ export default function StartupProfile() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Registration Status</span>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Registration Status</span>
               <p className="mt-1 text-xs font-bold text-slate-900 dark:text-slate-100">
                 {startup?.submitted_at ? "Submitted to Nodal Officer" : "Draft Lifecycle"}
               </p>
             </div>
 
             <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Documents Status</span>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Documents Status</span>
               <p className="mt-1 text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                 <FileText className="h-3.5 w-3.5 text-emerald-600" />
                 <span>{startup?.documents?.length || 0} Documents Uploaded</span>
@@ -863,7 +863,7 @@ export default function StartupProfile() {
             </div>
 
             <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Verification Status</span>
+              <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Verification Status</span>
               <p className="mt-1 text-xs font-bold text-emerald-700 dark:text-emerald-400">
                 {vStatus.replace("_", " ")}
               </p>

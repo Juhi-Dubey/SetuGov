@@ -20,6 +20,7 @@ import {
   Target,
   Sparkles,
   Loader2,
+  UserCheck,
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
@@ -32,6 +33,12 @@ const workflowItems = [
     description: "Review startup applications submitted for this challenge.",
     icon: Users,
     path: "applications",
+  },
+  {
+    title: "Evaluator Recruitment",
+    description: "Empanel expert evaluators, manage intake, and shortlist review committee.",
+    icon: UserCheck,
+    path: "evaluators",
   },
   {
     title: "Eligibility",
@@ -150,10 +157,10 @@ function ChallengeOverview() {
       <AppLayout role="government">
         <div className="mx-auto max-w-7xl py-12 text-center">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">No Challenge Selected</h2>
-          <p className="mt-2 text-slate-500 dark:text-slate-400">Please select a valid challenge from the repository.</p>
+          <p className="mt-2 text-slate-600 dark:text-slate-300">Please select a valid challenge from the repository.</p>
           <button
             onClick={() => navigate("/government/challenges")}
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-900 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 transition"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition dark:bg-blue-600 dark:hover:bg-blue-500"
           >
             <ArrowLeft className="h-4 w-4" /> Back to Challenges
           </button>
@@ -167,10 +174,10 @@ function ChallengeOverview() {
       <AppLayout role="government">
         <div className="mx-auto max-w-7xl py-12 text-center">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Challenge Not Found</h2>
-          <p className="mt-2 text-slate-500 dark:text-slate-400">The requested challenge could not be found or you do not have permission to view it.</p>
+          <p className="mt-2 text-slate-600 dark:text-slate-300">The requested challenge could not be found or you do not have permission to view it.</p>
           <button
             onClick={() => navigate("/government/challenges")}
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-900 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 transition"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition dark:bg-blue-600 dark:hover:bg-blue-500"
           >
             <ArrowLeft className="h-4 w-4" /> Back to Challenges
           </button>
@@ -252,7 +259,7 @@ function ChallengeOverview() {
                 {displayData.title}
               </h1>
 
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
                 {displayData.department} · {displayData.location}
               </p>
             </div>
@@ -272,29 +279,25 @@ function ChallengeOverview() {
               {challenge?.status === "PUBLISHED" && (
                 <button
                   type="button"
-                  onClick={handleStartEvaluation}
-                  disabled={transitioning}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-emerald-600 bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700 disabled:opacity-50"
+                  onClick={handleMoveToEvaluation}
+                  disabled={actionLoading}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 text-sm font-semibold text-white shadow-md shadow-purple-600/20 transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-purple-600 dark:hover:bg-purple-500"
                 >
-                  {transitioning ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <ClipboardCheck className="h-4 w-4" />
-                  )}
-                  Start Evaluation Phase
+                  <Sparkles className="h-4 w-4" />
+                  Move to Evaluation
                 </button>
               )}
 
               <button
                 type="button"
-                onClick={handleRunMatching}
+                onClick={handleRunBrainMatching}
                 disabled={matchingLoading}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 text-sm font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 {matchingLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <RefreshCw className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Sparkles className="h-4 w-4 text-indigo-600" />
+                  <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                 )}
                 Run Brain 2 Matching
               </button>
@@ -302,7 +305,7 @@ function ChallengeOverview() {
               <button
                 type="button"
                 onClick={() => navigate(`/government/challenges/${id}/applications`)}
-                className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-900 px-5 text-sm font-semibold text-white shadow-lg shadow-blue-900/15 transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-md shadow-blue-600/15 transition hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
               >
                 View Applications
                 <ArrowRight className="h-4 w-4" />
@@ -321,40 +324,39 @@ function ChallengeOverview() {
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard
             icon={Users}
-            label="Applications"
-            value={displayData.applications}
-            description="Total submitted (Click to view)"
+            label="Total Applications"
+            value={appCount}
+            description="Submitted solutions"
             onClick={() => navigate(`/government/challenges/${id}/applications`)}
           />
-
+          <SummaryCard
+            icon={Award}
+            label="Assigned Evaluators"
+            value={evaluatorCount}
+            description="Review committee"
+            onClick={() => navigate(`/government/challenges/${id}/evaluators`)}
+          />
           <SummaryCard
             icon={ShieldCheck}
-            label="Eligible Startups"
-            value={displayData.eligibleStartups}
-            description="Passed compliance"
+            label="Evaluation Progress"
+            value={evalCount}
+            description="Completed scorecards"
+            onClick={() => navigate(`/government/challenges/${id}/evaluators`)}
           />
-
           <SummaryCard
-            icon={ClipboardCheck}
-            label="Evaluation"
-            value={`${displayData.evaluationProgress}%`}
-            description="Scoring progress"
-          />
-
-          <SummaryCard
-            icon={FlaskConical}
-            label="Pilot Duration"
-            value={displayData.endDate}
-            description="Target sandbox duration"
+            icon={IndianRupee}
+            label="Budget Allocation"
+            value={displayData.budget}
+            description={displayData.location}
           />
         </div>
 
-        {/* DETAILS SECTION */}
-        <div className="mb-8 grid gap-6 lg:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 lg:col-span-2">
-            <h2 className="text-base font-semibold">Problem Statement</h2>
+        {/* MAIN DETAILS */}
+        <div className="mb-6 grid gap-6 lg:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 lg:col-span-2 dark:border-slate-800 dark:bg-slate-900">
+            <h2 className="text-base font-semibold">Problem Description</h2>
             <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-              {displayData.description}
+              {displayData.problemDescription}
             </p>
 
             <h2 className="mt-6 text-base font-semibold">Desired Outcome</h2>
@@ -367,25 +369,25 @@ function ChallengeOverview() {
             <h2 className="text-base font-semibold">Key Parameters</h2>
             <div className="space-y-3 pt-2 text-sm">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
-                <span className="flex items-center gap-2 text-slate-500">
+                <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <IndianRupee className="h-4 w-4" /> Budget
                 </span>
                 <span className="font-semibold">{displayData.budget}</span>
               </div>
               <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
-                <span className="flex items-center gap-2 text-slate-500">
+                <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <MapPin className="h-4 w-4" /> Location
                 </span>
                 <span className="font-semibold">{displayData.location}</span>
               </div>
               <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
-                <span className="flex items-center gap-2 text-slate-500">
+                <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <Target className="h-4 w-4" /> Status
                 </span>
                 <span className="font-semibold">{displayData.status}</span>
               </div>
               <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
-                <span className="flex items-center gap-2 text-slate-500">
+                <span className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <Calendar className="h-4 w-4" /> Published Date
                 </span>
                 <span className="font-semibold">{displayData.publishedDate}</span>
@@ -397,7 +399,7 @@ function ChallengeOverview() {
         {/* WORKFLOW MATRIX */}
         <div className="mb-4">
           <h2 className="text-lg font-bold tracking-tight">Challenge Lifecycle Stages</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-slate-600 dark:text-slate-300">
             Track and execute each phase from startup selection through pilot validation and scaling.
           </p>
         </div>
@@ -421,7 +423,7 @@ function ChallengeOverview() {
                   <ArrowRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-600 transition-colors" />
                 </div>
                 <h3 className="mt-4 text-sm font-semibold">{item.title}</h3>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
                   {item.description}
                 </p>
               </motion.div>
@@ -437,20 +439,18 @@ function SummaryCard({ icon: Icon, label, value, description, onClick }) {
   return (
     <div
       onClick={onClick}
-      className={`rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 ${
-        onClick
-          ? "cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-400 hover:shadow-md"
-          : ""
+      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition dark:border-slate-800 dark:bg-slate-900 ${
+        onClick ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-md hover:border-indigo-500/40" : ""
       }`}
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-          <Icon className="h-4 w-4" />
+        <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{label}</span>
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          <Icon className="h-4.5 w-4.5" />
         </div>
       </div>
-      <p className="mt-3 text-2xl font-bold">{value}</p>
-      <p className="mt-1 text-[11px] text-slate-400">{description}</p>
+      <p className="mt-2 text-2xl font-bold tracking-tight">{value}</p>
+      <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{description}</p>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard,
@@ -135,7 +135,7 @@ const navigation = {
     {
       section: "ACCOUNT",
       label: "Profile / Settings",
-      path: "/evaluator/profile",
+      path: "/evaluator/my-page",
       icon: Settings,
     },
   ],
@@ -194,6 +194,7 @@ const navigation = {
 
 function Sidebar({ role = "government", isOpen, onClose }) {
   const items = navigation[role] || navigation.government;
+  const location = useLocation();
 
   return (
     <>
@@ -219,7 +220,7 @@ function Sidebar({ role = "government", isOpen, onClose }) {
         {/* Brand */}
         <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-700 text-white shadow-xs dark:bg-blue-600 dark:text-white">
               <Building2 className="h-4 w-4" />
             </div>
 
@@ -244,7 +245,7 @@ function Sidebar({ role = "government", isOpen, onClose }) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 min-h-0 overflow-y-auto px-3 pt-5 pb-4">
+        <nav className="flex-initial max-h-[calc(100vh-9.5rem)] overflow-y-auto px-3 pt-3 pb-1">
           {(() => {
             const sections = [];
             items.forEach((item) => {
@@ -258,40 +259,56 @@ function Sidebar({ role = "government", isOpen, onClose }) {
             });
 
             return sections.map((sec, idx) => (
-              <div key={sec.name} className={idx > 0 ? "mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60" : ""}>
-                <p className="mb-2 px-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              <div key={sec.name} className={idx > 0 ? "mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/60" : ""}>
+                <p className="mb-1.5 px-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   {sec.name}
                 </p>
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   {sec.items.map((item) => {
                     const Icon = item.icon;
+                    const isItemActive =
+                      location.pathname === item.path ||
+                      (item.path === "/evaluator/my-page" &&
+                        (location.pathname === "/evaluator/my-page" || location.pathname === "/evaluator/profile"));
+
                     return (
                       <NavLink
                         key={item.path}
                         to={item.path}
                         onClick={onClose}
-                        className={({ isActive }) =>
-                          `group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs sm:text-sm font-medium transition-all ${
-                            isActive
-                              ? "bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900"
-                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
-                          }`
-                        }
+                        aria-current={isItemActive ? "page" : undefined}
+                        className={({ isActive }) => {
+                          const active = isActive || isItemActive;
+                          return `group relative flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs sm:text-sm font-medium transition-all ${
+                            active
+                              ? "bg-blue-50 text-blue-700 font-semibold dark:bg-blue-950/60 dark:text-blue-300"
+                              : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
+                          }`;
+                        }}
                       >
-                        {({ isActive }) => (
-                          <>
-                            <Icon
-                              strokeWidth={1.75}
-                              aria-hidden="true"
-                              className={`h-4 w-4 shrink-0 ${
-                                isActive
-                                  ? "text-current"
-                                  : "text-slate-400 group-hover:text-current"
-                              }`}
-                            />
-                            <span className="truncate">{item.label}</span>
-                          </>
-                        )}
+                        {({ isActive }) => {
+                          const active = isActive || isItemActive;
+                          return (
+                            <>
+                              {active && (
+                                <span
+                                  aria-hidden="true"
+                                  className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r bg-blue-600 dark:bg-blue-400"
+                                />
+                              )}
+                              <Icon
+                                strokeWidth={active ? 2 : 1.75}
+                                aria-hidden="true"
+                                className={`h-4 w-4 shrink-0 ${
+                                  active
+                                    ? "text-blue-600 dark:text-blue-400"
+                                    : "text-slate-500 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-200"
+                                }`}
+                              />
+                              <span className="truncate">{item.label}</span>
+                            </>
+                          );
+                        }}
                       </NavLink>
                     );
                   })}
@@ -302,7 +319,7 @@ function Sidebar({ role = "government", isOpen, onClose }) {
         </nav>
 
         {/* Bottom Security Card */}
-        <div className="mt-auto shrink-0 border-t border-slate-200 p-2.5 dark:border-slate-800">
+        <div className="mt-3 shrink-0 border-t border-slate-200 p-2.5 dark:border-slate-800">
           <div className="rounded-lg bg-slate-50 p-2.5 dark:bg-slate-900">
             <div className="mb-1 flex items-center gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />

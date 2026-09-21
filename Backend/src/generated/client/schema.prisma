@@ -127,6 +127,8 @@ model Challenge {
   required_documents           Json?
   cybersecurity_requirements   String?
   data_compliance              String?
+  evaluator_recruitment_status String?                     @default("OPEN")
+  required_evaluator_count     Int?                        @default(3)
   created_at                   DateTime                    @default(now())
   updated_at                   DateTime                    @updatedAt
   applications                 Application[]
@@ -953,6 +955,7 @@ model EvaluatorAssignment {
   notes          String?
   assigned_at    DateTime                  @default(now())
   accepted_at    DateTime?
+  responded_at   DateTime?
   completed_at   DateTime?
   created_at     DateTime                  @default(now())
   updated_at     DateTime                  @updatedAt

@@ -16,6 +16,7 @@ export const register = async ({
   department_id = null,
   designation = null,
   phone = null,
+  company_name = null,
   ip_address = null
 }) => {
   const normalizedEmail = email.trim().toLowerCase();
@@ -86,7 +87,7 @@ export const register = async ({
   const startup = await prisma.startup.create({
     data: {
       user_id: user.id,
-      company_name: data.company_name ? data.company_name.trim() : '',
+      company_name: company_name ? company_name.trim() : '',
       description: '',
       domain: '',
       technologies: [],

@@ -93,3 +93,36 @@ export const removeFromEvaluatorPool = async (req, res, next) => {
     next(error);
   }
 };
+
+export const closeEvaluatorRecruitment = async (req, res, next) => {
+  try {
+    const { challenge_id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await evaluatorPoolService.closeEvaluatorRecruitment(challenge_id, req.body, req.user, ip_address);
+    return successResponse(res, result, result.message, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reopenEvaluatorRecruitment = async (req, res, next) => {
+  try {
+    const { challenge_id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await evaluatorPoolService.reopenEvaluatorRecruitment(challenge_id, req.body, req.user, ip_address);
+    return successResponse(res, result, result.message, 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateChallengeEvaluatorRecruitment = async (req, res, next) => {
+  try {
+    const { challenge_id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await evaluatorPoolService.updateChallengeEvaluatorRecruitment(challenge_id, req.body, req.user, ip_address);
+    return successResponse(res, result, 'Challenge evaluator recruitment settings updated successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};

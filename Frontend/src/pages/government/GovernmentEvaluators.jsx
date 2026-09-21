@@ -147,7 +147,7 @@ function GovernmentEvaluators() {
                 setNominateSuccess(false);
                 setNominateError("");
               }}
-              className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-900 px-4 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
             >
               <UserPlus className="h-4 w-4" />
               Nominate Evaluator
@@ -329,7 +329,7 @@ function GovernmentEvaluators() {
                       setShowNominateModal(false);
                       setNominateSuccess(false);
                     }}
-                    className="btn-primary mt-4 inline-flex items-center justify-center rounded-xl bg-blue-900 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                    className="btn-primary mt-4 inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
                   >
                     Done
                   </button>

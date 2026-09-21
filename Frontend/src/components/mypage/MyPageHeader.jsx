@@ -35,7 +35,7 @@ export default function MyPageHeader({
               {roleBadge}
             </span>
           )}
-          <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Official Workspace & Profile
           </span>
         </div>
@@ -45,7 +45,7 @@ export default function MyPageHeader({
         </h1>
 
         {subtitle && (
-          <p className="mt-0.5 max-w-2xl text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 max-w-2xl text-xs sm:text-sm text-slate-600 dark:text-slate-300">
             {subtitle}
           </p>
         )}

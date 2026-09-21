@@ -154,7 +154,7 @@ export default function EvaluatorMyPage() {
   return (
     <div className="space-y-6">
       {/* HEADER */}
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
@@ -168,16 +168,16 @@ export default function EvaluatorMyPage() {
           <h1 className="mt-2 text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
             Account Settings
           </h1>
-          <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
             Official evaluator credentials, domain expertise, institutional affiliation, and panel verification status.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pb-0.5">
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500"
+            className="btn-primary inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
           >
             <Edit3 className="h-3.5 w-3.5" />
             Edit Profile
@@ -252,23 +252,37 @@ export default function EvaluatorMyPage() {
             </div>
           </div>
 
+          {/* Center Metadata Stats to eliminate dead whitespace */}
+          <div className="hidden xl:flex items-center gap-6 border-l border-r border-slate-100 px-6 dark:border-slate-800">
+            <div>
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">Assigned Evaluations</p>
+              <p className="text-lg font-bold text-slate-900 dark:text-white">{assignments.length}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">Completed Reviews</p>
+              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                {assignments.filter((a) => a.status === "COMPLETED" || a.is_evaluated).length}
+              </p>
+            </div>
+          </div>
+
           {/* Profile Completeness Gauge */}
           <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/40 lg:w-72">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 Profile Completeness
               </span>
-              <span className="font-bold text-indigo-600 dark:text-indigo-400">
+              <span className="font-bold text-blue-600 dark:text-blue-400">
                 {completeness}%
               </span>
             </div>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
               <div
-                className="h-full rounded-full bg-indigo-600 transition-all duration-500"
+                className="h-full rounded-full bg-blue-600 transition-all duration-500"
                 style={{ width: `${completeness}%` }}
               />
             </div>
-            <p className="mt-1.5 text-[10px] text-slate-400">
+            <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-300">
               {completeness === 100
                 ? "Full evaluation credentials recorded."
                 : "Complete all profile fields to speed up verification."}
@@ -281,20 +295,20 @@ export default function EvaluatorMyPage() {
       <div className="grid gap-6 md:grid-cols-2">
         {/* INSTITUTIONAL & PROFESSIONAL INFO */}
         <section className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
             Professional Information
           </h3>
 
           <div className="space-y-3">
             <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900">
-              <span className="text-[10px] uppercase font-bold text-slate-400">Organization</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Organization</span>
               <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-white">
                 {profile?.organization || "Not specified"}
               </p>
             </div>
 
             <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900">
-              <span className="text-[10px] uppercase font-bold text-slate-400">Designation / Role</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Designation / Role</span>
               <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-white">
                 {profile?.designation || user?.designation || "Not specified"}
               </p>
@@ -302,13 +316,13 @@ export default function EvaluatorMyPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Employment Type</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Employment Type</span>
                 <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-white">
                   {profile?.employment_type || "Not specified"}
                 </p>
               </div>
               <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900">
-                <span className="text-[10px] uppercase font-bold text-slate-400">Experience</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Experience</span>
                 <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-white">
                   {profile?.years_experience != null ? `${profile.years_experience} Years` : "Not specified"}
                 </p>
@@ -316,7 +330,7 @@ export default function EvaluatorMyPage() {
             </div>
 
             <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900">
-              <span className="text-[10px] uppercase font-bold text-slate-400">Professional Bio</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Professional Bio</span>
               <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                 {profile?.bio || "No professional biography recorded yet."}
               </p>
@@ -326,12 +340,12 @@ export default function EvaluatorMyPage() {
 
         {/* DOMAIN EXPERTISE & GOVERNANCE */}
         <section className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
             Domain Expertise & Governance
           </h3>
 
           <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
-            <span className="text-[10px] uppercase font-bold text-slate-400">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               Empaneled Domains & Technologies
             </span>
             {domainList.length > 0 ? (
@@ -353,7 +367,7 @@ export default function EvaluatorMyPage() {
           </div>
 
           <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
-            <span className="text-[10px] uppercase font-bold text-slate-400">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               Evaluation Track Record
             </span>
             <div className="mt-3 grid grid-cols-2 gap-3">
@@ -361,13 +375,13 @@ export default function EvaluatorMyPage() {
                 <p className="text-lg font-bold text-slate-900 dark:text-white">
                   {assignments.length}
                 </p>
-                <p className="text-[10px] text-slate-400">Total Assigned Proposals</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">Total Assigned Proposals</p>
               </div>
               <div className="rounded-xl border border-slate-200/60 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
                 <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                   {assignments.filter((a) => a.status === "COMPLETED" || a.is_evaluated).length}
                 </p>
-                <p className="text-[10px] text-slate-400">Completed Evaluations</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">Completed Evaluations</p>
               </div>
             </div>
           </div>
@@ -377,7 +391,7 @@ export default function EvaluatorMyPage() {
               <ShieldCheck className="h-4 w-4 text-indigo-500" />
               <span>Independent Evaluator Charter</span>
             </div>
-            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+            <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
               Evaluator assessments are advisory inputs submitted independently to Government department nodal selection committees. All scorecards and conflict certifications are logged in the audit ledger.
             </p>
           </div>

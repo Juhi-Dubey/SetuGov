@@ -62,7 +62,7 @@ function FormField({
       )}
 
       {helperText && !error && (
-        <p className="text-xs leading-5 text-slate-400">
+        <p className="text-xs leading-5 text-slate-600 dark:text-slate-400">
           {helperText}
         </p>
       )}

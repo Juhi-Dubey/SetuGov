@@ -323,7 +323,7 @@ function ChallengePayments() {
                 {routeId ? "Challenge Payments & Escrow Releases" : "Department Payments & Treasury Releases"}
               </h1>
 
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
                 {routeId
                   ? (pilot
                       ? `Track milestone payments, verified deliverable completion, and treasury disbursals for pilot: ${pilot.title || pilot.startup?.company_name || "Active Pilot"}`
@@ -922,7 +922,7 @@ function MilestoneRow({
               }
               className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-xs font-semibold shadow-sm transition ${
                 isMilestoneCompleted
-                  ? "bg-blue-900 text-white hover:bg-blue-800 dark:bg-blue-800 dark:hover:bg-blue-700"
+                  ? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
                   : "border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
               }`}
             >
@@ -1022,7 +1022,7 @@ function UnlinkedPaymentRow({ payment, onMarkPaid, isProcessing }) {
               type="button"
               onClick={() => onMarkPaid(payment)}
               disabled={isProcessing}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-900 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
             >
               {isProcessing ? (
                 <>

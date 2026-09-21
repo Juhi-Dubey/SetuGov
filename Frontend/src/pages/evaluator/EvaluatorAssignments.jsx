@@ -200,7 +200,7 @@ function EvaluatorAssignments() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             Evaluator Workspace & Discovery
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
             Review official assignments from government nodal officers or discover and apply for open innovation challenges.
           </p>
         </div>
@@ -304,7 +304,7 @@ function EvaluatorAssignments() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-                  <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:border-slate-800 dark:bg-slate-950">
+                  <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
                     <tr>
                       <th className="py-3.5 px-4">Challenge & Department</th>
                       <th className="py-3.5 px-4">Startup Candidate</th>
@@ -321,7 +321,7 @@ function EvaluatorAssignments() {
                           <p className="font-semibold text-slate-900 dark:text-white">
                             {a.challenge_title || "Innovation Challenge"}
                           </p>
-                          <p className="text-[11px] text-slate-400">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
                             {a.department_name} • {a.state}
                           </p>
                         </td>
@@ -329,9 +329,9 @@ function EvaluatorAssignments() {
                           <p className="font-semibold text-slate-800 dark:text-slate-200">
                             {a.startup_name}
                           </p>
-                          <p className="text-[11px] text-slate-400">{a.domain}</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">{a.domain}</p>
                         </td>
-                        <td className="py-3.5 px-4 text-slate-500">
+                        <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
                           {a.assigned_at
                             ? new Date(a.assigned_at).toLocaleDateString("en-IN", {
                                 day: "2-digit",
@@ -459,7 +459,7 @@ function EvaluatorAssignments() {
                               {ch.sector}
                             </span>
                           )}
-                          <span className="text-xs text-slate-400 flex items-center gap-1">
+                          <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
                             <CalendarDays className="h-3 w-3" />
                             Posted {new Date(ch.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                           </span>
@@ -469,7 +469,7 @@ function EvaluatorAssignments() {
                           {ch.title}
                         </h3>
 
-                        <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                        <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
                           {ch.problem_description || "Detailed public sector problem statement."}
                         </p>
                       </div>

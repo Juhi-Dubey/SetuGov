@@ -394,7 +394,7 @@ function ChallengeTable({ challenges, onCreateChallenge, onSelectChallenge }) {
               {isFiltered && ` of ${challenges.length}`}
             </span>
           </div>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-600">
             Active department problem statements and capability matching.
           </p>
         </div>
@@ -644,7 +644,7 @@ function ChallengeRow({ challenge, onSelectChallenge }) {
             {challenge.description && (
               <>
                 <span>·</span>
-                <span className="truncate max-w-[180px]" title={challenge.description}>{challenge.description}</span>
+                <span className="max-w-[280px] line-clamp-2" title={challenge.description}>{challenge.description}</span>
               </>
             )}
           </div>
@@ -727,7 +727,7 @@ function PilotHealth({ data }) {
               Total {total} tracked
             </span>
           </div>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-slate-600">
             Tracking milestone KPI delivery across active sandbox pilots.
           </p>
         </div>

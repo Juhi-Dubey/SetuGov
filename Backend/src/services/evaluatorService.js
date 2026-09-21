@@ -3,6 +3,7 @@ import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.
 import { createAuditLog } from './auditService.js';
 import { sendNotification, notifyEvaluatorAssigned } from './notificationService.js';
 import { createGovernmentNomination } from './accessRequestService.js';
+import { evaluateEligibility } from '../utils/eligibility.js';
 
 /**
  * List evaluators with optional filtering by domain, verification status, and search query.
@@ -373,6 +374,14 @@ export const assignEvaluatorToApplication = async (applicationId, data, currentU
     throw new BadRequestError(`Cannot assign evaluator to application in '${application.status}' status. Application must be SUBMITTED or SHORTLISTED.`);
   }
 
+  // Mandatory Eligibility Enforcement: Ineligible startups cannot proceed to evaluator assignment
+  const eligibility = evaluateEligibility(application.challenge, application.startup);
+  if (eligibility.eligibility_status === 'INELIGIBLE') {
+    throw new BadRequestError(
+      `Cannot assign evaluator to ineligible application. Reason: ${eligibility.ineligibility_reasons.join('; ') || 'Startup does not satisfy challenge eligibility requirements.'}`
+    );
+  }
+
   // Check Department isolation
   if (currentUser.role === 'GOVERNMENT') {
     if (currentUser.department_id && application.challenge.department_id !== currentUser.department_id) {
@@ -592,11 +601,28 @@ export const updateAssignmentStatus = async (assignmentId, data, user, ip_addres
     throw new NotFoundError(`Assignment with ID ${assignmentId} not found.`);
   }
 
-  if (user.role !== 'ADMIN' && assignment.evaluator_id !== user.id) {
-    throw new ForbiddenError('You can only update your own assigned evaluations.');
+  // Enforce: Government cannot impersonate evaluator
+  if (user.role === 'GOVERNMENT') {
+    throw new ForbiddenError('Government users cannot respond to evaluator assignment invitations.');
   }
 
-  const updateData = { status };
+  // Enforce: Only the assigned evaluator (or Admin) can respond
+  if (user.role !== 'ADMIN' && assignment.evaluator_id !== user.id) {
+    throw new ForbiddenError('You can only update your own assigned evaluations. Another evaluator cannot respond to this invitation.');
+  }
+
+  // Enforce: A response can only be made while status = PENDING. Second response is rejected.
+  if (assignment.status !== 'PENDING') {
+    throw new BadRequestError(
+      `Assignment invitation has already been responded to (Current status: ${assignment.status}). A second response cannot be submitted.`
+    );
+  }
+
+  const updateData = {
+    status,
+    responded_at: new Date()
+  };
+
   if (status === 'ACCEPTED') {
     updateData.accepted_at = new Date();
   }
@@ -614,16 +640,21 @@ export const updateAssignmentStatus = async (assignmentId, data, user, ip_addres
     }
   });
 
+  const auditAction = status === 'ACCEPTED'
+    ? 'EVALUATOR_INVITATION_ACCEPTED'
+    : (status === 'DECLINED' ? 'EVALUATOR_INVITATION_DECLINED' : `EVALUATOR_ASSIGNMENT_${status}`);
+
   await createAuditLog({
     user_id: user.id,
-    action: `EVALUATOR_ASSIGNMENT_${status}`,
+    action: auditAction,
     entity_type: 'EVALUATOR_ASSIGNMENT',
     entity_id: assignmentId,
     details: {
       application_id: assignment.application_id,
       challenge_id: assignment.application?.challenge_id,
       evaluator_id: user.id,
-      new_status: status
+      new_status: status,
+      previous_status: assignment.status
     },
     ip_address
   });

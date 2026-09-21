@@ -264,7 +264,7 @@ function ChallengeEvidence() {
               <button
                 type="button"
                 onClick={addEvidence}
-                className="btn-primary inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                className="btn-primary inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
               >
                 <Plus className="h-4 w-4" />
                 Add Evidence
@@ -709,7 +709,7 @@ function ChallengeEvidence() {
                 <button
                   type="button"
                   onClick={() => navigate(`/government/challenges/${challengeId}/decision`)}
-                  className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-900/15 transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                  className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-md shadow-blue-600/15 transition hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
                 >
                   Continue to Decision
                   <CheckCircle2 className="h-4 w-4" />

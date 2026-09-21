@@ -478,8 +478,7 @@ export const updateStartup = async (id, data, user, ip_address = null) => {
     'readiness_level',
     'years_experience',
     'previous_deployments',
-    'location',
-    'phone'
+    'location'
   ];
 
   // Map address_line1 / address_line2 to registered_address if provided

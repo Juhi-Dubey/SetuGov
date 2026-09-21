@@ -1301,7 +1301,7 @@ function StartupPilot() {
               <button
                 type="submit"
                 disabled={isSubmittingIssue}
-                className="btn-primary rounded-xl bg-blue-900 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-800 disabled:opacity-50 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                className="btn-primary rounded-xl bg-blue-600 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
               >
                 {isSubmittingIssue ? "Saving..." : editingIssue ? "Update Blocker" : "Submit Blocker"}
               </button>

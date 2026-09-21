@@ -333,18 +333,25 @@ async function runPaymentTests() {
     assert(auditPaid !== null, 'AuditLog entry created for PAYMENT_PAID');
 
     // ----------------------------------------------------
-    // TEST 6: Concurrent / Re-marking as Paid Idempotency
+    // TEST 6: Duplicate Disbursal Prevention
     // ----------------------------------------------------
-    console.log('\n--- TEST 6: Concurrent / Idempotent Mark as Paid ---');
-    const reMarked = await paymentService.updatePaymentStatus(
-      payment2.id,
-      {
-        status: 'PAID',
-        reference_number: 'TREASURY-MH-2026-08941',
-      },
-      userA
-    );
-    assert(reMarked.status === 'PAID', 'Re-marking as PAID safely succeeded without duplicate error or state corruption');
+    console.log('\n--- TEST 6: Duplicate Disbursal Prevention ---');
+    try {
+      await paymentService.updatePaymentStatus(
+        payment2.id,
+        {
+          status: 'PAID',
+          reference_number: 'TREASURY-MH-2026-08941',
+        },
+        userA
+      );
+      assert(false, 'Should have blocked duplicate disbursal for already PAID payment.');
+    } catch (err) {
+      assert(
+        err.message.includes('already been disbursed'),
+        `Properly blocked duplicate disbursal: "${err.message}"`
+      );
+    }
 
     // ----------------------------------------------------
     // TEST 7: Cross-Department Access Protection (403 Forbidden)

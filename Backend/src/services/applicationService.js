@@ -55,14 +55,6 @@ export const createApplication = async (challengeIdParam, data, user, ip_address
     );
   }
 
-  // Mandatory Eligibility Evaluation (Verification, Domain, Capabilities, TRL)
-  const eligibility = evaluateEligibility(challenge, startup);
-  if (eligibility.eligibility_status === 'INELIGIBLE') {
-    throw new ForbiddenError(
-      `Your startup is not eligible to apply for this challenge: ${eligibility.ineligibility_reasons.join('; ')}`
-    );
-  }
-
   // 3. Prevent duplicate applications
   const existingApp = await prisma.application.findUnique({
     where: {

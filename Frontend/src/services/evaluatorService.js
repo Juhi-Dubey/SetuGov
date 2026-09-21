@@ -100,6 +100,26 @@ export const removeFromEvaluatorPool = async (challengeId, evaluator_id) => {
   });
 };
 
+export const closeEvaluatorRecruitment = async (challengeId, data = {}) => {
+  return apiRequest(`/challenges/${challengeId}/evaluator-applications/close`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const reopenEvaluatorRecruitment = async (challengeId) => {
+  return apiRequest(`/challenges/${challengeId}/evaluator-applications/reopen`, {
+    method: 'POST'
+  });
+};
+
+export const updateChallengeEvaluatorRecruitment = async (challengeId, data) => {
+  return apiRequest(`/challenges/${challengeId}/evaluator-recruitment`, {
+    method: 'PATCH',
+    body: JSON.stringify(data)
+  });
+};
+
 export default {
   getEvaluators,
   getEvaluatorProfile,
@@ -115,6 +135,9 @@ export default {
   getMyEvaluatorApplications,
   getChallengeEvaluatorApplications,
   reviewEvaluatorApplication,
+  closeEvaluatorRecruitment,
+  reopenEvaluatorRecruitment,
+  updateChallengeEvaluatorRecruitment,
   getChallengeEvaluatorMatches,
   getChallengeEvaluatorPool,
   addToEvaluatorPool,

@@ -17,12 +17,19 @@ export const createScaleDecision = async (pilotId, data, user, ip_address = null
 
   // Governance Gate: Pilot must have reached VALIDATION stage with an existing validation record
   const validationRecord = await prisma.validation.findFirst({
-    where: { pilot_id: pilotId }
+    where: { pilot_id: pilotId },
+    orderBy: { created_at: 'desc' }
   });
 
   if (!validationRecord) {
     throw new BadRequestError(
       'Cannot finalize scale decision: Pilot project has not been validated. An authoritative independent evaluation report is required before a scale decision can be made.'
+    );
+  }
+
+  if (data.decision === 'SCALE' && validationRecord.status === 'NOT_VALIDATED') {
+    throw new BadRequestError(
+      'Cannot scale pilot: Pilot project is NOT_VALIDATED. A pilot that failed validation cannot proceed to commercial scale.'
     );
   }
 

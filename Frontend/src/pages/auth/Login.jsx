@@ -588,7 +588,7 @@ function Login() {
                 whileTap={{ scale: isLoading ? 1 : 0.98 }}
                 type="submit"
                 disabled={isLoading}
-                className="btn-primary flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-blue-900 px-5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-blue-900/15 transition-all hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                className="btn-primary flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-blue-600/15 transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
               >
                 {isLoading ? (
                   <>
@@ -661,7 +661,7 @@ function Login() {
                           onClick={() => setDemoRoleFilter(tab.id)}
                           className={`rounded-lg px-2 py-0.5 text-[11px] font-medium transition-all ${
                             demoRoleFilter === tab.id
-                              ? "bg-blue-900 text-white shadow-sm dark:bg-blue-600"
+                              ? "bg-blue-600 text-white shadow-sm dark:bg-blue-600"
                               : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                           }`}
                         >

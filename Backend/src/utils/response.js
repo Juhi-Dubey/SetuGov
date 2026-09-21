@@ -24,6 +24,7 @@ export const successResponse = (res, data = {}, message = 'Operation successful'
 export const errorResponse = (res, code = 'INTERNAL_ERROR', message = 'An unexpected error occurred', details = null, statusCode = 500) => {
   return res.status(statusCode).json({
     success: false,
+    message,
     error: {
       code,
       message,

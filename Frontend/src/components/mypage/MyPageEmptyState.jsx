@@ -16,7 +16,7 @@ export default function MyPageEmptyState({
       <h3 className="mt-3 text-sm font-semibold text-slate-800 dark:text-slate-200">
         {title}
       </h3>
-      <p className="mt-1 max-w-sm text-xs text-slate-400 dark:text-slate-500">
+      <p className="mt-1 max-w-sm text-xs text-slate-600 dark:text-slate-300">
         {description}
       </p>
       {action || (actionText && onAction && (

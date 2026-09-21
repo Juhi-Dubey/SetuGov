@@ -1,6 +1,6 @@
 import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError } from '../utils/errors.js';
-import { evaluateEligibility } from '../utils/eligibility.js';
+import { evaluateEligibility, ELIGIBILITY_STATUS } from '../utils/eligibility.js';
 import { calculateTotalScore } from './evaluationService.js';
 import { createAuditLog } from './auditService.js';
 
@@ -156,7 +156,7 @@ export const evaluateApplicationDecision = async (applicationId, user = null, po
   let recommendation = DECISION_RECOMMENDATIONS.NOT_RECOMMENDED;
   const decisionFactors = [];
 
-  if (!eligibility.is_eligible) {
+  if (eligibility.eligibility_status === ELIGIBILITY_STATUS.INELIGIBLE) {
     recommendation = DECISION_RECOMMENDATIONS.NOT_RECOMMENDED;
     decisionFactors.push(`Ineligible candidate: ${eligibility.ineligibility_reasons.join('; ')}`);
   } else if (!isBudgetCompliant) {

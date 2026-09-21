@@ -50,7 +50,7 @@ export default function Pagination({
 
         {onPageSizeChange && pageSizeOptions && pageSizeOptions.length > 0 && (
           <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3 dark:border-slate-700">
-            <span className="text-slate-400">Per page:</span>
+            <span className="text-slate-600">Per page:</span>
             <select
               value={pageSize}
               onChange={(e) => {

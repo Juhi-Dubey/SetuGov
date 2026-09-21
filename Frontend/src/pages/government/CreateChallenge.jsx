@@ -399,8 +399,9 @@ function CreateChallenge() {
         "End date is required.";
     }
 
-    if (!formData.budget) {
-      newErrors.budget = "Budget is required.";
+    const parsedBudget = Number(String(formData.budget || "").replace(/[^0-9.]/g, ""));
+    if (!formData.budget || isNaN(parsedBudget) || parsedBudget <= 0) {
+      newErrors.budget = "Budget is required and must be a positive number.";
     }
 
     if (
@@ -1109,7 +1110,7 @@ function CreateChallenge() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-900/15 transition-all hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                  className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-md shadow-blue-600/15 transition-all hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
                 >
                   Continue
 
@@ -1138,7 +1139,7 @@ function CreateChallenge() {
                   <button
                     type="button"
                     onClick={handlePublish}
-                    className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-900 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-900/15 transition-all hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                    className="btn-primary inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-md shadow-blue-600/15 transition-all hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
                   >
                     Publish Challenge
 

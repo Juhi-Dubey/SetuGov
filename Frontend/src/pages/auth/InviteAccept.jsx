@@ -166,7 +166,7 @@ export default function InviteAccept() {
             <div className="mt-6">
               <Link
                 to="/login"
-                className="btn-primary inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-900 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                className="btn-primary inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
               >
                 Sign In to Dashboard
                 <ArrowRight className="h-4 w-4" />
@@ -197,7 +197,7 @@ export default function InviteAccept() {
             <div className="mt-6 flex flex-col gap-2">
               <Link
                 to="/login"
-                className="btn-primary inline-flex h-10 w-full items-center justify-center rounded-xl bg-blue-900 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                className="btn-primary inline-flex h-10 w-full items-center justify-center rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
               >
                 Return to Sign In
               </Link>
@@ -317,7 +317,7 @@ export default function InviteAccept() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="btn-primary mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-900 px-5 text-xs font-semibold text-white shadow-lg shadow-blue-900/15 transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+                className="btn-primary mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white shadow-md shadow-blue-600/15 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
               >
                 {isSubmitting ? (
                   <>

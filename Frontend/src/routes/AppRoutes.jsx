@@ -37,6 +37,7 @@ import ChallengeAudit from "../pages/government/ChallengeAudit";
 import GovernmentReports from "../pages/government/GovernmentReports";
 import GovernmentEvaluators from "../pages/government/GovernmentEvaluators";
 import GovernmentEvaluatorDetail from "../pages/government/GovernmentEvaluatorDetail";
+import GovernmentChallengeEvaluators from "../pages/government/GovernmentChallengeEvaluators";
 import GovernmentMyPage from "../pages/government/GovernmentMyPage";
 
 // =====================================================
@@ -287,6 +288,18 @@ function AppRoutes() {
           <ProtectedRoute>
             <RoleRoute allowedRoles={["GOVERNMENT"]}>
               <ChallengeEvaluation />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/government/challenges/:id/evaluators"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
+              <AppLayout role="government">
+                <GovernmentChallengeEvaluators />
+              </AppLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
@@ -728,7 +741,7 @@ function AppRoutes() {
           <ProtectedRoute>
             <RoleRoute allowedRoles={["EVALUATOR"]}>
               <AppLayout role="evaluator">
-                <EvaluatorEvaluations />
+                <EvaluatorAssignments />
               </AppLayout>
             </RoleRoute>
           </ProtectedRoute>

@@ -172,13 +172,22 @@ function ChallengeEvaluation() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                Challenge ID
-              </p>
-              <p className="mt-0.5 text-xs font-mono font-bold text-slate-700 dark:text-slate-300 truncate max-w-[180px]">
-                {id}
-              </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                to={`/government/challenges/${id}/evaluators`}
+                className="inline-flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-2.5 text-xs font-semibold text-purple-700 shadow-sm transition hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-300"
+              >
+                <Users className="h-4 w-4 text-purple-600" />
+                <span>Manage Evaluator Intake & Pool</span>
+              </Link>
+              <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  Challenge ID
+                </p>
+                <p className="mt-0.5 text-xs font-mono font-bold text-slate-700 dark:text-slate-300 truncate max-w-[180px]">
+                  {id}
+                </p>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -274,9 +283,17 @@ function ChallengeEvaluation() {
                 <p className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">
                   {evaluatorPool.length}
                 </p>
-                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                  Empaneled experts
-                </p>
+                <div className="mt-2 flex items-center justify-between">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Empaneled experts
+                  </p>
+                  <Link
+                    to={`/government/challenges/${id}/evaluators`}
+                    className="text-[11px] font-semibold text-purple-600 hover:text-purple-700 dark:text-purple-400"
+                  >
+                    Manage Pool →
+                  </Link>
+                </div>
               </div>
             </div>
 

@@ -108,6 +108,8 @@ function StartupApplication() {
     innovation: "",
     expectedImpact: "",
     implementationPlan: "",
+    proposedBudget: "",
+    proposedTimeline: "",
     teamSize: "",
     teamExperience: "",
     additionalInformation: "",
@@ -169,11 +171,17 @@ function StartupApplication() {
     if (!form.problemUnderstanding.trim()) {
       nextErrors.problemUnderstanding =
         "Please explain your understanding of the problem.";
+    } else if (form.problemUnderstanding.trim().length < 20) {
+      nextErrors.problemUnderstanding =
+        "Problem understanding must be at least 20 characters.";
     }
 
     if (!form.proposedSolution.trim()) {
       nextErrors.proposedSolution =
         "Please describe your proposed solution.";
+    } else if (form.proposedSolution.trim().length < 20) {
+      nextErrors.proposedSolution =
+        "Proposed solution must be at least 20 characters.";
     }
 
     if (!form.technology.trim()) {
@@ -184,11 +192,24 @@ function StartupApplication() {
     if (!form.expectedImpact.trim()) {
       nextErrors.expectedImpact =
         "Please describe the expected impact.";
+    } else if (form.expectedImpact.trim().length < 20) {
+      nextErrors.expectedImpact =
+        "Expected impact must be at least 20 characters.";
     }
 
     if (!form.implementationPlan.trim()) {
       nextErrors.implementationPlan =
         "Please provide an implementation plan.";
+    }
+
+    if (!String(form.proposedBudget).trim() || isNaN(Number(form.proposedBudget)) || Number(form.proposedBudget) <= 0) {
+      nextErrors.proposedBudget =
+        "Please enter a valid positive proposed budget (₹).";
+    }
+
+    if (!String(form.proposedTimeline).trim()) {
+      nextErrors.proposedTimeline =
+        "Please specify an estimated timeline (e.g., 60 days).";
     }
 
     setErrors(nextErrors);
@@ -201,12 +222,19 @@ function StartupApplication() {
   const handleSaveDraft = async () => {
     setSaveState("saving");
     try {
+      const budgetVal = form.proposedBudget && !isNaN(Number(form.proposedBudget)) && Number(form.proposedBudget) > 0
+        ? Number(form.proposedBudget)
+        : 100000;
+      const timelineVal = String(form.proposedTimeline || "").trim() || "30 days";
       const payload = {
-        proposal_summary: form.problemUnderstanding?.trim() || form.solutionName?.trim() || "Draft Proposal Summary",
-        technical_approach: form.proposedSolution?.trim() || form.technology?.trim() || "Draft Technical Approach",
-        expected_impact: form.expectedImpact?.trim() || "Draft Expected Impact Description",
-        proposed_budget: Number(form.proposedBudget || 100000),
-        proposed_timeline_days: Number(form.proposedTimeline || 30),
+        proposal: form.problemUnderstanding?.trim() || form.solutionName?.trim() || "Draft Proposal Summary (minimum 20 characters)",
+        proposal_summary: form.problemUnderstanding?.trim() || form.solutionName?.trim() || "Draft Proposal Summary (minimum 20 characters)",
+        technical_approach: form.proposedSolution?.trim() || form.technology?.trim() || "Draft Technical Approach (minimum 20 characters)",
+        expected_impact: form.expectedImpact?.trim() || "Draft Expected Impact Description (minimum 20 characters)",
+        proposed_budget: budgetVal,
+        estimated_cost: budgetVal,
+        proposed_timeline_days: !isNaN(Number(timelineVal)) ? Number(timelineVal) : timelineVal,
+        timeline: timelineVal,
         status: "DRAFT"
       };
 
@@ -254,7 +282,13 @@ function StartupApplication() {
     setSubmitState("submitting");
 
     try {
+      const budgetNumber = Number(form.proposedBudget);
+      const timelineStr = String(form.proposedTimeline || "").trim();
       const payload = {
+        proposal:
+          form.problemUnderstanding?.trim() ||
+          form.solutionName?.trim() ||
+          "",
         proposal_summary:
           form.problemUnderstanding?.trim() ||
           form.solutionName?.trim() ||
@@ -263,8 +297,11 @@ function StartupApplication() {
           form.proposedSolution?.trim() ||
           form.technology?.trim() ||
           "",
-        proposed_budget: Number(form.proposedBudget || 0),
-        proposed_timeline_days: Number(form.proposedTimeline || 30),
+        expected_impact: form.expectedImpact?.trim(),
+        proposed_budget: budgetNumber,
+        estimated_cost: budgetNumber,
+        proposed_timeline_days: !isNaN(Number(timelineStr)) ? Number(timelineStr) : timelineStr,
+        timeline: timelineStr,
         team_experience: form.teamExperience || "",
         evidence_attachments: documents.map((d) => d.name || "document.pdf"),
       };
@@ -309,7 +346,7 @@ function StartupApplication() {
         <p className="mt-1 text-xs text-red-600 dark:text-red-300">{challengeError || "The requested procurement challenge does not exist."}</p>
         <button
           onClick={() => navigate('/startup/challenges')}
-          className="btn-primary mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-900 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-800 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+          className="btn-primary mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
         >
           <ArrowLeft className="h-4 w-4" /> Browse Active Challenges
         </button>
@@ -698,30 +735,76 @@ function StartupApplication() {
           title="Implementation Plan"
           description="Show how your startup will execute the solution."
         >
-          <FormField
-            label="Implementation Approach"
-            required
-            error={
-              errors.implementationPlan
-            }
-            hint="Mention phases, milestones, timeline and key deliverables."
-          >
-            <Textarea
-              value={
-                form.implementationPlan
-              }
-              onChange={(value) =>
-                updateField(
-                  "implementationPlan",
-                  value
-                )
-              }
-              placeholder="Phase 1: Discovery... Phase 2: Development... Phase 3: Pilot..."
+          <div className="grid gap-5">
+            <FormField
+              label="Implementation Approach"
+              required
               error={
                 errors.implementationPlan
               }
-            />
-          </FormField>
+              hint="Mention phases, milestones, timeline and key deliverables."
+            >
+              <Textarea
+                value={
+                  form.implementationPlan
+                }
+                onChange={(value) =>
+                  updateField(
+                    "implementationPlan",
+                    value
+                  )
+                }
+                placeholder="Phase 1: Discovery... Phase 2: Development... Phase 3: Pilot..."
+                error={
+                  errors.implementationPlan
+                }
+              />
+            </FormField>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <FormField
+                label="Proposed Budget (₹ INR)"
+                required
+                error={errors.proposedBudget}
+                hint="Total estimated cost required to execute the solution."
+              >
+                <input
+                  type="number"
+                  min="1"
+                  step="any"
+                  value={form.proposedBudget}
+                  onChange={(event) =>
+                    updateField(
+                      "proposedBudget",
+                      event.target.value
+                    )
+                  }
+                  placeholder="e.g. 500000"
+                  className={inputClass(errors.proposedBudget)}
+                />
+              </FormField>
+
+              <FormField
+                label="Proposed Timeline"
+                required
+                error={errors.proposedTimeline}
+                hint="Estimated execution duration (e.g. 60 days, 3 months)."
+              >
+                <input
+                  type="text"
+                  value={form.proposedTimeline}
+                  onChange={(event) =>
+                    updateField(
+                      "proposedTimeline",
+                      event.target.value
+                    )
+                  }
+                  placeholder="e.g. 60 days"
+                  className={inputClass(errors.proposedTimeline)}
+                />
+              </FormField>
+            </div>
+          </div>
         </FormSection>
 
         {/* ================================================= */}
@@ -1610,7 +1693,7 @@ function MyApplicationsListView({ user, navigate }) {
               type="button"
               onClick={() => setStatusFilter(st)}
               className={`h-10 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${statusFilter === st
-                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                  ? "bg-blue-600 text-white shadow-sm dark:bg-blue-600 dark:text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                 }`}
             >

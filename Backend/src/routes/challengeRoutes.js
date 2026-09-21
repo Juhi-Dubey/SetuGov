@@ -33,6 +33,9 @@ import {
   applyToEvaluateChallenge,
   getChallengeEvaluatorApplications,
   reviewEvaluatorApplication,
+  closeEvaluatorRecruitment,
+  reopenEvaluatorRecruitment,
+  updateChallengeEvaluatorRecruitment,
   getChallengeEvaluatorMatches,
   getChallengeEvaluatorPool,
   addToEvaluatorPool,
@@ -105,12 +108,17 @@ router.get('/:challenge_id/pilot', authenticate, authorizeRoles('GOVERNMENT', 'A
 router.post('/:challenge_id/evaluator-applications', authenticate, authorizeRoles('EVALUATOR', 'ADMIN'), applyToEvaluateChallenge);
 router.get('/:challenge_id/evaluator-applications', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), getChallengeEvaluatorApplications);
 router.patch('/:challenge_id/evaluator-applications/:application_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), reviewEvaluatorApplication);
+router.post('/:challenge_id/evaluator-applications/:application_id/review', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), reviewEvaluatorApplication);
+router.post('/:challenge_id/evaluator-applications/close', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), closeEvaluatorRecruitment);
+router.post('/:challenge_id/evaluator-applications/reopen', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), reopenEvaluatorRecruitment);
+router.patch('/:challenge_id/evaluator-recruitment', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), updateChallengeEvaluatorRecruitment);
 
 // Evaluator Matching & Discovery for Challenge
 router.get('/:challenge_id/evaluator-matches', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), getChallengeEvaluatorMatches);
 
 // Challenge Final Evaluator Pool
 router.get('/:challenge_id/evaluator-pool', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), getChallengeEvaluatorPool);
+router.get('/:challenge_id/evaluators', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), getChallengeEvaluatorPool);
 router.post('/:challenge_id/evaluator-pool', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), addToEvaluatorPool);
 router.delete('/:challenge_id/evaluator-pool/:evaluator_id', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), removeFromEvaluatorPool);
 
