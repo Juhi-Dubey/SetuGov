@@ -31,17 +31,28 @@ function AdminUsers() {
       const list = res?.data?.users || res?.data || [];
       // Strictly guarantee only government users are loaded
       const govUsers = list.filter((u) => String(u.role).toUpperCase() === "GOVERNMENT");
-      const mapped = govUsers.map((u) => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        role: "Government",
-        organization: u.department?.name || "Government Department",
-        status: u.is_active ? "Active" : "Inactive",
-        is_active: u.is_active,
-        verified: u.is_verified,
-        joined: u.created_at ? new Date(u.created_at).toLocaleDateString("en-IN") : "Recent",
-      }));
+      const mapped = govUsers.map((u) => {
+        const isVerified = Boolean(u.is_verified);
+        let vStatus = u.verification_status;
+        if (!vStatus) {
+          vStatus = isVerified ? "Verified" : "Pending";
+        } else {
+          vStatus = vStatus.charAt(0).toUpperCase() + vStatus.slice(1).toLowerCase();
+        }
+        return {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: "Government",
+          organization: u.department?.name || "Government Department",
+          status: u.is_active ? "Active" : "Inactive",
+          is_active: u.is_active,
+          verified: isVerified,
+          verification_status: vStatus,
+          joined: u.created_at ? new Date(u.created_at).toLocaleDateString("en-IN") : "Recent",
+          created_at: u.created_at ? new Date(u.created_at) : null,
+        };
+      });
       setUsers(mapped);
     } catch (err) {
       console.error("Failed to load users from backend:", err);
@@ -57,6 +68,9 @@ function AdminUsers() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [verificationFilter, setVerificationFilter] = useState("All");
+  const [dateFilter, setDateFilter] = useState("All");
+  const [customDate, setCustomDate] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [openMenu, setOpenMenu] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,9 +78,11 @@ function AdminUsers() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, statusFilter]);
+  }, [search, statusFilter, verificationFilter, dateFilter, customDate]);
 
   const filteredUsers = useMemo(() => {
+    const now = new Date();
+
     return users.filter((user) => {
       const searchText = search.toLowerCase();
 
@@ -78,9 +94,48 @@ function AdminUsers() {
       const matchesStatus =
         statusFilter === "All" || user.status === statusFilter;
 
-      return matchesSearch && matchesStatus;
+      let matchesVerification = true;
+      if (verificationFilter !== "All") {
+        if (verificationFilter === "Verified") {
+          matchesVerification = user.verified || user.verification_status === "Verified";
+        } else if (verificationFilter === "Pending") {
+          matchesVerification = !user.verified && user.verification_status === "Pending";
+        } else if (verificationFilter === "Rejected") {
+          matchesVerification = user.verification_status === "Rejected";
+        }
+      }
+
+      let matchesDate = true;
+      if (dateFilter !== "All" && user.created_at) {
+        const userDate = new Date(user.created_at);
+        if (dateFilter === "Today") {
+          matchesDate = userDate.toDateString() === now.toDateString();
+        } else if (dateFilter === "Last7Days") {
+          const sevenDaysAgo = new Date(now);
+          sevenDaysAgo.setDate(now.getDate() - 7);
+          matchesDate = userDate >= sevenDaysAgo;
+        } else if (dateFilter === "Last30Days") {
+          const thirtyDaysAgo = new Date(now);
+          thirtyDaysAgo.setDate(now.getDate() - 30);
+          matchesDate = userDate >= thirtyDaysAgo;
+        } else if (dateFilter === "ThisMonth") {
+          matchesDate =
+            userDate.getMonth() === now.getMonth() &&
+            userDate.getFullYear() === now.getFullYear();
+        } else if (dateFilter === "Custom" && customDate) {
+          const targetDate = new Date(customDate);
+          matchesDate = userDate.toDateString() === targetDate.toDateString();
+        }
+      }
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesVerification &&
+        matchesDate
+      );
     });
-  }, [users, search, statusFilter]);
+  }, [users, search, statusFilter, verificationFilter, dateFilter, customDate]);
 
   const paginatedUsers = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -116,11 +171,11 @@ function AdminUsers() {
   ).length;
 
   const pendingUsers = users.filter(
-    (user) => user.status === "Pending"
+    (user) => user.verification_status === "Pending" || (!user.verified && user.verification_status !== "Rejected")
   ).length;
 
   const verifiedUsers = users.filter(
-    (user) => user.verified
+    (user) => user.verified || user.verification_status === "Verified"
   ).length;
 
   return (
@@ -209,7 +264,8 @@ function AdminUsers() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Status Filter */}
               <select
                 value={statusFilter}
                 onChange={(event) =>
@@ -230,11 +286,81 @@ function AdminUsers() {
                 <option value="Inactive">
                   Inactive
                 </option>
+              </select>
+
+              {/* Verification Filter */}
+              <select
+                value={verificationFilter}
+                onChange={(event) =>
+                  setVerificationFilter(
+                    event.target.value
+                  )
+                }
+                className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+              >
+                <option value="All">
+                  All Verification
+                </option>
 
                 <option value="Pending">
                   Pending
                 </option>
+
+                <option value="Rejected">
+                  Rejected
+                </option>
+
+                <option value="Verified">
+                  Verified
+                </option>
               </select>
+
+              {/* Date Filter */}
+              <select
+                value={dateFilter}
+                onChange={(event) => {
+                  setDateFilter(event.target.value);
+                  if (event.target.value !== "Custom") {
+                    setCustomDate("");
+                  }
+                }}
+                className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+              >
+                <option value="All">
+                  All Dates
+                </option>
+
+                <option value="Today">
+                  Today
+                </option>
+
+                <option value="Last7Days">
+                  Last 7 Days
+                </option>
+
+                <option value="Last30Days">
+                  Last 30 Days
+                </option>
+
+                <option value="ThisMonth">
+                  This Month
+                </option>
+
+                <option value="Custom">
+                  Custom Date
+                </option>
+              </select>
+
+              {dateFilter === "Custom" && (
+                <input
+                  type="date"
+                  value={customDate}
+                  onChange={(event) =>
+                    setCustomDate(event.target.value)
+                  }
+                  className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-900 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                />
+              )}
             </div>
           </div>
         </div>
@@ -459,7 +585,12 @@ function UserRow({
       {/* VERIFICATION */}
 
       <td className="px-5 py-3">
-        {user.verified ? (
+        {user.verification_status === "Rejected" ? (
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-600 dark:text-rose-400">
+            <X className="h-3.5 w-3.5" />
+            Rejected
+          </span>
+        ) : user.verified || user.verification_status === "Verified" ? (
           <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="h-3.5 w-3.5" />
             Verified
