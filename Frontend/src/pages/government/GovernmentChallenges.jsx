@@ -38,6 +38,7 @@ import {
 import AppLayout from "../../components/layout/AppLayout";
 import PageHeader from "../../components/layout/PageHeader";
 import Pagination from "../../components/common/Pagination";
+import StatCard from "../../components/common/StatCard";
 import {
   getChallenges,
   publishChallenge,
@@ -293,85 +294,49 @@ export default function GovernmentChallenges() {
 
         {/* Top KPI Metrics Bar */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
-              <span className="text-[14px] font-medium">
-                Total Challenges
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
-                <FileText className="h-4 w-4" />
-              </div>
-            </div>
-            <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {stats.total}
-            </p>
-            <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">Across all departments</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
-              <span className="text-[14px] font-medium">
-                Open for Proposals
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
-                <Sparkles className="h-4 w-4" />
-              </div>
-            </div>
-            <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {stats.published}
-            </p>
-            <p className="mt-1 text-[14px] text-emerald-600 dark:text-emerald-400">Active public challenges</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
-              <span className="text-[14px] font-medium">
-                In Evaluation
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400">
-                <Users className="h-4 w-4" />
-              </div>
-            </div>
-            <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {stats.evaluation}
-            </p>
-            <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">Committee scoring phase</p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
-              <span className="text-[14px] font-medium">
-                Active Pilots
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
-                <FlaskConical className="h-4 w-4" />
-              </div>
-            </div>
-            <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {stats.pilots}
-            </p>
-            <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">Live sandbox execution</p>
-          </div>
-
-          <div className="col-span-2 rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-xs transition-all hover:shadow-md lg:col-span-1 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
-            <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
-              <span className="text-[14px] font-medium">
-                Total Budget
-              </span>
-
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400">
-                <Wallet className="h-4 w-4" />
-              </div>
-            </div>
-
-            <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {formatBudget(stats.totalBudget)}
-            </p>
-
-            <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">
-              {stats.totalApps} startup proposals
-            </p>
-          </div>
+          <StatCard
+            index={0}
+            title="Total Challenges"
+            value={stats.total}
+            description="Across all departments"
+            icon={FileText}
+            color="blue"
+          />
+          <StatCard
+            index={1}
+            title="Open for Proposals"
+            value={stats.published}
+            description="Active public challenges"
+            icon={Sparkles}
+            color="emerald"
+            valueColor="text-emerald-700 dark:text-emerald-400"
+          />
+          <StatCard
+            index={2}
+            title="In Evaluation"
+            value={stats.evaluation}
+            description="Committee scoring phase"
+            icon={Users}
+            color="violet"
+          />
+          <StatCard
+            index={3}
+            title="Active Pilots"
+            value={stats.pilots}
+            description="Live sandbox execution"
+            icon={FlaskConical}
+            color="emerald"
+            valueColor="text-emerald-700 dark:text-emerald-400"
+          />
+          <StatCard
+            index={4}
+            className="col-span-2 lg:col-span-1"
+            title="Total Budget"
+            value={formatBudget(stats.totalBudget)}
+            description={`${stats.totalApps} startup proposals`}
+            icon={Wallet}
+            color="cyan"
+          />
         </div>  
 
         {/* Filter & Search Toolbar */}

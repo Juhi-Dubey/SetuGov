@@ -28,6 +28,7 @@ import { getGovernmentAnalytics } from "../../services/challengeService";
 import { getPilots } from "../../services/pilotService";
 import { useAuth } from "../../context/AuthContext";
 import Pagination from "../../components/common/Pagination";
+import StatCard from "../../components/common/StatCard";
 import { formatPilotStatus } from "../../utils/filterUtils";
 
 function GovernmentReports() {
@@ -626,100 +627,55 @@ function GovernmentReports() {
           <>
             {/* EXECUTIVE KPI SUMMARY CARDS */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
-              >
-                <div className="flex items-center justify-between text-slate-400">
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Department Challenges
-                  </span>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
-                    <FileText className="h-4 w-4" />
-                  </div>
-                </div>
-                <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  {metrics.totalChallenges}
-                </p>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {analytics?.metrics?.published_challenges
+              <StatCard
+                index={0}
+                title="Department Challenges"
+                value={metrics.totalChallenges}
+                description={
+                  analytics?.metrics?.published_challenges
                     ? `${analytics.metrics.published_challenges} published`
-                    : "Challenges in department"}
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05 }}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
-              >
-                <div className="flex items-center justify-between text-slate-400">
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Active Pilots
-                  </span>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
-                    <Rocket className="h-4 w-4" />
-                  </div>
-                </div>
-                <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  {metrics.activePilots}
-                </p>
-                <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
-                  {metrics.completedPilots > 0
+                    : "Challenges in department"
+                }
+                icon={FileText}
+                color="blue"
+              />
+              <StatCard
+                index={1}
+                title="Active Pilots"
+                value={metrics.activePilots}
+                description={
+                  metrics.completedPilots > 0
                     ? `${metrics.completedPilots} completed successfully`
-                    : `${metrics.totalPilots} total pilots`}
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
-              >
-                <div className="flex items-center justify-between text-slate-400">
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Actual Paid Funds
-                  </span>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400">
-                    <DollarSign className="h-4 w-4" />
-                  </div>
-                </div>
-                <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  ₹{Number(metrics.totalDisbursed).toLocaleString("en-IN")}
-                </p>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {metrics.totalAllocated > 0
+                    : `${metrics.totalPilots} total pilots`
+                }
+                icon={Rocket}
+                color="emerald"
+                valueColor="text-emerald-700 dark:text-emerald-400"
+              />
+              <StatCard
+                index={2}
+                title="Actual Paid Funds"
+                value={`₹${Number(metrics.totalDisbursed).toLocaleString("en-IN")}`}
+                description={
+                  metrics.totalAllocated > 0
                     ? `${metrics.utilizationPercentage}% of total sanction`
-                    : "Disbursed milestone funds"}
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
-              >
-                <div className="flex items-center justify-between text-slate-400">
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Empirical Success Rate
-                  </span>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400">
-                    <TrendingUp className="h-4 w-4" />
-                  </div>
-                </div>
-                <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  {metrics.successRate}%
-                </p>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  {metrics.avgValidationScore > 0
+                    : "Disbursed milestone funds"
+                }
+                icon={DollarSign}
+                color="cyan"
+              />
+              <StatCard
+                index={3}
+                title="Empirical Success Rate"
+                value={`${metrics.successRate}%`}
+                description={
+                  metrics.avgValidationScore > 0
                     ? `Avg validation score: ${metrics.avgValidationScore}%`
-                    : "Based on verified evaluations"}
-                </p>
-              </motion.div>
+                    : "Based on verified evaluations"
+                }
+                icon={TrendingUp}
+                color="violet"
+              />
             </div>
 
             {/* TABS NAVIGATION */}

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
+import StatCard from "../../components/common/StatCard";
 import { getChallengeEvaluationSummary } from "../../services/challengeService";
 import { getChallengeEvaluatorPool } from "../../services/evaluatorService";
 
@@ -228,73 +229,43 @@ function ChallengeEvaluation() {
           <>
             {/* STATS OVERVIEW */}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-6">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Applications
-                  </span>
-                  <FileText className="h-4 w-4 text-blue-500" />
-                </div>
-                <p className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">
-                  {totalApplications}
-                </p>
-                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                  Total submitted proposals
-                </p>
-              </div>
+              <StatCard
+                index={0}
+                title="Applications"
+                value={totalApplications}
+                description="Total submitted proposals"
+                icon={FileText}
+                color="blue"
+              />
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Evaluations Done
-                  </span>
-                  <Award className="h-4 w-4 text-indigo-500" />
-                </div>
-                <p className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">
-                  {totalEvaluationsCount}
-                </p>
-                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                  Completed scorecards
-                </p>
-              </div>
+              <StatCard
+                index={1}
+                title="Evaluations Done"
+                value={totalEvaluationsCount}
+                description="Completed scorecards"
+                icon={Award}
+                color="violet"
+              />
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Quorum Status
-                  </span>
-                  <Scale className="h-4 w-4 text-emerald-500" />
-                </div>
-                <p className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">
-                  {quorumMetCount} / {rankedApplications.length || 0}
-                </p>
-                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                  Min {requiredQuorum} reviews required
-                </p>
-              </div>
+              <StatCard
+                index={2}
+                title="Quorum Status"
+                value={`${quorumMetCount} / ${rankedApplications.length || 0}`}
+                description={`Min ${requiredQuorum} reviews required`}
+                icon={Scale}
+                color="emerald"
+                valueColor="text-emerald-700 dark:text-emerald-400"
+              />
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                    Evaluator Pool
-                  </span>
-                  <Users className="h-4 w-4 text-purple-500" />
-                </div>
-                <p className="mt-3 text-2xl font-bold text-slate-900 dark:text-white">
-                  {evaluatorPool.length}
-                </p>
-                <div className="mt-2 flex items-center justify-between">
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Empaneled experts
-                  </p>
-                  <Link
-                    to={`/government/challenges/${id}/evaluators`}
-                    className="text-[11px] font-semibold text-purple-600 hover:text-purple-700 dark:text-purple-400"
-                  >
-                    Manage Pool →
-                  </Link>
-                </div>
-              </div>
+              <StatCard
+                index={3}
+                title="Evaluator Pool"
+                value={evaluatorPool.length}
+                description="Empaneled experts"
+                icon={Users}
+                color="violet"
+                to={`/government/challenges/${id}/evaluators`}
+              />
             </div>
 
             {/* OFFICIAL EVALUATION CRITERIA REFERENCE */}

@@ -40,6 +40,7 @@ import {
 import AppLayout from "../../components/layout/AppLayout";
 import PageHeader from "../../components/layout/PageHeader";
 import Pagination from "../../components/common/Pagination";
+import StatCard from "../../components/common/StatCard";
 import {
   getPilots,
   getPilotById,
@@ -1139,64 +1140,55 @@ function ChallengePilot() {
           <>
             {/* METRIC HIGHLIGHTS */}
             <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Pilot Status
-                </p>
-                <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
-                  {formatPilotStatus(pilot.status)}
-                </p>
-                <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                  {pilot.status === "PLANNED"
+              <StatCard
+                index={0}
+                title="Pilot Status"
+                value={formatPilotStatus(pilot.status)}
+                description={
+                  pilot.status === "PLANNED"
                     ? "Onboarding & Readiness Check"
                     : pilot.status === "RUNNING"
                       ? "Active Operational Sandbox"
                       : pilot.status === "COMPLETED"
                         ? "Successfully Concluded"
-                        : "Live Execution"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Allocated Budget
-                </p>
-                <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
-                  {pilot.budget ? `₹${Number(pilot.budget).toLocaleString("en-IN")}` : "Not specified"}
-                </p>
-                <p className="mt-1 text-[11px] text-slate-400">Milestone-linked escrow</p>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Milestones Progress
-                </p>
-                <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
-                  {pilot.milestones?.filter((m) => m.status === "COMPLETED" || m.completion_percentage === 100).length || 0} /{" "}
-                  {pilot.milestones?.length || 0}
-                </p>
-                <p className="mt-1 text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">
-                  {pilot.milestones?.length
+                        : "Live Execution"
+                }
+                icon={FlaskConical}
+                color="emerald"
+                valueColor="text-emerald-700 dark:text-emerald-400"
+              />
+              <StatCard
+                index={1}
+                title="Allocated Budget"
+                value={pilot.budget ? `₹${Number(pilot.budget).toLocaleString("en-IN")}` : "Not specified"}
+                description="Milestone-linked escrow"
+                icon={DollarSign}
+                color="cyan"
+              />
+              <StatCard
+                index={2}
+                title="Milestones Progress"
+                value={`${pilot.milestones?.filter((m) => m.status === "COMPLETED" || m.completion_percentage === 100).length || 0} / ${pilot.milestones?.length || 0}`}
+                description={
+                  pilot.milestones?.length
                     ? `${Math.round(
-                      ((pilot.milestones?.filter((m) => m.status === "COMPLETED" || m.completion_percentage === 100).length || 0) /
-                        pilot.milestones.length) *
-                      100
-                    )}% Completed`
-                    : "No milestones configured"}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Tracked KPIs
-                </p>
-                <p className="mt-2 text-xl font-bold text-slate-900 dark:text-white">
-                  {pilot.kpis?.length || 0} Metrics
-                </p>
-                <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                  {pilot.kpis?.length ? "Telemetry Active" : "No KPIs configured"}
-                </p>
-              </div>
+                        ((pilot.milestones?.filter((m) => m.status === "COMPLETED" || m.completion_percentage === 100).length || 0) /
+                          pilot.milestones.length) *
+                          100
+                      )}% Completed`
+                    : "No milestones configured"
+                }
+                icon={Flag}
+                color="violet"
+              />
+              <StatCard
+                index={3}
+                title="Tracked KPIs"
+                value={`${pilot.kpis?.length || 0} Metrics`}
+                description={pilot.kpis?.length ? "Telemetry Active" : "No KPIs configured"}
+                icon={Activity}
+                color="emerald"
+              />
             </div>
 
             {/* NAVIGATION TABS */}

@@ -25,6 +25,7 @@ import {
 import AppLayout from "../../components/layout/AppLayout";
 import Pagination from "../../components/common/Pagination";
 import PageHeader from "../../components/layout/PageHeader";
+import StatCard from "../../components/common/StatCard";
 import { getChallengeById, getChallengePilot } from "../../services/challengeService";
 import {
   getPilotMilestones,
@@ -433,6 +434,7 @@ function ChallengePayments() {
                 label="Total Pilot Budget"
                 value={formatCurrency(totalContractValue)}
                 description="Sanctioned contract value"
+                color="cyan"
               />
 
               <PaymentSummary
@@ -440,7 +442,8 @@ function ChallengePayments() {
                 label="Disbursed Amount"
                 value={formatCurrency(paidAmount)}
                 description="Verified & released"
-                highlightColor="text-emerald-600 dark:text-emerald-400"
+                color="emerald"
+                highlightColor="text-emerald-700 dark:text-emerald-400"
               />
 
               <PaymentSummary
@@ -448,6 +451,8 @@ function ChallengePayments() {
                 label="Pending Disbursal"
                 value={formatCurrency(pendingAmount)}
                 description="Awaiting milestone release"
+                color="amber"
+                highlightColor="text-amber-700 dark:text-amber-400"
               />
 
               <PaymentSummary
@@ -455,6 +460,7 @@ function ChallengePayments() {
                 label="Escrow Disbursal %"
                 value={`${paidPercentage}%`}
                 description="Disbursed vs Total Budget"
+                color="blue"
               />
             </section>
 
@@ -705,26 +711,16 @@ function ChallengePayments() {
 // PAYMENT SUMMARY CARD
 // =========================================================
 
-function PaymentSummary({ icon: Icon, label, value, description, highlightColor }) {
+function PaymentSummary({ icon: Icon, label, value, description, highlightColor, color }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex items-center justify-between">
-        <p className="text-[14px] font-medium text-slate-900 dark:text-slate-400">
-          {label}
-        </p>
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-          <Icon className="h-5 w-5" />
-        </div>
-      </div>
-
-      <p className={`mt-4 text-xl font-bold ${highlightColor || "text-slate-900 dark:text-white"}`}>
-        {value}
-      </p>
-
-      {description && (
-        <p className="mt-0.5 text-xs text-slate-800 dark:text-slate-400">{description}</p>
-      )}
-    </div>
+    <StatCard
+      icon={Icon}
+      title={label}
+      value={value}
+      description={description}
+      color={color || (highlightColor?.includes("emerald") ? "emerald" : "cyan")}
+      valueColor={highlightColor}
+    />
   );
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import StatCard from "../../components/common/StatCard";
 import {
   UserCheck,
   ClipboardCheck,
@@ -370,19 +371,22 @@ export default function EvaluatorMyPage() {
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               Evaluation Track Record
             </span>
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-slate-200/60 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
-                <p className="text-lg font-bold text-slate-900 dark:text-white">
-                  {assignments.length}
-                </p>
-                <p className="text-xs text-slate-600 dark:text-slate-400">Total Assigned Proposals</p>
-              </div>
-              <div className="rounded-xl border border-slate-200/60 bg-white p-3 dark:border-slate-800 dark:bg-slate-950">
-                <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                  {assignments.filter((a) => a.status === "COMPLETED" || a.is_evaluated).length}
-                </p>
-                <p className="text-xs text-slate-600 dark:text-slate-400">Completed Evaluations</p>
-              </div>
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <StatCard
+                title="Assigned Proposals"
+                value={assignments.length}
+                description="Total assigned proposals"
+                icon={FileText}
+                color="blue"
+              />
+              <StatCard
+                title="Completed Evaluations"
+                value={assignments.filter((a) => a.status === "COMPLETED" || a.is_evaluated).length}
+                description="Completed evaluations"
+                icon={CheckCircle2}
+                color="emerald"
+                valueColor="text-emerald-700 dark:text-emerald-400"
+              />
             </div>
           </div>
 

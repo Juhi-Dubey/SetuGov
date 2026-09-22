@@ -275,7 +275,7 @@ function StartupChallenges() {
         </div>
 
         <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
-          <p className="text-xs font-medium text-slate-400">
+          <p className="text-xs font-medium text-slate-600">
             Showing{" "}
             <strong className="font-bold text-slate-700 dark:text-slate-200">
               {filteredChallenges.length}
@@ -406,7 +406,7 @@ function ChallengeCard({
           </div>
 
           <div className="min-w-0">
-            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-[10px] font-semibold text-slate-700 dark:text-slate-400 truncate">
               {challenge.department}
             </p>
 
@@ -414,7 +414,7 @@ function ChallengeCard({
               <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-600 dark:bg-slate-900 dark:text-slate-400">
                 {challenge.category}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-md bg-slate-50 px-1.5 py-0.5 text-[9px] font-medium text-slate-600 border border-slate-100 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300">
+              <span className="inline-flex items-center gap-1 rounded-md bg-indigo-100 rounded-xl px-1.5 py-0.5 text-[9px] font-medium text-indigo-600 border border-slate-100 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300">
                 <CalendarDays className="h-2.5 w-2.5 text-indigo-500 shrink-0" />
                 Published: {challenge.publishedDate}
               </span>
@@ -511,9 +511,9 @@ function InfoBox({
   return (
     <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-900">
       <div className="flex items-center gap-1.5">
-        <Icon className="h-3 w-3 text-slate-400" />
+        <Icon className="h-3 w-3 text-slate-500" />
 
-        <span className="text-[9px] font-medium text-slate-500 dark:text-slate-400">
+        <span className="text-[10px] font-medium text-slate-700 dark:text-slate-400">
           {label}
         </span>
       </div>

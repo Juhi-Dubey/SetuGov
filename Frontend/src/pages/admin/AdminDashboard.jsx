@@ -19,6 +19,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getAdminDashboard } from "../../services/adminService";
 import ArchitectureStatus from "../../components/admin/ArchitectureStatus";
+import StatCard from "../../components/common/StatCard";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -182,52 +183,32 @@ function AdminDashboard() {
 
       {/* USER STATS */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {userStats.map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <motion.div
-              key={item.title}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: index * 0.08 }}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
-            >
-              <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
-                <span className="text-[14px] font-medium">{item.title}</span>
-                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.iconClass || "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400"}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-              </div>
-              <div className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{item.value}</div>
-              <div className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">{item.change}</div>
-            </motion.div>
-          );
-        })}
+        {userStats.map((item, index) => (
+          <StatCard
+            key={item.title}
+            index={index}
+            title={item.title}
+            value={item.value}
+            description={item.change}
+            icon={item.icon}
+            iconClass={item.iconClass}
+          />
+        ))}
       </div>
 
       {/* SYSTEM STATS */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {systemStats.map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <motion.div
-              key={item.title}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.2 + index * 0.08 }}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
-            >
-              <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
-                <span className="text-[14px] font-medium">{item.title}</span>
-                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.iconClass || "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400"}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-              </div>
-              <div className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{item.value}</div>
-              <div className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">{item.change}</div>
-            </motion.div>
-          );
-        })}
+        {systemStats.map((item, index) => (
+          <StatCard
+            key={item.title}
+            index={index + 4}
+            title={item.title}
+            value={item.value}
+            description={item.change}
+            icon={item.icon}
+            iconClass={item.iconClass}
+          />
+        ))}
       </div>
 
       {/* ARCHITECTURE STATUS OBSERVABILITY SECTION */}

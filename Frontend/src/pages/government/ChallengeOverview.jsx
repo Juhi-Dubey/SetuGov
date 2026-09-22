@@ -27,6 +27,7 @@ import {
 
 import AppLayout from "../../components/layout/AppLayout";
 import PageHeader from "../../components/layout/PageHeader";
+import StatCard from "../../components/common/StatCard";
 import { getChallengeById, runChallengeMatching, startChallengeEvaluation } from "../../services/challengeService";
 import { formatPublishDate } from "../../utils/filterUtils";
 
@@ -296,32 +297,40 @@ function ChallengeOverview() {
 
         {/* SUMMARY CARDS */}
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <SummaryCard
+          <StatCard
+            index={0}
             icon={Users}
-            label="Total Applications"
+            title="Total Applications"
             value={appCount}
             description="Submitted solutions"
+            color="blue"
             onClick={() => navigate(`/government/challenges/${id}/applications`)}
           />
-          <SummaryCard
+          <StatCard
+            index={1}
             icon={Award}
-            label="Assigned Evaluators"
+            title="Assigned Evaluators"
             value={evaluatorCount}
             description="Review committee"
+            color="violet"
             onClick={() => navigate(`/government/challenges/${id}/evaluators`)}
           />
-          <SummaryCard
+          <StatCard
+            index={2}
             icon={ShieldCheck}
-            label="Evaluation Progress"
+            title="Evaluation Progress"
             value={evalCount}
             description="Completed scorecards"
+            color="emerald"
             onClick={() => navigate(`/government/challenges/${id}/evaluators`)}
           />
-          <SummaryCard
+          <StatCard
+            index={3}
             icon={IndianRupee}
-            label="Budget Allocation"
+            title="Budget Allocation"
             value={displayData.budget}
             description={displayData.location}
+            color="cyan"
           />
         </div>
 
@@ -406,26 +415,6 @@ function ChallengeOverview() {
         </div>
       </div>
     </AppLayout>
-  );
-}
-
-function SummaryCard({ icon: Icon, label, value, description, onClick }) {
-  return (
-    <div
-      onClick={onClick}
-      className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition dark:border-slate-800 dark:bg-slate-900 ${
-        onClick ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-md hover:border-indigo-500/40" : ""
-      }`}
-    >
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{label}</span>
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-          <Icon className="h-4.5 w-4.5" />
-        </div>
-      </div>
-      <p className="mt-2 text-2xl font-bold tracking-tight">{value}</p>
-      <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{description}</p>
-    </div>
   );
 }
 

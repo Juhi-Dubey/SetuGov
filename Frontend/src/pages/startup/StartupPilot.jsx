@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import StatCard from "../../components/common/StatCard";
 import {
   ArrowRight,
   CalendarDays,
@@ -520,6 +521,7 @@ function StartupPilot() {
           title="Pilot Progress"
           value={`${progressPercent}%`}
           description="Overall completion"
+          color="blue"
         />
 
         <SummaryCard
@@ -527,6 +529,8 @@ function StartupPilot() {
           title="Milestones"
           value={`${completedMilestones}/${milestones.length}`}
           description="Milestones completed"
+          color="emerald"
+          valueColor="text-emerald-700 dark:text-emerald-400"
         />
 
         <SummaryCard
@@ -534,6 +538,7 @@ function StartupPilot() {
           title="Start Date"
           value={formattedStartDate}
           description="Pilot commencement"
+          color="violet"
         />
 
         <SummaryCard
@@ -541,6 +546,7 @@ function StartupPilot() {
           title="End Date"
           value={formattedEndDate}
           description="Target completion"
+          color="amber"
         />
       </section>
 
@@ -1370,29 +1376,22 @@ function StartupPilot() {
 /* ===================================================== */
 
 function SummaryCard({
-  icon: Icon,
+  icon,
   title,
   value,
   description,
+  color = "blue",
+  valueColor,
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-        <Icon className="h-5 w-5" />
-      </div>
-
-      <p className="mt-5 text-lg font-bold text-slate-900 dark:text-white">
-        {value}
-      </p>
-
-      <p className="mt-1 text-xs font-bold text-slate-700 dark:text-slate-300">
-        {title}
-      </p>
-
-      <p className="mt-1 text-[10px] text-slate-400">
-        {description}
-      </p>
-    </div>
+    <StatCard
+      icon={icon}
+      title={title}
+      value={value}
+      description={description}
+      color={color}
+      valueColor={valueColor}
+    />
   );
 }
 

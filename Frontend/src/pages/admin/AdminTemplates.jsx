@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import StatCard from "../../components/common/StatCard";
 import {
   ArrowLeft,
   Copy,
@@ -450,40 +451,35 @@ function AdminTemplates() {
 /* ===================================================== */
 
 function SummaryCard({
-  icon: Icon,
+  icon,
   title,
   value,
   type,
+  description,
 }) {
-  let iconClass =
-    "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400";
+  const color =
+    type === "success"
+      ? "emerald"
+      : type === "warning"
+      ? "amber"
+      : "blue";
 
-  if (type === "success") {
-    iconClass =
-      "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400";
-  }
-
-  if (type === "warning") {
-    iconClass =
-      "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400";
-  }
+  const valueColor =
+    type === "success"
+      ? "text-emerald-700 dark:text-emerald-400"
+      : type === "warning"
+      ? "text-amber-700 dark:text-amber-400"
+      : undefined;
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-      <div
-        className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconClass}`}
-      >
-        <Icon className="h-5 w-5" />
-      </div>
-
-      <p className="mt-5 text-2xl font-bold text-slate-900 dark:text-white">
-        {value}
-      </p>
-
-      <p className="mt-1 text-xs font-bold text-slate-700 dark:text-slate-300">
-        {title}
-      </p>
-    </div>
+    <StatCard
+      icon={icon}
+      title={title}
+      value={value}
+      description={description}
+      color={color}
+      valueColor={valueColor}
+    />
   );
 }
 

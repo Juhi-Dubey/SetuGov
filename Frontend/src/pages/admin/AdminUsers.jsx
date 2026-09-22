@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { getUsers, updateUserStatus, verifyUser } from "../../services/adminService";
 import Pagination from "../../components/common/Pagination";
 import PageHeader from "../../components/layout/PageHeader";
+import StatCard from "../../components/common/StatCard";
 
 function AdminUsers() {
   const navigate = useNavigate();
@@ -371,23 +372,23 @@ function AdminUsers() {
           <table className="w-full min-w-[850px]">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50">
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-400">
                   Government Official
                 </th>
 
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-400">
                   Status
                 </th>
 
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-400">
                   Verification
                 </th>
 
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-400">
                   Joined
                 </th>
 
-                <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-400">
                   Action
                 </th>
               </tr>
@@ -486,41 +487,23 @@ function SummaryCard({
   title,
   value,
   type,
+  description,
 }) {
-  let iconClass =
-    "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400";
-
-  if (type === "success") {
-    iconClass =
-      "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400";
-  }
-
-  if (type === "verified") {
-    iconClass =
-      "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400";
-  }
-
-  if (type === "warning") {
-    iconClass =
-      "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400";
-  }
+  const colorMap = {
+    success: "emerald",
+    verified: "blue",
+    warning: "amber",
+  };
+  const color = colorMap[type] || "blue";
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-      <div
-        className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconClass}`}
-      >
-        <Icon className="h-5 w-5" />
-      </div>
-
-      <p className="mt-5 text-2xl font-bold text-slate-900 dark:text-white">
-        {value}
-      </p>
-
-      <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-        {title}
-      </p>
-    </div>
+    <StatCard
+      icon={Icon}
+      title={title}
+      value={value}
+      description={description}
+      color={color}
+    />
   );
 }
 

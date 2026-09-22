@@ -26,6 +26,7 @@ import {
 
 import AppLayout from "../../components/layout/AppLayout";
 import PageHeader from "../../components/layout/PageHeader";
+import StatCard from "../../components/common/StatCard";
 import { getChallenges, getGovernmentAnalytics } from "../../services/challengeService";
 import { getPilots } from "../../services/pilotService";
 import { useAuth } from "../../context/AuthContext";
@@ -237,53 +238,29 @@ function GovernmentDashboard() {
 function KPICard({ data, index }) {
   const Icon = kpiIcons[data.id] || FileText;
   const href = data.href || kpiRoutes[data.id] || "/government/challenges";
-  const isAtRisk = data.id === "at-risk";
+  const colorMap = {
+    challenges: "blue",
+    applications: "blue",
+    pilots: "emerald",
+    "at-risk": "amber",
+  };
+  const color = colorMap[data.id] || "blue";
+  const valueColor =
+    data.id === "at-risk" && Number(data.value) > 0
+      ? "text-amber-700 dark:text-amber-400"
+      : undefined;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.4,
-        delay: index * 0.08,
-      }}
-    >
-      <Link
-        to={href}
-        aria-label={`${data.label}: ${data.value}`}
-        className={`group block cursor-pointer rounded-2xl border bg-white p-5 shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:bg-slate-900 dark:focus-visible:ring-offset-slate-950 ${
-          isAtRisk
-            ? "border-amber-200/80 hover:border-amber-300 dark:border-amber-900/40 dark:hover:border-amber-800"
-            : "border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700"
-        }`}
-      >
-        <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
-          <span className="text-[14px] font-medium">
-            {data.label}
-          </span>
-          <div
-            className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
-              isAtRisk
-                ? "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400 group-hover:bg-amber-100"
-                : "bg-blue-50 text-blue-600 group-hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-400"
-            }`}
-          >
-            <Icon className="h-4 w-4" />
-          </div>
-        </div>
-
-        <div className="mt-3">
-          <p className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-            {data.value}
-          </p>
-          {data.subtext && (
-            <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">
-              {data.subtext}
-            </p>
-          )}
-        </div>
-      </Link>
-    </motion.div>
+    <StatCard
+      index={index}
+      to={href}
+      title={data.label}
+      value={data.value}
+      description={data.subtext}
+      icon={Icon}
+      color={color}
+      valueColor={valueColor}
+    />
   );
 }
 

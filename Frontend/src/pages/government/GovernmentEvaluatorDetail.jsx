@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { getEvaluatorProfile } from "../../services/evaluatorService";
 import { formatEmploymentType } from "../../utils/filterUtils";
+import StatCard from "../../components/common/StatCard";
 
 /* ─── helpers ─────────────────────────────────────────────────────────── */
 
@@ -344,50 +345,55 @@ function GovernmentEvaluatorDetail() {
               )}
 
             {/* Summary stats row */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {profile.years_experience != null && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 text-center">
-                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {profile.years_experience}
-                  </p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium uppercase tracking-wider">
-                    Years Experience
-                  </p>
-                </div>
+                <StatCard
+                  title="Experience"
+                  value={`${profile.years_experience} Yrs`}
+                  description="Years of domain practice"
+                  icon={Briefcase}
+                  color="violet"
+                  valueColor="text-violet-700 dark:text-violet-400"
+                />
               )}
 
               {Array.isArray(profile.domain_expertise) && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 text-center">
-                  <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                    {profile.domain_expertise.length}
-                  </p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium uppercase tracking-wider">
-                    Domain{profile.domain_expertise.length !== 1 ? "s" : ""}
-                  </p>
-                </div>
+                <StatCard
+                  title="Domains"
+                  value={profile.domain_expertise.length}
+                  description={`Empaneled domain${profile.domain_expertise.length !== 1 ? "s" : ""}`}
+                  icon={Award}
+                  color="blue"
+                />
               )}
 
               {profile.verification_status && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 text-center">
-                  <p
-                    className={`text-base font-bold mt-1 ${
-                      profile.verification_status === "VERIFIED"
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : profile.verification_status === "PENDING"
-                        ? "text-amber-600 dark:text-amber-400"
-                        : "text-red-600 dark:text-red-400"
-                    }`}
-                  >
-                    {profile.verification_status === "VERIFIED"
-                      ? "✓ Verified"
+                <StatCard
+                  title="Panel Status"
+                  value={
+                    profile.verification_status === "VERIFIED"
+                      ? "Verified"
                       : profile.verification_status === "PENDING"
-                      ? "⏳ Pending"
-                      : "✗ Rejected"}
-                  </p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium uppercase tracking-wider">
-                    Status
-                  </p>
-                </div>
+                      ? "Pending"
+                      : "Rejected"
+                  }
+                  description="Credential verification"
+                  icon={ShieldCheck}
+                  color={
+                    profile.verification_status === "VERIFIED"
+                      ? "emerald"
+                      : profile.verification_status === "PENDING"
+                      ? "amber"
+                      : "rose"
+                  }
+                  valueColor={
+                    profile.verification_status === "VERIFIED"
+                      ? "text-emerald-700 dark:text-emerald-400"
+                      : profile.verification_status === "PENDING"
+                      ? "text-amber-700 dark:text-amber-400"
+                      : "text-rose-700 dark:text-rose-400"
+                  }
+                />
               )}
             </div>
 

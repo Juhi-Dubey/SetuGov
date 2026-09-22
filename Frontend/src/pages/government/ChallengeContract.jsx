@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
+import StatCard from "../../components/common/StatCard";
 import { getChallengeById, getChallengePilot } from "../../services/challengeService";
 import { getScaleDecision, getPilotValidations } from "../../services/pilotService";
 import {
@@ -636,48 +637,42 @@ function ChallengeContract() {
           <div className="space-y-8">
             {/* CONTEXT SUMMARY CARDS */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <span className="text-xs text-slate-500">Selected Startup</span>
-                <p className="mt-2 text-base font-bold text-slate-900 dark:text-white">
-                  {pilot.startup?.company_name || "Not specified"}
-                </p>
-                <p className="text-[11px] text-slate-400">
-                  {pilot.startup?.domain || "Innovation Vendor"}
-                </p>
-              </div>
+              <StatCard
+                index={0}
+                title="Selected Startup"
+                value={pilot.startup?.company_name || "Not specified"}
+                description={pilot.startup?.domain || "Innovation Vendor"}
+                icon={Building2}
+                color="blue"
+              />
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <span className="text-xs text-slate-500">Pilot Decision</span>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                    <Check className="h-3.5 w-3.5" />
-                    SCALE APPROVED
-                  </span>
-                </div>
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Score: {scaleDecision?.score ? `${scaleDecision.score}/100` : "Empirical Pass"}
-                </p>
-              </div>
+              <StatCard
+                index={1}
+                title="Pilot Decision"
+                value="Scale Approved"
+                description={`Score: ${scaleDecision?.score ? `${scaleDecision.score}/100` : "Empirical Pass"}`}
+                icon={CheckCircle2}
+                color="emerald"
+                valueColor="text-emerald-700 dark:text-emerald-400"
+              />
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <span className="text-xs text-slate-500">Procurement Route</span>
-                <p className="mt-2 text-base font-bold text-slate-900 dark:text-white">
-                  {procurement?.route ? procurement.route.replace(/_/g, " ") : readinessForm.route}
-                </p>
-                <p className="text-[11px] text-slate-400">
-                  {procurement ? "Persisted in PostgreSQL" : "Ready for Selection"}
-                </p>
-              </div>
+              <StatCard
+                index={2}
+                title="Procurement Route"
+                value={procurement?.route ? procurement.route.replace(/_/g, " ") : readinessForm.route}
+                description={procurement ? "Persisted in PostgreSQL" : "Ready for Selection"}
+                icon={FileText}
+                color="violet"
+              />
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                <span className="text-xs text-slate-500">Estimated Value</span>
-                <p className="mt-2 text-base font-bold text-slate-900 dark:text-white">
-                  ₹{Number(procurement?.final_contract_value || procurement?.estimated_value || readinessForm.estimated_value || 0).toLocaleString("en-IN")}
-                </p>
-                <p className="text-[11px] text-slate-400">
-                  Status: {procurement?.status || "DRAFT"}
-                </p>
-              </div>
+              <StatCard
+                index={3}
+                title="Estimated Value"
+                value={`₹${Number(procurement?.final_contract_value || procurement?.estimated_value || readinessForm.estimated_value || 0).toLocaleString("en-IN")}`}
+                description={`Status: ${procurement?.status || "DRAFT"}`}
+                icon={IndianRupee}
+                color="cyan"
+              />
             </div>
 
             {/* LIFECYCLE STEPPER */}

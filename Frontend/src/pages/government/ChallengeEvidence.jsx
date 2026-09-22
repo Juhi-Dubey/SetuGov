@@ -18,6 +18,7 @@ import {
 
 import AppLayout from "../../components/layout/AppLayout";
 import Pagination from "../../components/common/Pagination";
+import StatCard from "../../components/common/StatCard";
 import { getPilotEvidence, addPilotEvidence, updateEvidence as apiUpdateEvidence } from "../../services/pilotService.js";
 import { getChallengePilot } from "../../services/challengeService.js";
 import { openDocumentSecurely } from "../../utils/documentUtils.js";
@@ -734,43 +735,30 @@ function EvidenceSummary({
   description,
   type,
 }) {
-  const styles = {
-    success:
-      "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
-
-    warning:
-      "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
-
-    danger:
-      "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400",
+  const colorMap = {
+    success: "emerald",
+    warning: "amber",
+    danger: "rose",
   };
+  const color = colorMap[type] || "blue";
+  const valueColor =
+    type === "success"
+      ? "text-emerald-700 dark:text-emerald-400"
+      : type === "warning"
+        ? "text-amber-700 dark:text-amber-400"
+        : type === "danger"
+          ? "text-rose-700 dark:text-rose-400"
+          : undefined;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-
-      <div className="flex items-center justify-between">
-
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl ${styles[type]}`}
-        >
-          <Icon className="h-5 w-5" />
-        </div>
-
-        <p className="text-2xl font-bold">
-          {value}
-        </p>
-
-      </div>
-
-      <p className="mt-4 text-sm font-semibold">
-        {label}
-      </p>
-
-      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-        {description}
-      </p>
-
-    </div>
+    <StatCard
+      icon={Icon}
+      title={label}
+      value={value}
+      description={description}
+      color={color}
+      valueColor={valueColor}
+    />
   );
 }
 

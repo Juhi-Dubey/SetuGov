@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import StatCard from "../../components/common/StatCard";
 import {
   ArrowLeft,
   ArrowRight,
@@ -1110,7 +1111,7 @@ function FormField({
   return (
     <div>
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+        <label className="text-xs font-bold text-slate-900 dark:text-slate-200">
           {label}
           {required && (
             <span className="ml-1 text-red-500">
@@ -1669,23 +1670,34 @@ function MyApplicationsListView({ user, navigate }) {
         </div>
 
         {/* Stats Strip */}
-        <div className="mt-6 grid grid-cols-2 gap-4 border-t border-slate-100 pt-5 dark:border-slate-800/80 sm:grid-cols-4">
-          <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Submitted</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{stats.total}</p>
-          </div>
-          <div className="rounded-2xl bg-emerald-50/60 p-4 dark:bg-emerald-950/20">
-            <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Selected for Pilot</p>
-            <p className="mt-1 text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.selected}</p>
-          </div>
-          <div className="rounded-2xl bg-indigo-50/60 p-4 dark:bg-indigo-950/20">
-            <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">Shortlisted</p>
-            <p className="mt-1 text-2xl font-bold text-indigo-700 dark:text-indigo-300">{stats.shortlisted}</p>
-          </div>
-          <div className="rounded-2xl bg-sky-50/60 p-4 dark:bg-sky-950/20">
-            <p className="text-xs font-medium text-sky-600 dark:text-sky-400">Pending Review</p>
-            <p className="mt-1 text-2xl font-bold text-sky-700 dark:text-sky-300">{stats.submitted}</p>
-          </div>
+        <div className="mt-6 grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 dark:border-slate-800/80 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            title="Total Submitted"
+            value={stats.total}
+            icon={FileText}
+            color="blue"
+          />
+          <StatCard
+            title="Selected for Pilot"
+            value={stats.selected}
+            icon={CheckCircle2}
+            color="emerald"
+            valueColor="text-emerald-700 dark:text-emerald-400"
+          />
+          <StatCard
+            title="Shortlisted"
+            value={stats.shortlisted}
+            icon={Sparkles}
+            color="violet"
+            valueColor="text-violet-700 dark:text-violet-400"
+          />
+          <StatCard
+            title="Pending Review"
+            value={stats.submitted}
+            icon={Clock3}
+            color="amber"
+            valueColor="text-amber-700 dark:text-amber-400"
+          />
         </div>
       </section>
 
@@ -1702,7 +1714,7 @@ function MyApplicationsListView({ user, navigate }) {
           />
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
-          {["ALL", "SELECTED", "SHORTLISTED", "SUBMITTED"].map((st) => (
+          {["ALL", "Selected", "Shortlisted", "Submitted"].map((st) => (
             <button
               key={st}
               type="button"
@@ -1753,7 +1765,7 @@ function MyApplicationsListView({ user, navigate }) {
                       <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
                         <Building2 className="h-3.5 w-3.5" /> {app.department} • {app.state}
                       </span>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-xl bg-indigo-50 text-indigo-600">
                         <CalendarDays className="h-3.5 w-3.5" />{" "}
                         {app.submitted_at
                           ? `Submitted ${new Date(app.submitted_at).toLocaleDateString("en-IN", {
@@ -1785,11 +1797,11 @@ function MyApplicationsListView({ user, navigate }) {
 
                     <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
                       <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-400">Budget Proposed: </span>
+                        <span className="text-[10px] uppercase font-bold text-slate-600">Budget Proposed: </span>
                         <strong className="text-slate-800 dark:text-slate-200">{app.estimated_cost}</strong>
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase font-bold text-slate-400">Current Stage: </span>
+                        <span className="text-[10px] uppercase font-bold text-slate-600">Current Stage: </span>
                         <span className="font-semibold text-indigo-600 dark:text-indigo-400">{app.stage}</span>
                       </div>
                     </div>

@@ -17,6 +17,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getStartupPilots } from "../../services/startupService.js";
 import Pagination from "../../components/common/Pagination";
+import StatCard from "../../components/common/StatCard";
 import PageHeader from "../../components/layout/PageHeader";
 import { getPilots, getPilotPayments, getPilotMilestones } from "../../services/pilotService";
 
@@ -480,40 +481,30 @@ function StartupPayments() {
 /* ===================================================== */
 
 function PaymentCard({
-  icon: Icon,
+  icon,
   title,
   amount,
   description,
   status,
 }) {
+  const color =
+    status === "paid" ? "emerald" : status === "pending" ? "amber" : "cyan";
+  const valueColor =
+    status === "paid"
+      ? "text-emerald-700 dark:text-emerald-400"
+      : status === "pending"
+      ? "text-amber-700 dark:text-amber-400"
+      : "text-cyan-700 dark:text-cyan-400";
+
   return (
-    <div className="flex flex-col justify-between h-full rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-      <div>
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-            status === "paid"
-              ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-              : status === "pending"
-              ? "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
-              : "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
-          }`}
-        >
-          <Icon className="h-5 w-5" />
-        </div>
-
-        <p className="mt-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
-          {title}
-        </p>
-
-        <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-          {formatCurrency(amount)}
-        </p>
-      </div>
-
-      <p className="mt-2 text-xs text-slate-400">
-        {description}
-      </p>
-    </div>
+    <StatCard
+      icon={icon}
+      title={title}
+      value={formatCurrency(amount)}
+      description={description}
+      color={color}
+      valueColor={valueColor}
+    />
   );
 }
 

@@ -22,6 +22,7 @@ import { useAuth } from "../../context/AuthContext";
 import { getChallenges } from "../../services/challengeService";
 import { getStartupApplications, getStartupPilots, getStartupPerformance } from "../../services/startupService";
 import Pagination from "../../components/common/Pagination";
+import StatCard from "../../components/common/StatCard";
 import { formatApplicationStatus, formatPublishDate } from "../../utils/filterUtils";
 
 function StartupDashboard() {
@@ -84,28 +85,31 @@ function StartupDashboard() {
         value: String(applications.length),
         description: "Submitted procurement proposals",
         icon: FileText,
-        iconClass: "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400",
+        color: "blue",
       },
       {
         title: "Under Evaluation",
         value: String(underReview),
         description: "Awaiting evaluator scoring",
         icon: Clock3,
-        iconClass: "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400",
+        color: "amber",
+        valueColor: "text-amber-700 dark:text-amber-400",
       },
       {
         title: "Pilot Sandboxes",
         value: String(selectedCount),
         description: "Active government field trials",
         icon: Rocket,
-        iconClass: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400",
+        color: "emerald",
+        valueColor: "text-emerald-700 dark:text-emerald-400",
       },
       {
         title: "Milestone Funding",
         value: totalBudget > 0 ? `₹${(totalBudget / 100000).toFixed(1)}L` : "₹0.0L",
         description: "Committed escrow grants",
         icon: Wallet,
-        iconClass: "bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400",
+        color: "cyan",
+        valueColor: "text-cyan-700 dark:text-cyan-400",
       },
     ];
   }, [applications, pilots]);
@@ -158,29 +162,18 @@ function StartupDashboard() {
 
       {/* STATS */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <motion.div
-              key={item.title}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: index * 0.08 }}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
-            >
-              <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
-                <span className="text-[14px] font-medium">{item.title}</span>
-                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.iconClass || "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400"}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-              </div>
-              <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {item.value}
-              </p>
-              <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">{item.description}</p>
-            </motion.div>
-          );
-        })}
+        {stats.map((item, index) => (
+          <StatCard
+            key={item.title}
+            title={item.title}
+            value={item.value}
+            description={item.description}
+            icon={item.icon}
+            color={item.color}
+            valueColor={item.valueColor}
+            index={index}
+          />
+        ))}
       </div>
 
       {/* MAIN TWO-COLUMN SECTION */}
@@ -191,7 +184,7 @@ function StartupDashboard() {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Open Government Challenges</h2>
-                <p className="text-xs text-slate-400">Problem statements accepting innovation proposals</p>
+                <p className="text-xs text-slate-600">Problem statements accepting innovation proposals</p>
               </div>
               <button
                 type="button"
@@ -221,7 +214,7 @@ function StartupDashboard() {
                           <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
                             {ch.department?.name || "State Department"}
                           </span>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-indigo-100 rounded-xl px-1.5 py-0.5 text-indigo-600 dark:text-slate-400">
                             <CalendarDays className="h-3 w-3 text-indigo-500" />
                             Published: {formatPublishDate(ch)}
                           </span>
@@ -263,7 +256,7 @@ function StartupDashboard() {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Your Applications & Status</h2>
-                <p className="text-xs text-slate-400">Real-time status in procurement evaluation lifecycle</p>
+                <p className="text-xs text-slate-600">Real-time status in procurement evaluation lifecycle</p>
               </div>
             </div>
 
@@ -292,7 +285,7 @@ function StartupDashboard() {
                         <h3 className="text-sm font-semibold">
                           {app.challenge?.title || "Department Innovation Pilot"}
                         </h3>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-slate-500">
                           Submitted: {app.created_at ? new Date(app.created_at).toLocaleDateString("en-IN") : "Recent"}
                         </p>
                       </div>
@@ -343,7 +336,7 @@ function StartupDashboard() {
                 {performance?.dpiit_verified ? "DPIIT Recognized Startup" : (user?.verification_status === "VERIFIED" ? "Verified Enterprise" : "Registered Startup")}
               </span>
             </div>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-slate-600">
               Audited performance metrics across state and municipal innovation sandbox deployments
             </p>
           </div>
@@ -353,7 +346,7 @@ function StartupDashboard() {
           <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-5 dark:border-slate-800/80 dark:bg-slate-800/40">
             <p className="text-[14px] font-medium text-slate-800 dark:text-slate-200">Pilots Completed / Scaled</p>
             <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {performance ? performance.completed_pilots ?? 0 : 0} <span className="text-sm font-normal text-slate-400">/ {performance ? performance.total_pilots ?? 0 : 0}</span>
+              {performance ? performance.completed_pilots ?? 0 : 0} <span className="text-sm font-normal text-slate-600">/ {performance ? performance.total_pilots ?? 0 : 0}</span>
             </p>
             <p className="mt-1 text-[14px] text-emerald-600 dark:text-emerald-400">Validated sandbox field deployments</p>
           </div>

@@ -24,6 +24,7 @@ import {
 import AppLayout from "../../components/layout/AppLayout";
 import { getAuditLogs } from "../../services/auditService";
 import Pagination from "../../components/common/Pagination";
+import StatCard from "../../components/common/StatCard";
 
 // Centralized Action Label and Badge Formatter
 const ACTION_MAP = {
@@ -481,50 +482,35 @@ function ChallengeAudit() {
         </motion.div>
 
         {/* Challenge info summary cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="grid gap-4 sm:grid-cols-3"
-        >
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Audit Scoping</p>
-                <p className="mt-0.5 text-sm font-bold text-slate-900 dark:text-white">Department Protected</p>
-              </div>
-            </div>
-          </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatCard
+            index={0}
+            title="Audit Scoping"
+            value="Department Protected"
+            description="Immutable PostgreSQL ledger"
+            icon={ShieldCheck}
+            color="blue"
+          />
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                <FileText className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Audit Scope</p>
-                <p className="mt-0.5 text-sm font-bold text-slate-900 dark:text-white">
-                  {id ? "Challenge-Specific Ledger" : "All Department Operations"}
-                </p>
-              </div>
-            </div>
-          </div>
+          <StatCard
+            index={1}
+            title="Audit Scope"
+            value={id ? "Challenge Ledger" : "All Department Operations"}
+            description="Scoped administrative trace"
+            icon={FileText}
+            color="violet"
+          />
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-                <Activity className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Recorded Events</p>
-                <p className="mt-0.5 text-sm font-bold text-slate-900 dark:text-white">{totalCount} Actions</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+          <StatCard
+            index={2}
+            title="Recorded Events"
+            value={`${totalCount} Actions`}
+            description="Tamper-evident logs"
+            icon={Activity}
+            color="emerald"
+            valueColor="text-emerald-700 dark:text-emerald-400"
+          />
+        </div>
 
         {/* Audit trail container */}
         <motion.div

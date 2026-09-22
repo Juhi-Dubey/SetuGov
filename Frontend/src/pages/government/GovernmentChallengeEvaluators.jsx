@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 
 import BackButton from "../../components/common/BackButton";
+import StatCard from "../../components/common/StatCard";
 import {
   getChallengeEvaluatorApplications,
   reviewEvaluatorApplication,
@@ -344,83 +345,55 @@ export default function GovernmentChallengeEvaluators() {
 
       {/* KPI Metrics Dashboard Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {/* Card 1: Required */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Required</span>
-            <button
-              type="button"
-              onClick={() => setShowEditCountModal(true)}
-              className="text-[11px] font-medium text-purple-600 hover:text-purple-700 underline dark:text-purple-400"
-            >
-              Edit
-            </button>
-          </div>
-          <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">
-            {metrics.required_evaluator_count}
-          </p>
-          <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-            Target evaluation quorum
-          </p>
-        </div>
-
-        {/* Card 2: Shortlisted */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Shortlisted</span>
-            <UserCheck className="h-4 w-4 text-purple-500" />
-          </div>
-          <p className="mt-1.5 text-2xl font-bold text-purple-600 dark:text-purple-400">
-            {metrics.shortlisted_count}
-          </p>
-          <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-            {metrics.shortlisted_count >= metrics.required_evaluator_count
+        <StatCard
+          index={0}
+          title="Required Quorum"
+          value={metrics.required_evaluator_count}
+          description="Target evaluation quorum (Click to edit)"
+          icon={Users}
+          color="violet"
+          onClick={() => setShowEditCountModal(true)}
+        />
+        <StatCard
+          index={1}
+          title="Shortlisted"
+          value={metrics.shortlisted_count}
+          description={
+            metrics.shortlisted_count >= metrics.required_evaluator_count
               ? "✓ Quorum met"
-              : `${metrics.still_required_count} more needed`}
-          </p>
-        </div>
-
-        {/* Card 3: Accepted */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Accepted</span>
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-          </div>
-          <p className="mt-1.5 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            {metrics.assignments_accepted_count}
-          </p>
-          <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-            Invitations accepted
-          </p>
-        </div>
-
-        {/* Card 4: Still Required */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Still Needed</span>
-            <Clock3 className="h-4 w-4 text-amber-500" />
-          </div>
-          <p className="mt-1.5 text-2xl font-bold text-amber-600 dark:text-amber-400">
-            {metrics.still_required_count}
-          </p>
-          <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-            Pending selection
-          </p>
-        </div>
-
-        {/* Card 5: Total Applicants */}
-        <div className="col-span-2 sm:col-span-1 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Total Intake</span>
-            <Users className="h-4 w-4 text-slate-400" />
-          </div>
-          <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white">
-            {metrics.total_applications_count}
-          </p>
-          <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-            Self-applications received
-          </p>
-        </div>
+              : `${metrics.still_required_count} more needed`
+          }
+          icon={UserCheck}
+          color="violet"
+          valueColor="text-violet-700 dark:text-violet-400"
+        />
+        <StatCard
+          index={2}
+          title="Accepted"
+          value={metrics.assignments_accepted_count}
+          description="Invitations accepted"
+          icon={CheckCircle2}
+          color="emerald"
+          valueColor="text-emerald-700 dark:text-emerald-400"
+        />
+        <StatCard
+          index={3}
+          title="Still Needed"
+          value={metrics.still_required_count}
+          description="Pending selection"
+          icon={Clock3}
+          color="amber"
+          valueColor={metrics.still_required_count > 0 ? "text-amber-700 dark:text-amber-400" : undefined}
+        />
+        <StatCard
+          index={4}
+          className="col-span-2 sm:col-span-1"
+          title="Total Intake"
+          value={metrics.total_applications_count}
+          description="Self-applications received"
+          icon={Users}
+          color="blue"
+        />
       </div>
 
       {/* Recruitment Status Notice Banner */}

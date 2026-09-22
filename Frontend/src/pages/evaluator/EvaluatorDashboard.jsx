@@ -18,34 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getMyAssignments, updateAssignmentStatus } from "../../services/evaluatorService";
-
-function StatCard({ title, value, description, icon: Icon, iconClass, delay = 0 }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay }}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
-    >
-      <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
-        <span className="text-[14px] font-medium">
-          {title}
-        </span>
-        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconClass}`} aria-hidden="true">
-          <Icon className="h-4 w-4" />
-        </div>
-      </div>
-      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white" aria-label={`${title}: ${value}`}>
-        {value}
-      </p>
-      {description && (
-        <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">
-          {description}
-        </p>
-      )}
-    </motion.div>
-  );
-}
+import StatCard from "../../components/common/StatCard";
 
 function EvaluatorDashboard() {
   const navigate = useNavigate();
