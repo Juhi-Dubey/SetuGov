@@ -8,13 +8,13 @@ import { AppError, BadRequestError } from '../utils/errors.js';
  *
  * Responsibilities:
  * - Deterministic text representations for Challenges and Startups
- * - Connect to Ollama /api/embed using nomic-embed-text
- * - Strict response validation: exactly 768 dimensions, all finite numbers
+ * - Connect to AI service POST /ai/embeddings
+ * - Strict response validation: configurable dimensions (default 768), all finite numbers
  * - Database persistence to PostgreSQL pgvector column via raw queries
  * - Explicit errors on failure (no silent mock/hash substitutes)
  */
 
-export const EXPECTED_EMBEDDING_DIMENSION = config.OLLAMA_EMBEDDING_DIMENSION || 768;
+export const EXPECTED_EMBEDDING_DIMENSION = config.AI_EMBEDDING_DIMENSION || 768;
 
 /**
  * Build deterministic embedding text for a Challenge using existing model fields.
@@ -152,10 +152,10 @@ export const validateEmbeddingVector = (vector, expectedDim = EXPECTED_EMBEDDING
 };
 
 /**
- * Generate a 768-dimensional semantic embedding using Ollama nomic-embed-text.
+ * Generate a semantic embedding using the AI service.
  *
  * @param {string} text - Clean text to embed
- * @returns {Promise<number[]>} 768-dimensional float array
+ * @returns {Promise<number[]>} Float array matching EXPECTED_EMBEDDING_DIMENSION
  */
 export const generateEmbedding = async (text) => {
   if (!text || typeof text !== 'string' || !text.trim()) {
@@ -163,13 +163,12 @@ export const generateEmbedding = async (text) => {
   }
 
   const trimmedText = text.trim();
-  const url = `${config.OLLAMA_BASE_URL}/api/embed`;
+  const url = `${config.AI_SERVICE_URL}/ai/embeddings`;
   const payload = {
-    model: config.OLLAMA_EMBEDDING_MODEL,
-    input: trimmedText
+    texts: [trimmedText]
   };
 
-  logger.info(`Ollama Embedding → POST ${url} [model: ${config.OLLAMA_EMBEDDING_MODEL}, chars: ${trimmedText.length}]`);
+  logger.info(`AI Embedding → POST ${url} [chars: ${trimmedText.length}]`);
 
   let response;
   try {
@@ -182,25 +181,25 @@ export const generateEmbedding = async (text) => {
   } catch (err) {
     if (err.name === 'TimeoutError' || err.name === 'AbortError') {
       throw new AppError(
-        `Ollama embedding request timed out after 30s at ${config.OLLAMA_BASE_URL}`,
+        `AI embedding request timed out after 30s at ${config.AI_SERVICE_URL}`,
         504,
-        'OLLAMA_TIMEOUT'
+        'AI_TIMEOUT'
       );
     }
     throw new AppError(
-      `Cannot connect to Ollama embedding service at ${config.OLLAMA_BASE_URL}: ${err.message}`,
+      `Cannot connect to AI embedding service at ${config.AI_SERVICE_URL}: ${err.message}`,
       503,
-      'OLLAMA_UNAVAILABLE'
+      'AI_SERVICE_UNAVAILABLE'
     );
   }
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
-    logger.error(`Ollama embedding error HTTP ${response.status}: ${errorText}`);
+    logger.error(`AI embedding error HTTP ${response.status}: ${errorText}`);
     throw new AppError(
-      `Ollama embedding failed with HTTP ${response.status}: ${errorText || response.statusText}`,
+      `AI embedding failed with HTTP ${response.status}: ${errorText || response.statusText}`,
       502,
-      'OLLAMA_ERROR'
+      'AI_SERVICE_ERROR'
     );
   }
 
@@ -208,24 +207,24 @@ export const generateEmbedding = async (text) => {
   try {
     body = await response.json();
   } catch (err) {
-    throw new AppError('Ollama embedding response is not valid JSON', 502, 'OLLAMA_MALFORMED_RESPONSE');
+    throw new AppError('AI embedding response is not valid JSON', 502, 'AI_MALFORMED_RESPONSE');
   }
 
-  if (!body || !Array.isArray(body.embeddings) || body.embeddings.length === 0) {
-    throw new AppError('Ollama response does not contain an embeddings array', 502, 'OLLAMA_INVALID_RESPONSE');
+  if (!body || !body.success || !body.data || !Array.isArray(body.data.embeddings) || body.data.embeddings.length === 0) {
+    throw new AppError('AI response does not contain valid embeddings data', 502, 'AI_MALFORMED_RESPONSE');
   }
 
-  const vector = body.embeddings[0];
+  const vector = body.data.embeddings[0];
   validateEmbeddingVector(vector, EXPECTED_EMBEDDING_DIMENSION);
 
   return vector;
 };
 
 /**
- * Generate 768-dimensional embeddings for a batch of texts.
+ * Generate semantic embeddings for a batch of texts using the AI service.
  *
  * @param {string[]} texts
- * @returns {Promise<number[][]>} Array of 768-dimensional float arrays
+ * @returns {Promise<number[][]>} Array of float arrays matching EXPECTED_EMBEDDING_DIMENSION
  */
 export const generateBatchEmbeddings = async (texts) => {
   if (!Array.isArray(texts) || texts.length === 0) {
@@ -237,13 +236,12 @@ export const generateBatchEmbeddings = async (texts) => {
     return [];
   }
 
-  const url = `${config.OLLAMA_BASE_URL}/api/embed`;
+  const url = `${config.AI_SERVICE_URL}/ai/embeddings`;
   const payload = {
-    model: config.OLLAMA_EMBEDDING_MODEL,
-    input: cleaned
+    texts: cleaned
   };
 
-  logger.info(`Ollama Batch Embedding → POST ${url} [count: ${cleaned.length}]`);
+  logger.info(`AI Batch Embedding → POST ${url} [count: ${cleaned.length}]`);
 
   let response;
   try {
@@ -255,34 +253,40 @@ export const generateBatchEmbeddings = async (texts) => {
     });
   } catch (err) {
     if (err.name === 'TimeoutError' || err.name === 'AbortError') {
-      throw new AppError('Ollama batch embedding request timed out after 60s', 504, 'OLLAMA_TIMEOUT');
+      throw new AppError('AI batch embedding request timed out after 60s', 504, 'AI_TIMEOUT');
     }
     throw new AppError(
-      `Cannot connect to Ollama embedding service at ${config.OLLAMA_BASE_URL}: ${err.message}`,
+      `Cannot connect to AI embedding service at ${config.AI_SERVICE_URL}: ${err.message}`,
       503,
-      'OLLAMA_UNAVAILABLE'
+      'AI_SERVICE_UNAVAILABLE'
     );
   }
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
-    throw new AppError(`Ollama batch embedding failed with HTTP ${response.status}: ${errorText}`, 502, 'OLLAMA_ERROR');
+    throw new AppError(`AI batch embedding failed with HTTP ${response.status}: ${errorText}`, 502, 'AI_SERVICE_ERROR');
   }
 
-  const body = await response.json().catch(() => null);
-  if (!body || !Array.isArray(body.embeddings) || body.embeddings.length !== cleaned.length) {
+  let body;
+  try {
+    body = await response.json();
+  } catch (err) {
+    throw new AppError('AI batch embedding response is not valid JSON', 502, 'AI_MALFORMED_RESPONSE');
+  }
+
+  if (!body || !body.success || !body.data || !Array.isArray(body.data.embeddings) || body.data.embeddings.length !== cleaned.length) {
     throw new AppError(
-      `Ollama batch response mismatch: expected ${cleaned.length} vectors`,
+      `AI batch response mismatch: expected ${cleaned.length} vectors`,
       502,
-      'OLLAMA_INVALID_RESPONSE'
+      'AI_MALFORMED_RESPONSE'
     );
   }
 
-  for (let i = 0; i < body.embeddings.length; i++) {
-    validateEmbeddingVector(body.embeddings[i], EXPECTED_EMBEDDING_DIMENSION);
+  for (let i = 0; i < body.data.embeddings.length; i++) {
+    validateEmbeddingVector(body.data.embeddings[i], EXPECTED_EMBEDDING_DIMENSION);
   }
 
-  return body.embeddings;
+  return body.data.embeddings;
 };
 
 /**
@@ -299,7 +303,7 @@ export const persistChallengeEmbedding = async (challengeId, embedding) => {
     vectorStr,
     challengeId
   );
-  logger.info(`Persisted 768-dim embedding for Challenge ${challengeId}`);
+  logger.info(`Persisted ${EXPECTED_EMBEDDING_DIMENSION}-dim embedding for Challenge ${challengeId}`);
 };
 
 /**
@@ -316,11 +320,11 @@ export const persistStartupEmbedding = async (startupId, embedding) => {
     vectorStr,
     startupId
   );
-  logger.info(`Persisted 768-dim embedding for Startup ${startupId}`);
+  logger.info(`Persisted ${EXPECTED_EMBEDDING_DIMENSION}-dim embedding for Startup ${startupId}`);
 };
 
 /**
- * Retrieve the raw 768-dimensional embedding for a Challenge from the database.
+ * Retrieve the raw embedding for a Challenge from the database (dimension configurable).
  *
  * @param {string} challengeId
  * @returns {Promise<number[]|null>}
@@ -347,7 +351,7 @@ export const getChallengeEmbedding = async (challengeId) => {
 };
 
 /**
- * Retrieve the raw 768-dimensional embedding for a Startup from the database.
+ * Retrieve the raw embedding for a Startup from the database (dimension configurable).
  *
  * @param {string} startupId
  * @returns {Promise<number[]|null>}
@@ -373,7 +377,7 @@ export const getStartupEmbedding = async (startupId) => {
 };
 
 /**
- * Retrieve raw 768-dimensional embeddings for all verified startups.
+ * Retrieve raw embeddings for all verified startups (dimension configurable).
  *
  * @returns {Promise<Map<string, number[]>>}
  */

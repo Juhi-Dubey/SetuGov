@@ -152,18 +152,18 @@ const runEmbeddingTests = async () => {
     assert.throws(() => validateEmbeddingVector('string'), /must be an array/);
   });
 
-  // Test 7: Live Ollama test (runs if local Ollama nomic-embed-text is reachable)
-  await test('7. Live Ollama integration returns real 768-dimensional nomic-embed-text embedding', async () => {
+  // Test 7: Live AI embedding service test (runs if AI service is reachable)
+  await test('7. Live AI embedding service returns valid embedding vector', async () => {
     try {
       const sampleText = 'Government public grievance redressing using natural language processing and workflow automation.';
       const embedding = await generateEmbedding(sampleText);
       assert.strictEqual(Array.isArray(embedding), true);
-      assert.strictEqual(embedding.length, 768, 'Live Ollama nomic-embed-text must return exactly 768 dimensions');
+      assert.strictEqual(embedding.length, EXPECTED_EMBEDDING_DIMENSION, `Live embedding service must return exactly ${EXPECTED_EMBEDDING_DIMENSION} dimensions`);
       assert.ok(embedding.every(v => typeof v === 'number' && Number.isFinite(v)));
-      logger.info('    ℹ️ Live Ollama verified: 768-dim vector generated successfully');
+      logger.info(`    ℹ️ Live embedding service verified: ${EXPECTED_EMBEDDING_DIMENSION}-dim vector generated successfully`);
     } catch (err) {
-      if (err.message.includes('unavailable') || err.message.includes('ECONNREFUSED')) {
-        logger.warn(`    ⚠️ Ollama offline: skipped live call (${err.message})`);
+      if (err.message.includes('unavailable') || err.message.includes('ECONNREFUSED') || err.errorCode === 'AI_SERVICE_UNAVAILABLE') {
+        logger.warn(`    ⚠️ AI embedding service offline: skipped live call (${err.message})`);
       } else {
         throw err;
       }

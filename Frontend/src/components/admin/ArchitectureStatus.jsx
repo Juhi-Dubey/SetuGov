@@ -84,22 +84,22 @@ const FIVE_AI_BRAINS = [
   {
     name: "Brain 1 — Challenge Copilot",
     purpose: "Transforms unstructured government administrative problems into structured, measurable innovation challenges with baseline KPIs and evaluation criteria.",
-    backendRoute: "POST /api/v1/challenges/:id/brain1/generate",
+    backendRoute: "POST /api/v1/challenges/:challenge_id/brain1/generate",
     aiServiceEndpoint: "POST /ai/challenge",
-    llmDependency: "Llama 3.2 3B via local Ollama",
+    llmDependency: "Configurable AI Provider (LLM)",
     isInvoked: "Yes — invoked when Government officer clicks Generate Copilot Suggestions in Challenge Editor",
     isPersisted: "Yes — saved into Challenge model fields: problem_description, desired_outcome, pilot_duration_days",
     frontendConsumed: "Yes — populated directly into CreateChallenge.jsx form fields for human officer review",
     status: status.WORKING,
-    explanation: "Complete execution path verified: Frontend form -> Express backend -> FastAPI AI service -> Ollama Llama 3.2 3B -> Structured JSON response parsed and populated into form.",
+    explanation: "Complete execution path verified: Frontend form -> Express backend -> FastAPI AI service -> Configured AI Provider -> Structured JSON response parsed and populated into form.",
     boundaryNote: "Advisory copilot only. Government officer must explicitly edit and approve before challenge publication.",
   },
   {
     name: "Brain 2 — Startup Match Intelligence",
     purpose: "Provides natural-language explanatory synthesis for why a startup was matched to a government challenge.",
-    backendRoute: "POST /api/v1/challenges/:id/match",
+    backendRoute: "POST /api/v1/challenges/:challenge_id/match",
     aiServiceEndpoint: "POST /ai/match",
-    llmDependency: "Llama 3.2 3B + Nomic Embed Text (768-dim vectors)",
+    llmDependency: "Configurable AI Provider + Embeddings (configurable dimension)",
     isInvoked: "Yes — invoked during candidate matching workflow",
     isPersisted: "Yes — deterministic score in MatchScore.score; narrative saved in MatchScore.match_explanation",
     frontendConsumed: "Yes — displayed in ChallengeApplications.jsx and ChallengeOverview.jsx match cards",
@@ -110,9 +110,9 @@ const FIVE_AI_BRAINS = [
   {
     name: "Brain 3 — Proposal Analysis",
     purpose: "Analyzes startup technical proposals against challenge objectives, highlighting feasibility risks, implementation strengths, and budget anomalies.",
-    backendRoute: "POST /api/v1/ai/proposal-analysis",
+    backendRoute: "POST /api/v1/ai/applications/:application_id/analyze",
     aiServiceEndpoint: "POST /ai/proposal",
-    llmDependency: "Llama 3.2 3B via local Ollama",
+    llmDependency: "Configurable AI Provider (LLM)",
     isInvoked: "Yes — invoked when evaluator or government officer requests AI technical proposal brief",
     isPersisted: "Yes — advisory summary cached in evaluation metadata",
     frontendConsumed: "Yes — rendered in EvaluationDetail.jsx advisory sidebar for technical evaluators",
@@ -123,9 +123,9 @@ const FIVE_AI_BRAINS = [
   {
     name: "Brain 4 — Pilot Intelligence",
     purpose: "Analyzes milestone progress, KPI trajectory, evidence authenticity, and operational risks during pilot execution.",
-    backendRoute: "POST /api/v1/ai/pilot-intelligence",
+    backendRoute: "POST /api/v1/ai/pilots/:pilot_id/analyze",
     aiServiceEndpoint: "POST /ai/pilot",
-    llmDependency: "Llama 3.2 3B via local Ollama",
+    llmDependency: "Configurable AI Provider (LLM)",
     isInvoked: "Yes — invoked on pilot review dashboard for automated risk and progress synthesis",
     isPersisted: "Yes — stored in Pilot.ai_summary and risk assessment records",
     frontendConsumed: "Yes — displayed in ChallengePilot.jsx and EvaluatorPilotDetail.jsx",
@@ -136,9 +136,9 @@ const FIVE_AI_BRAINS = [
   {
     name: "Brain 5 — Document Assistance & Governance Drafting",
     purpose: "Assists authorized government officers in generating standardized pilot agreements, validation reports, and procurement handoff briefs.",
-    backendRoute: "POST /api/v1/ai/document-assistance",
+    backendRoute: "POST /api/v1/ai/documents/generate",
     aiServiceEndpoint: "POST /ai/document",
-    llmDependency: "Llama 3.2 3B via local Ollama",
+    llmDependency: "Configurable AI Provider (LLM)",
     isInvoked: "Partially — baseline document templates and validation note generator connected",
     isPersisted: "Partially — generated drafts saved in document drafts table",
     frontendConsumed: "Partially — validation note generator accessible in pilot validation modal",
@@ -257,12 +257,12 @@ const ARCHITECTURE_CATEGORIES = [
       { name: "Frontend", status: status.WORKING, desc: "React 19 + Vite SPA with Tailwind CSS, Framer Motion, strict accessible components", deps: "Node.js, Vite, React Router, Tailwind" },
       { name: "Backend API", status: status.WORKING, desc: "Node.js Express REST API v1 with Prisma ORM, robust error handling, rate limiting", deps: "Express 4, Prisma, Node.js" },
       { name: "PostgreSQL", status: status.WORKING, desc: "PostgreSQL database with relational schemas, foreign keys, and pgvector extension", deps: "PostgreSQL 15+, pgvector" },
-      { name: "Vector Embeddings", status: status.WORKING, desc: "768-dimensional semantic embeddings generated via Ollama nomic-embed-text", deps: "Ollama /api/embed, embeddingService.js" },
-      { name: "Vector Storage", status: status.WORKING, desc: "pgvector vector(768) columns with cosine distance similarity queries for matching", deps: "PostgreSQL pgvector, Prisma raw query" },
+      { name: "Vector Embeddings", status: status.WORKING, desc: "Semantic embeddings generated via AI service (dimension configurable)", deps: "AI Service /ai/embeddings, embeddingService.js" },
+      { name: "Vector Storage", status: status.WORKING, desc: "pgvector vector(N) columns with cosine distance similarity queries for matching", deps: "PostgreSQL pgvector, Prisma raw query" },
       { name: "AI Service", status: status.WORKING, desc: "Python FastAPI microservice on port 8000 providing decision support and Copilot endpoints", deps: "Python 3.10+, FastAPI, Uvicorn, httpx" },
-      { name: "Ollama", status: status.WORKING, desc: "Local LLM inference runtime operating on port 11434 with model caching", deps: "Ollama runtime on localhost:11434" },
-      { name: "Llama 3.2 3B", status: status.WORKING, desc: "Instruct model delivering structured JSON outputs across all 5 AI Brains", deps: "ollama run llama3.2:3b" },
-      { name: "Nomic Embed Text", status: status.WORKING, desc: "Specialized text embedding model producing 768-dimensional normalized vectors", deps: "ollama pull nomic-embed-text" },
+      { name: "AI Provider Runtime", status: status.WORKING, desc: "Configurable LLM provider (OpenAI-compatible, native Ollama, or mock adapter)", deps: "AI_PROVIDER, AI_BASE_URL, AI_MODEL" },
+      { name: "Embedding Provider", status: status.WORKING, desc: "Configurable embedding provider (OpenAI-compatible, native Ollama, or mock adapter)", deps: "EMBEDDING_PROVIDER, EMBEDDING_MODEL, EMBEDDING_DIMENSION" },
+      { name: "Decision Engine", status: status.WORKING, desc: "Deterministic scoring & evaluation engines for scale, risk, and candidate comparison", deps: "FastAPI, decision_engine.py" },
       { name: "Email Infrastructure", status: status.PARTIALLY_WORKING, desc: "Email sending simulated via console logger in development; production SMTP supported via env", deps: "nodemailer, SMTP_HOST" },
     ],
   },
@@ -414,14 +414,14 @@ export function ArchitectureStatus() {
 
           <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/60">
             <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
-              <span>Local LLM Stack</span>
-              <span className="flex items-center gap-1 font-mono text-amber-700 dark:text-amber-400 font-semibold">
-                <span className="h-2 w-2 rounded-full bg-amber-500" />
-                Ollama Runtime
+              <span>AI Provider Stack</span>
+              <span className="flex items-center gap-1 font-mono text-indigo-600 dark:text-indigo-400 font-semibold">
+                <span className="h-2 w-2 rounded-full bg-indigo-500" />
+                Configured Provider
               </span>
             </div>
             <p className="mt-1 text-xs font-mono text-slate-700 dark:text-slate-300 truncate">
-              Llama 3.2 3B + Nomic Embed
+              Configurable LLM & Embeddings
             </p>
           </div>
         </div>

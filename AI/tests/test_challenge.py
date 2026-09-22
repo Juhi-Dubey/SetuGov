@@ -15,7 +15,7 @@ from schemas.requests import (
 from schemas.responses import ChallengeCopilotResponse, ReadinessScore, SuggestedKPI
 from services.ai_service import AIService
 from services.decision_engine import DecisionEngine
-from services.ollama_client import InvalidAIResponseError, OllamaClient
+from providers.base import AIProvider, InvalidAIResponseError
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -625,10 +625,10 @@ class TestAIServiceAnalyzeChallengeAsync:
             "warnings": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_challenge(request)
 
         assert isinstance(response, ChallengeCopilotResponse)

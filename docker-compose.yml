@@ -29,6 +29,7 @@ services:
     image: ollama/ollama:0.5.7
     container_name: setugov_ollama
     restart: unless-stopped
+    profiles: ["local-llm"]
     ports:
       - "11434:11434"
     volumes:
@@ -51,15 +52,20 @@ services:
     environment:
       AI_SERVICE_HOST: 0.0.0.0
       AI_SERVICE_PORT: 8000
-      OLLAMA_BASE_URL: http://ollama:11434
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
-      OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT:-120}
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      AI_BASE_URL: ${AI_BASE_URL:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+      AI_TIMEOUT: ${AI_TIMEOUT:-120}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-mock}
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+      EMBEDDING_DIMENSION: ${EMBEDDING_DIMENSION:-768}
+      EMBEDDING_REQUEST_DIMENSIONS: ${EMBEDDING_REQUEST_DIMENSIONS:-false}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     ports:
       - "8000:8000"
-    depends_on:
-      ollama:
-        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
@@ -83,6 +89,7 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       AI_SERVICE_URL: http://ai:8000
       AI_MOCK_MODE: ${AI_MOCK_MODE:-true}
+      AI_EMBEDDING_DIMENSION: ${AI_EMBEDDING_DIMENSION:-768}
       NODE_ENV: ${NODE_ENV:-development}
     ports:
       - "5000:5000"

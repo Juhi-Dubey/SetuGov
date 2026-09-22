@@ -457,6 +457,69 @@ class DecisionEngine:
         return counts
 
     # ══════════════════════════════════════════════════════════════════
+    # Scale Recommendation (SCALE / EXTEND / STOP) — always deterministic
+    # ══════════════════════════════════════════════════════════════════
+
+    @staticmethod
+    def compute_kpi_achievement_pct(kpi_results: list) -> Optional[float]:
+        """
+        Average per-KPI achievement against baseline->target, using only
+        KPIs with a complete baseline/target/actual triple. Used to bridge
+        raw per-KPI pilot data into the aggregate ``kpi_achievement_pct``
+        that DecisionInput/``recommend()`` expects.
+        """
+        achievements: list[float] = []
+        for k in kpi_results:
+            if k.baseline is not None and k.target is not None and k.actual is not None:
+                expected = abs(k.target - k.baseline)
+                actual = abs(k.actual - k.baseline)
+                achievements.append((actual / expected) * 100 if expected > 0 else 100.0)
+        if not achievements:
+            return None
+        return sum(achievements) / len(achievements)
+
+    @staticmethod
+    def compute_evidence_quality_pct(evidence: list) -> Optional[float]:
+        """Fraction of evidence items marked verified, as a 0-100 score.
+        Bridges raw PilotEvidence lists into the aggregate ``evidence_quality``
+        that DecisionInput/``recommend()`` expects."""
+        if not evidence:
+            return None
+        verified = sum(1 for e in evidence if e.verified is True)
+        return (verified / len(evidence)) * 100.0
+
+    @staticmethod
+    def compute_risk_score_from_risks(risks: list) -> float:
+        """
+        Aggregate a list of PilotRisk items into a single 0-100 risk score
+        (HIGH=30, MEDIUM=12, LOW=5, capped at 100) — the same weighting
+        used for LLM-identified risks in summarize_identified_risks, so
+        risk scoring is consistent across both entry points.
+        """
+        high = sum(1 for r in risks if (r.severity or "").upper() == "HIGH")
+        medium = sum(1 for r in risks if (r.severity or "").upper() == "MEDIUM")
+        low = sum(1 for r in risks if (r.severity or "").upper() == "LOW")
+        return min(100.0, high * 30.0 + medium * 12.0 + low * 5.0)
+
+    # ══════════════════════════════════════════════════════════════════
+    # Risk Analysis — severity counts and overall score are deterministic
+    # ══════════════════════════════════════════════════════════════════
+
+    @staticmethod
+    def summarize_identified_risks(risks: list) -> tuple[int, int, int, float]:
+        """
+        Count LLM-identified risks by severity and compute an overall
+        0-100 risk score from those counts. The LLM identifies risks;
+        Python is the sole authority on the resulting counts and score
+        (mirrors the Backend's own JS fallback weighting: 30/12/5).
+        """
+        high = sum(1 for r in risks if r.severity.value == "HIGH")
+        medium = sum(1 for r in risks if r.severity.value == "MEDIUM")
+        low = sum(1 for r in risks if r.severity.value == "LOW")
+        score = min(100.0, high * 30.0 + medium * 12.0 + low * 5.0)
+        return high, medium, low, score
+
+    # ══════════════════════════════════════════════════════════════════
     # KPI Weight Validation
     # ══════════════════════════════════════════════════════════════════
 

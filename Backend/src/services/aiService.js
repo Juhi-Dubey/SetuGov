@@ -21,7 +21,7 @@ const callExternalAiService = async (endpoint, payload) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(120000) // 120s timeout for local LLM inference
+      signal: AbortSignal.timeout((config.AI_TIMEOUT || 300) * 1000)
     });
 
     if (!response.ok) {

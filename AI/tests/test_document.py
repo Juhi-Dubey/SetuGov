@@ -166,7 +166,7 @@ class TestAIServiceAssistDocumentAsync:
         """Authoritative request values and ₹ Unicode symbols survive end-to-end."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement Draft — Hospital Workflow",
@@ -175,10 +175,10 @@ class TestAIServiceAssistDocumentAsync:
             "missing_information": ["[DATE] (effective date)"],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         assert response.document_type == "PILOT_AGREEMENT_DRAFT"
@@ -193,7 +193,7 @@ class TestAIServiceAssistDocumentAsync:
         """Invented IP ownership claims and invented payment splits are converted to review placeholders."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement",
@@ -211,10 +211,10 @@ class TestAIServiceAssistDocumentAsync:
             "missing_information": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         # Invented IP terms replaced with review placeholder
@@ -232,7 +232,7 @@ class TestAIServiceAssistDocumentAsync:
         """Unsupplied commercial/governance terms are surfaced without claiming they are legal mandates."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement",
@@ -241,10 +241,10 @@ class TestAIServiceAssistDocumentAsync:
             "missing_information": ["[START_DATE] commencement date"],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         assert "Payment milestone disbursement schedule: Not provided — requires authorized review." in response.missing_information
@@ -257,7 +257,7 @@ class TestAIServiceAssistDocumentAsync:
         """Strings returned for sections or missing_information are safely parsed without char splitting."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement",
@@ -266,10 +266,10 @@ class TestAIServiceAssistDocumentAsync:
             "missing_information": "Item 1: Signatures missing, Item 2: Address missing",
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         assert isinstance(response.sections, list)
@@ -299,7 +299,7 @@ class TestAIServiceAssistDocumentAsync:
         """When LLM returns overly thin content (<250 chars), system ensures substantive multi-section draft."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         # Thin 1-sentence mock LLM output
         raw_llm = {
@@ -309,10 +309,10 @@ class TestAIServiceAssistDocumentAsync:
             "missing_information": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         # Must not be just a thin intro paragraph
@@ -333,7 +333,7 @@ class TestAIServiceAssistDocumentAsync:
         """Verify em dash and ₹ symbols are preserved without mojibake."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement Draft — Government Innovation",
@@ -342,10 +342,10 @@ class TestAIServiceAssistDocumentAsync:
             "missing_information": ["Disbursement terms — requires review."],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         # Em dash must not be corrupted into mojibake
@@ -360,7 +360,7 @@ class TestAIServiceAssistDocumentAsync:
         """User objective 40% and KPI target 54 / baseline 90 are protected from LLM altering."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement Draft",
@@ -380,10 +380,10 @@ class TestAIServiceAssistDocumentAsync:
             "missing_information": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         # 40% must be preserved and 30% reduction must be reconciled
@@ -399,7 +399,7 @@ class TestAIServiceAssistDocumentAsync:
         """Contractual compliance commitments and termination notice periods are converted to review placeholders."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement",
@@ -418,10 +418,10 @@ class TestAIServiceAssistDocumentAsync:
             "missing_information": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         # Active contractual compliance statements converted to review placeholder
@@ -440,7 +440,7 @@ class TestAIServiceAssistDocumentAsync:
         """All user supplied parameters survive end-to-end without data loss."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement Draft — Government Innovation",
@@ -462,10 +462,10 @@ class TestAIServiceAssistDocumentAsync:
             "missing_information": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         assert "Reduce waiting times at government hospitals" in response.content
@@ -483,7 +483,7 @@ class TestAIServiceAssistDocumentAsync:
         """Missing legal/contractual items use standard review placeholders without invented certifications."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement Draft",
@@ -506,10 +506,10 @@ class TestAIServiceAssistDocumentAsync:
             "missing_information": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         # Placeholders must be present
@@ -538,7 +538,7 @@ class TestAIServiceAssistDocumentAsync:
         """Review label is strictly preserved and Unicode em dash and rupee are intact."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement Draft",
@@ -547,10 +547,10 @@ class TestAIServiceAssistDocumentAsync:
             "missing_information": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         assert response.review_label == "AI-generated draft — requires authorized review."
@@ -565,7 +565,7 @@ class TestAIServiceAssistDocumentAsync:
         """[STARTUP_NAME] must not leak into date / commencement positions."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement Draft",
@@ -579,10 +579,10 @@ class TestAIServiceAssistDocumentAsync:
             "missing_information": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         assert "[STARTUP_NAME]" not in response.content
@@ -597,7 +597,7 @@ class TestAIServiceAssistDocumentAsync:
         """Document must never claim to be the final version or legally binding."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement Draft",
@@ -611,10 +611,10 @@ class TestAIServiceAssistDocumentAsync:
             "missing_information": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         assert "is the final version" not in response.content
@@ -626,7 +626,7 @@ class TestAIServiceAssistDocumentAsync:
         """Filters out generic placeholder duplicates and preserves legitimate missing items."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement Draft",
@@ -641,10 +641,10 @@ class TestAIServiceAssistDocumentAsync:
             ],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         # Generic junk items filtered
@@ -669,7 +669,7 @@ class TestAIServiceAssistDocumentAsync:
         """Generic date placeholders are normalized to '— REQUIRES AUTHORIZED REVIEW' and double punctuation is fixed."""
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
 
         raw_llm = {
             "title": "Pilot Agreement Draft",
@@ -694,10 +694,10 @@ class TestAIServiceAssistDocumentAsync:
             ],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.assist_document(full_document_request)
 
         # Normalized date placeholders in content
@@ -758,7 +758,7 @@ class TestAIServiceAssistDocumentAsync:
         """
         from unittest.mock import AsyncMock
         from services.ai_service import AIService
-        from services.ollama_client import OllamaClient
+        from providers.base import AIProvider
         from schemas.requests import DocumentAssistanceRequest, DocumentType, KPIInput
 
         # 1. TEST A & Missing Data Workflow
@@ -798,10 +798,10 @@ class TestAIServiceAssistDocumentAsync:
             ],
         }
 
-        mock_ollama_a = AsyncMock(spec=OllamaClient)
-        mock_ollama_a.generate_json.return_value = mock_raw_missing
+        mock_provider_a = AsyncMock(spec=AIProvider)
+        mock_provider_a.generate_json.return_value = mock_raw_missing
 
-        service_a = AIService(ollama_client=mock_ollama_a)
+        service_a = AIService(ai_provider=mock_provider_a)
         resp_a = await service_a.assist_document(missing_req)
 
         # TEST A & C: Placeholder preserved, startup name present, no template leaks
@@ -873,10 +873,10 @@ class TestAIServiceAssistDocumentAsync:
             ],
         }
 
-        mock_ollama_b = AsyncMock(spec=OllamaClient)
-        mock_ollama_b.generate_json.return_value = mock_raw_supplied
+        mock_provider_b = AsyncMock(spec=AIProvider)
+        mock_provider_b.generate_json.return_value = mock_raw_supplied
 
-        service_b = AIService(ollama_client=mock_ollama_b)
+        service_b = AIService(ai_provider=mock_provider_b)
         resp_b = await service_b.assist_document(supplied_req)
 
         # Supplied values appear

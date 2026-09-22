@@ -37,13 +37,13 @@ const getStatusPriority = (status) => {
 };
 
 /**
- * Match startups with a Government Challenge using real pgvector / semantic similarity (768-dim nomic-embed-text)
+ * Match startups with a Government Challenge using real pgvector / semantic similarity (configurable dimensions via AI service)
  * and transparent 5-factor authoritative weighted scoring.
  * 
  * Pipeline:
  * 1. Candidate Discovery (Verified startups)
  * 2. 3-State Eligibility Evaluation (ELIGIBLE, NEEDS_REVIEW, INELIGIBLE)
- * 3. Real 768-dimensional Ollama embeddings & cosine similarity
+ * 3. Semantic embeddings from AI service & cosine similarity (dimension configurable)
  * 4. 5-Factor Deterministic Authoritative Match Scoring:
  *    - Technology Match: 30%
  *    - Domain/Semantic Match: 25% (Real cosine similarity + domain keywords, no fake 0.5)
@@ -130,7 +130,7 @@ const _executeMatchingForChallenge = async (challenge, challengeId, user = null,
     };
   }
 
-  // Retrieve or lazy-generate challenge embedding (768-dim nomic-embed-text)
+  // Retrieve or lazy-generate challenge embedding from AI service (dimension configurable)
   let challengeEmbedding = await getChallengeEmbedding(challenge.id);
   if (!challengeEmbedding || challengeEmbedding.length !== 768) {
     try {

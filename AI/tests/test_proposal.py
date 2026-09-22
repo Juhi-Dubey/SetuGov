@@ -154,15 +154,15 @@ class TestProposalResponseValidation:
 from unittest.mock import AsyncMock
 from prompts.proposal_analysis import build_proposal_prompt
 from services.ai_service import AIService
-from services.ollama_client import OllamaClient
+from providers.base import AIProvider
 
 
 class TestAIServiceAnalyzeProposalAsync:
-    """Tests for AIService.analyze_proposal with mocked Ollama."""
+    """Tests for AIService.analyze_proposal with a mocked provider."""
 
     @pytest.mark.asyncio
     async def test_analyze_proposal_async_mock(self):
-        """End-to-end AIService execution with AsyncMock OllamaClient."""
+        """End-to-end AIService execution with AsyncMock AIProvider."""
         request = _full_proposal_request()
         raw_llm = {
             "executive_summary": "The proposal states an AI-based OPD queue management approach.",
@@ -183,10 +183,10 @@ class TestAIServiceAnalyzeProposalAsync:
             "questions_for_evaluator": ["Verify API readiness of the district hospital."],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(request)
 
         assert response.executive_summary == "The proposal states an AI-based OPD queue management approach."
@@ -209,10 +209,10 @@ class TestAIServiceAnalyzeProposalAsync:
             "estimated_cost": "₹50 lakh",  # Hallucinated cost
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(request)
 
         assert response.estimated_cost == "₹10 lakh"
@@ -228,10 +228,10 @@ class TestAIServiceAnalyzeProposalAsync:
             "implementation_timeline": "6 months",  # Hallucinated timeline
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(request)
 
         assert response.implementation_timeline == "60 days"
@@ -248,10 +248,10 @@ class TestAIServiceAnalyzeProposalAsync:
             "missing_information": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(request)
 
         assert response.estimated_cost is None
@@ -269,10 +269,10 @@ class TestAIServiceAnalyzeProposalAsync:
             "missing_information": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(request)
 
         assert response.implementation_timeline is None
@@ -296,10 +296,10 @@ class TestAIServiceAnalyzeProposalAsync:
             ],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(request)
 
         # Assert unverified claims are reframed
@@ -344,10 +344,10 @@ class TestAIServiceAnalyzeProposalAsync:
             ],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(request)
 
         assert len(response.risks) == 3
@@ -376,10 +376,10 @@ class TestAIServiceAnalyzeProposalAsync:
             "questions_for_evaluator": "What is the failover mechanism?, How is patient consent logged?",
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(request)
 
         assert "Data flow diagram" in response.missing_information
@@ -411,10 +411,10 @@ class TestAIServiceAnalyzeProposalAsync:
             "questions_for_evaluator": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(minimal_request)
 
         missing_text = " ".join(response.missing_information).lower()
@@ -453,10 +453,10 @@ class TestAIServiceAnalyzeProposalAsync:
             "estimated_cost": "?50 lakh",  # LLM attempt to override or corrupt rupee sign
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(request)
 
         assert response.estimated_cost == "₹10 lakh"
@@ -481,10 +481,10 @@ class TestAIServiceAnalyzeProposalAsync:
             "questions_for_evaluator": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(request)
 
         # Falsely claimed missing items must be filtered out
@@ -506,10 +506,10 @@ class TestAIServiceAnalyzeProposalAsync:
             "technology_readiness": "TRL 7 — System prototype in operational environment with proven maturity and demonstrated production readiness.",
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(request)
 
         assert "trl 7" not in response.technology_readiness.lower()
@@ -526,10 +526,10 @@ class TestAIServiceAnalyzeProposalAsync:
             "estimated_cost": "$50,000",
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(request)
 
         assert response.estimated_cost == "€10,000"
@@ -558,10 +558,10 @@ class TestAIServiceAnalyzeProposalAsync:
             "evidence_quality": "Moderate — relies on self-reported deployment claims.",
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.analyze_proposal(request)
 
         assert response.requirement_traceability is not None

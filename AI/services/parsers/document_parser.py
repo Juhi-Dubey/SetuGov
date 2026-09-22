@@ -18,7 +18,7 @@ from pydantic import ValidationError
 
 from schemas.requests import DocumentAssistanceRequest, DocumentType
 from schemas.responses import DocumentAssistanceResponse
-from services.ollama_client import InvalidAIResponseError
+from providers.base import InvalidAIResponseError
 from services.sanitizers import _extract_str_list, _sanitize_claim
 
 

@@ -2,7 +2,7 @@
 Tests for Decision Engine — SCALE / EXTEND / STOP
 
 Covers: SCALE, EXTEND, STOP paths, boundary conditions, reproducibility.
-Also tests Ollama client exception types and JSON parsing.
+Also tests provider exception types and shared JSON parsing.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from schemas.responses import (
     DecisionRecommendation,
 )
 from services.decision_engine import DecisionEngine
-from services.ollama_client import InvalidAIResponseError, OllamaClient
+from providers.base import InvalidAIResponseError, safe_parse_json
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -162,41 +162,41 @@ class TestDecisionEngine:
 # ═══════════════════════════════════════════════════════════════════════════
 
 
-class TestOllamaClientParsing:
-    """Test the safe JSON parsing without a live Ollama connection."""
+class TestProviderJSONParsing:
+    """Test the shared safe JSON parsing without a live AI provider connection."""
 
     def test_parse_valid_json(self):
         raw = '{"key": "value", "num": 42}'
-        result = OllamaClient._safe_parse_json(raw)
+        result = safe_parse_json(raw)
         assert result == {"key": "value", "num": 42}
 
     def test_parse_json_with_whitespace(self):
         raw = '  \n  {"key": "value"}  \n  '
-        result = OllamaClient._safe_parse_json(raw)
+        result = safe_parse_json(raw)
         assert result == {"key": "value"}
 
     def test_parse_json_in_markdown_fences(self):
         raw = '```json\n{"key": "value"}\n```'
-        result = OllamaClient._safe_parse_json(raw)
+        result = safe_parse_json(raw)
         assert result == {"key": "value"}
 
     def test_parse_json_embedded_in_text(self):
         raw = 'Here is the result: {"key": "value"} hope it helps!'
-        result = OllamaClient._safe_parse_json(raw)
+        result = safe_parse_json(raw)
         assert result == {"key": "value"}
 
     def test_parse_invalid_json_raises(self):
         with pytest.raises(InvalidAIResponseError):
-            OllamaClient._safe_parse_json("not json at all")
+            safe_parse_json("not json at all")
 
     def test_parse_array_raises(self):
         """We expect a JSON object, not an array."""
         with pytest.raises(InvalidAIResponseError):
-            OllamaClient._safe_parse_json('[1, 2, 3]')
+            safe_parse_json('[1, 2, 3]')
 
     def test_parse_empty_raises(self):
         with pytest.raises(InvalidAIResponseError):
-            OllamaClient._safe_parse_json("")
+            safe_parse_json("")
 
 
 # ═══════════════════════════════════════════════════════════════════════════

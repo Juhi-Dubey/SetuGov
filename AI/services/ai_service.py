@@ -5,7 +5,7 @@ Coordinates the AI brains:
 1. Receives typed requests
 2. Runs deterministic calculations (via DecisionEngine)
 3. Builds prompts
-4. Calls OllamaClient
+4. Calls the configured AIProvider
 5. Parses and validates responses via Pydantic
 6. Returns typed responses
 """
@@ -26,11 +26,14 @@ from prompts.proposal_analysis import build_proposal_prompt
 from prompts.startup_comparator import build_comparator_prompt
 from schemas.requests import (
     ChallengeCopilotRequest,
+    DecisionInput,
     DocumentAssistanceRequest,
     DocumentType,
     MatchExplanationRequest,
     PilotIntelligenceRequest,
     ProposalAnalysisRequest,
+    RiskAnalysisRequest,
+    ScaleRecommendationRequest,
     StartupComparatorRequest,
 )
 from schemas.responses import (
@@ -44,20 +47,25 @@ from schemas.responses import (
     PilotRecommendation,
     ProposalAnalysisResponse,
     ProposalRisk,
+    RiskAnalysisResponse,
     RiskSeverity,
+    ScaleRecommendationResponse,
+    ScaleSupportingMetrics,
     StartupComparatorResponse,
     SuggestedKPI,
 )
+from prompts.risk_analysis import build_risk_analysis_prompt
 from services.confidence import ConfidenceAssessor
 from services.decision_engine import DecisionEngine
 from services.input_sanitizer import sanitize_user_input
-from services.ollama_client import InvalidAIResponseError, OllamaClient
+from providers.base import AIProvider, InvalidAIResponseError
 from services.parsers.challenge_parser import parse_challenge_response
 from services.parsers.comparator_parser import parse_comparator_response
 from services.parsers.document_parser import parse_document_response
 from services.parsers.match_parser import parse_match_response
 from services.parsers.pilot_parser import parse_pilot_response
 from services.parsers.proposal_parser import parse_proposal_response
+from services.parsers.risk_analysis_parser import parse_risk_analysis_response
 
 logger = logging.getLogger("setugov.ai.service")
 
@@ -1295,11 +1303,11 @@ def _match_kpi(
 class AIService:
     """
     Orchestrator that wires deterministic calculations, prompts,
-    and Ollama together for each brain.
+    and the configured AIProvider together for each brain.
     """
 
-    def __init__(self, ollama_client: OllamaClient) -> None:
-        self._ollama = ollama_client
+    def __init__(self, ai_provider: AIProvider) -> None:
+        self._ai = ai_provider
         self._engine = DecisionEngine()
 
     # ══════════════════════════════════════════════════════════════════
@@ -1322,7 +1330,7 @@ class AIService:
 
         # 2. Build prompt and call LLM
         system_prompt, user_prompt = build_challenge_prompt(request)
-        raw = await self._ollama.generate_json(prompt=user_prompt, system=system_prompt)
+        raw = await self._ai.generate_json(prompt=user_prompt, system=system_prompt)
 
         # 3. Parse and reconcile LLM output with authoritative user input
         response = parse_challenge_response(raw, request=request)
@@ -1363,7 +1371,7 @@ class AIService:
 
         # 2. LLM explanation
         system_prompt, user_prompt = build_match_prompt(request, score)
-        raw = await self._ollama.generate_json(prompt=user_prompt, system=system_prompt)
+        raw = await self._ai.generate_json(prompt=user_prompt, system=system_prompt)
 
         # 3. Build response — score is strictly from Python, explanation from LLM
         return parse_match_response(raw, score=score)
@@ -1385,7 +1393,7 @@ class AIService:
         )
 
         system_prompt, user_prompt = build_proposal_prompt(request)
-        raw = await self._ollama.generate_json(prompt=user_prompt, system=system_prompt)
+        raw = await self._ai.generate_json(prompt=user_prompt, system=system_prompt)
 
         response = parse_proposal_response(raw, request=request)
         if not response.evidence_quality:
@@ -1429,7 +1437,7 @@ class AIService:
         system_prompt, user_prompt = build_pilot_prompt(
             request, kpi_analyses, milestone_rate, risk_counts
         )
-        raw = await self._ollama.generate_json(prompt=user_prompt, system=system_prompt)
+        raw = await self._ai.generate_json(prompt=user_prompt, system=system_prompt)
 
         # 3. Build response — calculations from Python, interpretation from LLM
         response = parse_pilot_response(
@@ -1468,7 +1476,7 @@ class AIService:
         logger.info("Brain 5 — generating %s", request.document_type.value)
 
         system_prompt, user_prompt = build_document_prompt(request)
-        raw = await self._ollama.generate_json(prompt=user_prompt, system=system_prompt)
+        raw = await self._ai.generate_json(prompt=user_prompt, system=system_prompt)
 
         return parse_document_response(raw, request=request)
 
@@ -1511,7 +1519,109 @@ class AIService:
         system_prompt, user_prompt = build_comparator_prompt(request, scores)
 
         # 3. LLM call — qualitative narratives only
-        raw = await self._ollama.generate_json(prompt=user_prompt, system=system_prompt)
+        raw = await self._ai.generate_json(prompt=user_prompt, system=system_prompt)
 
         # 4. Parse — scores from Python, text from LLM
         return parse_comparator_response(raw, request=request, scores=scores)
+
+    # ══════════════════════════════════════════════════════════════════
+    # Scale Recommendation — SCALE/EXTEND/STOP always deterministic
+    # ══════════════════════════════════════════════════════════════════
+
+    async def recommend_scale(
+        self, request: ScaleRecommendationRequest
+    ) -> ScaleRecommendationResponse:
+        """
+        SCALE/EXTEND/STOP recommendation for a pilot -- a thin adapter over
+        the existing, tested DecisionEngine.recommend() composite-scoring
+        engine (see /ai/decision). No LLM call: this reuses the same
+        pure-Python decision logic already used elsewhere, rather than
+        introducing a second, parallel way to make the same kind of call.
+
+        Callers may supply either pre-aggregated metrics directly
+        (kpi_achievement_pct, evidence_quality, risk_score) or raw pilot
+        data (kpi_results, evidence, risks) for this method to aggregate
+        into that same shape first.
+        """
+        logger.info(
+            "Scale recommendation -- challenge='%s', startup='%s'",
+            request.challenge_title,
+            request.startup_name,
+        )
+
+        # 1. Aggregate raw lists into the flat metrics DecisionInput expects,
+        #    only where a pre-aggregated value wasn't supplied directly.
+        kpi_achievement_pct = request.kpi_achievement_pct
+        if kpi_achievement_pct is None:
+            kpi_achievement_pct = self._engine.compute_kpi_achievement_pct(
+                request.kpi_results
+            )
+
+        evidence_quality = request.evidence_quality
+        if evidence_quality is None:
+            evidence_quality = self._engine.compute_evidence_quality_pct(request.evidence)
+
+        risk_score = request.risk_score
+        if risk_score is None:
+            risk_score = self._engine.compute_risk_score_from_risks(request.risks)
+
+        # Neutral (50/100) defaults for signals this request's contract has
+        # no raw-data source for at all (technical_stability, user_feedback) --
+        # never fabricated toward SCALE or STOP, just a midpoint.
+        decision_input = DecisionInput(
+            kpi_achievement_pct=kpi_achievement_pct if kpi_achievement_pct is not None else 50.0,
+            evidence_quality=evidence_quality if evidence_quality is not None else 50.0,
+            validation_status=request.validation_status or "partial",
+            technical_stability=(
+                request.technical_stability if request.technical_stability is not None else 50.0
+            ),
+            user_feedback_score=(
+                request.user_feedback_score if request.user_feedback_score is not None else 50.0
+            ),
+            risk_score=risk_score if risk_score is not None else 0.0,
+        )
+
+        # 2. The existing, tested composite-score engine is the sole
+        #    authority on the recommendation -- no LLM involved.
+        result = self._engine.recommend(decision_input)
+
+        supporting_metrics = ScaleSupportingMetrics(
+            kpi_achievement_pct=(
+                round(kpi_achievement_pct, 1) if kpi_achievement_pct is not None else None
+            ),
+            milestone_completion_rate=None,  # not part of this request's contract
+            validation_score=(
+                round(evidence_quality, 1) if evidence_quality is not None else None
+            ),
+            risk_score=round(risk_score, 1) if risk_score is not None else None,
+        )
+
+        return ScaleRecommendationResponse(
+            recommendation=result.recommendation.value,
+            confidence_pct=result.composite_score,
+            reasons=result.reasoning,
+            supporting_metrics=supporting_metrics,
+            risks=result.uncertainties,
+            conditions_for_scaling=[c.description for c in result.conditions],
+        )
+
+    # ══════════════════════════════════════════════════════════════════
+    # Risk Analysis -- 7-dimension identification, counts always deterministic
+    # ══════════════════════════════════════════════════════════════════
+
+    async def analyze_risks(self, request: RiskAnalysisRequest) -> RiskAnalysisResponse:
+        """
+        Open-ended risk identification by the LLM; severity counts and the
+        overall score are always recomputed deterministically in Python
+        from the LLM's own risk list (never trusted from the LLM directly).
+        """
+        logger.info(
+            "Risk analysis — challenge='%s', categories=%s",
+            request.challenge_title,
+            request.categories,
+        )
+
+        system_prompt, user_prompt = build_risk_analysis_prompt(request)
+        raw = await self._ai.generate_json(prompt=user_prompt, system=system_prompt)
+
+        return parse_risk_analysis_response(raw)

@@ -28,6 +28,8 @@ class APIResponse(BaseModel):
 
     success: bool = True
     data: Optional[dict[str, Any]] = None
+    # Non-fatal notices, e.g. input text that the sanitizer filtered.
+    warnings: list[str] = Field(default_factory=list)
 
 
 class ErrorResponse(BaseModel):
@@ -340,5 +342,98 @@ class StartupComparatorResponse(BaseModel):
         default=(
             "AI-generated comparative analysis — scores are deterministic; "
             "qualitative explanations require authorized evaluator review before use."
+        )
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Embeddings
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class EmbeddingResponse(BaseModel):
+    """Output of the embeddings endpoint — vectors only, no persistence."""
+
+    embeddings: list[list[float]] = Field(
+        ..., description="One vector per input text, in the same order."
+    )
+    model: Optional[str] = Field(None, description="Embedding model that produced these vectors.")
+    dimension: int = Field(..., description="Length of each returned vector.")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Scale Recommendation
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class ScaleRecommendationResult(str, Enum):
+    SCALE = "SCALE"
+    EXTEND = "EXTEND"
+    STOP = "STOP"
+
+
+class ScaleSupportingMetrics(BaseModel):
+    """All computed deterministically in Python — the LLM never sets these."""
+
+    kpi_achievement_pct: Optional[float] = None
+    milestone_completion_rate: Optional[float] = Field(
+        None,
+        description=(
+            "Not computable here — milestones are not part of this "
+            "request's contract. Left null rather than fabricated; the "
+            "caller (Backend) has direct DB access to compute it if needed."
+        ),
+    )
+    validation_score: Optional[float] = None
+    risk_score: Optional[float] = None
+
+
+class ScaleRecommendationResponse(BaseModel):
+    """SCALE/EXTEND/STOP is always deterministic — see DecisionEngine.
+    ``reasons``, ``risks`` (narrative) and ``conditions_for_scaling`` are the
+    LLM's qualitative narration of the already-computed result."""
+
+    recommendation: ScaleRecommendationResult
+    confidence_pct: float = Field(..., ge=0, le=100)
+    reasons: list[str] = Field(default_factory=list)
+    supporting_metrics: ScaleSupportingMetrics
+    risks: list[str] = Field(default_factory=list)
+    conditions_for_scaling: list[str] = Field(default_factory=list)
+    advisory_notice: str = Field(
+        default=(
+            "AI recommendation is strictly advisory. Final scaling and "
+            "procurement decision must be made by authorized government officials."
+        )
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Risk Analysis
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class IdentifiedRisk(BaseModel):
+    category: str
+    description: str
+    severity: RiskSeverity
+    probability: RiskSeverity
+    mitigation_suggestion: Optional[str] = None
+
+
+class RiskAnalysisResponse(BaseModel):
+    """The risk list and severities are LLM-generated (open-ended
+    identification); the counts and overall score are always recomputed
+    deterministically in Python from that list — never trusted from the LLM."""
+
+    risks: list[IdentifiedRisk] = Field(default_factory=list)
+    overall_risk_score: float = Field(..., ge=0, le=100)
+    high_risk_count: int = Field(..., ge=0)
+    medium_risk_count: int = Field(..., ge=0)
+    low_risk_count: int = Field(..., ge=0)
+    risk_summary: str
+    advisory_notice: str = Field(
+        default=(
+            "AI-assisted risk analysis is advisory. Officials should conduct "
+            "formal departmental risk audits."
         )
     )

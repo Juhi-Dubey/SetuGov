@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from schemas.requests import PilotIntelligenceRequest
 from schemas.responses import KPIAnalysis, KPIStatus, PilotIntelligenceResponse
-from services.ollama_client import InvalidAIResponseError
+from providers.base import InvalidAIResponseError
 from services.sanitizers import _extract_str_list, _sanitize_claim
 
 

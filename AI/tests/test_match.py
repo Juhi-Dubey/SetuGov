@@ -169,12 +169,12 @@ class TestLLMCannotModifyScore:
 
 from unittest.mock import AsyncMock
 from services.ai_service import AIService
-from services.ollama_client import OllamaClient
+from providers.base import AIProvider
 from prompts.match_explanation import build_match_prompt
 
 
 class TestAIServiceExplainMatchAsync:
-    """Test async execution of AIService.explain_match with mocked OllamaClient."""
+    """Test async execution of AIService.explain_match with a mocked AIProvider."""
 
     @pytest.mark.asyncio
     async def test_explain_match_preserves_deterministic_score_and_ignores_llm_score(self):
@@ -199,10 +199,10 @@ class TestAIServiceExplainMatchAsync:
             "deployment_considerations": ["Requires integration with existing hospital token system"],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.explain_match(request)
 
         assert isinstance(response, MatchExplanationResponse)
@@ -230,10 +230,10 @@ class TestAIServiceExplainMatchAsync:
             "deployment_considerations": "On-premise server requirements",  # plain string
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.explain_match(request)
 
         # Must be parsed as single-item list of strings, NOT character arrays
@@ -254,10 +254,10 @@ class TestAIServiceExplainMatchAsync:
             "deployment_considerations": "Integration with OPD\nStaff training requirement",
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.explain_match(request)
 
         assert len(response.strengths) == 3
@@ -281,10 +281,10 @@ class TestAIServiceExplainMatchAsync:
             "deployment_considerations": "Network bandwidth, Token printer setup",
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.explain_match(request)
 
         assert response.strengths == ["Queue management", "Predictive analytics", "ISO 27001"]
@@ -296,10 +296,10 @@ class TestAIServiceExplainMatchAsync:
     async def test_explain_match_handles_empty_or_malformed_llm_output(self):
         """Empty LLM dictionary gracefully yields default explanation and empty lists."""
         request = _full_match_request()
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = {}
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = {}
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.explain_match(request)
 
         assert response.why_matched == "No explanation provided."
@@ -350,10 +350,10 @@ class TestAntiHallucinationClaimSanitization:
             "deployment_considerations": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.explain_match(request)
 
         # None of the unverified claims should remain

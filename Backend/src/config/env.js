@@ -30,9 +30,8 @@ export const config = {
     throw new Error(`Invalid AI_MOCK_MODE value: "${val}". Must be "true", "false", or unset.`);
   })(),
   NODE_ENV: nodeEnv,
-  OLLAMA_BASE_URL: (process.env.OLLAMA_BASE_URL || 'http://localhost:11434').replace(/\/+$/, ''),
-  OLLAMA_EMBEDDING_MODEL: process.env.OLLAMA_EMBEDDING_MODEL || 'nomic-embed-text',
-  OLLAMA_EMBEDDING_DIMENSION: parseInt(process.env.OLLAMA_EMBEDDING_DIMENSION || '768', 10),
+  AI_TIMEOUT: parseInt(process.env.AI_TIMEOUT || '300', 10),
+  AI_EMBEDDING_DIMENSION: parseInt(process.env.AI_EMBEDDING_DIMENSION || '768', 10),
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 mins
   RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
   AUTH_RATE_LIMIT_WINDOW_MS: parseInt(process.env.AUTH_RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 mins

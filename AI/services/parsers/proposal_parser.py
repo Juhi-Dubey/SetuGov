@@ -22,7 +22,7 @@ from schemas.responses import (
     RequirementTrace,
     RiskSeverity,
 )
-from services.ollama_client import InvalidAIResponseError
+from providers.base import InvalidAIResponseError
 from services.sanitizers import _extract_str_list, _sanitize_claim
 
 

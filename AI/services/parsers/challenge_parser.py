@@ -18,7 +18,7 @@ from schemas.responses import (
     SuggestedKPI,
 )
 from services.decision_engine import DecisionEngine
-from services.ollama_client import InvalidAIResponseError
+from providers.base import InvalidAIResponseError
 from services.sanitizers import (
     _ensure_evidence_aware_assumption,
     _ensure_hypothesis,

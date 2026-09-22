@@ -14,7 +14,7 @@ from schemas.requests import (
 from schemas.responses import KPIAnalysis, KPIStatus, PilotIntelligenceResponse
 from services.ai_service import AIService
 from services.decision_engine import DecisionEngine
-from services.ollama_client import OllamaClient
+from providers.base import AIProvider
 from prompts.pilot_intelligence import build_pilot_prompt
 
 
@@ -322,10 +322,10 @@ class TestAIServiceInterpretPilotAsync:
             "recommended_actions": ["Conduct third-party audit before scaling."],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.interpret_pilot(request)
 
         # 1. Deterministic KPI 1 authority: (90 - 45) / 90 = 50% improvement, 100% target achievement, ON_TARGET
@@ -371,10 +371,10 @@ class TestAIServiceInterpretPilotAsync:
             "recommended_actions": ["Action 1"],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.interpret_pilot(request)
 
         gaps_text = " ".join(response.evidence_gaps).lower()
@@ -401,10 +401,10 @@ class TestAIServiceInterpretPilotAsync:
             "recommended_actions": "Conduct load testing; Finalize training modules",
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.interpret_pilot(request)
 
         assert len(response.observations) == 1
@@ -433,10 +433,10 @@ class TestAIServiceInterpretPilotAsync:
             "recommended_actions": ["Actions."],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.interpret_pilot(request)
 
         assert "proven technology fit" not in response.overall_assessment
@@ -499,10 +499,10 @@ class TestAIServiceInterpretPilotAsync:
             "recommended_actions": [],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.interpret_pilot(edge_request)
 
         assert response.kpi_analyses[0].improvement_pct == 0.0
@@ -512,15 +512,15 @@ class TestAIServiceInterpretPilotAsync:
         assert response.risk_summary == "HIGH: 0, MEDIUM: 0, LOW: 0"
 
     @pytest.mark.asyncio
-    async def test_interpret_pilot_malformed_ollama_output_raises_invalid_ai_response(self):
-        """When Ollama returns invalid/unparseable JSON, InvalidAIResponseError is raised."""
-        from services.ollama_client import InvalidAIResponseError
+    async def test_interpret_pilot_malformed_provider_output_raises_invalid_ai_response(self):
+        """When the AI provider returns invalid/unparseable JSON, InvalidAIResponseError is raised."""
+        from providers.base import InvalidAIResponseError
 
         request = _full_pilot_request()
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.side_effect = InvalidAIResponseError("Failed to parse JSON")
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.side_effect = InvalidAIResponseError("Failed to parse JSON")
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         with pytest.raises(InvalidAIResponseError):
             await service.interpret_pilot(request)
 
@@ -536,10 +536,10 @@ class TestAIServiceInterpretPilotAsync:
             "recommended_actions": ["Procurement committee should review evidence."],
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.interpret_pilot(request)
 
         # PilotIntelligenceResponse must NOT contain decision recommendation fields (which belong to DecisionEngine)
@@ -563,10 +563,10 @@ class TestAIServiceInterpretPilotAsync:
             "scale_readiness": "Conditionally ready pending resolution of server latency bottlenecks.",
         }
 
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        mock_ollama.generate_json.return_value = raw_llm
+        mock_provider = AsyncMock(spec=AIProvider)
+        mock_provider.generate_json.return_value = raw_llm
 
-        service = AIService(ollama_client=mock_ollama)
+        service = AIService(ai_provider=mock_provider)
         response = await service.interpret_pilot(request)
 
         assert response.confidence_level == "MEDIUM"
