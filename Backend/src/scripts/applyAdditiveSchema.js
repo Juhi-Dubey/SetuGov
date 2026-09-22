@@ -138,7 +138,37 @@ async function main() {
     `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "required_evaluator_count" INTEGER DEFAULT 3;`,
     `ALTER TABLE "evaluator_assignments" ADD COLUMN IF NOT EXISTS "responded_at" TIMESTAMP(3);`,
     `UPDATE "challenges" SET "evaluator_recruitment_status" = 'OPEN' WHERE "evaluator_recruitment_status" IS NULL;`,
-    `UPDATE "challenges" SET "required_evaluator_count" = 3 WHERE "required_evaluator_count" IS NULL;`
+    `UPDATE "challenges" SET "required_evaluator_count" = 3 WHERE "required_evaluator_count" IS NULL;`,
+
+    // 10. Additional challenge lifecycle & specification fields
+    `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "current_process" TEXT;`,
+    `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "pilot_location" TEXT;`,
+    `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "pilot_start_date" TIMESTAMP(3);`,
+    `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "pilot_end_date" TIMESTAMP(3);`,
+    `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "startup_requirements" TEXT;`,
+    `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "kpis" JSONB;`,
+    `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "milestones" JSONB;`,
+    `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "eligibility_requirements" JSONB;`,
+    `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "required_documents" JSONB;`,
+    `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "cybersecurity_requirements" TEXT;`,
+    `ALTER TABLE "challenges" ADD COLUMN IF NOT EXISTS "data_compliance" TEXT;`,
+
+    // 11. Create challenge_eligibility_reviews table
+    `CREATE TABLE IF NOT EXISTS "challenge_eligibility_reviews" (
+      "id" TEXT NOT NULL,
+      "challenge_id" TEXT NOT NULL,
+      "reviewed_by" TEXT NOT NULL,
+      "decision" TEXT NOT NULL DEFAULT 'PENDING',
+      "remarks" TEXT,
+      "checks" JSONB NOT NULL,
+      "reviewed_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "challenge_eligibility_reviews_pkey" PRIMARY KEY ("id"),
+      CONSTRAINT "challenge_eligibility_reviews_challenge_id_key" UNIQUE ("challenge_id"),
+      CONSTRAINT "challenge_eligibility_reviews_challenge_id_fkey" FOREIGN KEY ("challenge_id") REFERENCES "challenges"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "challenge_eligibility_reviews_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    );`,
+    `CREATE INDEX IF NOT EXISTS "challenge_eligibility_reviews_challenge_id_idx" ON "challenge_eligibility_reviews"("challenge_id");`
   ];
 
   for (const sql of statements) {
