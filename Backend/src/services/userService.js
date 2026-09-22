@@ -42,6 +42,7 @@ export const getUsers = async (query = {}, currentUser = null) => {
         role: true,
         department_id: true,
         is_active: true,
+        is_verified: true,
         created_at: true,
         updated_at: true,
         department: {
@@ -90,6 +91,7 @@ export const getUserById = async (id, currentUser = null) => {
       role: true,
       department_id: true,
       is_active: true,
+      is_verified: true,
       created_at: true,
       updated_at: true,
       department: {
@@ -226,9 +228,43 @@ export const updateUserStatus = async (id, isActive, adminUser, ip_address = nul
   return updatedUser;
 };
 
+export const updateUserVerification = async (id, isVerified, adminUser, ip_address = null) => {
+  const existing = await prisma.user.findUnique({ where: { id } });
+  if (!existing) {
+    throw new NotFoundError(`User with ID ${id} not found.`);
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id },
+    data: { is_verified: isVerified },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      is_active: true,
+      is_verified: true,
+      updated_at: true
+    }
+  });
+
+  // Audit log for verification status change
+  await createAuditLog({
+    user_id: adminUser.id,
+    action: isVerified ? 'USER_VERIFIED' : 'USER_UNVERIFIED',
+    entity_type: 'USER',
+    entity_id: id,
+    details: { previousVerification: existing.is_verified, newVerification: isVerified },
+    ip_address
+  });
+
+  return updatedUser;
+};
+
 export default {
   getUsers,
   getUserById,
   updateUser,
-  updateUserStatus
+  updateUserStatus,
+  updateUserVerification
 };

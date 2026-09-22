@@ -44,6 +44,13 @@ export const updateUserStatus = async (userId, isActive) => {
   });
 };
 
+export const verifyUser = async (userId, isVerified = true) => {
+  return apiRequest(`/users/${userId}/verify`, {
+    method: "PATCH",
+    body: JSON.stringify({ is_verified: isVerified }),
+  });
+};
+
 export const updateUserRole = async (userId, role, department_id = null) => {
   return apiRequest(`/admin/users/${userId}/role`, {
     method: "PATCH",
@@ -206,6 +213,7 @@ export default {
   getUserById,
   updateUser,
   updateUserStatus,
+  verifyUser,
   updateUserRole,
   getDepartments,
   verifyDepartment,

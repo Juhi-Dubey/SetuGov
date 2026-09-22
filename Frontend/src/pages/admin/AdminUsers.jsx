@@ -14,7 +14,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getUsers, updateUserStatus } from "../../services/adminService";
+import { getUsers, updateUserStatus, verifyUser } from "../../services/adminService";
 import Pagination from "../../components/common/Pagination";
 import PageHeader from "../../components/layout/PageHeader";
 
@@ -99,8 +99,14 @@ function AdminUsers() {
     setOpenMenu(null);
   };
 
-  const handleVerify = (id) => {
-    handleToggleStatus(id);
+  const handleVerify = async (id) => {
+    try {
+      await verifyUser(id, true);
+      loadUsers();
+    } catch (err) {
+      alert(`Error verifying user: ${err.message}`);
+    }
+    setOpenMenu(null);
   };
 
   const totalUsers = users.length;

@@ -12,8 +12,16 @@ export const updateUserStatusSchema = z.object({
   })
 }).strict();
 
+export const updateUserVerificationSchema = z.object({
+  is_verified: z.boolean({
+    required_error: 'is_verified boolean is required'
+  })
+}).strict();
+
 export default {
   updateUserSchema,
-  updateUserStatusSchema
+  updateUserStatusSchema,
+  updateUserVerificationSchema
 };
+
 

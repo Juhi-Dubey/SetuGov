@@ -41,9 +41,21 @@ export const updateUserStatus = async (req, res, next) => {
   }
 };
 
+export const updateUserVerification = async (req, res, next) => {
+  try {
+    const userId = req.params.user_id || req.params.id;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const user = await userService.updateUserVerification(userId, req.body.is_verified, req.user, ip_address);
+    return successResponse(res, { user }, 'User verification status updated successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   getUsers,
   getUserById,
   updateUser,
-  updateUserStatus
+  updateUserStatus,
+  updateUserVerification
 };

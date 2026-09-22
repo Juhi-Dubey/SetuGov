@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { getUsers, getUserById, updateUser, updateUserStatus } from '../controllers/userController.js';
+import { getUsers, getUserById, updateUser, updateUserStatus, updateUserVerification } from '../controllers/userController.js';
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
-import { updateUserSchema, updateUserStatusSchema } from '../schemas/userSchemas.js';
+import { updateUserSchema, updateUserStatusSchema, updateUserVerificationSchema } from '../schemas/userSchemas.js';
 
 const router = Router();
 
@@ -18,5 +18,8 @@ router.patch('/:user_id', authenticate, validate(updateUserSchema), updateUser);
 
 // Update user active status (Admin only)
 router.patch('/:user_id/status', authenticate, authorizeRoles('ADMIN'), validate(updateUserStatusSchema), updateUserStatus);
+
+// Update user verification status (Admin only)
+router.patch('/:user_id/verify', authenticate, authorizeRoles('ADMIN'), validate(updateUserVerificationSchema), updateUserVerification);
 
 export default router;
