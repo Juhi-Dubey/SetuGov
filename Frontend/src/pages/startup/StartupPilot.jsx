@@ -42,6 +42,7 @@ import {
   createPilotProgressUpdate,
 } from "../../services/pilotService.js";
 import { openDocumentSecurely } from "../../utils/documentUtils.js";
+import PageHeader from "../../components/layout/PageHeader";
 
 function StartupPilot() {
   const navigate = useNavigate();
@@ -361,27 +362,6 @@ function StartupPilot() {
     }
   };
 
-  const handleMilestoneClick = (id) => {
-    setMilestones((previous) =>
-      previous.map((milestone) => {
-        if (milestone.id !== id) {
-          return milestone;
-        }
-
-        if (
-          milestone.status ===
-          "In Progress"
-        ) {
-          return {
-            ...milestone,
-            status: "Completed",
-          };
-        }
-
-        return milestone;
-      })
-    );
-  };
 
   const progressPercent = activePilot?.progress ?? (milestones.length > 0 ? Math.round((completedMilestones / milestones.length) * 100) : 0);
   const formattedStartDate = activePilot?.start_date ? new Date(activePilot.start_date).toLocaleDateString("en-IN") : "Not set";
@@ -438,62 +418,28 @@ function StartupPilot() {
       {/* HEADER                                            */}
       {/* ================================================= */}
 
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-8">
-        <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-indigo-100/60 blur-3xl dark:bg-indigo-500/10" />
-
-        <div className="relative">
+      {/* ================================================= */}
+      {/* HEADER                                            */}
+      {/* ================================================= */}
+      <PageHeader
+        showBack
+        backTo="/startup"
+        backLabel="Back to Dashboard"
+        badge={`Pilot Workspace · ${activePilot.status || "PLANNED"}`}
+        badgeIcon={Rocket}
+        title={activePilot.title || activePilot.challenge?.title || "Sanctioned Pilot Project"}
+        description={`${activePilot.challenge?.department?.name || "Government Department"} · ${activePilot.location || "Deployment Site"}`}
+        actions={
           <button
             type="button"
-            onClick={() =>
-              navigate("/startup")
-            }
-            className="back-nav"
+            onClick={() => setShowUpdateForm((previous) => !previous)}
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white shadow-xs transition-all hover:bg-blue-700"
           >
-            <ChevronRight className="h-4 w-4 rotate-180" />
-            Back to Dashboard
+            <Plus className="h-4 w-4" />
+            Add Progress Update
           </button>
-
-          <div className="mt-2 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-                <Rocket className="h-6 w-6" />
-              </div>
-
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                    Pilot Workspace
-                  </span>
-
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[9px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    {activePilot.status || "PLANNED"}
-                  </span>
-                </div>
-
-                <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-                  {activePilot.title || activePilot.challenge?.title || "Sanctioned Pilot Project"}
-                </h1>
-
-                <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-                  {activePilot.challenge?.department?.name || "Government Department"} · {activePilot.location || "Deployment Site"}
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                setShowUpdateForm(
-                  (previous) => !previous
-                )
-              }
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-bold text-white transition-all hover:bg-indigo-700"
-            >
-              <Plus className="h-4 w-4" />
-              Add Progress Update
-            </button>
-          </div>
+        }
+      />
 
           {/* UPDATE FORM */}
 
@@ -563,8 +509,6 @@ function StartupPilot() {
               </div>
             </motion.div>
           )}
-        </div>
-      </section>
 
       {/* ================================================= */}
       {/* PILOT SUMMARY                                     */}
@@ -680,11 +624,6 @@ function StartupPilot() {
                     key={milestone.id}
                     milestone={milestone}
                     index={index}
-                    onClick={() =>
-                      handleMilestoneClick(
-                        milestone.id
-                      )
-                    }
                   />
                 ))
               )}
@@ -994,13 +933,12 @@ function StartupPilot() {
                   <button
                     type="button"
                     onClick={() => handleToggleCompliance(item)}
-                    className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition ${
-                      item.status === "SATISFIED"
+                    className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition ${item.status === "SATISFIED"
                         ? "border-emerald-500 bg-emerald-500 text-white"
                         : item.status === "IN_PROGRESS"
-                        ? "border-amber-500 bg-amber-50 text-amber-600 dark:bg-amber-950/40"
-                        : "border-slate-300 bg-white text-slate-400 dark:border-slate-700 dark:bg-slate-900"
-                    }`}
+                          ? "border-amber-500 bg-amber-50 text-amber-600 dark:bg-amber-950/40"
+                          : "border-slate-300 bg-white text-slate-400 dark:border-slate-700 dark:bg-slate-900"
+                      }`}
                   >
                     {item.status === "SATISFIED" ? <CheckCircle2 className="h-4 w-4" /> : item.is_mandatory ? "!" : "—"}
                   </button>
@@ -1020,13 +958,12 @@ function StartupPilot() {
 
                 <div className="flex items-center gap-2 self-end sm:self-center">
                   <span
-                    className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
-                      item.status === "SATISFIED"
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${item.status === "SATISFIED"
                         ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
                         : item.status === "IN_PROGRESS"
-                        ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-                        : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
-                    }`}
+                          ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                          : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
+                      }`}
                   >
                     {item.status}
                   </span>
@@ -1319,13 +1256,12 @@ function StartupPilot() {
               <div key={issue.id} className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/40">
                 <div className="flex items-center justify-between">
                   <span
-                    className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${
-                      issue.severity === "CRITICAL"
+                    className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${issue.severity === "CRITICAL"
                         ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
                         : issue.severity === "HIGH"
-                        ? "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300"
-                        : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-                    }`}
+                          ? "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300"
+                          : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                      }`}
                   >
                     {issue.severity}
                   </span>
@@ -1494,10 +1430,10 @@ function Milestone({
         type="button"
         onClick={onClick}
         className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-white dark:border-slate-950 ${completed
-            ? "bg-emerald-500 text-white"
-            : inProgress
-              ? "bg-indigo-600 text-white"
-              : "bg-slate-100 text-slate-400 dark:bg-slate-900"
+          ? "bg-emerald-500 text-white"
+          : inProgress
+            ? "bg-indigo-600 text-white"
+            : "bg-slate-100 text-slate-400 dark:bg-slate-900"
           }`}
         title={
           inProgress
@@ -1642,10 +1578,10 @@ function EvidenceCard({ evidence }) {
 
           <span
             className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${isVerified
-                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
-                : isRejected
-                  ? "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
-                  : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
+              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
+              : isRejected
+                ? "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+                : "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
               }`}
           >
             {isVerified ? "Verified" : isRejected ? "Rejected" : "Pending Review"}

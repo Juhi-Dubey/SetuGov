@@ -27,25 +27,25 @@ export default function MyPageStatCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.06 }}
       onClick={onClick}
-      className={`group rounded-2xl border border-slate-200 bg-white p-4 sm:p-4.5 shadow-sm transition-all duration-200 dark:border-slate-800 dark:bg-slate-900 ${
+      className={`group rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all duration-200 dark:border-slate-800 dark:bg-slate-900 ${
         onClick
           ? "cursor-pointer hover:border-slate-300 hover:shadow-md dark:hover:border-slate-700"
           : ""
       }`}
     >
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+      <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
+        <span className="text-[14px] font-medium">
           {title}
         </span>
         <div
-          className={`flex h-8.5 w-8.5 items-center justify-center rounded-xl border ${iconStyle} transition-transform group-hover:scale-105`}
+          className={`flex h-8 w-8 items-center justify-center rounded-lg border ${iconStyle} transition-transform group-hover:scale-105`}
         >
           {Icon && <Icon className="h-4 w-4" />}
         </div>
       </div>
 
-      <div className="mt-2.5 flex items-baseline justify-between">
-        <div className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+      <div className="mt-3 flex items-baseline justify-between">
+        <div className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
           {value}
         </div>
 
@@ -55,7 +55,7 @@ export default function MyPageStatCard({
       </div>
 
       {subtext && (
-        <div className="mt-1 text-xs text-slate-500 dark:text-slate-400 truncate">
+        <div className="mt-1 text-[14px] text-slate-600 dark:text-slate-400 truncate">
           {subtext}
         </div>
       )}

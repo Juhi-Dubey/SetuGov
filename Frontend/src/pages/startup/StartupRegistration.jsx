@@ -287,11 +287,11 @@ export default function StartupRegistration() {
       case 1: {
         const name = (uData?.name || s.user?.name || u?.name || "").trim();
         const email = (uData?.email || s.user?.email || u?.email || "").trim();
-        const phone = (uData?.phone || s.user?.phone || u?.phone || "").trim().replace(/[\s\-\(\)]/g, "");
+        const phone = (uData?.phone || s.user?.phone || u?.phone || "").trim().replace(/[\s()-]/g, "");
         const hasName = name.length >= 2;
         const hasEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
         const hasPhone = /^(?:\+91|0)?[6-9]\d{9}$/.test(phone);
-        const isSaved = s1Saved || Boolean(s.user?.phone && /^(?:\+91|0)?[6-9]\d{9}$/.test(s.user.phone.replace(/[\s\-\(\)]/g, "")));
+        const isSaved = s1Saved || Boolean(s.user?.phone && /^(?:\+91|0)?[6-9]\d{9}$/.test(s.user.phone.replace(/[\s()-]/g, "")));
         return Boolean(hasName && hasEmail && hasPhone && isSaved);
       }
       case 2: {
@@ -307,7 +307,7 @@ export default function StartupRegistration() {
         const hasAuthName = Boolean(s.authorized_person_name && s.authorized_person_name.trim().length > 0);
         const hasAuthDesig = Boolean(s.authorized_person_designation && s.authorized_person_designation.trim().length > 0);
         const hasAuthEmail = Boolean(s.authorized_person_email && /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(s.authorized_person_email.trim()));
-        const cleanPhone = (s.authorized_person_phone || "").replace(/[\s\-\(\)]/g, "");
+        const cleanPhone = (s.authorized_person_phone || "").replace(/[\s()-]/g, "");
         const hasAuthPhone = Boolean(cleanPhone && /^(?:\+91|0)?[6-9]\d{9}$/.test(cleanPhone));
         const hasAuthType = Boolean(s.authorization_type);
         return Boolean(hasAuthName && hasAuthDesig && hasAuthEmail && hasAuthPhone && hasAuthType);
@@ -384,7 +384,7 @@ export default function StartupRegistration() {
     } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
       errs.email = "Please enter a valid email address.";
     }
-    const phone = (userAccountData.phone || "").trim().replace(/[\s\-\(\)]/g, "");
+    const phone = (userAccountData.phone || "").trim().replace(/[\s()-]/g, "");
     if (!phone) {
       errs.phone = "Account contact phone number is required.";
     } else if (!/^(?:\+91|0)?[6-9]\d{9}$/.test(phone)) {
@@ -449,7 +449,7 @@ export default function StartupRegistration() {
     }
 
     const phone = (authPersonData.authorized_person_phone || "").trim();
-    const cleanPhone = phone.replace(/[\s\-\(\)]/g, "");
+    const cleanPhone = phone.replace(/[\s()-]/g, "");
     if (!phone) {
       errs.authorized_person_phone = "Authorized contact phone is required.";
     } else if (!/^(?:\+91|0)?[6-9]\d{9}$/.test(cleanPhone)) {
@@ -563,7 +563,7 @@ export default function StartupRegistration() {
       setSaving(true);
       setFeedback({ type: "", message: "" });
       try {
-        const cleanPhone = userAccountData.phone.trim().replace(/[\s\-\(\)]/g, "");
+        const cleanPhone = userAccountData.phone.trim().replace(/[\s()-]/g, "");
         const cleanName = userAccountData.name.trim();
         const cleanEmail = userAccountData.email.trim();
 

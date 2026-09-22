@@ -24,6 +24,7 @@ import {
 
 import AppLayout from "../../components/layout/AppLayout";
 import Pagination from "../../components/common/Pagination";
+import PageHeader from "../../components/layout/PageHeader";
 import { getChallengeById, getChallengePilot } from "../../services/challengeService";
 import {
   getPilotMilestones,
@@ -279,67 +280,45 @@ function ChallengePayments() {
   return (
     <AppLayout role="government">
       <div className="mx-auto max-w-6xl">
-
-        {/* HEADER */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() =>
-                routeId
-                  ? navigate(`/government/challenges/${routeId}/overview`)
-                  : navigate("/government/dashboard")
-              }
-              className="back-nav"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {routeId ? "Back to Challenge Overview" : "Back to Dashboard"}
-            </button>
-
+        {/* PAGE HEADER */}
+        <PageHeader
+          showBack
+          backTo={
+            routeId
+              ? `/government/challenges/${routeId}/overview`
+              : "/government/dashboard"
+          }
+          backLabel={routeId ? "Back to Challenge Overview" : "Back to Dashboard"}
+          topActions={
             <button
               type="button"
               onClick={loadData}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-50 shrink-0"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
               Refresh Data
             </button>
-          </div>
-
-          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-                <WalletCards className="h-3.5 w-3.5" />
-                Statutory Milestone Escrow & Disbursal
-              </div>
-
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl text-slate-900 dark:text-white">
-                {routeId ? "Challenge Payments & Escrow Releases" : "Department Payments & Treasury Releases"}
-              </h1>
-
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
-                {routeId
-                  ? (pilot
-                      ? `Track milestone payments, verified deliverable completion, and treasury disbursals for pilot: ${pilot.title || pilot.startup?.company_name || "Active Pilot"}`
-                      : "Track milestone-based payments and financial progress for this challenge.")
-                  : "Consolidated register of milestone releases, verified deliverable completion, and treasury disbursals across all departmental pilots and procurements."}
-              </p>
-            </div>
-
-            {pilot && (
-              <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400">
+          }
+          badge="Statutory Milestone Escrow & Disbursal"
+          badgeIcon={WalletCards}
+          title={routeId ? "Challenge Payments & Escrow Releases" : "Department Payments & Treasury Releases"}
+          description={
+            routeId
+              ? (pilot
+                  ? `Track milestone payments, verified deliverable completion, and treasury disbursals for pilot: ${pilot.title || pilot.startup?.company_name || "Active Pilot"}`
+                  : "Track milestone-based payments and financial progress for this challenge.")
+              : "Consolidated register of milestone releases, verified deliverable completion, and treasury disbursals across all departmental pilots and procurements."
+          }
+          actions={
+            pilot ? (
+              <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400">
                 <CheckCircle2 className="h-4 w-4" />
                 Pilot Status: {pilot.status || "RUNNING"}
               </div>
-            )}
-          </div>
-        </motion.div>
+            ) : null
+          }
+        />
 
         {/* ACTION FEEDBACK ALERTS */}
         <AnimatePresence>
@@ -730,21 +709,20 @@ function PaymentSummary({ icon: Icon, label, value, description, highlightColor 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-center justify-between">
+        <p className="text-[14px] font-medium text-slate-900 dark:text-slate-400">
+          {label}
+        </p>
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
           <Icon className="h-5 w-5" />
         </div>
       </div>
 
-      <p className="mt-4 text-xs font-medium text-slate-500 dark:text-slate-400">
-        {label}
-      </p>
-
-      <p className={`mt-1 text-xl font-bold ${highlightColor || "text-slate-900 dark:text-white"}`}>
+      <p className={`mt-4 text-xl font-bold ${highlightColor || "text-slate-900 dark:text-white"}`}>
         {value}
       </p>
 
       {description && (
-        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{description}</p>
+        <p className="mt-0.5 text-xs text-slate-800 dark:text-slate-400">{description}</p>
       )}
     </div>
   );
@@ -847,7 +825,7 @@ function MilestoneRow({
               </span>
             </div>
 
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-xs text-slate-700 dark:text-slate-400">
               Due Date: {formatDate(milestone.due_date || milestone.target_date)}
               {milestone.description ? ` • ${milestone.description}` : ""}
             </p>

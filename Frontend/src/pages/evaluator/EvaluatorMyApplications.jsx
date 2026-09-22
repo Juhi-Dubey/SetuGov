@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getMyEvaluatorApplications } from "../../services/evaluatorService";
+import Pagination from "../../components/common/Pagination";
+import PageHeader from "../../components/layout/PageHeader";
 
 function EvaluatorMyApplications() {
   const navigate = useNavigate();
@@ -24,10 +26,16 @@ function EvaluatorMyApplications() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(6);
 
   useEffect(() => {
     fetchMyApplications();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
 
   const fetchMyApplications = async () => {
     try {
@@ -64,6 +72,11 @@ function EvaluatorMyApplications() {
     });
   }, [applications, search, statusFilter]);
 
+  const paginatedApplications = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, currentPage, pageSize]);
+
   const getStatusBadge = (status) => {
     const s = String(status || "").toUpperCase();
     if (s === "SHORTLISTED") {
@@ -95,62 +108,52 @@ function EvaluatorMyApplications() {
       className="space-y-6"
     >
       {/* HEADER */}
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      <PageHeader
+        badge="Evaluator Participation"
+        badgeIcon={ClipboardCheck}
+        title="My Applications"
+        description="Track your submitted applications to evaluate Government Problem Statements."
+        actions={
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-              <ClipboardCheck className="h-4.5 w-4.5" />
-            </span>
-            <p className="text-xs sm:text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-              Evaluator Participation
-            </p>
+            <button
+              type="button"
+              onClick={fetchMyApplications}
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-50 shrink-0"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/evaluator/challenges")}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-700"
+            >
+              Discover Challenges
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
           </div>
-
-          <h1 className="mt-2 text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
-            My Applications
-          </h1>
-          <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Track your submitted applications to evaluate Government Problem Statements.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/evaluator/challenges")}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500"
-          >
-            Discover Challenges
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
-          <button
-            onClick={fetchMyApplications}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </button>
-        </div>
-      </section>
+        }
+      />
 
       {/* SEARCH & FILTERS */}
       <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search your applications..."
-            className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-4 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+            className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-slate-400" />
+          <Filter className="h-3.5 w-3.5 text-slate-400" />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
           >
             <option value="All">All status</option>
             <option value="SUBMITTED">Under Review</option>
@@ -199,66 +202,83 @@ function EvaluatorMyApplications() {
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {filtered.map((app) => (
-            <div
-              key={app.id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-indigo-200 dark:border-slate-800 dark:bg-slate-900"
-            >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
-                      {app.challenge?.domain || "Technology"}
-                    </span>
-                    {getStatusBadge(app.status)}
-                    <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      Applied: {app.created_at ? new Date(app.created_at).toLocaleDateString("en-IN") : "—"}
-                    </span>
-                  </div>
-
-                  <h3 className="mt-2 text-base font-bold text-slate-900 dark:text-white">
-                    {app.challenge?.title || "Problem Statement"}
-                  </h3>
-
-                  <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                    <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                    <span>
-                      {app.challenge?.department?.name || "Government Department"}
-                      {app.challenge?.department?.state ? ` (${app.challenge.department.state})` : ""}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <span className="text-[10px] uppercase tracking-wider text-slate-400">
-                    Challenge Lifecycle
-                  </span>
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    {app.challenge?.status || "ACTIVE"}
-                  </p>
-                </div>
-              </div>
-
-              {app.statement_of_interest && (
-                <div className="mt-4 rounded-xl bg-slate-50 p-3 text-xs leading-relaxed text-slate-600 dark:bg-slate-950/60 dark:text-slate-300">
-                  <span className="font-semibold text-slate-700 dark:text-slate-200">Your Statement: </span>
-                  {app.statement_of_interest}
-                </div>
-              )}
-
-              {app.review_reason && (
-                <div className="mt-3 flex items-start gap-2 rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 text-xs text-indigo-900 dark:border-indigo-900/30 dark:bg-indigo-950/20 dark:text-indigo-200">
-                  <MessageSquare className="h-4 w-4 shrink-0 text-indigo-500 mt-0.5" />
+        <div className="space-y-6">
+          <div className="space-y-4">
+            {paginatedApplications.map((app) => (
+              <div
+                key={app.id}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-indigo-200 dark:border-slate-800 dark:bg-slate-900"
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <span className="font-semibold">Department Nodal Remarks: </span>
-                    <span>{app.review_reason}</span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+                        {app.challenge?.domain || "Technology"}
+                      </span>
+                      {getStatusBadge(app.status)}
+                      <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        Applied: {app.created_at ? new Date(app.created_at).toLocaleDateString("en-IN") : "—"}
+                      </span>
+                    </div>
+
+                    <h3 className="mt-2 text-base font-bold text-slate-900 dark:text-white">
+                      {app.challenge?.title || "Problem Statement"}
+                    </h3>
+
+                    <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                      <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                      <span>
+                        {app.challenge?.department?.name || "Government Department"}
+                        {app.challenge?.department?.state ? ` (${app.challenge.department.state})` : ""}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-[10px] uppercase tracking-wider text-slate-400">
+                      Challenge Lifecycle
+                    </span>
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      {app.challenge?.status || "ACTIVE"}
+                    </p>
                   </div>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {app.statement_of_interest && (
+                  <div className="mt-4 rounded-xl bg-slate-50 p-3 text-xs leading-relaxed text-slate-600 dark:bg-slate-950/60 dark:text-slate-300">
+                    <span className="font-semibold text-slate-700 dark:text-slate-200">Your Statement: </span>
+                    {app.statement_of_interest}
+                  </div>
+                )}
+
+                {app.review_reason && (
+                  <div className="mt-3 flex items-start gap-2 rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 text-xs text-indigo-900 dark:border-indigo-900/30 dark:bg-indigo-950/20 dark:text-indigo-200">
+                    <MessageSquare className="h-4 w-4 shrink-0 text-indigo-500 mt-0.5" />
+                    <div>
+                      <span className="font-semibold">Department Nodal Remarks: </span>
+                      <span>{app.review_reason}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {filtered.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalItems={filtered.length}
+              pageSize={pageSize}
+              pageSizeOptions={[4, 6, 12, 20]}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setCurrentPage(1);
+              }}
+              itemName="applications"
+            />
+          )}
         </div>
       )}
     </motion.div>

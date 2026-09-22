@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getAdminSettings, updateAdminSettings } from "../../services/adminService";
+import PageHeader from "../../components/layout/PageHeader";
 
 function AdminSettings() {
   const navigate = useNavigate();
@@ -90,39 +91,19 @@ function AdminSettings() {
       className="space-y-6"
     >
       {/* HEADER */}
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-8">
-        <button
-          type="button"
-          onClick={() => navigate("/admin/dashboard")}
-          className="back-nav"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Admin Dashboard
-        </button>
-
-        <div className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-              <Settings className="h-6 w-6" />
-            </div>
-
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                Administration
-              </p>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-                Platform Settings
-              </h1>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Manage global platform preferences, security policies and system notifications.
-              </p>
-            </div>
-          </div>
-
+      <PageHeader
+        showBack
+        backTo="/admin/dashboard"
+        backLabel="Back to Admin Dashboard"
+        badge="Administration"
+        badgeIcon={Settings}
+        title="Platform Settings"
+        description="Manage global platform preferences, security policies, and system notifications."
+        actions={
           <button
             type="button"
             onClick={handleSave}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white transition-all hover:bg-indigo-700"
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white shadow-xs transition-all hover:bg-blue-700"
           >
             {saved ? (
               <>
@@ -136,8 +117,8 @@ function AdminSettings() {
               </>
             )}
           </button>
-        </div>
-      </section>
+        }
+      />
 
       {/* TABS */}
       <div className="flex gap-2 border-b border-slate-200 pb-2 dark:border-slate-800">

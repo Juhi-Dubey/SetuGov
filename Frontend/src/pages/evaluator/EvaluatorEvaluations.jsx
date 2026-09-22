@@ -22,6 +22,7 @@ import {
   getMyAssignments,
   updateAssignmentStatus,
 } from "../../services/evaluatorService";
+import PageHeader from "../../components/layout/PageHeader";
 
 function EvaluatorEvaluations() {
   const navigate = useNavigate();
@@ -144,53 +145,42 @@ function EvaluatorEvaluations() {
       className="space-y-6"
     >
       {/* HEADER */}
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-              <UserCheck className="h-4.5 w-4.5" />
-            </span>
-            <p className="text-xs sm:text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-              Official Evaluator Queue
-            </p>
-          </div>
-
-          <h1 className="mt-2 text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
-            Proposal Evaluation
-          </h1>
-          <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Assigned proposals for conflict certification, Brain 3 AI-assisted analysis, and independent 5-factor rubric scoring.
-          </p>
-        </div>
-
-        <button
-          onClick={fetchAssignments}
-          className="inline-flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh Queue
-        </button>
-      </section>
+      <PageHeader
+        badge="Official Evaluator Queue"
+        badgeIcon={UserCheck}
+        title="Proposal Evaluation"
+        description="Assigned proposals for conflict certification, Brain 3 AI-assisted analysis, and independent 5-factor rubric scoring."
+        actions={
+          <button
+            type="button"
+            onClick={fetchAssignments}
+            className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh Queue
+          </button>
+        }
+      />
 
       {/* SEARCH & FILTERS */}
       <section className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by startup name, challenge, or department..."
-            className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-4 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+            className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-slate-400" />
+          <Filter className="h-3.5 w-3.5 text-slate-400" />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
           >
             <option value="All">All Assignments ({stats.total})</option>
             <option value="PENDING">Pending Acceptance ({stats.pending})</option>

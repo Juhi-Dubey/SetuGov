@@ -1,9 +1,10 @@
 import path from 'path';
-import fs from 'fs';
 import { prisma } from '../config/prisma.js';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../utils/errors.js';
 import { successResponse } from '../utils/response.js';
 import { getFileUrl } from '../middleware/upload.js';
+import { createAuditLog } from '../services/auditService.js';
+import storageService from '../services/storageService.js';
 
 /**
  * Handle document upload and return secure relative/authenticated file reference
@@ -361,24 +362,50 @@ export const getPrivateFile = async (req, res, next) => {
       }
     }
 
-    // Path traversal defense
-    const safeFilename = path.basename(resolvedFilename);
-    const uploadsDir = path.resolve(process.cwd(), 'uploads');
-    const filePath = path.resolve(uploadsDir, safeFilename);
-
-    // Verify canonical path does not escape uploads directory
-    if (!filePath.startsWith(uploadsDir)) {
-      throw new BadRequestError('Invalid document path specified.');
-    }
+    // Path traversal defense via storage abstraction
+    const safeFilename = storageService.sanitizeStorageKey(resolvedFilename);
 
     // Perform resource-level authorization check FIRST before checking file existence
     const isAuthorized = await verifyDocumentAuthorization(req.user, rawIdentifier);
     if (!isAuthorized) {
+      if (req.user) {
+        const clientIp = req.ip || (req.headers['x-forwarded-for'] ? String(req.headers['x-forwarded-for']).split(',')[0].trim() : null);
+        await createAuditLog({
+          user_id: req.user.id,
+          action: 'DOCUMENT_ACCESS_DENIED',
+          entity_type: 'DOCUMENT',
+          entity_id: rawIdentifier,
+          details: {
+            file_name: safeFilename,
+            attempted_by: req.user.id,
+            role: req.user.role
+          },
+          ip_address: clientIp
+        });
+      }
       throw new ForbiddenError('You are not authorized to view or download this private verification document.');
     }
 
-    if (!fs.existsSync(filePath)) {
+    // Verify file exists in storage provider
+    const exists = await storageService.fileExists(safeFilename);
+    if (!exists) {
       throw new NotFoundError('Requested document not found.');
+    }
+
+    // Audit successful private document access
+    if (req.user) {
+      const clientIp = req.ip || (req.headers['x-forwarded-for'] ? String(req.headers['x-forwarded-for']).split(',')[0].trim() : null);
+      await createAuditLog({
+        user_id: req.user.id,
+        action: 'DOCUMENT_ACCESSED',
+        entity_type: 'DOCUMENT',
+        entity_id: rawIdentifier,
+        details: {
+          file_name: safeFilename,
+          access_role: req.user.role
+        },
+        ip_address: clientIp
+      });
     }
 
     const ext = path.extname(safeFilename).toLowerCase();
@@ -395,13 +422,22 @@ export const getPrivateFile = async (req, res, next) => {
       '.webm': 'video/webm'
     };
 
-    if (mimeMap[ext]) {
-      res.setHeader('Content-Type', mimeMap[ext]);
-    }
+    const fileStreamData = await storageService.getFileStream(safeFilename);
+
+    res.setHeader('Content-Type', fileStreamData.mimeType || mimeMap[ext] || 'application/octet-stream');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Disposition', `inline; filename="${safeFilename}"`);
+    if (fileStreamData.size) {
+      res.setHeader('Content-Length', fileStreamData.size);
+    }
 
-    return res.sendFile(filePath);
+    fileStreamData.stream.on('error', (err) => {
+      if (!res.headersSent) {
+        next(err);
+      }
+    });
+
+    fileStreamData.stream.pipe(res);
   } catch (error) {
     next(error);
   }

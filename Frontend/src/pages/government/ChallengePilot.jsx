@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
+import PageHeader from "../../components/layout/PageHeader";
 import Pagination from "../../components/common/Pagination";
 import {
   getPilots,
@@ -90,6 +91,19 @@ function ChallengePilot() {
   const [pilotsList, setPilotsList] = useState([]);
   const [pilotsPagination, setPilotsPagination] = useState(null);
 
+  // Pagination states
+  const [pilotsListPage, setPilotsListPage] = useState(1);
+  const [pilotsListPageSize, setPilotsListPageSize] = useState(6);
+
+  const [compliancePage, setCompliancePage] = useState(1);
+  const [compliancePageSize, setCompliancePageSize] = useState(6);
+
+  const [issuesPage, setIssuesPage] = useState(1);
+  const [issuesPageSize, setIssuesPageSize] = useState(5);
+
+  const [feedbackPage, setFeedbackPage] = useState(1);
+  const [feedbackPageSize, setFeedbackPageSize] = useState(4);
+
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const statusParam = searchParams.get("status");
   const isChallengeRoute = location.pathname.includes("/challenges/");
@@ -103,7 +117,18 @@ function ChallengePilot() {
     return pilotsList.filter((p) => p.status === statusParam);
   }, [pilotsList, statusParam]);
 
+  // Reset page when filter changes
+  useEffect(() => {
+    setPilotsListPage(1);
+  }, [statusParam]);
+
+  const paginatedPilots = useMemo(() => {
+    const start = (pilotsListPage - 1) * pilotsListPageSize;
+    return displayedPilots.slice(start, start + pilotsListPageSize);
+  }, [displayedPilots, pilotsListPage, pilotsListPageSize]);
+
   const handleStatusFilterChange = (statusKey) => {
+    setPilotsListPage(1);
     if (statusKey === "ALL") {
       navigate("/government/pilots");
     } else {
@@ -124,24 +149,14 @@ function ChallengePilot() {
   const [issuesList, setIssuesList] = useState([]);
   const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'kpis' | 'milestones' | 'compliance' | 'issues' | 'feedback' | 'ai-intelligence'
 
-  // Pagination states
-  const [compliancePage, setCompliancePage] = useState(1);
-  const [compliancePageSize, setCompliancePageSize] = useState(6);
-
-  const [issuesPage, setIssuesPage] = useState(1);
-  const [issuesPageSize, setIssuesPageSize] = useState(5);
-
-  const [feedbackPage, setFeedbackPage] = useState(1);
-  const [feedbackPageSize, setFeedbackPageSize] = useState(4);
-
   // Pilot Creation Form Modal
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({
+  const [createForm, setCreateForm] = useState(() => ({
     location: "",
     start_date: new Date().toISOString().split("T")[0],
     end_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     budget: "",
-  });
+  }));
 
   // Readiness Override State
   const [showOverrideModal, setShowOverrideModal] = useState(false);
@@ -723,52 +738,35 @@ function ChallengePilot() {
           transition={{ duration: 0.35 }}
           className="mb-8"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <button
-              type="button"
-              onClick={() => {
-                if (challenge?.id && location.pathname.includes("/challenges/")) {
-                  navigate(`/government/challenges/${challenge.id}/applications`);
-                } else if (isDirectPilotRoute) {
-                  navigate("/government/pilots");
-                } else {
-                  navigate("/government/dashboard");
-                }
-              }}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              {challenge?.id && location.pathname.includes("/challenges/") ? "Back to Challenge Applications" : isDirectPilotRoute ? "All Pilots" : "Back to Dashboard"}
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                <FlaskConical className="h-3.5 w-3.5 text-indigo-500" />
-                Live Pilot Sandbox
-              </div>
-
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl text-slate-900 dark:text-white">
-                {pilot?.challenge?.title || challenge?.title || "Operational Pilot Execution Workspace"}
-              </h1>
-
-              {pilot ? (
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  Startup:{" "}
-                  <span className="font-semibold text-slate-900 dark:text-white">
-                    {pilot?.startup?.company_name || "Not specified"}
-                  </span>{" "}
-                  · Location: {pilot?.location || "Not specified"}
-                </p>
-              ) : (
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  Challenge Pilot Lifecycle & Performance Management
-                </p>
-              )}
-            </div>
-
-            {pilot && (
+        {/* PAGE HEADER */}
+        <PageHeader
+          showBack
+          onBack={() => {
+            if (challenge?.id && location.pathname.includes("/challenges/")) {
+              navigate(`/government/challenges/${challenge.id}/applications`);
+            } else if (isDirectPilotRoute) {
+              navigate("/government/pilots");
+            } else {
+              navigate("/government/dashboard");
+            }
+          }}
+          backLabel={
+            challenge?.id && location.pathname.includes("/challenges/")
+              ? "Back to Challenge Applications"
+              : isDirectPilotRoute
+              ? "All Pilots"
+              : "Back to Dashboard"
+          }
+          badge="Live Pilot Sandbox"
+          badgeIcon={FlaskConical}
+          title={pilot?.challenge?.title || challenge?.title || "Operational Pilot Execution Workspace"}
+          description={
+            pilot
+              ? `Startup: ${pilot?.startup?.company_name || "Not specified"} · Location: ${pilot?.location || "Not specified"}`
+              : "Challenge Pilot Lifecycle & Performance Management"
+          }
+          actions={
+            pilot ? (
               <div className="flex flex-wrap items-center gap-2">
                 {pilot?.status === "PLANNED" && (
                   <>
@@ -776,7 +774,7 @@ function ChallengePilot() {
                       type="button"
                       onClick={handleStartPilot}
                       disabled={isSaving}
-                      className="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 disabled:opacity-60 transition"
+                      className="inline-flex h-9 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-xs font-semibold text-white shadow-xs hover:bg-emerald-500 disabled:opacity-60 transition"
                     >
                       <Play className="h-3.5 w-3.5" /> Start Pilot Sandbox
                     </button>
@@ -785,7 +783,7 @@ function ChallengePilot() {
                       <button
                         type="button"
                         onClick={() => setShowOverrideModal(true)}
-                        className="inline-flex h-10 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 transition"
+                        className="inline-flex h-9 items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300 transition"
                       >
                         <ShieldAlert className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                         Start with Readiness Override
@@ -799,7 +797,7 @@ function ChallengePilot() {
                     type="button"
                     onClick={handleCompletePilot}
                     disabled={isSaving}
-                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white shadow-sm hover:bg-blue-500 disabled:opacity-60 transition"
+                    className="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white shadow-xs hover:bg-blue-500 disabled:opacity-60 transition"
                   >
                     <CheckCheck className="h-3.5 w-3.5" /> Conclude & Validate
                   </button>
@@ -809,7 +807,7 @@ function ChallengePilot() {
                   type="button"
                   onClick={handleRunBrain4Analysis}
                   disabled={isAnalyzing}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 transition"
+                  className="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-800 px-4 text-xs font-semibold text-white shadow-xs hover:bg-blue-900 disabled:opacity-60 transition"
                 >
                   {isAnalyzing ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -819,8 +817,9 @@ function ChallengePilot() {
                   Brain 4 Pilot Intelligence
                 </button>
               </div>
-            )}
-          </div>
+            ) : null
+          }
+        />
         </motion.div>
 
         {/* PILOT STATUS FILTER TOOLBAR (Shown on /government/pilots list and direct pilot route) */}
@@ -845,7 +844,7 @@ function ChallengePilot() {
                         className={`flex shrink-0 items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${isActive
                             ? tab.id === "AT_RISK"
                               ? "bg-amber-600 text-white shadow-sm shadow-amber-600/20"
-                              : "bg-indigo-600 text-white shadow-sm shadow-indigo-600/20"
+                              : "bg-blue-600 text-white shadow-sm shadow-blue-600/20"
                             : "bg-slate-100 text-slate-600 hover:bg-slate-200/70 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                           }`}
                       >
@@ -905,73 +904,90 @@ function ChallengePilot() {
                 </button>
               </div>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {displayedPilots.map((p) => {
-                  const statusColors = {
-                    PLANNED: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-                    RUNNING: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
-                    AT_RISK: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
-                    VALIDATION: "bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300",
-                    COMPLETED: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300",
-                    SCALED: "bg-purple-100 text-purple-800 dark:bg-purple-950/50 dark:text-purple-300",
-                    STOPPED: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300",
-                  };
-                  const statusColor = statusColors[p.status] || statusColors.PLANNED;
-                  const startupName = p.startup?.company_name || p.startup?.name || "Startup";
-                  const challengeTitle = p.challenge?.title || "Pilot Project";
-                  const pilotLocation = p.location || "Location not set";
-                  const startDate = p.start_date ? new Date(p.start_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
-                  const endDate = p.end_date ? new Date(p.end_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
-                  const budget = p.budget ? `₹${Number(p.budget).toLocaleString("en-IN")}` : "—";
+              <div className="space-y-6">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {paginatedPilots.map((p) => {
+                    const statusColors = {
+                      PLANNED: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+                      RUNNING: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
+                      AT_RISK: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+                      VALIDATION: "bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300",
+                      COMPLETED: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300",
+                      SCALED: "bg-purple-100 text-purple-800 dark:bg-purple-950/50 dark:text-purple-300",
+                      STOPPED: "bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300",
+                    };
+                    const statusColor = statusColors[p.status] || statusColors.PLANNED;
+                    const startupName = p.startup?.company_name || p.startup?.name || "Startup";
+                    const challengeTitle = p.challenge?.title || "Pilot Project";
+                    const pilotLocation = p.location || "Location not set";
+                    const startDate = p.start_date ? new Date(p.start_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
+                    const endDate = p.end_date ? new Date(p.end_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
+                    const budget = p.budget ? `₹${Number(p.budget).toLocaleString("en-IN")}` : "—";
 
-                  return (
-                    <motion.button
-                      key={p.id}
-                      type="button"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.25 }}
-                      onClick={() => navigate(`/government/pilots/${p.id}`)}
-                      className="group relative flex flex-col rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm hover:border-indigo-300 hover:shadow-md transition-all dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700 cursor-pointer"
-                    >
-                      {/* Status badge */}
-                      <div className="flex items-start justify-between gap-2 mb-3">
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusColor}`}>
-                          {p.status === "AT_RISK" && <AlertTriangle className="mr-1 h-3 w-3" />}
-                          {formatPilotStatus(p.status)}
-                        </span>
-                        <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-500 transition shrink-0 mt-0.5" />
-                      </div>
-
-                      {/* Challenge title */}
-                      <h2 className="text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2 mb-1">
-                        {challengeTitle}
-                      </h2>
-
-                      {/* Startup */}
-                      <div className="flex items-center gap-1.5 mb-3">
-                        <Building2 className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
-                        <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 truncate">{startupName}</span>
-                      </div>
-
-                      {/* Meta info */}
-                      <div className="mt-auto space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                          <MapPin className="h-3.5 w-3.5 shrink-0" />
-                          <span className="truncate">{pilotLocation}</span>
+                    return (
+                      <motion.button
+                        key={p.id}
+                        type="button"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25 }}
+                        onClick={() => navigate(`/government/pilots/${p.id}`)}
+                        className="group relative flex flex-col rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm hover:border-indigo-300 hover:shadow-md transition-all dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700 cursor-pointer"
+                      >
+                        {/* Status badge */}
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusColor}`}>
+                            {p.status === "AT_RISK" && <AlertTriangle className="mr-1 h-3 w-3" />}
+                            {formatPilotStatus(p.status)}
+                          </span>
+                          <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-500 transition shrink-0 mt-0.5" />
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                          <Clock3 className="h-3.5 w-3.5 shrink-0" />
-                          <span>{startDate} → {endDate}</span>
+
+                        {/* Challenge title */}
+                        <h2 className="text-sm font-bold text-slate-900 dark:text-white leading-snug line-clamp-2 mb-1">
+                          {challengeTitle}
+                        </h2>
+
+                        {/* Startup */}
+                        <div className="flex items-center gap-1.5 mb-3">
+                          <Building2 className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                          <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-400 truncate">{startupName}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                          <DollarSign className="h-3.5 w-3.5 shrink-0" />
-                          <span className="font-semibold text-slate-700 dark:text-slate-300">{budget}</span>
+
+                        {/* Meta info */}
+                        <div className="mt-auto space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            <MapPin className="h-3.5 w-3.5 shrink-0" />
+                            <span className="truncate">{pilotLocation}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            <Clock3 className="h-3.5 w-3.5 shrink-0" />
+                            <span>{startDate} → {endDate}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                            <DollarSign className="h-3.5 w-3.5 shrink-0" />
+                            <span className="font-semibold text-slate-700 dark:text-slate-300">{budget}</span>
+                          </div>
                         </div>
-                      </div>
-                    </motion.button>
-                  );
-                })}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {displayedPilots.length > 0 && (
+                  <Pagination
+                    currentPage={pilotsListPage}
+                    totalItems={displayedPilots.length}
+                    pageSize={pilotsListPageSize}
+                    pageSizeOptions={[6, 9, 18, 27]}
+                    onPageChange={setPilotsListPage}
+                    onPageSizeChange={(size) => {
+                      setPilotsListPageSize(size);
+                      setPilotsListPage(1);
+                    }}
+                    itemName="pilots"
+                  />
+                )}
               </div>
             )}
           </div>
@@ -988,7 +1004,7 @@ function ChallengePilot() {
             <button
               type="button"
               onClick={() => navigate("/government/challenges")}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 transition"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition"
             >
               View Challenges
               <ArrowRight className="h-4 w-4" />

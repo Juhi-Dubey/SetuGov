@@ -4,7 +4,13 @@ import { logger } from './logger.js';
 
 // Derive 32-byte key from environment secret
 const getKey = () => {
-  const secret = process.env.BANK_ENCRYPTION_KEY || config.JWT_SECRET || 'setugov-secure-fallback-key-for-bank';
+  const secret = process.env.BANK_ENCRYPTION_KEY || config.JWT_SECRET;
+  if (!secret) {
+    if (config.NODE_ENV === 'production') {
+      throw new Error('FATAL: BANK_ENCRYPTION_KEY or JWT_SECRET must be configured in production.');
+    }
+    return crypto.createHash('sha256').update('setugov-dev-fallback-key-for-bank').digest();
+  }
   return crypto.createHash('sha256').update(String(secret)).digest();
 };
 

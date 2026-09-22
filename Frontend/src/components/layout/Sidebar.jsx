@@ -329,7 +329,7 @@ function Sidebar({ role = "government", isOpen, onClose }) {
               </span>
             </div>
 
-            <p className="text-xs leading-4 text-slate-400">
+            <p className="text-xs leading-4 text-slate-500">
               Your workspace activity is protected and audited.
             </p>
           </div>

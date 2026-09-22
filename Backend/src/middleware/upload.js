@@ -3,11 +3,9 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import { BadRequestError } from '../utils/errors.js';
+import storageService from '../services/storageService.js';
 
-const uploadsDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+const uploadsDir = storageService.getLocalStorageDir();
 
 const ALLOWED_EXTENSIONS = new Set([
   '.pdf', '.png', '.jpg', '.jpeg',
@@ -122,11 +120,7 @@ export const uploadSingle = (fieldName = 'file') => {
       if (req.file) {
         const isValid = validateFileSignature(req.file.path);
         if (!isValid) {
-          try {
-            fs.unlinkSync(req.file.path);
-          } catch (unlinkErr) {
-            // ignore unlink error
-          }
+          storageService.deleteTempFile(req.file.path);
           return next(new BadRequestError('Uploaded file content does not match allowable format signatures (PDF, DOC/DOCX, PPT/PPTX, PNG, JPG, MP4/WEBM). Executables and disguised files are rejected.'));
         }
       }

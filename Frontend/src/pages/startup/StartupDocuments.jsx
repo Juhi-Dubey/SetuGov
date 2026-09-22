@@ -24,6 +24,7 @@ import {
   uploadStartupDocument,
 } from "../../services/startupService.js";
 import Pagination from "../../components/common/Pagination";
+import PageHeader from "../../components/layout/PageHeader";
 import { openDocumentSecurely } from "../../utils/documentUtils.js";
 
 const documentTypeOptions = [
@@ -305,53 +306,28 @@ function StartupDocuments() {
       {/* HEADER                                            */}
       {/* ================================================= */}
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-8">
-        <button
-          type="button"
-          onClick={() =>
-            navigate("/startup")
-          }
-          className="back-nav mb-4"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
-        </button>
-
-        <div className="mt-2 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-              <FileText className="h-6 w-6" />
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                Startup Workspace
-              </p>
-
-              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-                Documents
-              </h1>
-
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                Manage company, compliance, pilot and
-                supporting documents required during
-                the government innovation process.
-              </p>
-            </div>
-          </div>
-
+      {/* ================================================= */}
+      {/* HEADER                                            */}
+      {/* ================================================= */}
+      <PageHeader
+        showBack
+        backTo="/startup"
+        backLabel="Back to Dashboard"
+        badge="Startup Workspace"
+        badgeIcon={FileText}
+        title="Documents"
+        description="Manage company, compliance, pilot, and supporting documents required during the government innovation process."
+        actions={
           <button
             type="button"
-            onClick={() =>
-              setShowUpload(true)
-            }
-            className="h-12 inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-xs font-bold text-white transition-colors hover:bg-indigo-700 self-start lg:self-center"
+            onClick={() => setShowUpload(true)}
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-blue-700"
           >
             <Plus className="h-4 w-4" />
             Upload Document
           </button>
-        </div>
-      </section>
+        }
+      />
 
       {/* ================================================= */}
       {/* SUMMARY                                           */}
@@ -433,7 +409,7 @@ function StartupDocuments() {
                   )
                 }
                 placeholder="Search documents..."
-                className="h-10 w-full sm:w-64 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white transition"
+                className="h-9 w-full sm:w-56 rounded-xl border border-slate-200 bg-white px-3.5 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
               />
 
               <select
@@ -443,7 +419,7 @@ function StartupDocuments() {
                     event.target.value
                   )
                 }
-                className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-white transition"
+                className="h-9 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-medium text-slate-700 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
               >
                 {documentCategories.map(
                   (cat) => (

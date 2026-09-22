@@ -41,6 +41,10 @@ build/
 dist/
 dist-ssr/
 
+# Prisma Generated Client
+Backend/src/generated/
+src/generated/
+
 # OS / Editor / Temp Artifacts
 .DS_Store
 Thumbs.db

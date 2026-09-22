@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import AppLayout from "../../components/layout/AppLayout";
+import PageHeader from "../../components/layout/PageHeader";
 import { useAuth } from "../../context/AuthContext";
 import ChallengeStepper from "../../components/challenge/ChallengeStepper";
 import ChallengeForm from "../../components/challenge/ChallengeForm";
@@ -872,60 +873,24 @@ function CreateChallenge() {
       <div className="mx-auto max-w-5xl">
 
         {/* HEADER */}
-
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 10,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 0.35,
-          }}
-          className="mb-6"
-        >
-          <button
-            type="button"
-            onClick={() =>
-              navigate(
-                "/government/dashboard"
-              )
-            }
-            className="back-nav"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </button>
-
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                Create Challenge
-              </h1>
-
-              <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                Define an outcome-focused government challenge. Use the AI Challenge Copilot below for instant structured problem framing or complete manually.
-              </p>
-            </div>
-
+        <PageHeader
+          showBack
+          backTo="/government/dashboard"
+          backLabel="Back to Dashboard"
+          title="Create Challenge"
+          description="Define an outcome-focused government challenge. Use the AI Challenge Copilot below for instant structured problem framing or complete manually."
+          actions={
             <button
               type="button"
               onClick={handleSaveDraft}
               disabled={isSaving}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-xs transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
             >
-              <Save className="h-4 w-4" />
-
-              {isSaving
-                ? "Saving..."
-                : "Save Draft"}
+              <Save className="h-3.5 w-3.5" />
+              {isSaving ? "Saving..." : "Save Draft"}
             </button>
-          </div>
-        </motion.div>
+          }
+        />
 
         {/* AI CHALLENGE COPILOT (BRAIN 1) */}
 

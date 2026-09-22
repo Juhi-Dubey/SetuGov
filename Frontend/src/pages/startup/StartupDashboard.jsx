@@ -84,24 +84,28 @@ function StartupDashboard() {
         value: String(applications.length),
         description: "Submitted procurement proposals",
         icon: FileText,
+        iconClass: "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400",
       },
       {
         title: "Under Evaluation",
         value: String(underReview),
         description: "Awaiting evaluator scoring",
         icon: Clock3,
+        iconClass: "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400",
       },
       {
         title: "Pilot Sandboxes",
         value: String(selectedCount),
         description: "Active government field trials",
         icon: Rocket,
+        iconClass: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400",
       },
       {
         title: "Milestone Funding",
         value: totalBudget > 0 ? `₹${(totalBudget / 100000).toFixed(1)}L` : "₹0.0L",
         description: "Committed escrow grants",
         icon: Wallet,
+        iconClass: "bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400",
       },
     ];
   }, [applications, pilots]);
@@ -135,7 +139,7 @@ function StartupDashboard() {
             <button
               type="button"
               onClick={() => navigate("/startup/challenges")}
-              className="inline-flex h-9.5 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+              className="inline-flex h-9.5 items-center gap-2 rounded-xl bg-blue-600 px-4 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
             >
               Browse Challenges
               <ArrowRight className="h-4 w-4" />
@@ -162,18 +166,18 @@ function StartupDashboard() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: index * 0.08 }}
-              className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-4.5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-400">{item.title}</span>
-                <div className="flex h-8.5 w-8.5 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
+                <span className="text-[14px] font-medium">{item.title}</span>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.iconClass || "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400"}`}>
                   <Icon className="h-4 w-4" />
                 </div>
               </div>
-              <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+              <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
                 {item.value}
               </p>
-              <p className="mt-0.5 text-xs text-slate-400">{item.description}</p>
+              <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">{item.description}</p>
             </motion.div>
           );
         })}
@@ -347,37 +351,37 @@ function StartupDashboard() {
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-5 dark:border-slate-800/80 dark:bg-slate-800/40">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Pilots Completed / Scaled</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
-              {performance ? performance.completed_pilots ?? 0 : 0} <span className="text-xs font-normal text-slate-400">/ {performance ? performance.total_pilots ?? 0 : 0}</span>
+            <p className="text-[14px] font-medium text-slate-800 dark:text-slate-200">Pilots Completed / Scaled</p>
+            <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+              {performance ? performance.completed_pilots ?? 0 : 0} <span className="text-sm font-normal text-slate-400">/ {performance ? performance.total_pilots ?? 0 : 0}</span>
             </p>
-            <p className="mt-1 text-[11px] text-emerald-600 dark:text-emerald-400">Validated sandbox field deployments</p>
+            <p className="mt-1 text-[14px] text-emerald-600 dark:text-emerald-400">Validated sandbox field deployments</p>
           </div>
 
           <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-5 dark:border-slate-800/80 dark:bg-slate-800/40">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Average Validation Score</p>
-            <p className="mt-2 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+            <p className="text-[14px] font-medium text-slate-800 dark:text-slate-200">Average Validation Score</p>
+            <p className="mt-3 text-3xl font-bold tracking-tight text-indigo-600 dark:text-indigo-400">
               {performance?.average_validation_score != null && performance?.average_validation_score > 0
                 ? `${performance.average_validation_score} / 100`
                 : "N/A"}
             </p>
-            <p className="mt-1 text-[11px] text-slate-400">Independent expert pilot evaluation</p>
+            <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">Independent expert pilot evaluation</p>
           </div>
 
           <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-5 dark:border-slate-800/80 dark:bg-slate-800/40">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Scale-Ready Pilots</p>
-            <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
+            <p className="text-[14px] font-medium text-slate-800 dark:text-slate-200">Scale-Ready Pilots</p>
+            <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
               {performance ? performance.scale_ready_count ?? 0 : 0}
             </p>
-            <p className="mt-1 text-[11px] text-slate-400">Authorized for statewide rollout</p>
+            <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">Authorized for statewide rollout</p>
           </div>
 
           <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-5 dark:border-slate-800/80 dark:bg-slate-800/40">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Gov Compliance Status</p>
-            <p className="mt-2 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+            <p className="text-[14px] font-medium text-slate-800 dark:text-slate-200">Gov Compliance Status</p>
+            <p className="mt-3 text-3xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
               {user?.verification_status === "VERIFIED" ? "Verified" : (user?.verification_status || "Pending Verification")}
             </p>
-            <p className="mt-1 text-[11px] text-slate-400">Government procurement readiness</p>
+            <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">Government procurement readiness</p>
           </div>
         </div>
       </div>

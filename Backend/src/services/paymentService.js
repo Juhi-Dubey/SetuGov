@@ -94,21 +94,20 @@ export const createPayment = async (pilotId, data, user, ip_address = null) => {
       }
     });
 
-    await tx.auditLog.create({
-      data: {
-        user_id: user.id,
-        action: 'PILOT_PAYMENT_SCHEDULED',
-        entity_type: 'PAYMENT',
-        entity_id: newPayment.id,
-        details: {
-          pilot_id: pilotId,
-          amount: data.amount,
-          status: newPayment.status,
-          milestone_id: data.milestone_id,
-          procurement_id: data.procurement_id
-        },
-        ip_address
-      }
+    await createAuditLog({
+      tx,
+      user_id: user.id,
+      action: 'PILOT_PAYMENT_SCHEDULED',
+      entity_type: 'PAYMENT',
+      entity_id: newPayment.id,
+      details: {
+        pilot_id: pilotId,
+        amount: data.amount,
+        status: newPayment.status,
+        milestone_id: data.milestone_id,
+        procurement_id: data.procurement_id
+      },
+      ip_address
     });
 
     return newPayment;
@@ -253,22 +252,21 @@ export const updatePaymentStatus = async (id, dataOrStatus, userOrPaymentDate, i
       }
     });
 
-    await tx.auditLog.create({
-      data: {
-        user_id: user.id,
-        action: `PAYMENT_${status}`,
-        entity_type: 'PAYMENT',
-        entity_id: id,
-        details: {
-          previousStatus: payment.status,
-          newStatus: status,
-          amount: payment.amount,
-          milestone_id: payment.milestone_id,
-          procurement_id: payment.procurement_id,
-          reference_number: updatedPayment.reference_number
-        },
-        ip_address: ip
-      }
+    await createAuditLog({
+      tx,
+      user_id: user.id,
+      action: `PAYMENT_${status}`,
+      entity_type: 'PAYMENT',
+      entity_id: id,
+      details: {
+        previousStatus: payment.status,
+        newStatus: status,
+        amount: payment.amount,
+        milestone_id: payment.milestone_id,
+        procurement_id: payment.procurement_id,
+        reference_number: updatedPayment.reference_number
+      },
+      ip_address: ip
     });
 
     return updatedPayment;

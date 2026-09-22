@@ -14,13 +14,15 @@ import {
   RefreshCw,
   FolderOpen,
   Calendar,
-  Layers
+  Layers,
+  TrendingUp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getGovernmentAnalytics } from "../../services/challengeService";
 import { getPilots } from "../../services/pilotService";
 import { useAuth } from "../../context/AuthContext";
 import Pagination from "../../components/common/Pagination";
+import PageHeader from "../../components/layout/PageHeader";
 import { formatPilotStatus } from "../../utils/filterUtils";
 
 function GovernmentReports() {
@@ -258,37 +260,35 @@ function GovernmentReports() {
   return (
     <div className="space-y-5 sm:space-y-6 print:space-y-4">
       {/* PAGE HEADER */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between print:hidden">
-        <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
-            <BarChart3 className="h-3.5 w-3.5" /> Departmental Analytics
-          </span>
-          <h1 className="mt-1.5 text-xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
-            Procurement & Pilot Performance Reports
-          </h1>
-          <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            {user?.department?.name
+      <div className="print:hidden">
+        <PageHeader
+          badge="Departmental Analytics"
+          badgeIcon={BarChart3}
+          title="Procurement & Pilot Performance Reports"
+          description={
+            user?.department?.name
               ? `Department-scoped oversight for ${user.department.name}.`
-              : "Live database oversight on departmental challenges, stage-gate milestones, and disbursements."}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-          >
-            <Download className="h-3.5 w-3.5 text-slate-500" /> Export CSV
-          </button>
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-          >
-            <Printer className="h-3.5 w-3.5 text-slate-500" /> Print / Save PDF
-          </button>
-        </div>
+              : "Live database oversight on departmental challenges, stage-gate milestones, and disbursements."
+          }
+          actions={
+            <>
+              <button
+                type="button"
+                onClick={handleExportCSV}
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                <Download className="h-3.5 w-3.5 text-slate-500" /> Export CSV
+              </button>
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                <Printer className="h-3.5 w-3.5 text-slate-500" /> Print / Save PDF
+              </button>
+            </>
+          }
+        />
       </div>
 
       {/* DATE RANGE FILTER BAR */}
@@ -321,7 +321,7 @@ function GovernmentReports() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 sm:border-l sm:border-slate-200 sm:pl-4 dark:sm:border-slate-700">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+            <div className="flex items-center gap-1.5 text-xs text-slate-700">
               <span>From:</span>
               <input
                 type="date"
@@ -333,7 +333,7 @@ function GovernmentReports() {
                 className="h-9 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+            <div className="flex items-center gap-1.5 text-xs text-slate-700">
               <span>To:</span>
               <input
                 type="date"
@@ -368,8 +368,8 @@ function GovernmentReports() {
           animate={{ opacity: 1, y: 0 }}
           className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
         >
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-medium">Department Challenges</span>
+          <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
+            <span className="text-[14px] font-medium">Department Challenges</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
               <FileText className="h-4 w-4" />
             </div>
@@ -377,7 +377,7 @@ function GovernmentReports() {
           <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             {metrics.totalChallenges}
           </p>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">
             {analytics?.metrics?.published_challenges ? `${analytics.metrics.published_challenges} published` : "Challenges in department"}
           </p>
         </motion.div>
@@ -388,8 +388,8 @@ function GovernmentReports() {
           transition={{ delay: 0.05 }}
           className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
         >
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-medium">Active Pilots</span>
+          <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
+            <span className="text-[14px] font-medium">Active Pilots</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
               <Rocket className="h-4 w-4" />
             </div>
@@ -397,7 +397,7 @@ function GovernmentReports() {
           <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             {metrics.activePilots}
           </p>
-          <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
+          <p className="mt-1 text-[14px] text-emerald-600 dark:text-emerald-400">
             {metrics.completedPilots > 0 ? `${metrics.completedPilots} completed successfully` : `${metrics.totalPilots} total pilots`}
           </p>
         </motion.div>
@@ -408,8 +408,8 @@ function GovernmentReports() {
           transition={{ delay: 0.1 }}
           className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
         >
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-medium">Actual Paid Funds</span>
+          <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
+            <span className="text-[14px] font-medium">Actual Paid Funds</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400">
               <DollarSign className="h-4 w-4" />
             </div>
@@ -417,7 +417,7 @@ function GovernmentReports() {
           <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             ₹{Number(metrics.totalDisbursed).toLocaleString("en-IN")}
           </p>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">
             {metrics.totalAllocated > 0 ? `${metrics.utilizationPercentage}% of total sanction` : "Disbursed milestone funds"}
           </p>
         </motion.div>
@@ -428,8 +428,8 @@ function GovernmentReports() {
           transition={{ delay: 0.15 }}
           className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
         >
-          <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-medium">Empirical Success Rate</span>
+          <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
+            <span className="text-[14px] font-medium">Empirical Success Rate</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400">
               <TrendingUp className="h-4 w-4" />
             </div>
@@ -437,7 +437,7 @@ function GovernmentReports() {
           <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             {metrics.successRate}%
           </p>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">
             {metrics.avgValidationScore > 0 ? `Avg validation score: ${metrics.avgValidationScore}%` : "Based on verified evaluations"}
           </p>
         </motion.div>
@@ -452,7 +452,7 @@ function GovernmentReports() {
             className={`border-b-2 py-3 text-xs font-semibold transition ${
               activeTab === "overview"
                 ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
-                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+                : "border-transparent text-slate-700 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
             }`}
           >
             Overview & Summary
@@ -463,7 +463,7 @@ function GovernmentReports() {
             className={`border-b-2 py-3 text-xs font-semibold transition ${
               activeTab === "pilots"
                 ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
-                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+                : "border-transparent text-slate-700 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
             }`}
           >
             Pilot Matrix ({filteredPilots.length})
@@ -474,7 +474,7 @@ function GovernmentReports() {
             className={`border-b-2 py-3 text-xs font-semibold transition ${
               activeTab === "disbursements"
                 ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
-                : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+                : "border-transparent text-slate-700 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
             }`}
           >
             Milestone Disbursements
@@ -492,7 +492,7 @@ function GovernmentReports() {
                 <h2 className="text-base font-bold text-slate-900 dark:text-white">
                   Stage-Gate Validation Summary
                 </h2>
-                <p className="text-xs text-slate-400">Authoritative status counts from database</p>
+                <p className="text-xs text-[12px] text-slate-700">Authoritative status counts from database</p>
               </div>
               <span className="rounded-full bg-blue-100 px-2.5 py-1 text-[11px] font-semibold text-blue-800 dark:bg-blue-950/60 dark:text-blue-300">
                 {metrics.totalPilots} Total Pilots
@@ -544,7 +544,7 @@ function GovernmentReports() {
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-900 dark:text-white">
                 <ShieldCheck className="h-4 w-4 text-emerald-500" /> Procurement Audit Guard
               </div>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">
                 All milestone payments and stage-gate validations are verified against PostgreSQL records with complete audit trails.
               </p>
             </div>
@@ -557,7 +557,7 @@ function GovernmentReports() {
                 <h2 className="text-base font-bold text-slate-900 dark:text-white">
                   Budget Utilization
                 </h2>
-                <p className="text-xs text-slate-400">Verified payment records</p>
+                <p className="text-xs text-[12px] text-slate-700">Verified payment records</p>
               </div>
               <span className="text-xs font-semibold text-slate-900 dark:text-white">
                 Total ₹{Number(metrics.totalAllocated).toLocaleString("en-IN")}
@@ -624,21 +624,21 @@ function GovernmentReports() {
 
             {/* Filters */}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="relative min-w-[200px] flex-1 sm:w-64 sm:flex-none">
+              <div className="relative min-w-[200px] flex-1 sm:w-56 sm:flex-none">
                 <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                 <input
                   type="text"
                   placeholder="Search challenges or startups..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-blue-500"
+                  className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500"
                 />
               </div>
 
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-9 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-medium text-slate-700 focus:border-blue-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:[color-scheme:dark]"
+                className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:[color-scheme:dark]"
               >
                 <option value="ALL">All Status</option>
                 <option value="RUNNING">Running</option>

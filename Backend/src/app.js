@@ -14,10 +14,34 @@ import { config } from './config/env.js';
 export const createApp = () => {
   const app = express();
 
-  // Security Headers with Cross-Origin Resource Policy for uploads
+  const isProduction = config.NODE_ENV === 'production';
+
+  // Security Headers calibrated for SetuGov API Gateway
   app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"]
+      }
+    },
+    noSniff: true,
+    frameguard: { action: 'deny' },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    hsts: isProduction
+      ? {
+          maxAge: 31536000,
+          includeSubDomains: true,
+          preload: true
+        }
+      : false
   }));
+
+  // Restrict sensitive browser feature permissions for API responses
+  app.use((req, res, next) => {
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+    next();
+  });
 
   // Ensure private uploads directory exists (No public static mount - Phase 1 Security Hardening)
   const uploadsDir = path.join(process.cwd(), 'uploads');
@@ -25,15 +49,56 @@ export const createApp = () => {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 
-  // CORS Configuration (P1-7: Restrict origins)
-  const allowedOrigins = config.CORS_ORIGIN === '*'
-    ? '*'
-    : config.CORS_ORIGIN.split(',').map(s => s.trim());
+  // Dynamic Environment-Aware CORS Configuration
+  const resolveAllowedOrigins = () => {
+    const origins = new Set();
+
+    // Configured frontend URL from environment
+    if (config.FRONTEND_URL) {
+      origins.add(config.FRONTEND_URL.replace(/\/+$/, ''));
+    }
+
+    // Configured CORS_ORIGIN list from environment (if set and not wildcard)
+    if (config.CORS_ORIGIN && config.CORS_ORIGIN !== '*') {
+      config.CORS_ORIGIN.split(',').forEach((o) => {
+        const trimmed = o.trim().replace(/\/+$/, '');
+        if (trimmed) origins.add(trimmed);
+      });
+    }
+
+    // Include local development origins in non-production environments
+    if (!isProduction) {
+      origins.add('http://localhost:5173');
+      origins.add('http://127.0.0.1:5173');
+      origins.add('http://localhost:3000');
+      origins.add('http://127.0.0.1:3000');
+    }
+
+    return origins;
+  };
+
+  const allowedOriginsSet = resolveAllowedOrigins();
 
   app.use(cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. server-to-server, curl, mobile native apps)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const normalizedOrigin = origin.replace(/\/+$/, '');
+      if (allowedOriginsSet.has(normalizedOrigin)) {
+        // Return explicit matched origin, never wildcard
+        return callback(null, true);
+      }
+
+      // Reject unauthorized origins without sending permissive headers
+      return callback(null, false);
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-bypass-rate-limit'],
+    exposedHeaders: ['RateLimit-Limit', 'RateLimit-Remaining', 'RateLimit-Reset', 'Retry-After'],
+    maxAge: 86400
   }));
 
   // Configure trust proxy for production reverse proxy / load balancers
@@ -53,7 +118,8 @@ export const createApp = () => {
     const start = Date.now();
     res.on('finish', () => {
       const duration = Date.now() - start;
-      logger.http(req.method, req.originalUrl, res.statusCode, duration);
+      const sanitizedUrl = req.originalUrl.replace(/([?&](?:token|jwt|access_token|password|secret)=)[^&]+/gi, '$1[REDACTED]');
+      logger.http(req.method, sanitizedUrl, res.statusCode, duration);
     });
     next();
   });

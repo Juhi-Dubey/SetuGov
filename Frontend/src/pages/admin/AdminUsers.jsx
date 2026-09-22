@@ -16,6 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getUsers, updateUserStatus } from "../../services/adminService";
 import Pagination from "../../components/common/Pagination";
+import PageHeader from "../../components/layout/PageHeader";
 
 function AdminUsers() {
   const navigate = useNavigate();
@@ -133,40 +134,15 @@ function AdminUsers() {
       onClick={() => setOpenMenu(null)}
     >
       {/* HEADER & NAVIGATION */}
-
-      <div className="space-y-3">
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            navigate("/admin/dashboard");
-          }}
-          className="back-nav"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Admin Dashboard
-        </button>
-
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-            <Users className="h-6 w-6" />
-          </div>
-
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-              Administration
-            </p>
-
-            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-              Government Users & Platform Directory
-            </h1>
-
-            <p className="mt-1.5 max-w-3xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-              Govern government nodal officers, department affiliations, and verified user accounts across the platform.
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        showBack
+        backTo="/admin/dashboard"
+        backLabel="Back to Admin Dashboard"
+        badge="Administration"
+        badgeIcon={Users}
+        title="Government Users & Platform Directory"
+        description="Govern government nodal officers, department affiliations, and verified user accounts across the platform."
+      />
 
       {/* SUMMARY */}
 
@@ -212,7 +188,7 @@ function AdminUsers() {
         <div className="border-b border-slate-200 p-4 dark:border-slate-800 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative w-full sm:max-w-xs md:max-w-sm">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
 
               <input
                 type="search"
@@ -223,7 +199,7 @@ function AdminUsers() {
                   )
                 }
                 placeholder="Search government official, email or department..."
-                className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
+                className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
               />
             </div>
 
@@ -235,7 +211,7 @@ function AdminUsers() {
                     event.target.value
                   )
                 }
-                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
               >
                 <option value="All">
                   All Status

@@ -412,34 +412,39 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
     }
   }
 
-  const updated = await prisma.application.update({
-    where: { id },
-    data: {
-      status: nextStatus
-    },
-    include: {
-      challenge: true,
-      startup: true
-    }
-  });
-
   // If SELECTED, log selection action
   const action = nextStatus === 'SELECTED' ? 'STARTUP_SELECTED' : `APPLICATION_${nextStatus}`;
 
-  await createAuditLog({
-    user_id: user.id,
-    action,
-    entity_type: 'APPLICATION',
-    entity_id: id,
-    details: {
-      previousStatus: application.status,
-      newStatus: nextStatus,
-      reason,
-      override_justification: override_justification || null,
-      challenge_id: application.challenge_id,
-      startup_id: application.startup_id
-    },
-    ip_address
+  const updated = await prisma.$transaction(async (tx) => {
+    const res = await tx.application.update({
+      where: { id },
+      data: {
+        status: nextStatus
+      },
+      include: {
+        challenge: true,
+        startup: true
+      }
+    });
+
+    await createAuditLog({
+      tx,
+      user_id: user.id,
+      action,
+      entity_type: 'APPLICATION',
+      entity_id: id,
+      details: {
+        previousStatus: application.status,
+        newStatus: nextStatus,
+        reason,
+        override_justification: override_justification || null,
+        challenge_id: application.challenge_id,
+        startup_id: application.startup_id
+      },
+      ip_address
+    });
+
+    return res;
   });
 
   // Notify the startup user regarding the status transition

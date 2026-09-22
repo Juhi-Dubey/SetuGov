@@ -57,9 +57,9 @@ export const createScaleDecision = async (pilotId, data, user, ip_address = null
   // Validate state transition
   validateTransition('PILOT', pilot.status, targetPilotStatus);
 
-  // Perform transaction to record decision and update pilot + challenge status
-  const [scaleDecision] = await prisma.$transaction([
-    prisma.scaleDecision.create({
+  // Perform transaction to record decision, audit log, and update pilot + challenge status
+  const [scaleDecision] = await prisma.$transaction(async (tx) => {
+    const dec = await tx.scaleDecision.create({
       data: {
         pilot_id: pilotId,
         decision: data.decision,
@@ -79,34 +79,39 @@ export const createScaleDecision = async (pilotId, data, user, ip_address = null
           }
         }
       }
-    }),
-    prisma.pilot.update({
+    });
+
+    await tx.pilot.update({
       where: { id: pilotId },
       data: {
         status: targetPilotStatus,
         final_recommendation: data.reasoning.trim()
       }
-    }),
-    prisma.challenge.update({
+    });
+
+    await tx.challenge.update({
       where: { id: pilot.challenge_id },
       data: {
         status: targetPilotStatus === 'SCALED' || targetPilotStatus === 'STOPPED' ? 'COMPLETED' : pilot.challenge.status
       }
-    })
-  ]);
+    });
 
-  await createAuditLog({
-    user_id: user.id,
-    action: `SCALE_DECISION_${data.decision}`,
-    entity_type: 'PILOT',
-    entity_id: pilotId,
-    details: {
-      decision: data.decision,
-      score: scaleDecision.score,
-      reasoning: data.reasoning,
-      pilot_status: targetPilotStatus
-    },
-    ip_address
+    await createAuditLog({
+      tx,
+      user_id: user.id,
+      action: `SCALE_DECISION_${data.decision}`,
+      entity_type: 'PILOT',
+      entity_id: pilotId,
+      details: {
+        decision: data.decision,
+        score: dec.score,
+        reasoning: data.reasoning,
+        pilot_status: targetPilotStatus
+      },
+      ip_address
+    });
+
+    return [dec];
   });
 
   // Dispatch in-app notification and transactional email with duplicate protection

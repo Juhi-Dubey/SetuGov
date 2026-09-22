@@ -20,6 +20,7 @@ import {
 import { getEvaluators, nominateEvaluator } from "../../services/evaluatorService";
 import { formatEmploymentType } from "../../utils/filterUtils";
 import Pagination from "../../components/common/Pagination";
+import PageHeader from "../../components/layout/PageHeader";
 
 function GovernmentEvaluators() {
   const navigate = useNavigate();
@@ -116,55 +117,48 @@ function GovernmentEvaluators() {
   return (
     <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                Official Evaluator Registry
-              </h1>
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700 dark:bg-purple-950/40 dark:text-purple-300">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Verified Expert Directory
-              </div>
-            </div>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Browse administrator-verified technical evaluators for scoring innovation proposals or nominate new experts.
-            </p>
-          </div>
+        <PageHeader
+          badge="Verified Expert Directory"
+          badgeIcon={ShieldCheck}
+          title="Official Evaluator Registry"
+          description="Browse administrator-verified technical evaluators for scoring innovation proposals or nominate new experts."
+          actions={
+            <>
+              <button
+                type="button"
+                onClick={fetchVerifiedEvaluators}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-50 shrink-0"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                Refresh
+              </button>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={fetchVerifiedEvaluators}
-              className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-              Refresh
-            </button>
-
-            <button
-              onClick={() => {
-                setShowNominateModal(true);
-                setNominateSuccess(false);
-                setNominateError("");
-              }}
-              className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
-            >
-              <UserPlus className="h-4 w-4" />
-              Nominate Evaluator
-            </button>
-          </div>
-        </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowNominateModal(true);
+                  setNominateSuccess(false);
+                  setNominateError("");
+                }}
+                className="inline-flex h-9 items-center gap-2 rounded-lg bg-blue-800 px-4 text-xs font-semibold text-white shadow-xs transition-all hover:bg-blue-900"
+              >
+                <UserPlus className="h-4 w-4" />
+                Nominate Evaluator
+              </button>
+            </>
+          }
+        />
 
         {/* Filters */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="relative sm:col-span-2">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder="Search verified evaluators by name, institution, or designation..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-xs outline-none focus:border-purple-500 dark:border-slate-800 dark:bg-slate-900"
+              className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
             />
           </div>
 
@@ -172,7 +166,7 @@ function GovernmentEvaluators() {
             <select
               value={domainFilter}
               onChange={(e) => setDomainFilter(e.target.value)}
-              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-purple-500 dark:border-slate-800 dark:bg-slate-900"
+              className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
             >
               <option value="ALL">All Technical Domains</option>
               <option value="Artificial Intelligence">Artificial Intelligence</option>
@@ -460,7 +454,7 @@ function GovernmentEvaluators() {
                     <button
                       type="submit"
                       disabled={nominateLoading}
-                      className="px-4 py-2 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 disabled:opacity-50"
+                      className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
                     >
                       {nominateLoading ? "Forwarding..." : "Submit Nomination"}
                     </button>

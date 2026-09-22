@@ -1,7 +1,15 @@
 node_modules
 .pgdata
 .env
+.env.*
+.env.local
+.env.*.local
+uploads/*
+!uploads/.gitkeep
+test-results/
+playwright-report/
 *.log
 npm-debug.log
 .git
 .gitignore
+

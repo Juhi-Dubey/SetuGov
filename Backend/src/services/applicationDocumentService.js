@@ -1,10 +1,10 @@
-import fs from 'fs';
 import path from 'path';
 import { prisma } from '../config/prisma.js';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
 import { getFileUrl } from '../middleware/upload.js';
+import storageService from './storageService.js';
 
 /**
  * Upload a solution document for a shortlisted finalist application
@@ -97,19 +97,26 @@ export const uploadSolutionDocument = async (applicationId, file, data = {}, use
   const fileUrl = file.file_url || (req ? getFileUrl(req, storedFilename) : `/uploads/${storedFilename}`);
 
   // 7. Persist ApplicationDocument record
-  const document = await prisma.applicationDocument.create({
-    data: {
-      application_id: applicationId,
-      uploaded_by: user.id,
-      original_filename: originalname,
-      stored_filename: storedFilename,
-      file_url: fileUrl,
-      file_size: fileSize,
-      mime_type: mimeType,
-      document_type: documentType,
-      description
-    }
-  });
+  let document;
+  try {
+    document = await prisma.applicationDocument.create({
+      data: {
+        application_id: applicationId,
+        uploaded_by: user.id,
+        original_filename: originalname,
+        stored_filename: storedFilename,
+        file_url: fileUrl,
+        file_size: fileSize,
+        mime_type: mimeType,
+        document_type: documentType,
+        description
+      }
+    });
+  } catch (dbErr) {
+    // If DB persistence fails, clean up the newly-created storage file
+    await storageService.deleteFile(storedFilename).catch(() => null);
+    throw dbErr;
+  }
 
   // 8. Audit logging
   await createAuditLog({
@@ -227,14 +234,9 @@ export const deleteSolutionDocument = async (applicationId, documentId, user, ip
     throw new NotFoundError(`Document with ID ${documentId} not found on this application.`);
   }
 
-  // Attempt to delete physical file safely
-  try {
-    const filePath = path.join(process.cwd(), 'uploads', document.stored_filename);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-  } catch (err) {
-    // Non-blocking log
+  // Delete physical file safely via storage abstraction
+  if (document.stored_filename) {
+    await storageService.deleteFile(document.stored_filename);
   }
 
   await prisma.applicationDocument.delete({

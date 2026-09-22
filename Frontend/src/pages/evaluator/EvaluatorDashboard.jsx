@@ -22,27 +22,27 @@ import { getMyAssignments, updateAssignmentStatus } from "../../services/evaluat
 function StatCard({ title, value, description, icon: Icon, iconClass, delay = 0 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay }}
-      className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-4.5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      transition={{ duration: 0.35, delay }}
+      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            {title}
-          </p>
-          <p className="mt-1.5 text-2xl font-bold text-slate-900 dark:text-white" aria-label={`${title}: ${value}`}>
-            {value}
-          </p>
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-            {description}
-          </p>
-        </div>
-        <div className={`flex h-8.5 w-8.5 items-center justify-center rounded-lg ${iconClass}`} aria-hidden="true">
+      <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
+        <span className="text-[14px] font-medium">
+          {title}
+        </span>
+        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconClass}`} aria-hidden="true">
           <Icon className="h-4 w-4" />
         </div>
       </div>
+      <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white" aria-label={`${title}: ${value}`}>
+        {value}
+      </p>
+      {description && (
+        <p className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">
+          {description}
+        </p>
+      )}
     </motion.div>
   );
 }
@@ -202,7 +202,7 @@ function EvaluatorDashboard() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 aria-label="Search assignments"
-                className="h-9 w-44 sm:w-60 rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs outline-none transition-colors focus:border-purple-500 focus:ring-1 focus:ring-purple-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                className="h-9 w-44 sm:w-56 rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
               />
             </div>
 
@@ -210,7 +210,7 @@ function EvaluatorDashboard() {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               aria-label="Filter by status"
-              className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none transition-colors focus:border-purple-500 focus:ring-1 focus:ring-purple-500 dark:border-slate-800 dark:bg-slate-950 text-slate-700 dark:text-slate-300"
+              className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
             >
               <option value="All">All Status</option>
               <option value="PENDING">Pending</option>

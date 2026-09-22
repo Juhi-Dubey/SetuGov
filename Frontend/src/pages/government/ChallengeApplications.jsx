@@ -121,6 +121,13 @@ function ChallengeApplications() {
   const [proposalStatusFilter, setProposalStatusFilter] = useState("all");
   const [proposalEvaluationFilter, setProposalEvaluationFilter] = useState("all");
   const [proposalDateFilter, setProposalDateFilter] = useState("all");
+  const [proposalDateCutoff, setProposalDateCutoff] = useState(0);
+
+  const handleDateFilterChange = (val) => {
+    setProposalDateFilter(val);
+    const days = val === "7d" ? 7 : val === "30d" ? 30 : val === "90d" ? 90 : 0;
+    setProposalDateCutoff(days > 0 ? Date.now() - days * 24 * 60 * 60 * 1000 : 0);
+  };
 
   // Separate Filter State: Shortlisted Startups (Tab 3)
   const [shortlistedSearch, setShortlistedSearch] = useState("");
@@ -525,6 +532,8 @@ function ChallengeApplications() {
     if (e && e.preventDefault) e.preventDefault();
     if (!selectedAppForDecision) return;
 
+    const rec = decisions[selectedAppForDecision.id]?.recommendation;
+
     // Gating: Challenge must be in EVALUATION status to select a startup
     if (challengeDetails?.status !== "EVALUATION") {
       setSelectionError("Selection blocked: Challenge must be transitioned to the EVALUATION phase before selecting a winning startup.");
@@ -716,67 +725,62 @@ function ChallengeApplications() {
   };
 
   // Submitted Proposals Filter Predicate
-  const filterApplication = (app) => {
-    if (proposalsSearch.trim()) {
-      const q = proposalsSearch.trim().toLowerCase();
-      const companyName = (
-        app.startup?.company_name ||
-        app.startup?.name ||
-        app.startup_name ||
-        ""
-      ).toLowerCase();
-      const proposalText = (
-        app.proposal_title ||
-        app.proposal_summary ||
-        app.proposal ||
-        ""
-      ).toLowerCase();
-      if (!companyName.includes(q) && !proposalText.includes(q)) return false;
-    }
-
-    if (proposalStatusFilter !== "all") {
-      if (app.status !== proposalStatusFilter) return false;
-    }
-
-    if (proposalEvaluationFilter !== "all") {
-      const dec = decisions[app.id];
-      const rec = dec?.recommendation;
-      const assignments = app.evaluator_assignments || [];
-      const hasCompleted = assignments.some((a) => a.status === "COMPLETED");
-
-      if (proposalEvaluationFilter === "RECOMMENDED_FOR_PILOT") {
-        if (rec !== "RECOMMENDED_FOR_PILOT") return false;
-      } else if (proposalEvaluationFilter === "RESERVE_CANDIDATE") {
-        if (rec !== "RESERVE_CANDIDATE") return false;
-      } else if (proposalEvaluationFilter === "EVALUATION_PENDING_QUORUM") {
-        if (rec !== "EVALUATION_PENDING_QUORUM") return false;
-      } else if (proposalEvaluationFilter === "NOT_RECOMMENDED") {
-        if (rec !== "NOT_RECOMMENDED") return false;
-      } else if (proposalEvaluationFilter === "EVALUATED") {
-        if (!hasCompleted && !dec) return false;
-      } else if (proposalEvaluationFilter === "PENDING") {
-        if (hasCompleted || (dec && rec === "RECOMMENDED_FOR_PILOT")) return false;
-      } else if (proposalEvaluationFilter === "UNASSIGNED") {
-        if (assignments.length > 0) return false;
-      }
-    }
-
-    if (proposalDateFilter !== "all") {
-      const dateStr = app.submitted_at || app.created_at;
-      if (!dateStr) return false;
-      const appTime = new Date(dateStr).getTime();
-      const now = Date.now();
-      const days = proposalDateFilter === "7d" ? 7 : proposalDateFilter === "30d" ? 30 : 90;
-      const cutoff = now - days * 24 * 60 * 60 * 1000;
-      if (appTime < cutoff) return false;
-    }
-
-    return true;
-  };
-
   const filteredApplications = useMemo(() => {
-    return applications.filter(filterApplication);
-  }, [applications, decisions, proposalsSearch, proposalStatusFilter, proposalEvaluationFilter, proposalDateFilter]);
+    return applications.filter((app) => {
+      if (proposalsSearch.trim()) {
+        const q = proposalsSearch.trim().toLowerCase();
+        const companyName = (
+          app.startup?.company_name ||
+          app.startup?.name ||
+          app.startup_name ||
+          ""
+        ).toLowerCase();
+        const proposalText = (
+          app.proposal_title ||
+          app.proposal_summary ||
+          app.proposal ||
+          ""
+        ).toLowerCase();
+        if (!companyName.includes(q) && !proposalText.includes(q)) return false;
+      }
+
+      if (proposalStatusFilter !== "all") {
+        if (app.status !== proposalStatusFilter) return false;
+      }
+
+      if (proposalEvaluationFilter !== "all") {
+        const dec = decisions[app.id];
+        const rec = dec?.recommendation;
+        const assignments = app.evaluator_assignments || [];
+        const hasCompleted = assignments.some((a) => a.status === "COMPLETED");
+
+        if (proposalEvaluationFilter === "RECOMMENDED_FOR_PILOT") {
+          if (rec !== "RECOMMENDED_FOR_PILOT") return false;
+        } else if (proposalEvaluationFilter === "RESERVE_CANDIDATE") {
+          if (rec !== "RESERVE_CANDIDATE") return false;
+        } else if (proposalEvaluationFilter === "EVALUATION_PENDING_QUORUM") {
+          if (rec !== "EVALUATION_PENDING_QUORUM") return false;
+        } else if (proposalEvaluationFilter === "NOT_RECOMMENDED") {
+          if (rec !== "NOT_RECOMMENDED") return false;
+        } else if (proposalEvaluationFilter === "EVALUATED") {
+          if (!hasCompleted && !dec) return false;
+        } else if (proposalEvaluationFilter === "PENDING") {
+          if (hasCompleted || (dec && rec === "RECOMMENDED_FOR_PILOT")) return false;
+        } else if (proposalEvaluationFilter === "UNASSIGNED") {
+          if (assignments.length > 0) return false;
+        }
+      }
+
+      if (proposalDateCutoff > 0) {
+        const dateStr = app.submitted_at || app.created_at;
+        if (!dateStr) return false;
+        const appTime = new Date(dateStr).getTime();
+        if (appTime < proposalDateCutoff) return false;
+      }
+
+      return true;
+    });
+  }, [applications, decisions, proposalsSearch, proposalStatusFilter, proposalEvaluationFilter, proposalDateCutoff]);
 
   useEffect(() => {
     setProposalsPage(1);
@@ -799,6 +803,7 @@ function ChallengeApplications() {
     setProposalStatusFilter("all");
     setProposalEvaluationFilter("all");
     setProposalDateFilter("all");
+    setProposalDateCutoff(0);
   };
 
   // Authoritative Shortlisted Startups (Tab 3) derived from real backend data
@@ -1535,7 +1540,7 @@ function ChallengeApplications() {
                 onClick={handleRunBrain2Matching}
                 disabled={matchingLoading || isClosed}
                 title={isClosed ? "Problem statement is closed. Candidate pool is frozen." : ""}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-semibold text-white shadow-md shadow-indigo-600/20 transition hover:bg-indigo-500 disabled:opacity-50 whitespace-nowrap"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-800 px-4 text-xs font-semibold text-white shadow-md shadow-blue-800/20 transition hover:bg-blue-900 disabled:opacity-50 whitespace-nowrap"
               >
                 {matchingLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -1581,11 +1586,11 @@ function ChallengeApplications() {
             onClick={() => setActiveTab("ai-matches")}
             className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold whitespace-nowrap shrink-0 transition-colors ${
               activeTab === "ai-matches"
-                ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
-            <Sparkles className="h-4 w-4 text-indigo-500 shrink-0" />
+            <Sparkles className="h-4 w-4 text-blue-500 shrink-0" />
             <span className="whitespace-nowrap">
               Startup Discovery ({matchSummary.eligible} Eligible / {matchSummary.total} Evaluated)
             </span>
@@ -1596,7 +1601,7 @@ function ChallengeApplications() {
             onClick={() => setActiveTab("applications")}
             className={`border-b-2 px-4 py-3 text-sm font-semibold whitespace-nowrap shrink-0 transition-colors ${
               activeTab === "applications"
-                ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
@@ -1610,11 +1615,11 @@ function ChallengeApplications() {
             onClick={() => setActiveTab("shortlisted")}
             className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold whitespace-nowrap shrink-0 transition-colors ${
               activeTab === "shortlisted"
-                ? "border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400"
+                ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
-            <CheckCircle2 className="h-4 w-4 text-purple-500 shrink-0" />
+            <CheckCircle2 className="h-4 w-4 text-blue-500 shrink-0" />
             <span className="whitespace-nowrap">
               Shortlisted Startups ({shortlistedList.length})
             </span>
@@ -1628,11 +1633,11 @@ function ChallengeApplications() {
             }}
             className={`flex items-center gap-1.5 border-b-2 px-4 py-3 text-sm font-semibold whitespace-nowrap shrink-0 transition-colors ${
               activeTab === "evaluator-pool"
-                ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
+                ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
             }`}
           >
-            <Users className="h-4 w-4 text-purple-500 shrink-0" />
+            <Users className="h-4 w-4 text-blue-500 shrink-0" />
             <span className="whitespace-nowrap">
               Final Evaluator Pool & Review ({challengePool.length} Pool Members)
             </span>
@@ -1673,7 +1678,7 @@ function ChallengeApplications() {
                         value={discoverySearch}
                         onChange={(e) => setDiscoverySearch(e.target.value)}
                         placeholder="Search startups by name..."
-                        className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-8.5 pr-3 text-xs outline-none focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900"
+                        className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                       />
                     </div>
 
@@ -1682,7 +1687,7 @@ function ChallengeApplications() {
                       <select
                         value={discoveryDomain}
                         onChange={(e) => setDiscoveryDomain(e.target.value)}
-                        className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                        className="h-9 w-full rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
                       >
                         <option value="all">All Domains</option>
                         {availableDomains.map((dom) => (
@@ -1901,13 +1906,13 @@ function ChallengeApplications() {
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3">
               <div className="flex flex-wrap items-center gap-3">
                 <div className="relative min-w-[240px] flex-1">
-                  <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
                     value={proposalsSearch}
                     onChange={(e) => setProposalsSearch(e.target.value)}
                     placeholder="Search proposals by startup name or proposal title..."
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-10 pr-4 text-xs outline-none focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:focus:bg-slate-900"
+                    className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                   />
                 </div>
 
@@ -1916,7 +1921,7 @@ function ChallengeApplications() {
                   <select
                     value={proposalStatusFilter}
                     onChange={(e) => setProposalStatusFilter(e.target.value)}
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 outline-none transition-all focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
                   >
                     <option value="all">All Application Status</option>
                     <option value="SUBMITTED">Submitted</option>
@@ -1949,7 +1954,7 @@ function ChallengeApplications() {
                 <div className="flex items-center gap-1.5">
                   <select
                     value={proposalDateFilter}
-                    onChange={(e) => setProposalDateFilter(e.target.value)}
+                    onChange={(e) => handleDateFilterChange(e.target.value)}
                     className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
                     <option value="all">All Submission Dates</option>
@@ -2194,7 +2199,7 @@ function ChallengeApplications() {
                       value={shortlistedSearch}
                       onChange={(e) => setShortlistedSearch(e.target.value)}
                       placeholder="Search shortlisted startups..."
-                      className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-8.5 pr-8 text-xs outline-none focus:border-purple-500 dark:border-slate-800 dark:bg-slate-900"
+                      className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-8 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                     />
                     {shortlistedSearch && (
                       <button
@@ -2606,7 +2611,7 @@ function ChallengeApplications() {
                   <button
                     type="submit"
                     disabled={shortlistLoading}
-                    className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 disabled:opacity-50 inline-flex items-center gap-1.5 text-xs"
+                    className="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 inline-flex items-center gap-1.5 text-xs shadow-sm"
                   >
                     {shortlistLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                     Confirm Shortlist
@@ -2766,7 +2771,7 @@ function ChallengeApplications() {
                   <button
                     type="submit"
                     disabled={assignLoading || !selectedEvaluatorId}
-                    className="px-4 py-2 rounded-xl bg-purple-600 text-white font-semibold hover:bg-purple-700 disabled:opacity-50 text-xs"
+                    className="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 text-xs shadow-sm"
                   >
                     {assignLoading ? "Assigning..." : "Assign Evaluator"}
                   </button>

@@ -13,7 +13,7 @@ export const getDashboard = async (req, res, next) => {
 
 export const getAuditLogs = async (req, res, next) => {
   try {
-    const result = await auditService.getAuditLogs(req.query);
+    const result = await auditService.getAuditLogs(req.query, req.user);
     return successResponse(res, result, 'Audit logs retrieved successfully', 200);
   } catch (error) {
     next(error);

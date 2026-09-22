@@ -8,6 +8,14 @@ import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.
  */
 export const sanitizeAuditDetails = (obj) => {
   if (!obj || typeof obj !== 'object') return obj;
+  if (obj instanceof Date) return obj.toISOString();
+  if (typeof obj.toJSON === 'function') {
+    const jsonVal = obj.toJSON();
+    if (jsonVal && typeof jsonVal === 'object') {
+      return sanitizeAuditDetails(jsonVal);
+    }
+    return jsonVal;
+  }
   if (Array.isArray(obj)) {
     return obj.map((item) => sanitizeAuditDetails(item));
   }
@@ -21,14 +29,24 @@ export const sanitizeAuditDetails = (obj) => {
     'refresh_token',
     'secret',
     'api_key',
+    'encryption_key',
+    'bank_encryption_key',
+    'otp',
+    'authorization',
+    'bearer',
+    'private_key',
     'invitation_token',
     'email_verification_token',
-    'private_key',
     'auth_token',
     'session_token'
   ];
 
-  const bankKeywords = ['account_number', 'raw_account_number', 'bank_account_number'];
+  const bankKeywords = [
+    'account_number',
+    'raw_account_number',
+    'bank_account_number',
+    'account_no'
+  ];
 
   const sanitized = {};
   for (const [k, v] of Object.entries(obj)) {
@@ -44,6 +62,15 @@ export const sanitizeAuditDetails = (obj) => {
     }
   }
   return sanitized;
+};
+
+/**
+ * Cleanly derive and sanitize IP address server-side
+ */
+export const sanitizeIpAddress = (ip) => {
+  if (!ip || typeof ip !== 'string') return null;
+  const firstIp = ip.split(',')[0].trim();
+  return firstIp.replace(/[^a-zA-Z0-9.:_-]/g, '').slice(0, 45) || null;
 };
 
 /**
@@ -342,6 +369,8 @@ export const createAuditLog = async ({
   ip_address = null
 }) => {
   const db = tx || prisma;
+  const sanitizedDetails = details ? sanitizeAuditDetails(details) : {};
+  const safeIp = sanitizeIpAddress(ip_address);
   try {
     const log = await db.auditLog.create({
       data: {
@@ -349,8 +378,8 @@ export const createAuditLog = async ({
         action,
         entity_type,
         entity_id,
-        details: details || {},
-        ip_address
+        details: sanitizedDetails,
+        ip_address: safeIp
       }
     });
     return log;
@@ -369,6 +398,10 @@ export const createAuditLog = async ({
  * Retrieve paginated audit logs with department scoping, date filtering, and sensitive data protection.
  */
 export const getAuditLogs = async (query = {}, user = null) => {
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'GOVERNMENT')) {
+    throw new ForbiddenError('Access denied: You are not authorized to view audit logs.');
+  }
+
   const {
     page = 1,
     limit = 50,
@@ -516,28 +549,6 @@ export const getAuditLogs = async (query = {}, user = null) => {
         { user_id: { in: Array.from(deptScope.userIds) } }
       ];
     }
-  } else {
-    // Unauthenticated or general fallback
-    let targetChallengeId = challenge_id;
-    if (!targetChallengeId && entity_id) {
-      const ch = await prisma.challenge.findUnique({
-        where: { id: entity_id },
-        select: { id: true }
-      });
-      if (ch) targetChallengeId = ch.id;
-    }
-
-    if (targetChallengeId) {
-      const descendantIds = await getChallengeDescendantEntityIds(targetChallengeId);
-      where.OR = [
-        { entity_id: { in: Array.from(descendantIds) } },
-        { details: { path: ['challenge_id'], equals: targetChallengeId } }
-      ];
-    } else if (entity_id) {
-      where.entity_id = entity_id;
-    }
-
-    if (user_id) where.user_id = user_id;
   }
 
   // Search keyword across action or ip_address
@@ -600,6 +611,10 @@ export const getAuditLogs = async (query = {}, user = null) => {
  * Retrieve a specific audit log by ID with department ownership verification and data masking.
  */
 export const getAuditLogById = async (id, user = null) => {
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'GOVERNMENT')) {
+    throw new ForbiddenError('Access denied: You are not authorized to view audit logs.');
+  }
+
   const log = await prisma.auditLog.findUnique({
     where: { id },
     include: {

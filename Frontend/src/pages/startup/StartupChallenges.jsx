@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   FileText,
   AlertTriangle,
+  ExternalLink,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getChallenges } from "../../services/challengeService";
@@ -221,7 +222,7 @@ function StartupChallenges() {
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
 
             <input
               type="search"
@@ -230,7 +231,7 @@ function StartupChallenges() {
                 setSearch(e.target.value)
               }
               placeholder="Search challenges, departments..."
-              className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-xs font-medium text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
+              className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900"
             />
           </div>
 
@@ -242,7 +243,7 @@ function StartupChallenges() {
                   e.target.value
                 )
               }
-              className="h-11 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-xs font-semibold text-slate-700 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:bg-slate-950"
+              className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:focus:bg-slate-900"
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
@@ -476,7 +477,7 @@ function ChallengeCard({
             e.stopPropagation();
             onApply(challenge);
           }}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-3 py-2.5 text-[10px] font-bold text-white transition-colors hover:bg-indigo-700"
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2.5 text-[10px] font-bold text-white transition-colors hover:bg-blue-700 shadow-sm"
         >
           Apply Now
           <ArrowRight className="h-3.5 w-3.5" />
@@ -726,7 +727,7 @@ function ChallengeDetailModal({
           <button
             type="button"
             onClick={onApply}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-xs font-bold text-white transition-all hover:bg-indigo-700"
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-xs font-bold text-white transition-all hover:bg-blue-700 shadow-sm"
           >
             Apply for this Challenge
             <ArrowRight className="h-4 w-4" />

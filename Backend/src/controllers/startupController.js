@@ -149,7 +149,7 @@ export const submitStartupRegistration = async (req, res, next) => {
   try {
     const startupId = req.params.startup_id || req.params.id;
     const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
-    const startup = await startupService.submitStartupRegistration(startupId, req.user, ip_address);
+    const startup = await startupService.submitStartupRegistration(startupId, req.body, req.user, ip_address);
     return successResponse(res, { startup }, 'Startup registration submitted for administrative verification', 200);
   } catch (error) {
     next(error);

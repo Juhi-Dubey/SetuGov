@@ -40,6 +40,7 @@ import { getStartupApplications } from "../../services/startupService";
 import { useAuth } from "../../context/AuthContext";
 import { API_BASE_URL } from "../../services/api";
 import { formatPublishDate } from "../../utils/filterUtils";
+import Pagination from "../../components/common/Pagination";
 
 
 
@@ -47,6 +48,15 @@ function StartupApplication() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { user } = useAuth();
+
+  if (!id) {
+    return <MyApplicationsListView user={user} navigate={navigate} />;
+  }
+
+  return <ApplicationForm id={id} user={user} navigate={navigate} />;
+}
+
+function ApplicationForm({ id, user, navigate }) {
 
   const [challenge, setChallenge] = useState(null);
   const [loadingChallenge, setLoadingChallenge] = useState(true);
@@ -89,14 +99,9 @@ function StartupApplication() {
     }
   }, [id]);
 
-  if (!id) {
-    return <MyApplicationsListView user={user} navigate={navigate} />;
-  }
-
-  const isDeadlineExpired = useMemo(() => {
-    if (!challenge?.deadlineRaw) return false;
-    return new Date(challenge.deadlineRaw) < new Date();
-  }, [challenge?.deadlineRaw]);
+  const isDeadlineExpired = Boolean(
+    challenge?.deadlineRaw && new Date(challenge.deadlineRaw) < new Date()
+  );
 
   const isStartupUnverified = user && user.verification_status && user.verification_status !== "VERIFIED";
 
@@ -1017,7 +1022,7 @@ function StartupApplication() {
                   submitState === "submitted" ||
                   isDeadlineExpired
                 }
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white transition-all hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-xs font-bold text-white transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none shadow-sm"
               >
                 {submitState === "submitting" ? (
                   <>
@@ -1173,8 +1178,8 @@ function InfoPill({ text }) {
 
 function inputClass(error = false) {
   return `h-11 w-full rounded-xl border bg-slate-50 px-3.5 text-xs text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:ring-4 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950 ${error
-      ? "border-red-300 focus:border-red-500 focus:ring-red-500/10 dark:border-red-500/40"
-      : "border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-slate-800"
+    ? "border-red-300 focus:border-red-500 focus:ring-red-500/10 dark:border-red-500/40"
+    : "border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-slate-800"
     }`;
 }
 
@@ -1184,8 +1189,8 @@ function inputClass(error = false) {
 
 function textareaClass(error = false) {
   return `w-full resize-y rounded-xl border bg-slate-50 px-3.5 py-3 text-xs leading-5 text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:ring-4 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950 ${error
-      ? "border-red-300 focus:border-red-500 focus:ring-red-500/10 dark:border-red-500/40"
-      : "border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-slate-800"
+    ? "border-red-300 focus:border-red-500 focus:ring-red-500/10 dark:border-red-500/40"
+    : "border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-slate-800"
     }`;
 }
 
@@ -1345,11 +1350,10 @@ function ShortlistSolutionPackage({ app, onRefresh }) {
           )}
           {deadline && (
             <span
-              className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                isDeadlinePassed
+              className={`text-xs font-medium px-2 py-0.5 rounded-full ${isDeadlinePassed
                   ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
                   : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-              }`}
+                }`}
             >
               Deadline:{" "}
               {new Date(deadline).toLocaleDateString("en-IN", {
@@ -1516,6 +1520,8 @@ function MyApplicationsListView({ user, navigate }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(6);
 
   const load = async () => {
     setLoading(true);
@@ -1545,10 +1551,10 @@ function MyApplicationsListView({ user, navigate }) {
             (app.status === "SELECTED"
               ? "Pilot Phase Active"
               : app.status === "SHORTLISTED"
-              ? "Finalist Solution Package"
-              : app.status === "DRAFT"
-              ? "Draft In Progress"
-              : "Under Department Review"),
+                ? "Finalist Solution Package"
+                : app.status === "DRAFT"
+                  ? "Draft In Progress"
+                  : "Under Department Review"),
         }));
         setApplications(mapped);
       } else {
@@ -1566,6 +1572,10 @@ function MyApplicationsListView({ user, navigate }) {
     load();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter]);
+
   const filtered = useMemo(() => {
     return applications.filter((app) => {
       const matchSearch =
@@ -1578,6 +1588,11 @@ function MyApplicationsListView({ user, navigate }) {
       return matchSearch && matchStatus;
     });
   }, [applications, search, statusFilter]);
+
+  const paginatedApps = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, currentPage, pageSize]);
 
   const stats = useMemo(() => {
     return {
@@ -1677,13 +1692,13 @@ function MyApplicationsListView({ user, navigate }) {
       {/* Unified Search & Filters Bar */}
       <section className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3.5">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by challenge or department..."
-            className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-xs text-slate-900 placeholder-slate-400 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+            className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-4 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
           />
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
@@ -1692,9 +1707,9 @@ function MyApplicationsListView({ user, navigate }) {
               key={st}
               type="button"
               onClick={() => setStatusFilter(st)}
-              className={`h-10 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${statusFilter === st
-                  ? "bg-blue-600 text-white shadow-sm dark:bg-blue-600 dark:text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              className={`h-9 rounded-xl px-3 text-xs font-semibold transition ${statusFilter === st
+                ? "bg-indigo-600 text-white shadow-sm dark:bg-indigo-600 dark:text-white"
+                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700"
                 }`}
             >
               {st === "ALL" ? "All Applications" : st.replace("_", " ")}
@@ -1723,78 +1738,95 @@ function MyApplicationsListView({ user, navigate }) {
           </button>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {filtered.map((app) => (
-            <motion.div
-              key={app.id}
-              layout
-              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-indigo-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-950 dark:hover:border-indigo-900/50"
-            >
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="min-w-0 flex-1 space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {getStatusBadge(app.status)}
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                      <Building2 className="h-3.5 w-3.5" /> {app.department} • {app.state}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400">
-                      <CalendarDays className="h-3.5 w-3.5" />{" "}
-                      {app.submitted_at
-                        ? `Submitted ${new Date(app.submitted_at).toLocaleDateString("en-IN", {
+        <div className="space-y-6">
+          <div className="grid gap-4">
+            {paginatedApps.map((app) => (
+              <motion.div
+                key={app.id}
+                layout
+                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-indigo-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-950 dark:hover:border-indigo-900/50"
+              >
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0 flex-1 space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {getStatusBadge(app.status)}
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                        <Building2 className="h-3.5 w-3.5" /> {app.department} • {app.state}
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400">
+                        <CalendarDays className="h-3.5 w-3.5" />{" "}
+                        {app.submitted_at
+                          ? `Submitted ${new Date(app.submitted_at).toLocaleDateString("en-IN", {
                             day: "2-digit",
                             month: "short",
                             year: "numeric",
                           })}`
-                        : "Draft In Progress"}
-                    </span>
-                  </div>
+                          : "Draft In Progress"}
+                      </span>
+                    </div>
 
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    {app.challenge_title}
-                  </h3>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                      {app.challenge_title}
+                    </h3>
 
-                  <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900/80">
-                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      Proposed Solution Summary:
-                    </p>
-                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                      {app.proposal}
-                    </p>
-                    {app.technical_approach && (
-                      <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-                        <strong className="text-slate-700 dark:text-slate-300">Tech Approach:</strong> {app.technical_approach}
+                    <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900/80">
+                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        Proposed Solution Summary:
                       </p>
+                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        {app.proposal}
+                      </p>
+                      {app.technical_approach && (
+                        <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                          <strong className="text-slate-700 dark:text-slate-300">Tech Approach:</strong> {app.technical_approach}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-400">Budget Proposed: </span>
+                        <strong className="text-slate-800 dark:text-slate-200">{app.estimated_cost}</strong>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-400">Current Stage: </span>
+                        <span className="font-semibold text-indigo-600 dark:text-indigo-400">{app.stage}</span>
+                      </div>
+                    </div>
+
+                    {/* Finalist Solution Package Upload & Finalization UI */}
+                    {app.status === "SHORTLISTED" && (
+                      <ShortlistSolutionPackage app={app} onRefresh={load} />
                     )}
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400">Budget Proposed: </span>
-                      <strong className="text-slate-800 dark:text-slate-200">{app.estimated_cost}</strong>
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400">Current Stage: </span>
-                      <span className="font-semibold text-indigo-600 dark:text-indigo-400">{app.stage}</span>
-                    </div>
+                  <div className="flex shrink-0 flex-row gap-2 lg:flex-col lg:items-end">
+                    <button
+                      onClick={() => navigate(`/startup/challenges`)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-850"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" /> View Challenge
+                    </button>
                   </div>
-
-                  {/* Finalist Solution Package Upload & Finalization UI */}
-                  {app.status === "SHORTLISTED" && (
-                    <ShortlistSolutionPackage app={app} onRefresh={load} />
-                  )}
                 </div>
+              </motion.div>
+            ))}
+          </div>
 
-                <div className="flex shrink-0 flex-row gap-2 lg:flex-col lg:items-end">
-                  <button
-                    onClick={() => navigate(`/startup/challenges`)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-850"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" /> View Challenge
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+          {filtered.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalItems={filtered.length}
+              pageSize={pageSize}
+              pageSizeOptions={[4, 6, 12, 20]}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setCurrentPage(1);
+              }}
+              itemName="applications"
+            />
+          )}
         </div>
       )}
     </motion.div>

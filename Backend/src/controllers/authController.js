@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import authService from '../services/authService.js';
+import { createAuditLog } from '../services/auditService.js';
 import { revokeToken } from '../utils/tokenRevocation.js';
 import { successResponse } from '../utils/response.js';
 
@@ -53,6 +54,21 @@ export const logout = async (req, res, next) => {
         }
       }
     }
+
+    if (req.user) {
+      await createAuditLog({
+        user_id: req.user.id,
+        action: 'USER_LOGOUT',
+        entity_type: 'USER',
+        entity_id: req.user.id,
+        details: {
+          email: req.user.email,
+          role: req.user.role
+        },
+        ip_address: req.ip || req.headers['x-forwarded-for'] || null
+      });
+    }
+
     return successResponse(res, {}, 'Logged out successfully', 200);
   } catch (error) {
     next(error);

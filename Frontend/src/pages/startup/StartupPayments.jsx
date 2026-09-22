@@ -17,6 +17,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getStartupPilots } from "../../services/startupService.js";
 import Pagination from "../../components/common/Pagination";
+import PageHeader from "../../components/layout/PageHeader";
 import { getPilots, getPilotPayments, getPilotMilestones } from "../../services/pilotService";
 
 function StartupPayments() {
@@ -125,54 +126,31 @@ function StartupPayments() {
       {/* HEADER                                            */}
       {/* ================================================= */}
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-8">
-        <button
-          type="button"
-          onClick={() => navigate("/startup")}
-          className="back-nav"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
-        </button>
-
-        <div className="mt-2 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-                <WalletCards className="h-5 w-5" />
-              </div>
-
-              <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                Financial Management
-              </span>
-            </div>
-
-            <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
-              Payments
-            </h1>
-
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-              Track approved funding, milestone
-              payments, transactions and pending
-              amounts for your government pilot.
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-emerald-50 px-5 py-4 dark:bg-emerald-500/10">
-            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+      {/* ================================================= */}
+      {/* HEADER                                            */}
+      {/* ================================================= */}
+      <PageHeader
+        showBack
+        backTo="/startup"
+        backLabel="Back to Dashboard"
+        badge="Financial Management"
+        badgeIcon={WalletCards}
+        title="Payments"
+        description="Track approved funding, milestone payments, transactions and pending amounts for your government pilot."
+        actions={
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 dark:border-emerald-900/50 dark:bg-emerald-950/30">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
               Payment Status
             </p>
-
-            <div className="mt-1 flex items-center gap-2">
+            <div className="mt-0.5 flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
-
-              <span className="text-sm font-bold text-slate-800 dark:text-white">
+              <span className="text-xs font-bold text-slate-800 dark:text-white">
                 Active
               </span>
             </div>
           </div>
-        </div>
-      </section>
+        }
+      />
 
       {/* ================================================= */}
       {/* SUMMARY CARDS                                     */}

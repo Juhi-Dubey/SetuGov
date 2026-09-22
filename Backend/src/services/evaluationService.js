@@ -123,72 +123,76 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
   // Calculate weighted total score
   const total_score = calculateTotalScore(data);
 
-  // Upsert evaluation for this evaluator and application
-  const evaluation = await prisma.evaluation.upsert({
-    where: {
-      application_id_evaluator_id: {
-        application_id: applicationId,
-        evaluator_id: user.id
-      }
-    },
-    update: {
-      technical_score: data.technical_score,
-      innovation_score: data.innovation_score,
-      impact_score: data.impact_score,
-      scalability_score: data.scalability_score,
-      cost_score: data.cost_score,
-      total_score,
-      comments: data.comments?.trim() || null,
-      is_submitted
-    },
-    create: {
-      application_id: applicationId,
-      evaluator_id: user.id,
-      technical_score: data.technical_score,
-      innovation_score: data.innovation_score,
-      impact_score: data.impact_score,
-      scalability_score: data.scalability_score,
-      cost_score: data.cost_score,
-      total_score,
-      comments: data.comments?.trim() || null,
-      is_submitted
-    },
-    include: {
-      evaluator: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true
-        }
-      }
-    }
-  });
-
+  let evaluation;
   if (!isDraft) {
-    // Mark evaluator assignment as COMPLETED if it exists
-    await prisma.evaluatorAssignment.updateMany({
-      where: {
-        application_id: applicationId,
-        evaluator_id: user.id
-      },
-      data: {
-        status: 'COMPLETED',
-        completed_at: new Date()
-      }
-    }).catch(() => { });
+    evaluation = await prisma.$transaction(async (tx) => {
+      const res = await tx.evaluation.upsert({
+        where: {
+          application_id_evaluator_id: {
+            application_id: applicationId,
+            evaluator_id: user.id
+          }
+        },
+        update: {
+          technical_score: data.technical_score,
+          innovation_score: data.innovation_score,
+          impact_score: data.impact_score,
+          scalability_score: data.scalability_score,
+          cost_score: data.cost_score,
+          total_score,
+          comments: data.comments?.trim() || null,
+          is_submitted
+        },
+        create: {
+          application_id: applicationId,
+          evaluator_id: user.id,
+          technical_score: data.technical_score,
+          innovation_score: data.innovation_score,
+          impact_score: data.impact_score,
+          scalability_score: data.scalability_score,
+          cost_score: data.cost_score,
+          total_score,
+          comments: data.comments?.trim() || null,
+          is_submitted
+        },
+        include: {
+          evaluator: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true
+            }
+          }
+        }
+      });
 
-    await createAuditLog({
-      user_id: user.id,
-      action: 'EVALUATION_SUBMITTED',
-      entity_type: 'EVALUATION',
-      entity_id: evaluation.id,
-      details: {
-        application_id: applicationId,
-        challenge_id: application.challenge_id,
-        total_score
-      },
-      ip_address
+      await tx.evaluatorAssignment.updateMany({
+        where: {
+          application_id: applicationId,
+          evaluator_id: user.id
+        },
+        data: {
+          status: 'COMPLETED',
+          completed_at: new Date()
+        }
+      }).catch(() => { });
+
+      await createAuditLog({
+        tx,
+        user_id: user.id,
+        action: 'EVALUATION_SUBMITTED',
+        entity_type: 'EVALUATION',
+        entity_id: res.id,
+        details: {
+          application_id: applicationId,
+          challenge_id: application.challenge_id,
+          total_score
+        },
+        ip_address
+      });
+
+      return res;
     });
 
     // Notify the government official managing the challenge
@@ -202,6 +206,47 @@ export const submitEvaluation = async (applicationId, data, user, ip_address = n
       });
     }
   } else {
+    evaluation = await prisma.evaluation.upsert({
+      where: {
+        application_id_evaluator_id: {
+          application_id: applicationId,
+          evaluator_id: user.id
+        }
+      },
+      update: {
+        technical_score: data.technical_score,
+        innovation_score: data.innovation_score,
+        impact_score: data.impact_score,
+        scalability_score: data.scalability_score,
+        cost_score: data.cost_score,
+        total_score,
+        comments: data.comments?.trim() || null,
+        is_submitted
+      },
+      create: {
+        application_id: applicationId,
+        evaluator_id: user.id,
+        technical_score: data.technical_score,
+        innovation_score: data.innovation_score,
+        impact_score: data.impact_score,
+        scalability_score: data.scalability_score,
+        cost_score: data.cost_score,
+        total_score,
+        comments: data.comments?.trim() || null,
+        is_submitted
+      },
+      include: {
+        evaluator: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true
+          }
+        }
+      }
+    });
+
     await createAuditLog({
       user_id: user.id,
       action: 'EVALUATION_DRAFT_SAVED',

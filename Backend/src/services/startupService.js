@@ -18,6 +18,7 @@ import {
   maskAccountNumber
 } from '../utils/encryption.js';
 import { normalizeDomain } from '../utils/domainUtils.js';
+import storageService from './storageService.js';
 
 export { maskAccountNumber };
 
@@ -852,17 +853,26 @@ export const addStartupDocument = async (startupId, data, user, ip_address = nul
     throw new BadRequestError('Invalid document URL. Files must be uploaded through the secure platform upload endpoint.');
   }
 
-  const document = await prisma.startupDocument.create({
-    data: {
-      startup_id: startupId,
-      document_type: data.document_type.trim(),
-      document_url: docUrl,
-      file_name: data.file_name ? data.file_name.trim() : null,
-      file_size: data.file_size || null,
-      mime_type: data.mime_type ? data.mime_type.trim() : null,
-      verification_status: 'PENDING'
+  let document;
+  try {
+    document = await prisma.startupDocument.create({
+      data: {
+        startup_id: startupId,
+        document_type: data.document_type.trim(),
+        document_url: docUrl,
+        file_name: data.file_name ? data.file_name.trim() : null,
+        file_size: data.file_size || null,
+        mime_type: data.mime_type ? data.mime_type.trim() : null,
+        verification_status: 'PENDING'
+      }
+    });
+  } catch (dbErr) {
+    const fileKey = storageService.extractKeyFromUrl(docUrl);
+    if (fileKey) {
+      await storageService.deleteFile(fileKey).catch(() => null);
     }
-  });
+    throw dbErr;
+  }
 
   await createAuditLog({
     user_id: user.id,
@@ -895,6 +905,12 @@ export const deleteStartupDocument = async (startupId, documentId, user, ip_addr
   const document = await prisma.startupDocument.findUnique({ where: { id: documentId } });
   if (!document || document.startup_id !== startupId) {
     throw new NotFoundError('Document not found for this startup.');
+  }
+
+  // Delete physical file safely from storage provider
+  const fileKey = storageService.extractKeyFromUrl(document.document_url);
+  if (fileKey) {
+    await storageService.deleteFile(fileKey);
   }
 
   await prisma.startupDocument.delete({ where: { id: documentId } });
@@ -1007,6 +1023,12 @@ export const submitStartupRegistration = async (startupId, dataOrUser, userOrIp 
 
   if (user.role !== 'ADMIN' && startup.user_id !== user.id) {
     throw new ForbiddenError('You can only submit registration for your own startup.');
+  }
+
+  // 0. Verification Lifecycle Guard:
+  // A VERIFIED startup must NOT be reset or downgraded to SUBMITTED via normal registration submission.
+  if (startup.verification_status === 'VERIFIED') {
+    throw new BadRequestError('Startup organization is already VERIFIED. Registration dossier cannot be resubmitted or reset to SUBMITTED.');
   }
 
   // Email verification guard

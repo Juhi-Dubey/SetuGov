@@ -10,6 +10,7 @@ import {
   FileText,
   Save,
   Send,
+  ShieldCheck,
   Sparkles,
   UserRound,
 } from "lucide-react";
@@ -747,7 +748,7 @@ function EvaluationDetail() {
                     handleSubmit
                   }
                   disabled={saving || conflictDeclaration?.is_recused || (!conflictDeclaration?.declared_at && !conflictDeclaration)}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-xs font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-xs font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />
 

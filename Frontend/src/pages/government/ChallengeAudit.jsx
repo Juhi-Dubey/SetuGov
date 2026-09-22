@@ -64,6 +64,45 @@ const ACTION_MAP = {
   RISK_UPDATED: { label: "Risk Status Updated", color: "amber" },
 };
 
+const ACTION_COLORS = {
+  blue: {
+    icon: "bg-blue-50 text-blue-600 border-blue-200",
+    line: "bg-blue-200",
+    card: "border-blue-100 hover:border-blue-300",
+    badge: "bg-blue-50 text-blue-700",
+  },
+  slate: {
+    icon: "bg-slate-100 text-slate-600 border-slate-200",
+    line: "bg-slate-300",
+    card: "border-slate-200 hover:border-slate-300",
+    badge: "bg-slate-100 text-slate-600",
+  },
+  emerald: {
+    icon: "bg-emerald-50 text-emerald-600 border-emerald-200",
+    line: "bg-emerald-200",
+    card: "border-emerald-100 hover:border-emerald-300",
+    badge: "bg-emerald-50 text-emerald-700",
+  },
+  amber: {
+    icon: "bg-amber-50 text-amber-600 border-amber-200",
+    line: "bg-amber-200",
+    card: "border-amber-100 hover:border-amber-300",
+    badge: "bg-amber-50 text-amber-700",
+  },
+  indigo: {
+    icon: "bg-indigo-50 text-indigo-600 border-indigo-200",
+    line: "bg-indigo-200",
+    card: "border-indigo-100 hover:border-indigo-300",
+    badge: "bg-indigo-50 text-indigo-700",
+  },
+  purple: {
+    icon: "bg-purple-50 text-purple-600 border-purple-200",
+    line: "bg-purple-200",
+    card: "border-purple-100 hover:border-purple-300",
+    badge: "bg-purple-50 text-purple-700",
+  },
+};
+
 const formatActionName = (action) => {
   if (!action) return "System Activity";
   if (ACTION_MAP[action]) return ACTION_MAP[action].label;
@@ -435,7 +474,7 @@ function ChallengeAudit() {
             type="button"
             onClick={fetchLogs}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white disabled:opacity-50 shrink-0"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-800 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-900 disabled:opacity-50 shrink-0"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh Trail
           </button>
@@ -515,7 +554,7 @@ function ChallengeAudit() {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-8 w-full rounded-xl border border-slate-200 bg-slate-50 pl-8 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
               </div>
 
@@ -528,7 +567,7 @@ function ChallengeAudit() {
                     setActionFilter(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-8 rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-xs font-medium text-slate-700 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:[color-scheme:dark]"
+                  className="h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:[color-scheme:dark]"
                 >
                   <option value="ALL">All Actions</option>
                   <option value="CHALLENGE_CREATED">Challenge Created</option>
@@ -552,7 +591,7 @@ function ChallengeAudit() {
           </div>
 
           {/* Content Area */}
-          <div className="p-6">
+          <div className="bg-slate-50/70 p-6">
             {loading ? (
               <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 py-12">
                 <RefreshCw className="h-7 w-7 animate-spin text-slate-400" />
@@ -582,96 +621,255 @@ function ChallengeAudit() {
                 </p>
               </div>
             ) : (
+              // <div className="space-y-5">
+              //   {auditLogs.map((log, index) => {
+              //     const actionInfo = ACTION_MAP[log.action] || { label: formatActionName(log.action), color: "slate" };
+              //     const actorName = log.user?.name || log.user?.email || "System Service";
+              //     const actorRole = log.user?.role || "SYSTEM";
+              //     const eventTime = new Date(log.created_at).toLocaleString("en-IN", {
+              //       dateStyle: "medium",
+              //       timeStyle: "short",
+              //     });
+              //     const primaryResource = extractPrimaryResource(log);
+              //     const summaryTags = extractSanitizedSummaryTags(log, primaryResource);
+
+              //     return (
+              //       <div
+              //         key={log.id}
+              //         className="relative flex gap-4 transition-all"
+              //       >
+              //         {/* Timeline connecting line */}
+              //         {index !== auditLogs.length - 1 && (
+              //           <div className="absolute left-5 top-10 h-full w-px bg-slate-200 dark:bg-slate-800" />
+              //         )}
+
+              //         {/* Status icon badge */}
+              //         <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-900">
+              //           <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              //         </div>
+
+              //         {/* Event Card */}
+              //         <div className="group min-w-0 flex-1 rounded-xl border border-slate-200 bg-white p-4.5 shadow-xs transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700">
+              //           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              //             <div>
+              //               <div className="flex items-center gap-2">
+              //                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              //                   {actionInfo.label}
+              //                 </h3>
+              //                 <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-mono text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+              //                   {log.action}
+              //                 </span>
+              //               </div>
+
+              //               {/* Human-readable primary resource */}
+              //               <div className="mt-1 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+              //                 <span className="font-semibold text-slate-700 dark:text-slate-200">{primaryResource.type}:</span>
+              //                 <span>{primaryResource.name || "General Operation"}</span>
+              //               </div>
+              //             </div>
+
+              //             <button
+              //               type="button"
+              //               onClick={() => setSelectedLog(log)}
+              //               className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:text-indigo-300 dark:hover:bg-indigo-950/40 transition shrink-0 self-start"
+              //             >
+              //               <Info className="h-3.5 w-3.5 text-indigo-500" />
+              //               Technical Details
+              //               <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              //             </button>
+              //           </div>
+
+              //           {/* Sanitized Context Badges (Human-Readable) */}
+              //           {summaryTags.length > 0 && (
+              //             <div className="mt-3 flex flex-wrap items-center gap-2">
+              //               {summaryTags.map((tag, tIdx) => (
+              //                 <span
+              //                   key={tIdx}
+              //                   className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-2.5 py-1 text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              //                 >
+              //                   <span className="font-medium text-slate-500 dark:text-slate-400">{tag.label}:</span>
+              //                   <span className="font-semibold text-slate-900 dark:text-slate-100">{tag.value}</span>
+              //                 </span>
+              //               ))}
+              //             </div>
+              //           )}
+
+              //           {/* Footer Actor & Timestamp */}
+              //           <div className="mt-3.5 flex flex-wrap items-center gap-4 text-xs text-slate-400">
+              //             <span className="inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300">
+              //               <User className="h-3.5 w-3.5 text-slate-400" />
+              //               {actorName}
+              //               <span className="rounded-sm bg-blue-50 px-1.5 py-0.2 text-[10px] font-semibold text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+              //                 {actorRole}
+              //               </span>
+              //             </span>
+
+              //             <span className="inline-flex items-center gap-1.5">
+              //               <Clock3 className="h-3.5 w-3.5" />
+              //               {eventTime}
+              //             </span>
+
+              //             {log.ip_address && (
+              //               <span className="text-xs text-slate-400 font-mono">
+              //                 IP: {log.ip_address}
+              //               </span>
+              //             )}
+              //           </div>
+              //         </div>
+              //       </div>
+              //     );
+              //   })}
+
+              //   <Pagination
+              //     currentPage={currentPage}
+              //     totalItems={totalCount}
+              //     pageSize={pageSize}
+              //     pageSizeOptions={[5, 10, 20, 50]}
+              //     onPageChange={setCurrentPage}
+              //     onPageSizeChange={(newSize) => {
+              //       setPageSize(newSize);
+              //       setCurrentPage(1);
+              //     }}
+              //     itemName="audit records"
+              //     className="mt-6"
+              //   />
+              // </div>
               <div className="space-y-5">
                 {auditLogs.map((log, index) => {
-                  const actionInfo = ACTION_MAP[log.action] || { label: formatActionName(log.action), color: "slate" };
-                  const actorName = log.user?.name || log.user?.email || "System Service";
+                  const actionInfo =
+                    ACTION_MAP[log.action] || {
+                      label: formatActionName(log.action),
+                      color: "slate",
+                    };
+
+                  const colors =
+                    ACTION_COLORS[actionInfo.color] || ACTION_COLORS.slate;
+
+                  const actorName =
+                    log.user?.name || log.user?.email || "System Service";
+
                   const actorRole = log.user?.role || "SYSTEM";
-                  const eventTime = new Date(log.created_at).toLocaleString("en-IN", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  });
+
+                  const eventTime = new Date(log.created_at).toLocaleString(
+                    "en-IN",
+                    {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    }
+                  );
+
                   const primaryResource = extractPrimaryResource(log);
-                  const summaryTags = extractSanitizedSummaryTags(log, primaryResource);
+                  const summaryTags = extractSanitizedSummaryTags(
+                    log,
+                    primaryResource
+                  );
 
                   return (
                     <div
                       key={log.id}
-                      className="relative flex gap-4 transition-all"
+                      className="relative flex gap-4"
                     >
                       {/* Timeline connecting line */}
                       {index !== auditLogs.length - 1 && (
-                        <div className="absolute left-5 top-10 h-full w-px bg-slate-200 dark:bg-slate-800" />
+                        <div
+                          className={`absolute left-5 top-10 h-[calc(100%+1.25rem)] w-px ${colors.line}`}
+                        />
                       )}
 
-                      {/* Status icon badge */}
-                      <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-xs dark:border-slate-700 dark:bg-slate-900">
-                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                      {/* Colored timeline icon */}
+                      <div
+                        className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 bg-white shadow-sm ${colors.icon}`}
+                      >
+                        <CheckCircle2 className="h-5 w-5" />
                       </div>
 
                       {/* Event Card */}
-                      <div className="group min-w-0 flex-1 rounded-xl border border-slate-200 bg-white p-4.5 shadow-xs transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:border-slate-700">
+                      <div
+                        className={`group min-w-0 flex-1 rounded-xl border bg-white p-4 shadow-sm transition-all hover:shadow-md ${colors.card}`}
+                      >
+                        {/* Header */}
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-sm font-bold text-slate-900">
                                 {actionInfo.label}
                               </h3>
-                              <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-mono text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+
+                              <span
+                                className={`rounded-md px-2 py-0.5 text-[10px] font-mono font-medium ${colors.badge}`}
+                              >
                                 {log.action}
                               </span>
                             </div>
 
-                            {/* Human-readable primary resource */}
-                            <div className="mt-1 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                              <span className="font-semibold text-slate-700 dark:text-slate-200">{primaryResource.type}:</span>
-                              <span>{primaryResource.name || "General Operation"}</span>
+                            {/* Resource */}
+                            <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-600">
+                              <span className="font-semibold text-slate-700">
+                                {primaryResource.type}:
+                              </span>
+
+                              <span className="truncate">
+                                {primaryResource.name || "General Operation"}
+                              </span>
                             </div>
                           </div>
 
+                          {/* Technical Details */}
                           <button
                             type="button"
                             onClick={() => setSelectedLog(log)}
-                            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:text-indigo-300 dark:hover:bg-indigo-950/40 transition shrink-0 self-start"
+                            className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-50 hover:text-indigo-700"
                           >
-                            <Info className="h-3.5 w-3.5 text-indigo-500" />
+                            <Info className="h-3.5 w-3.5" />
                             Technical Details
                             <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                           </button>
                         </div>
 
-                        {/* Sanitized Context Badges (Human-Readable) */}
+                        {/* Context Tags */}
                         {summaryTags.length > 0 && (
                           <div className="mt-3 flex flex-wrap items-center gap-2">
                             {summaryTags.map((tag, tIdx) => (
                               <span
                                 key={tIdx}
-                                className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-2.5 py-1 text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs"
                               >
-                                <span className="font-medium text-slate-500 dark:text-slate-400">{tag.label}:</span>
-                                <span className="font-semibold text-slate-900 dark:text-slate-100">{tag.value}</span>
+                                <span className="font-medium text-slate-500">
+                                  {tag.label}:
+                                </span>
+
+                                <span className="font-semibold text-slate-800">
+                                  {tag.value}
+                                </span>
                               </span>
                             ))}
                           </div>
                         )}
 
-                        {/* Footer Actor & Timestamp */}
-                        <div className="mt-3.5 flex flex-wrap items-center gap-4 text-xs text-slate-400">
-                          <span className="inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300">
+                        {/* Footer */}
+                        <div className="mt-3.5 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-3 text-xs">
+                          {/* Actor */}
+                          <span className="inline-flex items-center gap-1.5 font-medium text-slate-600">
                             <User className="h-3.5 w-3.5 text-slate-400" />
+
                             {actorName}
-                            <span className="rounded-sm bg-blue-50 px-1.5 py-0.2 text-[10px] font-semibold text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+
+                            <span
+                              className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${colors.badge}`}
+                            >
                               {actorRole}
                             </span>
                           </span>
 
-                          <span className="inline-flex items-center gap-1.5">
-                            <Clock3 className="h-3.5 w-3.5" />
+                          {/* Timestamp */}
+                          <span className="inline-flex items-center gap-1.5 text-slate-500">
+                            <Clock3 className="h-3.5 w-3.5 text-slate-400" />
                             {eventTime}
                           </span>
 
+                          {/* IP */}
                           {log.ip_address && (
-                            <span className="text-xs text-slate-400 font-mono">
+                            <span className="font-mono text-xs text-slate-400">
                               IP: {log.ip_address}
                             </span>
                           )}
@@ -745,7 +943,7 @@ function ChallengeAudit() {
                           {modalActor} ({modalRole})
                         </p>
                       </div>
-                      <div className="rounded-xl border border-slate-100 p-3 dark:border-slate-800 dark:bg-slate-800/40">
+                      <div className="rounded-xl border border-slate-300 p-3 dark:border-slate-800 dark:bg-slate-800/40">
                         <p className="text-slate-400">Timestamp</p>
                         <p className="font-semibold text-slate-900 dark:text-white mt-0.5">
                           {new Date(selectedLog.created_at).toLocaleString("en-IN")}

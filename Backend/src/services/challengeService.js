@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { validateTransition } from '../utils/lifecycle.js';
+import { parsePaginationParams, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '../utils/pagination.js';
 import embeddingService from './embeddingService.js';
 import { matchStartupsForChallenge, getChallengeMatches as getAuthoritativeChallengeMatches } from './matchingService.js';
 import { logger } from '../utils/logger.js';
@@ -114,10 +115,10 @@ export const getChallenges = async (query = {}, user = null) => {
   const {
     status,
     department_id,
-    search,
-    page = 1,
-    limit = 20
+    search
   } = query;
+
+  const { page, limit, skip, take } = parsePaginationParams(query);
 
   const where = {};
 
@@ -161,18 +162,16 @@ export const getChallenges = async (query = {}, user = null) => {
     }
   }
 
-  const safePage = Math.max(1, parseInt(page, 10) || 1);
-  const safeLimit = Math.min(1000, Math.max(1, parseInt(limit, 10) || 20));
-  const skip = (safePage - 1) * safeLimit;
-  const take = safeLimit;
-
   const [total, challenges] = await Promise.all([
     prisma.challenge.count({ where }),
     prisma.challenge.findMany({
       where,
       skip,
       take,
-      orderBy: { created_at: 'desc' },
+      orderBy: [
+        { created_at: 'desc' },
+        { id: 'desc' }
+      ],
       include: {
         department: {
           select: {
@@ -203,9 +202,9 @@ export const getChallenges = async (query = {}, user = null) => {
     challenges,
     pagination: {
       total,
-      page: safePage,
-      limit: safeLimit,
-      totalPages: Math.ceil(total / safeLimit)
+      page,
+      limit,
+      totalPages: total === 0 ? 0 : Math.ceil(total / limit)
     }
   };
 };
@@ -413,21 +412,26 @@ export const publishChallenge = async (id, user, ip_address = null) => {
   // Validate state transition DRAFT -> PUBLISHED
   validateTransition('CHALLENGE', challenge.status, 'PUBLISHED');
 
-  const updated = await prisma.challenge.update({
-    where: { id },
-    data: { status: 'PUBLISHED' },
-    include: {
-      department: true
-    }
-  });
+  const updated = await prisma.$transaction(async (tx) => {
+    const res = await tx.challenge.update({
+      where: { id },
+      data: { status: 'PUBLISHED' },
+      include: {
+        department: true
+      }
+    });
 
-  await createAuditLog({
-    user_id: user.id,
-    action: 'CHALLENGE_PUBLISHED',
-    entity_type: 'CHALLENGE',
-    entity_id: id,
-    details: { previousStatus: challenge.status, newStatus: 'PUBLISHED' },
-    ip_address
+    await createAuditLog({
+      tx,
+      user_id: user.id,
+      action: 'CHALLENGE_PUBLISHED',
+      entity_type: 'CHALLENGE',
+      entity_id: id,
+      details: { previousStatus: challenge.status, newStatus: 'PUBLISHED' },
+      ip_address
+    });
+
+    return res;
   });
 
   await sendNotification({

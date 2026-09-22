@@ -190,30 +190,35 @@ export const approveProcurement = async (procurementId, data, user, ip_address =
 
   const { approval_notes = '' } = data;
 
-  const updated = await prisma.procurementRecord.update({
-    where: { id: procurementId },
-    data: {
-      status: 'APPROVED',
-      approved_by: user.id,
-      approved_at: new Date(),
-      approval_notes: approval_notes.trim()
-    },
-    include: {
-      approver: { select: { id: true, name: true, email: true, role: true } }
-    }
-  });
+  const updated = await prisma.$transaction(async (tx) => {
+    const res = await tx.procurementRecord.update({
+      where: { id: procurementId },
+      data: {
+        status: 'APPROVED',
+        approved_by: user.id,
+        approved_at: new Date(),
+        approval_notes: approval_notes.trim()
+      },
+      include: {
+        approver: { select: { id: true, name: true, email: true, role: true } }
+      }
+    });
 
-  await createAuditLog({
-    user_id: user.id,
-    action: 'PROCUREMENT_APPROVED',
-    entity_type: 'PROCUREMENT',
-    entity_id: procurementId,
-    details: {
-      approved_by: user.name,
-      estimated_value: procurement.estimated_value,
-      route: procurement.route
-    },
-    ip_address
+    await createAuditLog({
+      tx,
+      user_id: user.id,
+      action: 'PROCUREMENT_APPROVED',
+      entity_type: 'PROCUREMENT',
+      entity_id: procurementId,
+      details: {
+        approved_by: user.name,
+        estimated_value: procurement.estimated_value,
+        route: procurement.route
+      },
+      ip_address
+    });
+
+    return res;
   });
 
   if (procurement.startup?.user_id) {
@@ -258,30 +263,35 @@ export const handoffToGeM = async (procurementId, data, user, ip_address = null)
     throw new BadRequestError(`Invalid GeM handoff status "${validHandoffStatus}". Valid status are: ${CANONICAL_HANDOFF_status.join(', ')}.`);
   }
 
-  const updated = await prisma.procurementRecord.update({
-    where: { id: procurementId },
-    data: {
-      status: 'HANDED_OFF',
-      gem_handoff_status: validHandoffStatus,
-      gem_handoff_date: new Date(),
-      gem_reference_number: gem_reference_number ? gem_reference_number.trim() : null,
-      gem_officer_name: gem_officer_name ? gem_officer_name.trim() : user.name,
-      gem_notes: gem_notes.trim(),
-      gem_supporting_doc: gem_supporting_doc ? gem_supporting_doc.trim() : null
-    }
-  });
+  const updated = await prisma.$transaction(async (tx) => {
+    const res = await tx.procurementRecord.update({
+      where: { id: procurementId },
+      data: {
+        status: 'HANDED_OFF',
+        gem_handoff_status: validHandoffStatus,
+        gem_handoff_date: new Date(),
+        gem_reference_number: gem_reference_number ? gem_reference_number.trim() : null,
+        gem_officer_name: gem_officer_name ? gem_officer_name.trim() : user.name,
+        gem_notes: gem_notes.trim(),
+        gem_supporting_doc: gem_supporting_doc ? gem_supporting_doc.trim() : null
+      }
+    });
 
-  await createAuditLog({
-    user_id: user.id,
-    action: 'PROCUREMENT_GEM_HANDOFF_RECORDED',
-    entity_type: 'PROCUREMENT',
-    entity_id: procurementId,
-    details: {
-      gem_reference_number: updated.gem_reference_number,
-      officer: updated.gem_officer_name,
-      handoff_status: updated.gem_handoff_status
-    },
-    ip_address
+    await createAuditLog({
+      tx,
+      user_id: user.id,
+      action: 'PROCUREMENT_GEM_HANDOFF_RECORDED',
+      entity_type: 'PROCUREMENT',
+      entity_id: procurementId,
+      details: {
+        gem_reference_number: res.gem_reference_number,
+        officer: res.gem_officer_name,
+        handoff_status: res.gem_handoff_status
+      },
+      ip_address
+    });
+
+    return res;
   });
 
   return updated;

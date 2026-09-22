@@ -29,6 +29,13 @@ export const errorHandler = (err, req, res, next) => {
     return errorResponse(res, 'VALIDATION_ERROR', 'Request validation failed', formattedErrors, 422);
   }
 
+  // Helper to sanitize error details and prevent internal database/system leakage
+  const sanitizeMeta = (meta) => {
+    if (!meta || typeof meta !== 'object') return null;
+    const { driverAdapterError, database, clientVersion, ...safeMeta } = meta;
+    return Object.keys(safeMeta).length > 0 ? safeMeta : null;
+  };
+
   // Handle Prisma Known Request Errors
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === 'P2002') {
@@ -37,19 +44,19 @@ export const errorHandler = (err, req, res, next) => {
         res,
         'DUPLICATE_RESOURCE',
         `A record with this ${target} already exists.`,
-        err.meta,
+        sanitizeMeta(err.meta),
         409
       );
     }
     if (err.code === 'P2025') {
-      return errorResponse(res, 'NOT_FOUND', 'Requested record does not exist.', err.meta, 404);
+      return errorResponse(res, 'NOT_FOUND', 'Requested record does not exist.', null, 404);
     }
     if (err.code === 'P2003') {
       return errorResponse(
         res,
         'FOREIGN_KEY_VIOLATION',
         'Referenced related resource does not exist.',
-        err.meta,
+        sanitizeMeta(err.meta),
         400
       );
     }
@@ -58,7 +65,7 @@ export const errorHandler = (err, req, res, next) => {
         res,
         'BAD_REQUEST',
         'Inconsistent or invalid column data provided.',
-        err.meta,
+        null,
         400
       );
     }
@@ -82,10 +89,14 @@ export const errorHandler = (err, req, res, next) => {
     return errorResponse(res, 'INVALID_JSON', 'Malformed JSON payload.', null, 400);
   }
 
-  // Generic Internal Server Error
-  const message = process.env.NODE_ENV === 'production' 
-    ? 'An unexpected internal server error occurred.' 
-    : err.message || 'Internal server error';
+  // Generic Internal Server Error: Never leak stack traces, database credentials, or internal paths
+  const isProduction = process.env.NODE_ENV === 'production';
+  const rawMsg = String(err.message || '');
+  const containsSensitiveInfo = /password|secret|jwt|database_url|postgres:\/\/|bearer|token/i.test(rawMsg);
+
+  const message = isProduction || containsSensitiveInfo
+    ? 'An unexpected internal server error occurred.'
+    : (rawMsg || 'Internal server error');
 
   return errorResponse(res, 'INTERNAL_SERVER_ERROR', message, null, 500);
 };

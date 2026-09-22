@@ -78,7 +78,8 @@ services:
     environment:
       PORT: 5000
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-setugov_db}?schema=public
-      JWT_SECRET: ${JWT_SECRET:-setugov_super_secret_jwt_key_2026}
+      JWT_SECRET: ${JWT_SECRET:-}
+      BANK_ENCRYPTION_KEY: ${BANK_ENCRYPTION_KEY:-}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       AI_SERVICE_URL: http://ai:8000
       AI_MOCK_MODE: ${AI_MOCK_MODE:-true}

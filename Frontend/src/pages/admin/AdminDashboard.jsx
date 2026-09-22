@@ -51,24 +51,28 @@ function AdminDashboard() {
       value: String(summary?.totalUsers ?? 0),
       change: "Active in platform",
       icon: Users,
+      iconClass: "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400",
     },
     {
       title: "Government Officers",
       value: String(usersBreakdown?.GOVERNMENT ?? 0),
       change: "Department nodal officers",
       icon: ShieldCheck,
+      iconClass: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400",
     },
     {
       title: "Registered Startups",
       value: String(summary?.totalStartups ?? (usersBreakdown?.STARTUP ?? 0)),
       change: "Innovation enterprises",
       icon: Building2,
+      iconClass: "bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400",
     },
     {
       title: "Domain Evaluators",
       value: String(summary?.totalEvaluators ?? (usersBreakdown?.EVALUATOR ?? 0)),
       change: "Technical experts",
       icon: UserCheck,
+      iconClass: "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400",
     },
   ];
 
@@ -76,22 +80,30 @@ function AdminDashboard() {
     {
       title: "Active Challenges",
       value: String(summary?.totalChallenges ?? 0),
+      change: "Procurement opportunities",
       icon: ClipboardList,
+      iconClass: "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400",
     },
     {
       title: "Verified Startups",
       value: String(data?.startupsBreakdown?.VERIFIED ?? 0),
+      change: "DPIIT recognized",
       icon: FileCheck2,
+      iconClass: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400",
     },
     {
       title: "Total Pilots",
       value: String(summary?.totalPilots ?? 0),
+      change: "Active & completed trials",
       icon: Activity,
+      iconClass: "bg-purple-50 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400",
     },
     {
       title: "Audit Log Entries",
       value: String(data?.recentAuditLogs?.length ?? 0),
+      change: "Tamper-evident records",
       icon: History,
+      iconClass: "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400",
     },
   ];
 
@@ -117,7 +129,7 @@ function AdminDashboard() {
           <button
             type="button"
             onClick={() => navigate("/admin/users")}
-            className="inline-flex h-10 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700"
           >
             <Users className="h-4 w-4" /> Manage Directory & Roles
           </button>
@@ -178,16 +190,16 @@ function AdminDashboard() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: index * 0.08 }}
-              className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-4.5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{item.title}</span>
-                <div className="flex h-8.5 w-8.5 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
+                <span className="text-[14px] font-medium">{item.title}</span>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.iconClass || "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400"}`}>
                   <Icon className="h-4 w-4" />
                 </div>
               </div>
-              <div className="mt-2 text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">{item.value}</div>
-              <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{item.change}</div>
+              <div className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{item.value}</div>
+              <div className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">{item.change}</div>
             </motion.div>
           );
         })}
@@ -203,15 +215,16 @@ function AdminDashboard() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: 0.2 + index * 0.08 }}
-              className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-4.5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{item.title}</span>
-                <div className="flex h-8.5 w-8.5 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+              <div className="flex items-center justify-between text-slate-800 dark:text-slate-200">
+                <span className="text-[14px] font-medium">{item.title}</span>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.iconClass || "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400"}`}>
                   <Icon className="h-4 w-4" />
                 </div>
               </div>
-              <div className="mt-2 text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">{item.value}</div>
+              <div className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{item.value}</div>
+              <div className="mt-1 text-[14px] text-slate-600 dark:text-slate-400">{item.change}</div>
             </motion.div>
           );
         })}

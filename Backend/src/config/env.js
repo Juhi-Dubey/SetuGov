@@ -20,6 +20,7 @@ export const config = {
   DATABASE_URL: process.env.DATABASE_URL,
   JWT_SECRET: jwtSecret,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
+  BANK_ENCRYPTION_KEY: process.env.BANK_ENCRYPTION_KEY || '',
   AI_SERVICE_URL: process.env.AI_SERVICE_URL || 'http://localhost:8000',
   AI_MOCK_MODE: (() => {
     const val = process.env.AI_MOCK_MODE;
@@ -43,7 +44,7 @@ export const config = {
   TURNSTILE_ENABLED: process.env.TURNSTILE_ENABLED === 'true',
   TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY || '',
   TURNSTILE_EXPECTED_HOSTNAME: process.env.TURNSTILE_EXPECTED_HOSTNAME || '',
-  CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
+  CORS_ORIGIN: process.env.CORS_ORIGIN || '',
   EMAIL_PROVIDER: process.env.EMAIL_PROVIDER || 'console',
   EMAIL_FROM: process.env.EMAIL_FROM || 'noreply@setugov.gov.in',
   EMAIL_API_KEY: process.env.EMAIL_API_KEY || '',

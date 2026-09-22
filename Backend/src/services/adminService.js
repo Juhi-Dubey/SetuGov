@@ -1030,31 +1030,36 @@ export const reviewStartupVerification = async (id, { action, notes, rejection_r
     updateData.correction_notes = correction_notes || notes || 'Please revise submitted organization details and re-upload required documents.';
   }
 
-  const updatedStartup = await prisma.startup.update({
-    where: { id },
-    data: updateData,
-    include: {
-      user: {
-        select: { id: true, name: true, email: true }
-      },
-      documents: true,
-      bank_details: true
-    }
-  });
+  const updatedStartup = await prisma.$transaction(async (tx) => {
+    const res = await tx.startup.update({
+      where: { id },
+      data: updateData,
+      include: {
+        user: {
+          select: { id: true, name: true, email: true }
+        },
+        documents: true,
+        bank_details: true
+      }
+    });
 
-  await createAuditLog({
-    user_id: adminUser.id,
-    action: `STARTUP_VERIFICATION_${action}`,
-    entity_type: 'STARTUP',
-    entity_id: id,
-    details: {
-      company_name: startup.company_name,
-      previous_status: startup.verification_status,
-      new_status: newStatus,
-      action,
-      notes
-    },
-    ip_address
+    await createAuditLog({
+      tx,
+      user_id: adminUser.id,
+      action: `STARTUP_VERIFICATION_${action}`,
+      entity_type: 'STARTUP',
+      entity_id: id,
+      details: {
+        company_name: startup.company_name,
+        previous_status: startup.verification_status,
+        new_status: newStatus,
+        action,
+        notes
+      },
+      ip_address
+    });
+
+    return res;
   });
 
   // Dispath notification to startup user

@@ -441,49 +441,54 @@ export const assignEvaluatorToApplication = async (applicationId, data, currentU
   }
 
   // 4. Create or update assignment
-  const assignment = await prisma.evaluatorAssignment.upsert({
-    where: {
-      application_id_evaluator_id: {
-        application_id: applicationId,
-        evaluator_id
-      }
-    },
-    create: {
-      application_id: applicationId,
-      evaluator_id,
-      assigned_by: currentUser.id,
-      status: 'PENDING',
-      notes: notes ? notes.trim() : null,
-      assigned_at: new Date()
-    },
-    update: {
-      assigned_by: currentUser.id,
-      status: existingAssignment?.status === 'ACCEPTED' ? 'ACCEPTED' : 'PENDING',
-      notes: notes ? notes.trim() : existingAssignment?.notes,
-      assigned_at: new Date()
-    },
-    include: {
-      evaluator: {
-        select: { id: true, name: true, email: true, role: true }
+  const assignment = await prisma.$transaction(async (tx) => {
+    const res = await tx.evaluatorAssignment.upsert({
+      where: {
+        application_id_evaluator_id: {
+          application_id: applicationId,
+          evaluator_id
+        }
       },
-      assigner: {
-        select: { id: true, name: true, email: true }
+      create: {
+        application_id: applicationId,
+        evaluator_id,
+        assigned_by: currentUser.id,
+        status: 'PENDING',
+        notes: notes ? notes.trim() : null,
+        assigned_at: new Date()
+      },
+      update: {
+        assigned_by: currentUser.id,
+        status: existingAssignment?.status === 'ACCEPTED' ? 'ACCEPTED' : 'PENDING',
+        notes: notes ? notes.trim() : existingAssignment?.notes,
+        assigned_at: new Date()
+      },
+      include: {
+        evaluator: {
+          select: { id: true, name: true, email: true, role: true }
+        },
+        assigner: {
+          select: { id: true, name: true, email: true }
+        }
       }
-    }
-  });
+    });
 
-  await createAuditLog({
-    user_id: currentUser.id,
-    action: 'EVALUATOR_ASSIGNED',
-    entity_type: 'APPLICATION',
-    entity_id: applicationId,
-    details: {
-      application_id: applicationId,
-      challenge_id: application.challenge_id,
-      evaluator_id,
-      evaluator_name: evaluatorUser.name
-    },
-    ip_address
+    await createAuditLog({
+      tx,
+      user_id: currentUser.id,
+      action: 'EVALUATOR_ASSIGNED',
+      entity_type: 'APPLICATION',
+      entity_id: applicationId,
+      details: {
+        application_id: applicationId,
+        challenge_id: application.challenge_id,
+        evaluator_id,
+        evaluator_name: evaluatorUser.name
+      },
+      ip_address
+    });
+
+    return res;
   });
 
   // Notify Evaluator with transactional email
