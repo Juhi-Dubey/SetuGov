@@ -305,7 +305,7 @@ export default function AdminStartups() {
                     </td>
 
                     <td className="px-6 py-4">
-                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                      <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
                         {s.org_type?.replace(/_/g, " ") || "Not Specified"}
                       </span>
                     </td>
