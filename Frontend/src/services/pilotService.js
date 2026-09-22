@@ -134,47 +134,38 @@ export const getPilotValidations = async (pilotId) => {
   return apiRequest(`/pilots/${pilotId}/validation`);
 };
 
-// Payments
-export const createPayment = async (pilotId, paymentData) => {
-  return apiRequest(`/pilots/${pilotId}/payments`, {
-    method: "POST",
-    body: JSON.stringify(paymentData),
-  });
+// Payments (delegated to dedicated paymentService.js)
+import {
+  createPayment,
+  getPilotPayments,
+  getPayments,
+  updatePaymentStatus,
+  schedulePayment,
+  approvePayment,
+  disbursePayment,
+  releasePayment,
+  rejectPayment,
+} from "./paymentService.js";
+
+export {
+  createPayment,
+  getPilotPayments,
+  getPayments,
+  updatePaymentStatus,
+  schedulePayment,
+  approvePayment,
+  disbursePayment,
+  releasePayment,
+  rejectPayment,
 };
 
-export const getPilotPayments = async (pilotId) => {
-  return apiRequest(`/pilots/${pilotId}/payments`);
-};
+// Scale Decisions (delegated to dedicated scaleDecisionService.js)
+import {
+  createScaleDecision,
+  getScaleDecision,
+} from "./scaleDecisionService.js";
 
-export const getPayments = async (params = {}) => {
-  const query = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      query.append(key, value);
-    }
-  });
-  const queryString = query.toString();
-  return apiRequest(`/payments${queryString ? `?${queryString}` : ""}`);
-};
-
-export const updatePaymentStatus = async (paymentId, statusData) => {
-  return apiRequest(`/payments/${paymentId}/status`, {
-    method: "PATCH",
-    body: JSON.stringify(statusData),
-  });
-};
-
-// Scale Decisions
-export const createScaleDecision = async (pilotId, scaleData) => {
-  return apiRequest(`/pilots/${pilotId}/scale-decision`, {
-    method: "POST",
-    body: JSON.stringify(scaleData),
-  });
-};
-
-export const getScaleDecision = async (pilotId) => {
-  return apiRequest(`/pilots/${pilotId}/scale-decision`);
-};
+export { createScaleDecision, getScaleDecision };
 
 // Compliance Checklist
 export const getComplianceChecklist = async (pilotId) => {

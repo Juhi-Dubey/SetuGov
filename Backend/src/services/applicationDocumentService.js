@@ -94,7 +94,22 @@ export const uploadSolutionDocument = async (applicationId, file, data = {}, use
 
   const documentType = data.document_type || file.document_type || 'PROPOSAL_DOC';
   const description = data.description ? data.description.trim() : (file.description || null);
-  const fileUrl = file.file_url || (req ? getFileUrl(req, storedFilename) : `/uploads/${storedFilename}`);
+  let fileUrl = file.file_url || (req ? getFileUrl(req, storedFilename) : `/uploads/${storedFilename}`);
+
+  // Verify physical document existence in storage
+  const fileKey = storedFilename || (file.file_url ? storageService.extractKeyFromUrl(file.file_url) : null);
+  if (fileKey) {
+    const exists = await storageService.fileExists(fileKey);
+    if (!exists && !file.path) {
+      throw new BadRequestError(`Referenced physical document file does not exist in storage: '${fileKey}'. Please upload the document first.`);
+    }
+    if (exists) {
+      const metadata = await storageService.getFileMetadata(fileKey);
+      if (metadata?.size && (!file.size && !file.file_size)) {
+        fileSize = metadata.size;
+      }
+    }
+  }
 
   // 7. Persist ApplicationDocument record
   let document;

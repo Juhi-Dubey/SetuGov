@@ -32,7 +32,8 @@ import {
 import AppLayout from "../../components/layout/AppLayout";
 import StatCard from "../../components/common/StatCard";
 import { getChallengeById, getChallengePilot } from "../../services/challengeService";
-import { getScaleDecision, getPilotValidations } from "../../services/pilotService";
+import { getPilotValidations } from "../../services/pilotService";
+import { getScaleDecision } from "../../services/scaleDecisionService";
 import {
   getProcurements,
   createProcurementReadiness,
@@ -41,9 +42,9 @@ import {
   issueProcurementContract,
   submitProcurementDelivery,
   acceptProcurementDelivery,
-  scheduleProcurementPayment,
   completeProcurement,
 } from "../../services/procurementService";
+import { scheduleProcurementPayment } from "../../services/paymentService";
 import { openDocumentSecurely } from "../../utils/documentUtils.js";
 import { generateDocumentDraftWithAI } from "../../services/aiService";
 

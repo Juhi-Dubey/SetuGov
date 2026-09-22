@@ -64,12 +64,9 @@ export const completeProcurement = async (id, data = {}) => {
   });
 };
 
-export const scheduleProcurementPayment = async (id, data) => {
-  return apiRequest(`/procurements/${id}/payments`, {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-};
+// Delegated to dedicated paymentService.js
+import { scheduleProcurementPayment } from "./paymentService.js";
+export { scheduleProcurementPayment };
 
 export default {
   getProcurements,

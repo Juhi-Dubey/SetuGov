@@ -2019,14 +2019,14 @@ function ChallengeApplications() {
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[1050px] text-left text-xs">
-                    <thead className="border-b border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                    <thead className="border-b border-slate-200 bg-slate-200 text-left text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
                       <tr>
-                        <th className="px-5 py-3.5 font-semibold whitespace-nowrap">Startup Name</th>
-                        <th className="px-5 py-3.5 font-semibold whitespace-nowrap">Proposal Summary</th>
-                        <th className="px-5 py-3.5 font-semibold whitespace-nowrap">Assigned Evaluators</th>
-                        <th className="px-5 py-3.5 font-semibold whitespace-nowrap">Decision Engine</th>
-                        <th className="px-5 py-3.5 font-semibold whitespace-nowrap">Status</th>
-                        <th className="px-5 py-3.5 text-right font-semibold whitespace-nowrap">Actions</th>
+                        <th className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 whitespace-nowrap">Startup Name</th>
+                        <th className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 whitespace-nowrap">Proposal Summary</th>
+                        <th className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 whitespace-nowrap">Assigned Evaluators</th>
+                        <th className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 whitespace-nowrap">Decision Engine</th>
+                        <th className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 whitespace-nowrap">Status</th>
+                        <th className="px-5 py-2.5 text-right text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -2301,13 +2301,13 @@ function ChallengeApplications() {
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                   <table className="w-full min-w-[850px] text-left text-xs text-slate-600 dark:text-slate-300">
-                    <thead className="border-b border-slate-100 bg-slate-50 text-[11px] font-semibold text-slate-400 dark:border-slate-800 dark:bg-slate-950">
+                    <thead className="border-b border-slate-200 bg-slate-200 text-left text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
                       <tr>
-                        <th className="py-3 px-4 whitespace-nowrap">Evaluator</th>
-                        <th className="py-3 px-4 whitespace-nowrap">Organization & Role</th>
-                        <th className="py-3 px-4 whitespace-nowrap">Source</th>
-                        <th className="py-3 px-4 whitespace-nowrap">Approval Notes</th>
-                        <th className="py-3 px-4 text-right whitespace-nowrap">Actions</th>
+                        <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 whitespace-nowrap">Evaluator</th>
+                        <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 whitespace-nowrap">Organization & Role</th>
+                        <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 whitespace-nowrap">Source</th>
+                        <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 whitespace-nowrap">Approval Notes</th>
+                        <th className="py-2.5 px-4 text-right text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100 whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

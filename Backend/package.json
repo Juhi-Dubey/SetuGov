@@ -33,7 +33,8 @@
     "test:brain5": "node src/tests/brain5.test.js",
     "test:e2e": "node src/tests/e2e.test.js",
     "test:security": "node src/tests/security.test.js",
-    "test:registration-integrity": "node src/tests/registrationIntegrityHardening.test.js"
+    "test:registration-integrity": "node src/tests/registrationIntegrityHardening.test.js",
+    "test:doc-existence": "node src/tests/documentPhysicalExistence.test.js"
   },
   "keywords": [
     "setugov",

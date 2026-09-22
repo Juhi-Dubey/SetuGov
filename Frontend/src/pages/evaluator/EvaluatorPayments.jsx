@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   FileText,
 } from "lucide-react";
-import { getPayments } from "../../services/pilotService";
+import { getPayments } from "../../services/paymentService";
 import Pagination from "../../components/common/Pagination";
 
 function EvaluatorPayments() {

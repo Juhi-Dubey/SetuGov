@@ -135,9 +135,10 @@ router.get('/:pilot_id/validation', authenticate, getPilotValidations);
 router.post('/:pilot_id/payments', authenticate, authorizeRoles('GOVERNMENT'), validate(createPaymentSchema), createPayment);
 router.get('/:pilot_id/payments', authenticate, getPilotPayments);
 
-// Scale Decisions (GOVERNMENT only)
-router.post('/:pilot_id/scale-decision', authenticate, authorizeRoles('GOVERNMENT'), validate(createScaleDecisionSchema), createScaleDecision);
-router.get('/:pilot_id/scale-decision', authenticate, getScaleDecision);
+// Scale Decisions (GOVERNMENT and ADMIN)
+router.post('/:pilot_id/scale-decision', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), validate(createScaleDecisionSchema), createScaleDecision);
+router.get('/:pilot_id/scale-decision', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN', 'STARTUP', 'EVALUATOR'), getScaleDecision);
+
 
 // Progress Updates (Persistent updates submitted by Startup/Gov/Admin)
 router.post('/:pilot_id/progress-updates', authenticate, authorizeRoles('GOVERNMENT', 'STARTUP', 'ADMIN'), validate(createProgressUpdateSchema), createProgressUpdate);

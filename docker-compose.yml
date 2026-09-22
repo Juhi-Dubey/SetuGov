@@ -88,9 +88,18 @@ services:
       BANK_ENCRYPTION_KEY: ${BANK_ENCRYPTION_KEY:-}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       AI_SERVICE_URL: http://ai:8000
-      AI_MOCK_MODE: ${AI_MOCK_MODE:-true}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      AI_MOCK_MODE: ${AI_MOCK_MODE:-false}
       AI_EMBEDDING_DIMENSION: ${AI_EMBEDDING_DIMENSION:-768}
       NODE_ENV: ${NODE_ENV:-development}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-resend}
+      EMAIL_FROM: ${EMAIL_FROM:-SetuGov Platform <noreply@setugov.gov.in>}
+      EMAIL_API_KEY: ${EMAIL_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     ports:
       - "5000:5000"
     volumes:
@@ -100,6 +109,8 @@ services:
         condition: service_healthy
       ai:
         condition: service_healthy
+      ollama:
+        condition: service_started
     command: >
       sh -c "npx prisma db push &&
              node prisma/seed.js &&

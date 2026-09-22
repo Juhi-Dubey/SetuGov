@@ -329,14 +329,14 @@ function EvaluatorAssignments() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-                  <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+                  <thead className="border-b border-slate-200 bg-slate-200 text-left text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
                     <tr>
-                      <th className="py-3.5 px-4">Challenge & Department</th>
-                      <th className="py-3.5 px-4">Startup Candidate</th>
-                      <th className="py-3.5 px-4">Assigned On</th>
-                      <th className="py-3.5 px-4">Status</th>
-                      <th className="py-3.5 px-4">Conflict Status</th>
-                      <th className="py-3.5 px-4 text-right">Actions</th>
+                      <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Challenge & Department</th>
+                      <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Startup Candidate</th>
+                      <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Assigned On</th>
+                      <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Status</th>
+                      <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Conflict Status</th>
+                      <th className="py-2.5 px-4 text-right text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-800">

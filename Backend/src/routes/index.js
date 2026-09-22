@@ -23,6 +23,7 @@ import decisionRoutes from './decisionRoutes.js';
 import uploadRoutes from './uploadRoutes.js';
 import accessRequestRoutes from './accessRequestRoutes.js';
 import procurementRoutes from './procurementRoutes.js';
+import scaleDecisionRoutes from './scaleDecisionRoutes.js';
 
 const router = Router();
 
@@ -47,6 +48,7 @@ router.get('/', (req, res) => {
       evaluations: '/api/v1/evaluations',
       decisions: '/api/v1/decisions',
       pilots: '/api/v1/pilots',
+      scaleDecisions: '/api/v1/pilots/:id/scale-decision',
       procurements: '/api/v1/procurements',
       kpis: '/api/v1/kpis',
       milestones: '/api/v1/milestones',
@@ -77,7 +79,11 @@ router.use('/access-requests', accessRequestRoutes);
 router.use('/applications', applicationRoutes);
 router.use('/evaluations', evaluationRoutes);
 router.use('/decisions', decisionRoutes);
+// NOTE: scaleDecisionRoutes at /pilots is intentionally NOT mounted here
+// because scale decision sub-routes are already registered inside pilotRoutes.js
+// (mounting here would cause /:id catch-all to shadow GET /api/v1/pilots/:id)
 router.use('/pilots', pilotRoutes);
+router.use('/scale-decisions', scaleDecisionRoutes);
 router.use('/procurements', procurementRoutes);
 router.use('/procurement', procurementRoutes);
 router.use('/kpis', kpiRoutes);

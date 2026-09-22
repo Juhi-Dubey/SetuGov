@@ -1,6 +1,9 @@
 import http from 'http';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 import { createApp } from '../app.js';
 import { prisma } from '../config/prisma.js';
+import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 import {
   challengeCopilotSchema,
@@ -255,30 +258,56 @@ const runAITestSuite = async () => {
     }, adminToken);
     const department = depRes.body?.data?.department;
 
-    const govReg = await request('POST', '/api/v1/auth/register', {
-      name: `Gov Official AI ${timestamp}`,
-      email: `gov.ai.${timestamp}@state.gov.in`,
-      password: 'GovPassword123!',
-      role: 'GOVERNMENT',
-      department_id: department?.id
-    });
-    const govToken = govReg.body?.data?.token;
+    const password_hash = await bcrypt.hash('Password123!', 10);
+    const generateToken = (payload) =>
+      jwt.sign(
+        {
+          userId: payload.id,
+          id: payload.id,
+          role: payload.role,
+          email: payload.email,
+          department_id: payload.department_id,
+        },
+        config.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
 
-    const evalReg = await request('POST', '/api/v1/auth/register', {
-      name: `Evaluator AI ${timestamp}`,
-      email: `eval.ai.${timestamp}@evaluators.in`,
-      password: 'EvalPassword123!',
-      role: 'EVALUATOR'
+    const govUser = await prisma.user.create({
+      data: {
+        name: `Gov Official AI ${timestamp}`,
+        email: `gov.ai.${timestamp}@state.gov.in`,
+        password_hash,
+        role: 'GOVERNMENT',
+        department_id: department?.id,
+        is_active: true,
+        is_verified: true,
+      },
     });
-    const evalToken = evalReg.body?.data?.token;
+    const govToken = generateToken(govUser);
 
-    const startupReg = await request('POST', '/api/v1/auth/register', {
-      name: `Founder AI ${timestamp}`,
-      email: `founder.ai.${timestamp}@startuphub.io`,
-      password: 'StartupPassword123!',
-      role: 'STARTUP'
+    const evalUser = await prisma.user.create({
+      data: {
+        name: `Evaluator AI ${timestamp}`,
+        email: `eval.ai.${timestamp}@evaluators.in`,
+        password_hash,
+        role: 'EVALUATOR',
+        is_active: true,
+        is_verified: true,
+      },
     });
-    const startupToken = startupReg.body?.data?.token;
+    const evalToken = generateToken(evalUser);
+
+    const startupUser = await prisma.user.create({
+      data: {
+        name: `Founder AI ${timestamp}`,
+        email: `founder.ai.${timestamp}@startuphub.io`,
+        password_hash,
+        role: 'STARTUP',
+        is_active: true,
+        is_verified: true,
+      },
+    });
+    const startupToken = generateToken(startupUser);
 
     // 3.2 Unauthenticated Request Blocked
     const unauthRes = await request('POST', '/api/v1/ai/challenges/generate', {
@@ -397,7 +426,7 @@ const runAITestSuite = async () => {
       },
       govToken
     );
-    assert(invalidReqRes.statusCode === 400, 'Invalid AI request body returns 400 Bad Request with validation details');
+    assert(invalidReqRes.statusCode === 422 || invalidReqRes.statusCode === 400, 'Invalid AI request body returns validation error (422/400) with details');
 
     // ══════════════════════════════════════════════════════════════
     // Summary

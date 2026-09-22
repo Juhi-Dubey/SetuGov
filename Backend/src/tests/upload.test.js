@@ -49,12 +49,18 @@ async function runUploadTests() {
   assert.strictEqual(uploadPdfData.data?.mime_type, 'application/pdf');
   console.log('✅ [PASS] PDF uploaded successfully:', uploadPdfData.data.file_url);
 
-  // Test 2: Verify Static File Access via GET
-  console.log('\n--- TEST 2: Static File Serving (GET /uploads/:filename) ---');
-  const staticRes = await fetch(uploadPdfData.data.file_url);
-  assert.strictEqual(staticRes.status, 200, 'Static file fetch must return 200 OK');
-  assert.strictEqual(staticRes.headers.get('content-type'), 'application/pdf');
-  console.log('✅ [PASS] Static PDF retrieved with correct content-type header');
+  // Test 2: Verify Mandatory Authentication on GET /api/v1/documents/:filename
+  console.log('\n--- TEST 2: Private Document Access (Anonymous blocked, Authenticated allowed) ---');
+  const anonRes = await fetch(uploadPdfData.data.file_url);
+  assert.strictEqual(anonRes.status, 401, 'Anonymous document download must strictly return 401 Unauthorized');
+  console.log('✅ [PASS] Anonymous access to document correctly blocked (HTTP 401)');
+
+  const authRes = await fetch(uploadPdfData.data.file_url, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  assert.strictEqual(authRes.status, 200, 'Authenticated uploader fetch must return 200 OK');
+  assert.strictEqual(authRes.headers.get('content-type'), 'application/pdf');
+  console.log('✅ [PASS] Authenticated uploader retrieved PDF with correct content-type header');
 
   // Test 3: Upload PNG Image via POST /api/v1/upload
   console.log('\n--- TEST 3: Image Upload (PNG) ---');

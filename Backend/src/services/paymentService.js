@@ -2,6 +2,7 @@ import { prisma } from '../config/prisma.js';
 import { NotFoundError, BadRequestError } from '../utils/errors.js';
 import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
+import storageService from './storageService.js';
 
 export const createPayment = async (pilotId, data, user, ip_address = null) => {
   // P0-3: Verify user has PAYMENT_MANAGE access to this pilot
@@ -76,6 +77,17 @@ export const createPayment = async (pilotId, data, user, ip_address = null) => {
   }
 
   const payment = await prisma.$transaction(async (tx) => {
+    let cleanInvoiceUrl = null;
+    if (data.invoice_url) {
+      const raw = data.invoice_url.trim();
+      if (raw.startsWith('/api/v1/documents/') || raw.startsWith('/uploads/') || raw.includes('localhost') || raw.includes('setugov.in')) {
+        const verified = await storageService.verifyDocumentFile(raw);
+        cleanInvoiceUrl = verified.normalizedUrl;
+      } else {
+        cleanInvoiceUrl = raw;
+      }
+    }
+
     const newPayment = await tx.payment.create({
       data: {
         pilot_id: pilotId,
@@ -86,7 +98,7 @@ export const createPayment = async (pilotId, data, user, ip_address = null) => {
         status: data.status || 'UPCOMING',
         payment_date: null,
         reference_number: data.reference_number ? data.reference_number.trim() : null,
-        invoice_url: data.invoice_url ? data.invoice_url.trim() : null
+        invoice_url: cleanInvoiceUrl
       },
       include: {
         milestone: true,

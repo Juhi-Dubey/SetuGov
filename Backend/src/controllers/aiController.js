@@ -33,10 +33,9 @@ export const analyzePilot = async (req, res, next) => {
 
 export const getScaleRecommendation = async (req, res, next) => {
   try {
-    const pilotId = req.params.pilot_id || req.params.id || req.body?.pilot_id;
-    const result = pilotId
-      ? await aiService.getScaleRecommendation(pilotId, req.user)
-      : await aiService.getScaleRecommendation('mock-pilot', req.user);
+    const pilotId = req.params.pilot_id || req.params.id;
+    const input = pilotId || (req.body && Object.keys(req.body).length > 0 ? req.body : 'mock-pilot');
+    const result = await aiService.getScaleRecommendation(input, req.user);
     return successResponse(res, result, 'AI scale recommendation completed', 200);
   } catch (error) {
     next(error);

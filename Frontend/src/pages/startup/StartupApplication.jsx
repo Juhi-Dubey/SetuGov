@@ -42,6 +42,7 @@ import { useAuth } from "../../context/AuthContext";
 import { API_BASE_URL } from "../../services/api";
 import { formatPublishDate } from "../../utils/filterUtils";
 import Pagination from "../../components/common/Pagination";
+import { openDocumentSecurely } from "../../utils/documentUtils.js";
 
 
 
@@ -1411,14 +1412,13 @@ function ShortlistSolutionPackage({ app, onRefresh }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-3">
-                  <a
-                    href={`${API_BASE_URL}/documents/${doc.stored_filename}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => openDocumentSecurely(`${API_BASE_URL}/documents/${doc.stored_filename}`, doc.original_filename)}
                     className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                   >
                     <Download className="h-3 w-3" /> View
-                  </a>
+                  </button>
                   {!isFinalized && (
                     <button
                       type="button"

@@ -286,16 +286,16 @@ function AdminAccessRequests() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-              <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
+              <thead className="border-b border-slate-200 bg-slate-200 text-left text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
                 <tr>
-                  <th className="py-3.5 px-4">Applicant</th>
-                  <th className="py-3.5 px-4">Requested Role</th>
-                  <th className="py-3.5 px-4">Source</th>
-                  <th className="py-3.5 px-4">Organization / Dept</th>
-                  <th className="py-3.5 px-4">Expertise / Domain</th>
-                  <th className="py-3.5 px-4">Submitted</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-right">Action</th>
+                  <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Applicant</th>
+                  <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Requested Role</th>
+                  <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Source</th>
+                  <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Organization / Dept</th>
+                  <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Expertise / Domain</th>
+                  <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Submitted</th>
+                  <th className="py-2.5 px-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Status</th>
+                  <th className="py-2.5 px-4 text-right text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">

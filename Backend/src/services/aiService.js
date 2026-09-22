@@ -9,8 +9,8 @@ import { createAuditLog } from './auditService.js';
  * Returns the parsed JSON body on success, or null on failure (for mock fallback).
  */
 const callExternalAiService = async (endpoint, payload) => {
-  if (config.AI_MOCK_MODE || process.env.NODE_ENV === 'test') {
-    return null; // Force mock fallback in test mode
+  if (config.AI_MOCK_MODE) {
+    return null; // Fallback to mock when AI_MOCK_MODE is true
   }
 
   try {
@@ -1345,10 +1345,17 @@ export const generateDocumentDraft = async (input) => {
 export const getScaleRecommendation = async (pilotIdOrInput, user) => {
   let payload = {};
   let pilotId = null;
+  let kpiResults = [];
+  let latestValidation = null;
+  let pilotRisks = [];
+  let pilotMilestones = [];
 
   if (typeof pilotIdOrInput === 'object' && pilotIdOrInput !== null) {
     payload = pilotIdOrInput;
     pilotId = payload.pilot_id || 'custom-pilot';
+    kpiResults = Array.isArray(payload.kpi_results) ? payload.kpi_results : [];
+    pilotRisks = Array.isArray(payload.risks) ? payload.risks : [];
+    pilotMilestones = Array.isArray(payload.milestones) ? payload.milestones : [];
   } else {
     pilotId = pilotIdOrInput;
     const pilot = await prisma.pilot.findUnique({
@@ -1358,7 +1365,7 @@ export const getScaleRecommendation = async (pilotIdOrInput, user) => {
         startup: true,
         kpis: {
           include: {
-            measurements: { orderBy: { recorded_at: 'desc' }, take: 1 }
+            measurements: { orderBy: { created_at: 'desc' }, take: 1 }
           }
         },
         milestones: { orderBy: { due_date: 'asc' } },
@@ -1385,7 +1392,7 @@ export const getScaleRecommendation = async (pilotIdOrInput, user) => {
       }
     }
 
-    const kpiResults = (pilot.kpis || []).map(k => {
+    kpiResults = (pilot.kpis || []).map(k => {
       const latestMeasurement = k.measurements && k.measurements.length > 0 ? k.measurements[0].value : null;
       const actual = latestMeasurement !== null ? latestMeasurement : (k.actual_value !== null ? k.actual_value : null);
       const direction = (k.target_value !== null && k.baseline_value !== null)
@@ -1402,14 +1409,16 @@ export const getScaleRecommendation = async (pilotIdOrInput, user) => {
       };
     });
 
-    const latestValidation = pilot.validations && pilot.validations.length > 0 ? pilot.validations[0] : null;
+    latestValidation = pilot.validations && pilot.validations.length > 0 ? pilot.validations[0] : null;
+    pilotRisks = pilot.risks || [];
+    pilotMilestones = pilot.milestones || [];
 
     payload = {
       challenge_title: pilot.challenge.title,
       startup_name: pilot.startup.company_name,
       pilot_duration: `${pilot.pilot_duration_days || 60} days`,
       kpi_results: kpiResults,
-      risks: (pilot.risks || []).map(r => ({
+      risks: pilotRisks.map(r => ({
         category: (r.category || 'operational').toLowerCase(),
         description: r.description,
         severity: (r.severity || 'LOW').toUpperCase(),
@@ -1449,9 +1458,9 @@ export const getScaleRecommendation = async (pilotIdOrInput, user) => {
 
   const avgKpi = validAchievements.length > 0
     ? validAchievements.reduce((a, b) => a + b, 0) / validAchievements.length
-    : (latestValidation?.performance_score || 0);
+    : (payload.kpi_achievement_pct != null ? Number(payload.kpi_achievement_pct) : (latestValidation?.performance_score || 80));
 
-  const highRisks = (pilot.risks || []).filter(r => (r.severity || '').toUpperCase() === 'HIGH').length;
+  const highRisks = pilotRisks.filter(r => (r.severity || '').toUpperCase() === 'HIGH').length;
 
   let recommendation = 'SCALE';
   if (highRisks > 1 || avgKpi < 45) {
@@ -1470,8 +1479,8 @@ export const getScaleRecommendation = async (pilotIdOrInput, user) => {
     ],
     supporting_metrics: {
       kpi_achievement_pct: parseFloat(avgKpi.toFixed(1)),
-      milestone_completion_rate: (pilot.milestones || []).length > 0
-        ? ((pilot.milestones || []).filter(m => m.status === 'COMPLETED').length / (pilot.milestones || []).length) * 100
+      milestone_completion_rate: pilotMilestones.length > 0
+        ? (pilotMilestones.filter(m => m.status === 'COMPLETED').length / pilotMilestones.length) * 100
         : 0,
       validation_score: latestValidation?.performance_score !== undefined ? Number(latestValidation.performance_score) : null,
       risk_score: highRisks * 25.0

@@ -371,24 +371,24 @@ function AdminUsers() {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[850px]">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50">
-                <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-400">
+              <tr className="border-b border-slate-200 bg-slate-200 text-left text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
+                <th className="px-5 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
                   Government Official
                 </th>
 
-                <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-400">
+                <th className="px-5 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
                   Status
                 </th>
 
-                <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-400">
+                <th className="px-5 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
                   Verification
                 </th>
 
-                <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-400">
+                <th className="px-5 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
                   Joined
                 </th>
 
-                <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-400">
+                <th className="px-5 py-2.5 text-right text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
                   Action
                 </th>
               </tr>

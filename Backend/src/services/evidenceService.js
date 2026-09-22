@@ -1,34 +1,50 @@
 import { prisma } from '../config/prisma.js';
-import { NotFoundError } from '../utils/errors.js';
+import { NotFoundError, BadRequestError } from '../utils/errors.js';
 import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
+import storageService from './storageService.js';
 
 export const createEvidence = async (pilotId, data, user, ip_address = null) => {
   // P0-3: Verify user has EVIDENCE_MANAGE access to this pilot
   await verifyPilotAccess(pilotId, user, 'EVIDENCE_MANAGE');
 
-  const evidence = await prisma.evidence.create({
-    data: {
-      pilot_id: pilotId,
-      type: data.type.trim(),
-      description: data.description.trim(),
-      file_url: data.file_url.trim(),
-      date: data.date ? new Date(data.date) : new Date(),
-      source: data.source.trim(),
-      verification_status: 'PENDING',
-      uploaded_by: user.id
-    },
-    include: {
-      uploader: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true
+  if (!data.file_url) {
+    throw new BadRequestError('Evidence file URL is required.');
+  }
+
+  // Verify physical document existence in storage and sanitize reference
+  const verified = await storageService.verifyDocumentFile(data.file_url);
+
+  let evidence;
+  try {
+    evidence = await prisma.evidence.create({
+      data: {
+        pilot_id: pilotId,
+        type: data.type.trim(),
+        description: data.description.trim(),
+        file_url: verified.normalizedUrl,
+        date: data.date ? new Date(data.date) : new Date(),
+        source: data.source.trim(),
+        verification_status: 'PENDING',
+        uploaded_by: user.id
+      },
+      include: {
+        uploader: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true
+          }
         }
       }
+    });
+  } catch (dbErr) {
+    if (verified.key) {
+      await storageService.deleteFile(verified.key).catch(() => null);
     }
-  });
+    throw dbErr;
+  }
 
   await createAuditLog({
     user_id: user.id,

@@ -2,6 +2,7 @@ import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
+import storageService from './storageService.js';
 
 /**
  * Verifies whether the authenticated user has access to view or manage a procurement record
@@ -324,13 +325,19 @@ export const issueContract = async (procurementId, data, user, ip_address = null
     throw new BadRequestError('Either a Contract Reference Number or PO Reference Number is required.');
   }
 
+  let cleanContractDocUrl = contract_document_url ? contract_document_url.trim() : null;
+  if (cleanContractDocUrl && (cleanContractDocUrl.startsWith('/api/v1/documents/') || cleanContractDocUrl.startsWith('/uploads/') || cleanContractDocUrl.includes('localhost') || cleanContractDocUrl.includes('setugov.in'))) {
+    const verified = await storageService.verifyDocumentFile(cleanContractDocUrl);
+    cleanContractDocUrl = verified.normalizedUrl;
+  }
+
   const updated = await prisma.procurementRecord.update({
     where: { id: procurementId },
     data: {
       status: 'CONTRACT_ISSUED',
       po_reference_number: po_reference_number ? po_reference_number.trim() : null,
       contract_reference: contract_reference ? contract_reference.trim() : null,
-      contract_document_url: contract_document_url ? contract_document_url.trim() : null,
+      contract_document_url: cleanContractDocUrl,
       final_contract_value: final_contract_value !== undefined ? final_contract_value : procurement.estimated_value,
       contract_issued_at: new Date(),
       contract_effective_date: contract_effective_date ? new Date(contract_effective_date) : new Date(),
@@ -370,13 +377,19 @@ export const submitDelivery = async (procurementId, data, user, ip_address = nul
     throw new BadRequestError('Detailed delivery scope description is required.');
   }
 
+  let cleanDeliveryEvidenceUrl = delivery_evidence_url ? delivery_evidence_url.trim() : null;
+  if (cleanDeliveryEvidenceUrl && (cleanDeliveryEvidenceUrl.startsWith('/api/v1/documents/') || cleanDeliveryEvidenceUrl.startsWith('/uploads/') || cleanDeliveryEvidenceUrl.includes('localhost') || cleanDeliveryEvidenceUrl.includes('setugov.in'))) {
+    const verified = await storageService.verifyDocumentFile(cleanDeliveryEvidenceUrl);
+    cleanDeliveryEvidenceUrl = verified.normalizedUrl;
+  }
+
   const updated = await prisma.procurementRecord.update({
     where: { id: procurementId },
     data: {
       status: 'DELIVERY_SUBMITTED',
       delivery_date: new Date(),
       delivery_scope: delivery_scope.trim(),
-      delivery_evidence_url: delivery_evidence_url ? delivery_evidence_url.trim() : null,
+      delivery_evidence_url: cleanDeliveryEvidenceUrl,
       delivery_notes: delivery_notes.trim(),
       acceptance_status: 'PENDING'
     }

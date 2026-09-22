@@ -831,27 +831,8 @@ export const addStartupDocument = async (startupId, data, user, ip_address = nul
     throw new BadRequestError(`Your registration is currently ${startup.verification_status.replace('_', ' ').toLowerCase()}. Document uploads are locked.`);
   }
 
-  // Strict upload validation: Reject arbitrary external client URLs
-  let docUrl = data.document_url ? data.document_url.trim() : '';
-  if (docUrl.startsWith('http://') || docUrl.startsWith('https://')) {
-    try {
-      const parsed = new URL(docUrl);
-      if (parsed.pathname.startsWith('/api/v1/documents/') || parsed.pathname.startsWith('/uploads/') || parsed.pathname.startsWith('/api/v1/uploads/')) {
-        docUrl = parsed.pathname;
-      } else if (parsed.hostname === 'setugov.in' || process.env.NODE_ENV === 'test') {
-        docUrl = parsed.pathname;
-      } else {
-        throw new BadRequestError('Invalid document URL. External URLs are not permitted.');
-      }
-    } catch (e) {
-      if (e instanceof BadRequestError) throw e;
-      throw new BadRequestError('Invalid document URL format.');
-    }
-  }
-
-  if (!docUrl || docUrl.startsWith('//') || docUrl.startsWith('data:') || (!docUrl.startsWith('/uploads/') && !docUrl.startsWith('/api/v1/uploads/') && !docUrl.startsWith('/api/v1/documents/') && !docUrl.startsWith('/docs/'))) {
-    throw new BadRequestError('Invalid document URL. Files must be uploaded through the secure platform upload endpoint.');
-  }
+  // Verify physical document existence in storage and sanitize reference
+  const verified = await storageService.verifyDocumentFile(data.document_url);
 
   let document;
   try {
@@ -859,17 +840,16 @@ export const addStartupDocument = async (startupId, data, user, ip_address = nul
       data: {
         startup_id: startupId,
         document_type: data.document_type.trim(),
-        document_url: docUrl,
-        file_name: data.file_name ? data.file_name.trim() : null,
-        file_size: data.file_size || null,
+        document_url: verified.normalizedUrl,
+        file_name: data.file_name ? data.file_name.trim() : verified.key,
+        file_size: data.file_size || (verified.metadata ? verified.metadata.size : null),
         mime_type: data.mime_type ? data.mime_type.trim() : null,
         verification_status: 'PENDING'
       }
     });
   } catch (dbErr) {
-    const fileKey = storageService.extractKeyFromUrl(docUrl);
-    if (fileKey) {
-      await storageService.deleteFile(fileKey).catch(() => null);
+    if (verified.key) {
+      await storageService.deleteFile(verified.key).catch(() => null);
     }
     throw dbErr;
   }

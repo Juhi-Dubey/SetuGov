@@ -902,14 +902,14 @@ function GovernmentReports() {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                      <thead className="border-b border-slate-100 bg-slate-50 font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                      <thead className="border-b border-slate-200 bg-slate-200 text-left text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
                         <tr>
-                          <th className="py-3.5 pl-6 pr-4">Challenge & Deployment</th>
-                          <th className="px-4 py-3.5">Startup Entity</th>
-                          <th className="px-4 py-3.5">Budget</th>
-                          <th className="px-4 py-3.5">Status</th>
-                          <th className="px-4 py-3.5">Validation Score</th>
-                          <th className="py-3.5 pl-4 pr-6 text-right">Action</th>
+                          <th className="py-2.5 pl-6 pr-4 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Challenge & Deployment</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Startup Entity</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Budget</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Status</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Validation Score</th>
+                          <th className="py-2.5 pl-4 pr-6 text-right text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

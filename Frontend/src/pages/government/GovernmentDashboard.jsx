@@ -551,18 +551,18 @@ function ChallengeTable({ challenges, onCreateChallenge, onSelectChallenge }) {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[800px] table-fixed">
             <colgroup>
-              <col className="w-[44%]" />
+              <col className="w-[45%]" />
               <col className="w-[25%]" />
-              <col className="w-[14%]" />
-              <col className="w-[11%]" />
+              <col className="w-[12%]" />
+              <col className="w-[12%]" />
               <col className="w-[6%]" />
             </colgroup>
             <thead>
               <tr className="border-b border-slate-200 bg-slate-200 text-left text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
-                <TableHeading className="w-[44%]">Challenge</TableHeading>
+                <TableHeading className="w-[45%]">Challenge</TableHeading>
                 <TableHeading className="w-[25%]">Department</TableHeading>
-                <TableHeading className="w-[14%]">Applications</TableHeading>
-                <TableHeading className="w-[11%]">Status</TableHeading>
+                <TableHeading className="w-[12%]">Applications</TableHeading>
+                <TableHeading className="w-[12%]">Status</TableHeading>
                 <TableHeading className="w-[6%] text-center">Action</TableHeading>
               </tr>
             </thead>
@@ -611,48 +611,50 @@ function ChallengeRow({ challenge, onSelectChallenge }) {
   return (
     <tr
       onClick={() => onSelectChallenge(challenge.id)}
-      className="cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 last:border-0 dark:border-slate-800 dark:hover:bg-slate-800/50"
+      className="group cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50/80 last:border-0 dark:border-slate-800 dark:hover:bg-slate-800/50"
     >
-      <td className="px-4 py-2.5">
-        <div className="min-w-0 overflow-hidden">
+      <td className="px-4 py-3.5 align-middle">
+        <div className="min-w-0">
           <p
-            className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white leading-snug"
+            className="text-sm font-semibold text-slate-900 dark:text-white leading-snug"
             title={challenge.title}
           >
             {challenge.title}
           </p>
-          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-600">
-            <span className="inline-flex items-center gap-1 px-2 rounded-xl font-medium text-indigo-500 bg-blue-100 dark:text-slate-400">
+          <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-medium text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300">
               <Calendar className="h-3 w-3 text-indigo-500 shrink-0" />
               Published: {formatPublishDate(challenge)}
             </span>
             {challenge.description && (
-              <>
-                <span>·</span>
-                <span className="max-w-[280px] line-clamp-2" title={challenge.description}>{challenge.description}</span>
-              </>
+              <span
+                className="line-clamp-1 text-xs text-slate-500 dark:text-slate-400"
+                title={challenge.description}
+              >
+                {challenge.description}
+              </span>
             )}
           </div>
         </div>
       </td>
 
-      <td className="px-4 py-2.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-        <span className="block leading-snug break-words">
+      <td className="px-4 py-3.5 text-xs text-slate-600 dark:text-slate-300 align-middle">
+        <span className="block leading-relaxed break-words">
           {challenge.department}
         </span>
       </td>
 
-      <td className="px-4 py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap">
-        <span className="inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+      <td className="px-4 py-3.5 align-middle whitespace-nowrap">
+        <span className="inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
           {proposalsLabel}
         </span>
       </td>
 
-      <td className="px-4 py-2.5 whitespace-nowrap">
+      <td className="px-4 py-3.5 align-middle whitespace-nowrap">
         <StatusBadge status={challenge.status} />
       </td>
 
-      <td className="px-4 py-2.5 text-center">
+      <td className="px-4 py-3.5 text-center align-middle">
         <button
           type="button"
           onClick={(e) => {
@@ -660,7 +662,7 @@ function ChallengeRow({ challenge, onSelectChallenge }) {
             onSelectChallenge(challenge.id);
           }}
           aria-label={`View details for ${challenge.title}`}
-          className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white"
+          className="inline-flex items-center justify-center rounded-lg p-1.5 text-slate-400 transition-colors hover:text-blue-600 dark:hover:text-blue-400"
         >
           <ArrowRight className="h-4 w-4" />
         </button>
@@ -684,7 +686,7 @@ function StatusBadge({ status }) {
   const badgeClass = statusMap[status] || "bg-slate-100 text-slate-700 border-slate-200";
 
   return (
-    <span className={`inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-semibold ${badgeClass}`}>
+    <span className={`inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeClass}`}>
       {status}
     </span>
   );

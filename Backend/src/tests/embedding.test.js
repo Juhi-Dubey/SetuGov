@@ -162,8 +162,15 @@ const runEmbeddingTests = async () => {
       assert.ok(embedding.every(v => typeof v === 'number' && Number.isFinite(v)));
       logger.info(`    ℹ️ Live embedding service verified: ${EXPECTED_EMBEDDING_DIMENSION}-dim vector generated successfully`);
     } catch (err) {
-      if (err.message.includes('unavailable') || err.message.includes('ECONNREFUSED') || err.errorCode === 'AI_SERVICE_UNAVAILABLE') {
-        logger.warn(`    ⚠️ AI embedding service offline: skipped live call (${err.message})`);
+      if (
+        err.message.toLowerCase().includes('unavailable') ||
+        err.message.includes('ECONNREFUSED') ||
+        err.message.includes('Cannot connect') ||
+        err.message.includes('fetch failed') ||
+        err.errorCode === 'AI_SERVICE_UNAVAILABLE' ||
+        err.code === 'OLLAMA_UNAVAILABLE'
+      ) {
+        logger.warn(`    ⚠️ AI/Ollama embedding service offline: skipped live call (${err.message})`);
       } else {
         throw err;
       }

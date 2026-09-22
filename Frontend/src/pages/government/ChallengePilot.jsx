@@ -50,8 +50,6 @@ import {
   completePilot,
   createMilestone,
   createKpi,
-  createScaleDecision,
-  getScaleDecision,
   getComplianceChecklist,
   updateComplianceItem,
   getPilotFeedbacks,
@@ -59,6 +57,7 @@ import {
   getPilotIssues,
   updatePilotIssue,
 } from "../../services/pilotService";
+import { createScaleDecision, getScaleDecision } from "../../services/scaleDecisionService";
 import { getChallengeById, getChallengePilot, getChallengeApplications } from "../../services/challengeService";
 import { analyzePilotWithAI, getScaleRecommendationWithAI } from "../../services/aiService";
 import { formatPilotStatus } from "../../utils/filterUtils";

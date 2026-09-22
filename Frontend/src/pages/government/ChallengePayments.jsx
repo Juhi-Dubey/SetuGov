@@ -27,13 +27,13 @@ import Pagination from "../../components/common/Pagination";
 import PageHeader from "../../components/layout/PageHeader";
 import StatCard from "../../components/common/StatCard";
 import { getChallengeById, getChallengePilot } from "../../services/challengeService";
+import { getPilotMilestones } from "../../services/pilotService";
 import {
-  getPilotMilestones,
   getPilotPayments,
   getPayments,
   createPayment,
   updatePaymentStatus,
-} from "../../services/pilotService";
+} from "../../services/paymentService";
 
 function ChallengePayments() {
   const navigate = useNavigate();

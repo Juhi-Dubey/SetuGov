@@ -159,6 +159,118 @@ export const deleteTempFile = (tempPath) => {
 };
 
 /**
+ * Validate that a document reference (URL, relative path, or filename) resolves
+ * strictly within the authorized platform storage and points to an actual physical file.
+ *
+ * Prevents:
+ *  - Directory traversal sequences (../, ..\, %2e%2e, etc.)
+ *  - Absolute filesystem paths (C:\..., /etc/passwd, etc.)
+ *  - Arbitrary external URLs (only permitted local hostnames or setugov domain)
+ *  - Paths outside the configured storage directory
+ *  - Missing / non-existent physical files
+ *
+ * @param {string} urlOrPath - The document URL, path, or filename to verify
+ * @param {object} [options]
+ * @returns {Promise<{ key: string, normalizedUrl: string, metadata: { key: string, size: number, modifiedAt: Date } | null }>}
+ */
+export const verifyDocumentFile = async (urlOrPath, options = {}) => {
+  if (!urlOrPath || typeof urlOrPath !== 'string') {
+    throw new BadRequestError('Document file reference is required.');
+  }
+
+  let cleaned = urlOrPath.replace(/\0/g, '').trim();
+
+  // Try decoding in case of URL encoded traversal sequences
+  try {
+    const decoded = decodeURIComponent(cleaned);
+    if (decoded !== cleaned) {
+      if (decoded.includes('..') || decoded.includes('\\') || decoded.includes('\0')) {
+        throw new BadRequestError('Invalid document path specified: Directory traversal sequences are forbidden.');
+      }
+    }
+  } catch (e) {
+    if (e instanceof BadRequestError) throw e;
+  }
+
+  // 1. Prevent traversal sequences
+  if (cleaned.includes('..') || cleaned.includes('\\') || cleaned.includes('\0')) {
+    throw new BadRequestError('Invalid document path specified: Directory traversal sequences are forbidden.');
+  }
+
+  // 2. Prevent Windows drive letters or rooted paths (e.g. C:\ or D:/)
+  if (/^[a-zA-Z]:/.test(cleaned)) {
+    throw new BadRequestError('Invalid document path: Absolute filesystem paths are forbidden.');
+  }
+
+  // 3. Handle external schemes and URLs
+  let pathname = cleaned;
+
+  // 3a. Block dangerous pseudo-protocols (XSS, SSRF, local file access)
+  // These do NOT contain '://' so must be checked explicitly before URL parsing
+  const DANGEROUS_SCHEMES = ['javascript:', 'vbscript:', 'data:', 'file:', 'ftp:', 'ftps:', 'blob:', 'about:', 'ws:', 'wss:'];
+  const lowerCleaned = cleaned.toLowerCase();
+  if (DANGEROUS_SCHEMES.some(scheme => lowerCleaned.startsWith(scheme))) {
+    throw new BadRequestError('Invalid document reference: Dangerous URL scheme is not permitted.');
+  }
+
+  if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) {
+    try {
+      const parsed = new URL(cleaned);
+      const allowedHosts = ['localhost', '127.0.0.1', 'setugov.in', 'storage.setugov.in', 'storage.setugov.gov.in'];
+      const isAllowedHost = allowedHosts.some(h => parsed.hostname === h || parsed.hostname.endsWith('.' + h));
+      if (!isAllowedHost) {
+        throw new BadRequestError('Invalid document URL: External URLs are not permitted.');
+      }
+      pathname = parsed.pathname;
+    } catch (urlErr) {
+      if (urlErr instanceof BadRequestError) throw urlErr;
+      throw new BadRequestError('Invalid document URL format.');
+    }
+  } else if (cleaned.includes('://') || cleaned.startsWith('//')) {
+    // Catch-all for other scheme://host patterns not already blocked above
+    throw new BadRequestError('Invalid document reference scheme.');
+  }
+
+  // Strip query string and fragment
+  pathname = pathname.split('?')[0].split('#')[0];
+
+  // 4. Validate directory containment if path contains slashes
+  if (pathname.startsWith('/')) {
+    const allowedPrefixes = ['/api/v1/documents/', '/uploads/', '/api/v1/uploads/', '/docs/'];
+    const isAllowedPrefix = allowedPrefixes.some(prefix => pathname.startsWith(prefix));
+    if (!isAllowedPrefix) {
+      throw new BadRequestError('Invalid document path: Path is outside the configured storage directory.');
+    }
+  } else if (pathname.includes('/')) {
+    // Relative path with subdirectories not matching allowed prefix
+    throw new BadRequestError('Invalid document path: Relative nested paths outside storage are forbidden.');
+  }
+
+  // 5. Extract storage key (base filename)
+  const key = extractKeyFromUrl(pathname);
+  if (!key || key === '.' || key === '..') {
+    throw new BadRequestError('Unable to resolve a valid storage key from the document reference.');
+  }
+
+  // 6. Verify physical file exists in storage provider
+  const exists = await fileExists(key);
+  if (!exists) {
+    throw new BadRequestError(`Referenced physical document file does not exist in storage: '${key}'. Please upload the document first.`);
+  }
+
+  // 7. Retrieve physical file metadata if supported
+  const metadata = await getFileMetadata(key);
+
+  const normalizedUrl = `/api/v1/documents/${key}`;
+
+  return {
+    key,
+    normalizedUrl,
+    metadata
+  };
+};
+
+/**
  * Get base directory for local storage (used by multer for initial staging)
  */
 export const getLocalStorageDir = () => {
@@ -174,6 +286,7 @@ export default {
   resetStorageProvider,
   sanitizeStorageKey,
   extractKeyFromUrl,
+  verifyDocumentFile,
   saveFile,
   saveBuffer,
   fileExists,
@@ -183,3 +296,4 @@ export default {
   deleteTempFile,
   getLocalStorageDir
 };
+

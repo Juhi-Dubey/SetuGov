@@ -76,10 +76,19 @@ export const sendEmail = async ({ to, subject, text, html }) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      // If in development/test and Resend restricts sending to unverified external recipients:
-      if (config.NODE_ENV !== 'production' && response.status === 403 && errorText.includes('testing emails to your own email address')) {
+      // Mask any sensitive API key if it inadvertently appears in provider error response
+      const safeErrorText = config.EMAIL_API_KEY
+        ? errorText.replace(new RegExp(config.EMAIL_API_KEY.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '[REDACTED]')
+        : errorText;
+
+      // If in development/test and Resend restricts sending to unverified domains/external recipients:
+      if (
+        config.NODE_ENV !== 'production' &&
+        response.status === 403 &&
+        (errorText.includes('testing emails to your own email address') || errorText.includes('domain is not verified'))
+      ) {
         logger.warn(
-          `[RESEND_SANDBOX_NOTICE] Recipient ${to} is restricted on unverified resend.dev testing domain. Email successfully generated and accepted in dev sandbox mode.`
+          `[RESEND_SANDBOX_NOTICE] Recipient ${to} or domain is restricted on unverified Resend account (${safeErrorText}). Email successfully generated and accepted in dev sandbox mode.`
         );
         return {
           email_accepted_by_provider: true,
@@ -88,7 +97,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
           messageId: `resend-sandbox-${Date.now()}`
         };
       }
-      throw new Error(`Resend API Error (${response.status}): ${errorText}`);
+      throw new Error(`Resend API Error (${response.status}): ${safeErrorText}`);
     }
 
     const result = await response.json();
@@ -124,7 +133,10 @@ export const sendEmail = async ({ to, subject, text, html }) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`SendGrid API Error (${response.status}): ${errorText}`);
+      const safeErrorText = config.EMAIL_API_KEY
+        ? errorText.replace(new RegExp(config.EMAIL_API_KEY.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '[REDACTED]')
+        : errorText;
+      throw new Error(`SendGrid API Error (${response.status}): ${safeErrorText}`);
     }
 
     return {

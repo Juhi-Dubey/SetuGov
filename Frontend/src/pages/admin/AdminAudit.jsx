@@ -348,23 +348,23 @@ export function AdminAudit() {
             <div className="hidden overflow-x-auto lg:block">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/70 text-left dark:border-slate-800 dark:bg-slate-900/40">
-                    <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                  <tr className="border-b border-slate-200 bg-slate-200 text-left text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
+                    <th className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
                       Actor / User
                     </th>
-                    <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                    <th className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
                       Action
                     </th>
-                    <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                    <th className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
                       Module
                     </th>
-                    <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                    <th className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
                       Target Entity / Details
                     </th>
-                    <th className="px-6 py-4 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                    <th className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
                       Timestamp
                     </th>
-                    <th className="px-6 py-4 text-right text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                    <th className="px-6 py-2.5 text-right text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
                       View
                     </th>
                   </tr>

@@ -24,6 +24,7 @@ import {
   createValidation,
   getPilotValidations,
 } from "../../services/pilotService";
+import { openDocumentSecurely } from "../../utils/documentUtils.js";
 
 function EvaluatorPilotDetail() {
   const navigate = useNavigate();
@@ -385,14 +386,13 @@ function EvaluatorPilotDetail() {
                       </p>
                     </div>
                     {ev.file_url && (
-                      <a
-                        href={ev.file_url}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => openDocumentSecurely(ev.file_url, ev.title || "evidence_doc.pdf")}
                         className="inline-flex items-center gap-1 rounded-lg bg-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300"
                       >
                         <ExternalLink className="h-3 w-3" /> View File
-                      </a>
+                      </button>
                     )}
                   </div>
                 ))}

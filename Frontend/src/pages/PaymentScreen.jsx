@@ -5,7 +5,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Loader2, AlertCircle, ArrowLeft, RefreshCw, IndianRupee } from "lucide-react";
 import StatusBadge from "../components/StatusBadge";
-import { getPilotPayments, getPilotById } from "../services/pilotService";
+import { getPilotById } from "../services/pilotService";
+import { getPilotPayments } from "../services/paymentService";
 
 function formatINR(amount) {
   return `₹${Number(amount || 0).toLocaleString("en-IN")}`;
@@ -142,11 +143,11 @@ export default function PaymentScreen() {
           <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="px-6 py-3 font-medium text-slate-600">Milestone</th>
-                  <th className="px-6 py-3 font-medium text-slate-600">Amount</th>
-                  <th className="px-6 py-3 font-medium text-slate-600">Reference</th>
-                  <th className="px-6 py-3 font-medium text-slate-600">Status</th>
+                <tr className="border-b border-slate-200 bg-slate-200 text-left text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
+                  <th className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Milestone</th>
+                  <th className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Amount</th>
+                  <th className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Reference</th>
+                  <th className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Status</th>
                 </tr>
               </thead>
               <tbody>

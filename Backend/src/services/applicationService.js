@@ -365,57 +365,103 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
   // Validate state machine transition
   validateTransition('APPLICATION', application.status, nextStatus);
 
-  // Phase 11, 12, 13: Governance Gates for SELECTED transition
-  if (nextStatus === 'SELECTED') {
-    // Challenge lifecycle gate: Challenge must be in EVALUATION stage
-    if (application.challenge.status !== 'EVALUATION') {
-      throw new BadRequestError(
-        `Cannot select startup: Problem Statement is in '${application.challenge.status}' stage. It must be transitioned to 'EVALUATION' stage before selecting a startup.`
-      );
-    }
-
-    const decision = await evaluateApplicationDecision(id, user);
-
-    // 1. Quorum Verification: minimum 2 independent evaluations
-    if (!decision.evaluation_assessment.quorum_met || decision.evaluation_assessment.evaluation_count < 2) {
-      throw new BadRequestError(
-        `Cannot select startup: Evaluation quorum (minimum 2 independent evaluations) has not been met. Current valid evaluations: ${decision.evaluation_assessment.evaluation_count}.`
-      );
-    }
-
-    if (decision.recommendation === 'EVALUATION_PENDING_QUORUM') {
-      throw new BadRequestError('Cannot select startup: Evaluation quorum has not been met.');
-    }
-
-    // 2. Decision Engine Consensus: non-recommended requires mandatory written justification
-    if (decision.recommendation === 'NOT_RECOMMENDED' || decision.recommendation === 'RESERVE_CANDIDATE') {
-      if (!override_justification || !override_justification.trim()) {
-        throw new BadRequestError(
-          `Cannot select startup: Decision Engine recommendation is "${decision.recommendation}". A mandatory written override justification is required.`
-        );
-      }
-
-      await createAuditLog({
-        user_id: user.id,
-        action: 'GOVERNMENT_SELECTION_OVERRIDE',
-        entity_type: 'APPLICATION',
-        entity_id: id,
-        details: {
-          recommendation: decision.recommendation,
-          override_justification: override_justification.trim(),
-          evaluation_score: decision.evaluation_assessment.average_total_score,
-          challenge_id: application.challenge_id,
-          startup_id: application.startup_id
-        },
-        ip_address
-      });
-    }
-  }
-
   // If SELECTED, log selection action
   const action = nextStatus === 'SELECTED' ? 'STARTUP_SELECTED' : `APPLICATION_${nextStatus}`;
 
   const updated = await prisma.$transaction(async (tx) => {
+    // 1. Concurrency Control: If transitioning to SELECTED, acquire row lock on Challenge to serialize selection
+    if (nextStatus === 'SELECTED') {
+      await tx.$executeRaw`SELECT id FROM challenges WHERE id = ${application.challenge_id} FOR UPDATE`;
+
+      // 2. Data Integrity Gate: Verify that NO OTHER application is already SELECTED for this challenge
+      const existingSelected = await tx.application.findFirst({
+        where: {
+          challenge_id: application.challenge_id,
+          status: 'SELECTED'
+        },
+        include: {
+          startup: {
+            select: { company_name: true }
+          }
+        }
+      });
+
+      if (existingSelected && existingSelected.id !== id) {
+        const selectedStartupName = existingSelected.startup?.company_name || existingSelected.id;
+        throw new BadRequestError(
+          `Cannot select startup: Challenge already has a selected startup (${selectedStartupName}). Only exactly one selected startup is allowed per challenge.`
+        );
+      }
+    }
+
+    // 3. Fresh read of application state within the locked transaction
+    const currentApp = await tx.application.findUnique({
+      where: { id },
+      include: {
+        challenge: true,
+        startup: true
+      }
+    });
+
+    if (!currentApp) {
+      throw new NotFoundError(`Application with ID ${id} not found.`);
+    }
+
+    if (currentApp.status === nextStatus) {
+      throw new BadRequestError(`Application is already in ${nextStatus} status.`);
+    }
+
+    validateTransition('APPLICATION', currentApp.status, nextStatus);
+
+    // 4. Governance Gates for SELECTED transition
+    if (nextStatus === 'SELECTED') {
+      // Challenge lifecycle gate: Challenge must be in EVALUATION stage
+      if (currentApp.challenge.status !== 'EVALUATION') {
+        throw new BadRequestError(
+          `Cannot select startup: Problem Statement is in '${currentApp.challenge.status}' stage. It must be transitioned to 'EVALUATION' stage before selecting a startup.`
+        );
+      }
+
+      const decision = await evaluateApplicationDecision(id, user);
+
+      // 4a. Quorum Verification: minimum 2 independent evaluations
+      if (!decision.evaluation_assessment.quorum_met || decision.evaluation_assessment.evaluation_count < 2) {
+        throw new BadRequestError(
+          `Cannot select startup: Evaluation quorum (minimum 2 independent evaluations) has not been met. Current valid evaluations: ${decision.evaluation_assessment.evaluation_count}.`
+        );
+      }
+
+      if (decision.recommendation === 'EVALUATION_PENDING_QUORUM') {
+        throw new BadRequestError('Cannot select startup: Evaluation quorum has not been met.');
+      }
+
+      // 4b. Decision Engine Consensus: non-recommended requires mandatory written justification
+      if (decision.recommendation === 'NOT_RECOMMENDED' || decision.recommendation === 'RESERVE_CANDIDATE') {
+        if (!override_justification || !override_justification.trim()) {
+          throw new BadRequestError(
+            `Cannot select startup: Decision Engine recommendation is "${decision.recommendation}". A mandatory written override justification is required.`
+          );
+        }
+
+        await createAuditLog({
+          tx,
+          user_id: user.id,
+          action: 'GOVERNMENT_SELECTION_OVERRIDE',
+          entity_type: 'APPLICATION',
+          entity_id: id,
+          details: {
+            recommendation: decision.recommendation,
+            override_justification: override_justification.trim(),
+            evaluation_score: decision.evaluation_assessment.average_total_score,
+            challenge_id: currentApp.challenge_id,
+            startup_id: currentApp.startup_id
+          },
+          ip_address
+        });
+      }
+    }
+
+    // 5. Update application status
     const res = await tx.application.update({
       where: { id },
       data: {
@@ -427,6 +473,7 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
       }
     });
 
+    // 6. Record status update audit log
     await createAuditLog({
       tx,
       user_id: user.id,
@@ -434,17 +481,25 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
       entity_type: 'APPLICATION',
       entity_id: id,
       details: {
-        previousStatus: application.status,
+        previousStatus: currentApp.status,
         newStatus: nextStatus,
         reason,
         override_justification: override_justification || null,
-        challenge_id: application.challenge_id,
-        startup_id: application.startup_id
+        challenge_id: currentApp.challenge_id,
+        startup_id: currentApp.startup_id
       },
       ip_address
     });
 
     return res;
+  }).catch((err) => {
+    // If unique constraint violation is triggered by partial index
+    if (err?.code === 'P2002' || err?.message?.includes('unique_selected_application_per_challenge')) {
+      throw new BadRequestError(
+        'Cannot select startup: Challenge already has a selected startup. Only exactly one selected startup is allowed per challenge.'
+      );
+    }
+    throw err;
   });
 
   // Notify the startup user regarding the status transition

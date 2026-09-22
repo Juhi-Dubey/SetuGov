@@ -588,14 +588,14 @@ export default function GovernmentChallenges() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[900px]">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-bold uppercase tracking-wider text-slate-700 dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-200">
-                    <th className="px-4 py-2.5">Challenge & Details</th>
-                    <th className="px-4 py-2.5">Department</th>
-                    <th className="px-4 py-2.5">Budget</th>
-                    <th className="px-4 py-2.5">Proposals</th>
-                    <th className="px-4 py-2.5">Pilot Duration</th>
-                    <th className="px-4 py-2.5">Status</th>
-                    <th className="px-4 py-2.5 text-right">Actions</th>
+                  <tr className="border-b border-slate-200 bg-slate-200 text-left text-slate-900 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100">
+                    <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Challenge & Details</th>
+                    <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Department</th>
+                    <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Budget</th>
+                    <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Proposals</th>
+                    <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Pilot Duration</th>
+                    <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Status</th>
+                    <th className="px-4 py-2.5 text-right text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { handleFileUpload, getPrivateFile } from '../controllers/uploadController.js';
 import { uploadSingle } from '../middleware/upload.js';
-import { authenticate, optionalAuthenticate } from '../middleware/auth.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -10,6 +10,6 @@ router.post('/', authenticate, uploadSingle('file'), handleFileUpload);
 
 // Retrieve private verification / supporting document (Protected: Authentication + Authorization)
 router.get('/private/:filename', authenticate, getPrivateFile);
-router.get('/:filename', optionalAuthenticate, getPrivateFile);
+router.get('/:filename', authenticate, getPrivateFile);
 
 export default router;

@@ -182,6 +182,8 @@ const runE2ETests = async () => {
     // STEP 7: Governed Evaluator Pool Curation, Assignment, COI & Independent Evaluations
     // ----------------------------------------------------
     logger.info('Step 7: Governed Evaluator Pool Curation & Multi-Evaluator Assessment...');
+
+    // Ensure evaluator 1 exists & is verified (seeded: anita.desai@evaluators.setugov.in)
     // Log in Evaluator 1 (Healthcare Systems Specialist)
     const evalLoginRes1 = await request('POST', '/api/v1/auth/login', {
       email: 'anita.desai@evaluators.setugov.in',
@@ -189,6 +191,34 @@ const runE2ETests = async () => {
     });
     const evalToken1 = evalLoginRes1.body.data.token;
     const evalUser1 = evalLoginRes1.body.data.user;
+
+    // Ensure evaluator 2 exists in DB BEFORE login attempt (not in seed data)
+    const eval2PasswordHash = await import('bcrypt').then(m => m.default.hash('Password123!', 10));
+    const rajeshUser = await prisma.user.upsert({
+      where: { email: 'rajesh.iyer@evaluators.setugov.in' },
+      update: { is_active: true, is_verified: true, password_hash: eval2PasswordHash },
+      create: {
+        email: 'rajesh.iyer@evaluators.setugov.in',
+        name: 'Dr. Rajesh Iyer',
+        role: 'EVALUATOR',
+        password_hash: eval2PasswordHash,
+        is_active: true,
+        is_verified: true
+      }
+    });
+    await prisma.evaluatorProfile.upsert({
+      where: { user_id: rajeshUser.id },
+      create: {
+        user_id: rajeshUser.id,
+        organization: 'Indian Institute of Science (IISc)',
+        designation: 'Professor, Computer Science',
+        employment_type: 'FULL_TIME',
+        years_experience: 15,
+        domain_expertise: ['AI Queue Management', 'Computer Vision'],
+        verification_status: 'VERIFIED'
+      },
+      update: { verification_status: 'VERIFIED' }
+    });
 
     // Log in Evaluator 2 (AI & Computer Vision Specialist)
     const evalLoginRes2 = await request('POST', '/api/v1/auth/login', {
@@ -198,7 +228,7 @@ const runE2ETests = async () => {
     const evalToken2 = evalLoginRes2.body.data.token;
     const evalUser2 = evalLoginRes2.body.data.user;
 
-    // Ensure both evaluator profiles are verified in database
+    // Ensure evaluator 1 profile is verified in database
     await prisma.user.update({
       where: { id: evalUser1.id },
       data: { is_verified: true }
@@ -217,23 +247,6 @@ const runE2ETests = async () => {
       update: { verification_status: 'VERIFIED' }
     });
 
-    await prisma.user.update({
-      where: { id: evalUser2.id },
-      data: { is_verified: true }
-    });
-    await prisma.evaluatorProfile.upsert({
-      where: { user_id: evalUser2.id },
-      create: {
-        user_id: evalUser2.id,
-        organization: 'Indian Institute of Science (IISc)',
-        designation: 'Professor, Computer Science',
-        employment_type: 'FULL_TIME',
-        years_experience: 15,
-        domain_expertise: ['AI Queue Management', 'Computer Vision'],
-        verification_status: 'VERIFIED'
-      },
-      update: { verification_status: 'VERIFIED' }
-    });
 
     // 7a. Evaluator matching & discovery
     const evalMatchRes = await request('GET', `/api/v1/challenges/${challenge.id}/evaluator-matches`, null, govToken);

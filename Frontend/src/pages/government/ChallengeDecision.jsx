@@ -15,9 +15,7 @@ import {
   ShieldCheck,
   Calendar,
   User,
-  Clock,
   Sparkles,
-  ExternalLink,
   Award,
   Layers,
   Building2,
@@ -26,7 +24,12 @@ import {
 
 import AppLayout from "../../components/layout/AppLayout";
 import { getChallengeById, getChallengePilot } from "../../services/challengeService";
-import { createScaleDecision, getScaleDecision } from "../../services/pilotService";
+import {
+  createScaleDecision,
+  getScaleDecision,
+  getScaleRecommendation,
+  getPilotValidations,
+} from "../../services/scaleDecisionService";
 import { formatPilotStatus } from "../../utils/filterUtils";
 
 const DECISION_CONFIGS = {
@@ -64,6 +67,9 @@ function ChallengeDecision() {
   const [challenge, setChallenge] = useState(null);
   const [pilot, setPilot] = useState(null);
   const [savedDecision, setSavedDecision] = useState(null);
+  const [validations, setValidations] = useState([]);
+  const [recommendation, setRecommendation] = useState(null);
+  const [recommendationLoading, setRecommendationLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
@@ -97,25 +103,50 @@ function ChallengeDecision() {
       if (pilotData && pilotData.id) {
         setPilot(pilotData);
 
-        // 3. Fetch existing ScaleDecision from PostgreSQL
-        try {
-          const decRes = await getScaleDecision(pilotData.id);
-          const existingDecision = decRes?.data?.scaleDecision || decRes?.scaleDecision || decRes?.data || null;
+        // 3. Concurrently fetch:
+        //    a) existing finalized ScaleDecision
+        //    b) independent validation records (governance gate check)
+        //    c) deterministic Decision Engine recommendation (advisory)
+        const [decRes, valRes] = await Promise.all([
+          getScaleDecision(pilotData.id).catch((decErr) => {
+            console.warn("No previous scale decision found:", decErr);
+            return null;
+          }),
+          getPilotValidations(pilotData.id).catch((valErr) => {
+            console.warn("Could not fetch pilot validations:", valErr);
+            return null;
+          })
+        ]);
 
-          if (existingDecision && existingDecision.id) {
-            setSavedDecision(existingDecision);
-            setSelectedDecision(existingDecision.decision || "SCALE");
-            setReasoning(existingDecision.reasoning || "");
-          } else {
-            setSavedDecision(null);
-          }
-        } catch (decErr) {
-          console.warn("No previous scale decision found or error loading it:", decErr);
+        const existingDecision = decRes?.data?.scaleDecision || decRes?.scaleDecision || decRes?.data || null;
+        if (existingDecision && existingDecision.id) {
+          setSavedDecision(existingDecision);
+          setSelectedDecision(existingDecision.decision || "SCALE");
+          setReasoning(existingDecision.reasoning || "");
+        } else {
           setSavedDecision(null);
+        }
+
+        const valList = valRes?.data?.validations || valRes?.validations || (Array.isArray(valRes?.data) ? valRes.data : []);
+        setValidations(valList);
+
+        // Fetch Decision Engine Advisory
+        try {
+          setRecommendationLoading(true);
+          const recRes = await getScaleRecommendation(pilotData.id);
+          const recData = recRes?.data || recRes;
+          setRecommendation(recData);
+        } catch (recErr) {
+          console.warn("Decision engine recommendation unavailable:", recErr);
+          setRecommendation(null);
+        } finally {
+          setRecommendationLoading(false);
         }
       } else {
         setPilot(null);
         setSavedDecision(null);
+        setValidations([]);
+        setRecommendation(null);
       }
     } catch (err) {
       console.error("Failed to load scale decision data:", err);
@@ -132,6 +163,22 @@ function ChallengeDecision() {
   useEffect(() => {
     loadDecisionData();
   }, [loadDecisionData]);
+
+  // Apply deterministic recommendation to form
+  const handleApplyRecommendation = () => {
+    if (!recommendation?.recommendation) return;
+    const rec = recommendation.recommendation.toUpperCase();
+    if (["SCALE", "EXTEND", "STOP"].includes(rec)) {
+      setSelectedDecision(rec);
+      if (!reasoning || reasoning.trim().length === 0) {
+        const reasonsText = Array.isArray(recommendation.reasons)
+          ? recommendation.reasons.join(". ")
+          : "";
+        const suggestedReasoning = `Based on empirical pilot validation results (Confidence: ${recommendation.confidence_pct || 85}%): ${reasonsText}`;
+        setReasoning(suggestedReasoning);
+      }
+    }
+  };
 
   // Submit Official Scale Decision
   const handleSubmitDecision = async (e) => {
@@ -150,6 +197,27 @@ function ChallengeDecision() {
     const trimmedReasoning = reasoning.trim();
     if (!trimmedReasoning || trimmedReasoning.length < 10) {
       setErrorMessage("Please provide official decision reasoning (at least 10 characters required).");
+      return;
+    }
+
+    // Governance gate checks
+    const latestVal = validations.length > 0 ? validations[0] : null;
+    if (validations.length === 0) {
+      setErrorMessage(
+        "Cannot finalize scale decision: Pilot project has not been validated. An authoritative independent evaluation report is required before a scale decision can be made."
+      );
+      return;
+    }
+
+    if (selectedDecision === "SCALE" && latestVal?.status === "NOT_VALIDATED") {
+      setErrorMessage(
+        "Cannot scale pilot: Pilot project is NOT_VALIDATED. A pilot that failed validation cannot proceed to commercial scale."
+      );
+      return;
+    }
+
+    if (savedDecision && savedDecision.status === "FINALIZED" && pilot.status !== "EXTENDED") {
+      setErrorMessage("A finalized scale decision has already been recorded for this pilot project.");
       return;
     }
 
@@ -183,11 +251,18 @@ function ChallengeDecision() {
       await loadDecisionData();
     } catch (err) {
       console.error("Scale decision error:", err);
-      setErrorMessage(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to persist official scale decision to PostgreSQL."
-      );
+      if (err?.response?.status === 403) {
+        setErrorMessage(
+          err?.response?.data?.message ||
+            "Unauthorized: Only authorized Government officials or Administrators can finalize pilot scale decisions."
+        );
+      } else {
+        setErrorMessage(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Failed to persist official scale decision to PostgreSQL."
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -470,124 +545,272 @@ function ChallengeDecision() {
                     )}
                   </div>
                 </div>
+
+                {/* IMMUTABLE AUDIT BANNER */}
+                {savedDecision.status === "FINALIZED" && pilot?.status !== "EXTENDED" && (
+                  <div className="mt-4 flex items-center gap-2.5 rounded-2xl bg-indigo-50/80 px-4 py-3 text-xs text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-200">
+                    <ShieldCheck className="h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                    <span>
+                      <strong>Decision Finalized:</strong> This scale decision is committed to PostgreSQL and the platform audit trail. To preserve governance integrity, duplicate scale decisions are blocked.
+                    </span>
+                  </div>
+                )}
               </motion.div>
             )}
 
-            {/* SCALE DECISION FORM (IF NOT YET FINALIZED OR FOR UPDATING) */}
-            <form onSubmit={handleSubmitDecision} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
-              <div className="mb-6">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  <ShieldCheck className="h-4 w-4 text-blue-600" />
-                  {savedDecision ? "Amend / Update Scale Sanction" : "Record New Scale Decision"}
-                </div>
-                <h3 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
-                  {savedDecision ? "Revise Official Sanction" : "Select Scale Decision & Provide Justification"}
-                </h3>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Select one canonical decision type and enter official justification. This action writes to PostgreSQL and updates the pilot lifecycle state.
-                </p>
+            {/* DECISION ENGINE ADVISORY CARD */}
+            {recommendationLoading ? (
+              <div className="flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50/50 p-5 dark:border-blue-900/30 dark:bg-blue-950/20">
+                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                <span className="text-xs text-blue-700 dark:text-blue-300">
+                  Running deterministic Decision Engine evaluation on pilot telemetry...
+                </span>
               </div>
+            ) : recommendation ? (
+              <div className="rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50/70 via-indigo-50/30 to-white p-6 shadow-sm dark:border-blue-900/40 dark:from-slate-900 dark:to-blue-950/20 sm:p-7">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-600/20">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">
+                          Deterministic Decision Engine
+                        </span>
+                        <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-semibold text-blue-800 dark:bg-blue-900/60 dark:text-blue-200">
+                          Confidence: {recommendation.confidence_pct || 85}%
+                        </span>
+                      </div>
+                      <h3 className="mt-0.5 text-base font-bold text-slate-900 dark:text-white">
+                        Advisory Outcome:{" "}
+                        <span className="text-blue-600 dark:text-blue-400">
+                          {recommendation.recommendation}
+                        </span>
+                      </h3>
+                    </div>
+                  </div>
 
-              {/* DECISION SELECTION CARDS */}
-              <div className="grid gap-4 sm:grid-cols-3">
-                {Object.entries(DECISION_CONFIGS).map(([key, config]) => {
-                  const Icon = config.icon;
-                  const isSelected = selectedDecision === key;
-                  return (
+                  {(!savedDecision || pilot?.status === "EXTENDED") && (
                     <button
-                      key={key}
                       type="button"
-                      onClick={() => setSelectedDecision(key)}
-                      className={`relative flex flex-col justify-between rounded-2xl border p-5 text-left transition-all ${
-                        isSelected
-                          ? "border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-600/15 dark:border-blue-500 dark:bg-blue-600"
-                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:bg-slate-800/50"
-                      }`}
+                      onClick={handleApplyRecommendation}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-4 py-2 text-xs font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300 dark:hover:bg-slate-800"
                     >
-                      <div>
-                        <div
-                          className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                            isSelected
-                              ? "bg-white/15 text-white"
-                              : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                          }`}
-                        >
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <h4 className={`mt-3.5 text-sm font-bold ${isSelected ? "text-white" : "text-slate-900 dark:text-white"}`}>
-                          {config.label}
-                        </h4>
-                        <p className={`mt-1.5 text-xs leading-relaxed ${isSelected ? "text-blue-100" : "text-slate-500 dark:text-slate-400"}`}>
-                          {config.description}
+                      <CheckCircle2 className="h-4 w-4" />
+                      Apply to Decision Form
+                    </button>
+                  )}
+                </div>
+
+                {/* EMPIRICAL REASONS */}
+                {Array.isArray(recommendation.reasons) && recommendation.reasons.length > 0 && (
+                  <div className="mt-4 rounded-2xl border border-blue-100 bg-white/90 p-4 dark:border-slate-800 dark:bg-slate-900/90">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                      Empirical Evaluation Criteria
+                    </h4>
+                    <ul className="mt-2 space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+                      {recommendation.reasons.map((r, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-blue-500 font-bold">•</span>
+                          <span>{r}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* SUPPORTING METRICS */}
+                {recommendation.supporting_metrics && (
+                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {recommendation.supporting_metrics.kpi_achievement_pct != null && (
+                      <div className="rounded-xl border border-slate-100 bg-white/60 p-2.5 text-center dark:border-slate-800 dark:bg-slate-900/60">
+                        <span className="text-[10px] text-slate-400 uppercase font-semibold">KPI Achievement</span>
+                        <p className="mt-0.5 text-sm font-bold text-slate-900 dark:text-white">
+                          {Number(recommendation.supporting_metrics.kpi_achievement_pct)}%
                         </p>
                       </div>
-
-                      <div className="mt-4 flex items-center justify-between pt-2">
-                        <span className={`text-[10px] font-bold uppercase tracking-wider ${isSelected ? "text-blue-200" : "text-slate-400"}`}>
-                          Target: {config.targetStatus}
-                        </span>
-                        {isSelected && (
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-blue-600">
-                            <Check className="h-3 w-3 stroke-[3]" />
-                          </span>
-                        )}
+                    )}
+                    {recommendation.supporting_metrics.milestone_completion_rate != null && (
+                      <div className="rounded-xl border border-slate-100 bg-white/60 p-2.5 text-center dark:border-slate-800 dark:bg-slate-900/60">
+                        <span className="text-[10px] text-slate-400 uppercase font-semibold">Milestones Completed</span>
+                        <p className="mt-0.5 text-sm font-bold text-slate-900 dark:text-white">
+                          {Math.round(recommendation.supporting_metrics.milestone_completion_rate)}%
+                        </p>
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
+                    )}
+                    {recommendation.supporting_metrics.validation_score != null && (
+                      <div className="rounded-xl border border-slate-100 bg-white/60 p-2.5 text-center dark:border-slate-800 dark:bg-slate-900/60">
+                        <span className="text-[10px] text-slate-400 uppercase font-semibold">Validation Score</span>
+                        <p className="mt-0.5 text-sm font-bold text-slate-900 dark:text-white">
+                          {Number(recommendation.supporting_metrics.validation_score)}/100
+                        </p>
+                      </div>
+                    )}
+                    {recommendation.supporting_metrics.risk_score != null && (
+                      <div className="rounded-xl border border-slate-100 bg-white/60 p-2.5 text-center dark:border-slate-800 dark:bg-slate-900/60">
+                        <span className="text-[10px] text-slate-400 uppercase font-semibold">Risk Index</span>
+                        <p className="mt-0.5 text-sm font-bold text-slate-900 dark:text-white">
+                          {Number(recommendation.supporting_metrics.risk_score)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-              {/* REASONING INPUT */}
-              <div className="mt-6">
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
-                    <MessageSquare className="h-3.5 w-3.5 text-slate-400" />
-                    Official Decision Reasoning & Empirical Justification *
-                  </label>
-                  <span className="text-[11px] text-slate-400">
-                    {reasoning.trim().length} characters (min 10)
+                {/* ADVISORY DISCLAIMER */}
+                <div className="mt-4 flex items-start gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+                  <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-500" />
+                  <span>
+                    <strong>Advisory Only:</strong> The Decision Engine provides deterministic empirical scoring. Final commercial scaling authority rests exclusively with authorized government officials.
                   </span>
                 </div>
-                <textarea
-                  rows={4}
-                  value={reasoning}
-                  onChange={(e) => setReasoning(e.target.value)}
-                  placeholder="Detail the key metrics, compliance clearance, operational feasibility, and departmental approval that justifies this decision..."
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white p-4 text-xs leading-relaxed text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                  required
-                />
               </div>
+            ) : null}
 
-              {/* ACTION FOOTER */}
-              <div className="mt-6 flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/government/challenges/${challengeRouteId}/pilot`)}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Return to Pilot
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting || reasoning.trim().length < 10}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-xs font-semibold text-white shadow-md shadow-blue-600/15 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Persisting to PostgreSQL...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      {savedDecision ? "Update Final Decision" : "Submit Official Scale Decision"}
-                    </>
-                  )}
-                </button>
+            {/* GOVERNANCE VALIDATION GATE ALERT */}
+            {validations.length === 0 ? (
+              <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                <div className="flex-1 text-xs text-amber-800 dark:text-amber-300">
+                  <p className="font-bold">Governance Gate: Independent Validation Required</p>
+                  <p className="mt-0.5">
+                    This pilot project has not received an authoritative independent evaluation report. Under SetuGov governance rules, independent validation is required before a commercial scale decision can be finalized.
+                  </p>
+                </div>
               </div>
-            </form>
+            ) : validations[0]?.status === "NOT_VALIDATED" ? (
+              <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-500/20 dark:bg-rose-500/10">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" />
+                <div className="flex-1 text-xs text-rose-800 dark:text-rose-300">
+                  <p className="font-bold">Governance Gate: Pilot Failed Validation (NOT_VALIDATED)</p>
+                  <p className="mt-0.5">
+                    The latest independent evaluation report marked this pilot as NOT_VALIDATED. Under platform rules, pilots that failed validation cannot proceed to commercial scale (SCALE). You may only choose EXTEND or STOP.
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            {/* SCALE DECISION FORM (ONLY IF NOT YET FINALIZED OR IF EXTENDED) */}
+            {(!savedDecision || pilot?.status === "EXTENDED") ? (
+              <form onSubmit={handleSubmitDecision} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <ShieldCheck className="h-4 w-4 text-blue-600" />
+                    {pilot?.status === "EXTENDED" ? "Post-Extension Scale Sanction" : "Record Official Scale Decision"}
+                  </div>
+                  <h3 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
+                    {pilot?.status === "EXTENDED" ? "Finalize Post-Extension Sanction" : "Select Scale Decision & Provide Justification"}
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Select one canonical decision type and enter official justification. This action writes to PostgreSQL, updates the pilot lifecycle state, and notifies stakeholders.
+                  </p>
+                </div>
+
+                {/* DECISION SELECTION CARDS */}
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {Object.entries(DECISION_CONFIGS).map(([key, config]) => {
+                    const Icon = config.icon;
+                    const isSelected = selectedDecision === key;
+                    const isScaleBlocked = key === "SCALE" && (validations.length === 0 || validations[0]?.status === "NOT_VALIDATED");
+
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setSelectedDecision(key)}
+                        disabled={isSubmitting}
+                        className={`relative flex flex-col justify-between rounded-2xl border p-5 text-left transition-all ${
+                          isSelected
+                            ? "border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-600/15 dark:border-blue-500 dark:bg-blue-600"
+                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:bg-slate-800/50"
+                        } ${isScaleBlocked && !isSelected ? "opacity-75" : ""}`}
+                      >
+                        <div>
+                          <div
+                            className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                              isSelected
+                                ? "bg-white/15 text-white"
+                                : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                            }`}
+                          >
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <h4 className={`mt-3.5 text-sm font-bold ${isSelected ? "text-white" : "text-slate-900 dark:text-white"}`}>
+                            {config.label}
+                          </h4>
+                          <p className={`mt-1.5 text-xs leading-relaxed ${isSelected ? "text-blue-100" : "text-slate-500 dark:text-slate-400"}`}>
+                            {config.description}
+                          </p>
+                        </div>
+
+                        <div className="mt-4 flex items-center justify-between pt-2">
+                          <span className={`text-[10px] font-bold uppercase tracking-wider ${isSelected ? "text-blue-200" : "text-slate-400"}`}>
+                            Target: {config.targetStatus}
+                          </span>
+                          {isSelected && (
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-blue-600">
+                              <Check className="h-3 w-3 stroke-[3]" />
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* REASONING INPUT */}
+                <div className="mt-6">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <MessageSquare className="h-3.5 w-3.5 text-slate-400" />
+                      Official Decision Reasoning & Empirical Justification *
+                    </label>
+                    <span className="text-[11px] text-slate-400">
+                      {reasoning.trim().length} characters (min 10)
+                    </span>
+                  </div>
+                  <textarea
+                    rows={4}
+                    value={reasoning}
+                    onChange={(e) => setReasoning(e.target.value)}
+                    placeholder="Detail the key metrics, compliance clearance, operational feasibility, and departmental approval that justifies this decision..."
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white p-4 text-xs leading-relaxed text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                    required
+                  />
+                </div>
+
+                {/* ACTION FOOTER */}
+                <div className="mt-6 flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/government/challenges/${challengeRouteId}/pilot`)}
+                    className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 px-5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Return to Pilot
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || reasoning.trim().length < 10 || validations.length === 0}
+                    className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-xs font-semibold text-white shadow-md shadow-blue-600/15 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Persisting to PostgreSQL...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4" />
+                        {pilot?.status === "EXTENDED" ? "Finalize Post-Extension Sanction" : "Submit Official Scale Decision"}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            ) : null}
           </div>
         )}
       </div>
