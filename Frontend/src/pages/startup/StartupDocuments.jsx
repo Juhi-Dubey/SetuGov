@@ -773,11 +773,11 @@ function DocumentRow({
           />
         </div>
 
-        <p className="mt-1 text-[10px] text-slate-400">
+        <p className="mt-1 text-[11px] text-slate-600">
           {document.category}
         </p>
 
-        <div className="mt-2 flex flex-wrap gap-3 text-[9px] text-slate-400">
+        <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-slate-500">
           <span>{document.fileName}</span>
           <span>{document.size}</span>
           <span>

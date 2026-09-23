@@ -1964,10 +1964,10 @@ function MyApplicationsListView({ user, navigate }) {
                     </h3>
 
                     <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900/80">
-                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-300">
                         Proposed Solution Summary:
                       </p>
-                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-500 leading-relaxed">
                         {app.proposal}
                       </p>
                       {app.technical_approach && (

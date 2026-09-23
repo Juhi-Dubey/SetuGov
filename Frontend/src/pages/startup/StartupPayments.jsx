@@ -222,7 +222,7 @@ function StartupPayments() {
           />
         </div>
 
-        <div className="mt-3 flex justify-between text-xs text-slate-400">
+        <div className="mt-3 flex justify-between text-xs text-slate-500">
           <span>
             {paidPercentage}% released
           </span>

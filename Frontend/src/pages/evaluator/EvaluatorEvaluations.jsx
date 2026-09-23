@@ -235,7 +235,7 @@ function EvaluatorEvaluations() {
                   </span>
                   {getAssignmentBadge(item.status)}
                   {getCoiBadge(item)}
-                  <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                  <span className="text-[11px] bg-indigo-100 rounded-xl px-2 py-0.5 text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     Assigned: {item.assigned_at ? new Date(item.assigned_at).toLocaleDateString("en-IN") : "—"}
                   </span>

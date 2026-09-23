@@ -231,7 +231,7 @@ export function AdminAudit() {
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">
                 Live Server Filters
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600">
                 Filter authoritative audit records by actor, action, or entity module.
               </p>
             </div>
@@ -295,12 +295,12 @@ export function AdminAudit() {
             <h2 className="text-sm font-bold text-slate-900 dark:text-white">
               Persisted Audit Records
             </h2>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-slate-600">
               Showing {logs.length} records (Total in query: {pagination.total})
             </p>
           </div>
 
-          <div className="flex items-center gap-3 text-[10px] font-semibold text-slate-400">
+          <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-500">
             <span className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-500" /> Standard
             </span>
@@ -386,7 +386,7 @@ export function AdminAudit() {
                               <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                                 {actorName}
                               </p>
-                              <p className="text-[10px] text-slate-400 font-mono">
+                              <p className="text-[10px] text-slate-600 font-mono">
                                 {actorRole}
                               </p>
                             </div>
@@ -451,12 +451,12 @@ export function AdminAudit() {
                         <Eye className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
                       <span>{actorName}</span>
                       <span>•</span>
                       <span className="font-semibold">{log.entity_type}</span>
                     </div>
-                    <p className="text-[10px] text-slate-400">{timeStr}</p>
+                    <p className="text-[10px] text-slate-600">{timeStr}</p>
                   </div>
                 );
               })}

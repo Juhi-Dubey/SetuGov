@@ -562,7 +562,7 @@ function EvaluationDetail() {
                     Evaluation Form
                   </h2>
 
-                  <p className="mt-1 text-[11px] leading-5 text-slate-400">
+                  <p className="mt-1 text-[12px] leading-5 text-slate-500">
                     Score each criterion from
                     0 to 100. Weighted scores
                     contribute to the final
@@ -826,7 +826,7 @@ function ProposalPanel({
           </div>
 
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
               Startup Proposal
             </p>
 
