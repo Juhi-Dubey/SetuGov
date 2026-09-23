@@ -119,7 +119,6 @@ services:
     # fast and safe for local development iteration.
     command: >
       sh -c "npx prisma db push &&
-             node prisma/seed.js &&
              npm run dev"
 
 volumes:

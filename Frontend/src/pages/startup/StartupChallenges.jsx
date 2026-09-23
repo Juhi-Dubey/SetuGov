@@ -275,7 +275,7 @@ function StartupChallenges() {
         </div>
 
         <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
-          <p className="text-xs font-medium text-slate-600">
+          <p className="text-xs font-medium text-slate-500">
             Showing{" "}
             <strong className="font-bold text-slate-700 dark:text-slate-200">
               {filteredChallenges.length}

@@ -60,7 +60,7 @@ router.get('/', (req, res) => {
       auditLogs: '/api/v1/audit-logs',
       admin: '/api/v1/admin',
       ai: '/api/v1/ai',
-      documents: '/api/v1/documents',
+      // documents: '/api/v1/documents',
       upload: '/api/v1/upload'
     }
   });
@@ -74,7 +74,7 @@ router.use('/departments', departmentRoutes);
 router.use('/challenges', challengeRoutes);
 router.use('/startups', startupRoutes);
 router.use('/evaluators', evaluatorRoutes);
-router.use('/evaluator', evaluatorRoutes);
+// router.use('/evaluator', evaluatorRoutes);
 router.use('/access-requests', accessRequestRoutes);
 router.use('/applications', applicationRoutes);
 router.use('/evaluations', evaluationRoutes);
@@ -83,7 +83,7 @@ router.use('/decisions', decisionRoutes);
 router.use('/pilots', pilotRoutes);
 // router.use('/scale-decisions', scaleDecisionRoutes);
 router.use('/procurements', procurementRoutes);
-router.use('/procurement', procurementRoutes);
+// router.use('/procurement', procurementRoutes);
 router.use('/kpis', kpiRoutes);
 router.use('/milestones', milestoneRoutes);
 router.use('/evidence', evidenceRoutes);

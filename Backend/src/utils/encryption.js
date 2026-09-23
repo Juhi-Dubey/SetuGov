@@ -9,6 +9,10 @@ const getKey = () => {
     if (config.NODE_ENV === 'production') {
       throw new Error('FATAL: BANK_ENCRYPTION_KEY or JWT_SECRET must be configured in production.');
     }
+    logger.warn(
+       '[ENCRYPTION_WARNING] BANK_ENCRYPTION_KEY is not set. ' +
+      'Using insecure dev fallback key — DO NOT use real bank data in this environment.'
+    );
     return crypto.createHash('sha256').update('setugov-dev-fallback-key-for-bank').digest();
   }
   return crypto.createHash('sha256').update(String(secret)).digest();
