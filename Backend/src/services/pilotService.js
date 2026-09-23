@@ -58,11 +58,25 @@ export const createPilot = async (data, user, ip_address = null) => {
     throw new BadRequestError('A pilot can only be created for a SELECTED startup application.');
   }
 
+  // A5: Cap active pilots per Problem Statement at 2
+  // STOPPED pilots do NOT count against this cap
+  const activePilotCount = await prisma.pilot.count({
+    where: {
+      challenge_id: data.challenge_id,
+      status: { not: 'STOPPED' }
+    }
+  });
+
+  if (activePilotCount >= 2) {
+    throw new BadRequestError('Cannot create pilot: Problem Statement already has 2 active or completed pilots (maximum allowed is 2).');
+  }
+
   // 3. Prevent duplicate active pilots for same challenge & startup
   const existingPilot = await prisma.pilot.findFirst({
     where: {
       challenge_id: data.challenge_id,
-      startup_id: data.startup_id
+      startup_id: data.startup_id,
+      status: { not: 'STOPPED' }
     }
   });
 

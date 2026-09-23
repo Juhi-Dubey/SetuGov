@@ -1,4 +1,4 @@
-import { apiRequest } from "./api";
+import { apiRequest, API_BASE_URL } from "./api";
 
 /**
  * Brain 1: Challenge Copilot
@@ -22,12 +22,93 @@ export const matchStartupsWithAI = async (challengeId) => {
 };
 
 /**
- * Brain 3: Proposal Analysis & Evaluator Advisory
+ * Brain 3: Proposal Analysis & Evaluator Advisory (Non-streaming trigger)
  * Analyzes technical proposal against challenge specifications, highlighting strengths and risks.
+ * Strictly restricted to EVALUATOR role.
  */
 export const analyzeApplicationWithAI = async (applicationId) => {
   return apiRequest(`/ai/applications/${applicationId}/analyze`, {
     method: "POST",
+  });
+};
+
+/**
+ * Brain 3: Proposal Analysis Streaming (Real-time SSE proxy)
+ * Streams token chunks and returns final analysis. Restricted to EVALUATOR role.
+ */
+export const streamAnalyzeApplicationWithAI = async (
+  applicationId,
+  { onChunk, onComplete, onError, signal } = {}
+) => {
+  const token = localStorage.getItem("token");
+  const url = `${API_BASE_URL}/ai/applications/${applicationId}/analyze/stream`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      signal,
+    });
+
+    if (!response.ok) {
+      const errJson = await response.json().catch(() => ({}));
+      const msg =
+        errJson.error?.message ||
+        errJson.message ||
+        `Streaming request failed with status ${response.status}`;
+      if (onError) onError(msg);
+      return;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const jsonStr = line.slice(6).trim();
+        if (!jsonStr) continue;
+
+        try {
+          const event = JSON.parse(jsonStr);
+          if (event.event === "chunk") {
+            if (onChunk) onChunk(event.text || "");
+          } else if (event.event === "complete") {
+            if (onComplete) onComplete(event.data);
+            return;
+          } else if (event.event === "error") {
+            if (onError) onError(event.message || "Streaming error occurred");
+            return;
+          }
+        } catch (_) {
+          // ignore malformed SSE lines
+        }
+      }
+    }
+  } catch (err) {
+    if (signal?.aborted) return;
+    if (onError) onError(err.message || "Network error during streaming");
+  }
+};
+
+/**
+ * Brain 3: Read-only Retrieval of Application Proposal Analysis
+ * Open to Government, Startup, Evaluator, and Admin roles.
+ */
+export const getApplicationProposalAnalysis = async (applicationId) => {
+  return apiRequest(`/ai/applications/${applicationId}/analysis`, {
+    method: "GET",
   });
 };
 
@@ -89,6 +170,8 @@ export default {
   matchStartupsWithAI,
   explainMatchWithAI,
   analyzeApplicationWithAI,
+  streamAnalyzeApplicationWithAI,
+  getApplicationProposalAnalysis,
   analyzePilotWithAI,
   getScaleRecommendationWithAI,
   analyzeRisksWithAI,

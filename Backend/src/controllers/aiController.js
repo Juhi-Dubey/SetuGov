@@ -82,15 +82,56 @@ export const generateDocumentDraft = async (req, res, next) => {
   }
 };
 
+/**
+ * B1: Stream AI Proposal Analysis in real-time via SSE
+ * Proxies the Python AI service streaming endpoint or falls back to mock streaming
+ */
+export const streamAnalyzeApplicationProposal = async (req, res, next) => {
+  try {
+    const applicationId = req.params.application_id;
+    if (!applicationId) {
+      return res.status(400).json({ success: false, message: 'application_id is required' });
+    }
+
+    // Set SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
+
+    await aiService.streamAnalyzeApplicationProposal(applicationId, req.user, req.ip, {
+      onChunk: (text) => {
+        res.write(`data: ${JSON.stringify({ event: 'chunk', text })}\n\n`);
+      },
+      onComplete: (data) => {
+        res.write(`data: ${JSON.stringify({ event: 'complete', data })}\n\n`);
+        res.end();
+      },
+      onError: (message) => {
+        res.write(`data: ${JSON.stringify({ event: 'error', message })}\n\n`);
+        res.end();
+      }
+    });
+  } catch (error) {
+    if (!res.headersSent) {
+      next(error);
+    } else {
+      res.write(`data: ${JSON.stringify({ event: 'error', message: error.message })}\n\n`);
+      res.end();
+    }
+  }
+};
+
 export default {
   generateChallenge,
   explainMatch,
   analyzeApplicationProposal,
+  getApplicationProposalAnalysis,
+  streamAnalyzeApplicationProposal,
   analyzePilot,
   getScaleRecommendation,
   analyzeRisks,
   generateDocumentDraft
 };
-
-
 
