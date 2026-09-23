@@ -17,6 +17,12 @@
 services:
   # AI service is only reachable inside the Docker network (http://ai:8000).
   # No host port is published — removes the direct external exposure.
+  postgres:
+    ports: []
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set in production}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in production}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set in production}
   ai:
     ports: []
     expose:
@@ -26,6 +32,9 @@ services:
     restart: always
     environment:
       NODE_ENV: production
+      # In production, DATABASE_URL must use the same required credentials as the postgres service.
+      # This prevents the backend from silently falling back to the weak dev defaults.
+      DATABASE_URL: postgresql://${POSTGRES_USER:?POSTGRES_USER must be set in production}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in production}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB must be set in production}?schema=public
     volumes:
       # No src bind-mount in production — run the baked image code.
       - uploads_data:/app/uploads

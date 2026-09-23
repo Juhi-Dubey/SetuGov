@@ -10,16 +10,8 @@ export const authenticate = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     let token = null;
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {  
+    if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.split(' ')[1];
-    } else if (req.query?.token && typeof req.query.token === 'string') {
-      const isDocumentRoute = 
-        req.path.includes('/documents') ||
-        req.path.includes('/uploads') ||
-        req.path.includes('private');
-        if (isDocumentRoute) {
-          token = req.query.token;
-        }
     }
 
     if (!token) {

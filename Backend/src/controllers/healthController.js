@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma.js';
 import { config } from '../config/env.js';
 import { successResponse, errorResponse } from '../utils/response.js';
+import { logger } from '../utils/logger.js';
 
 export const getHealth = async (req, res, next) => {
   try {
@@ -16,17 +17,17 @@ export const getHealth = async (req, res, next) => {
       service: 'SetuGov Backend API',
       version: '1.0.0',
       uptime: process.uptime(),
-      environment: config.NODE_ENV,
+      // environment: config.NODE_ENV,
       database: {
         status: 'connected',
         type: 'PostgreSQL',
         latencyMs: dbLatencyMs
       },
-      aiIntegration: {
-        mockMode: config.AI_MOCK_MODE,
-        serviceUrl: config.AI_SERVICE_URL
-      },
-      memory: process.memoryUsage()
+      // aiIntegration: {
+      //   mockMode: config.AI_MOCK_MODE,
+      //   serviceUrl: config.AI_SERVICE_URL
+      // },
+      // memory: process.memoryUsage()
     };
 
     return successResponse(res, healthData, 'System is healthy and operational');
@@ -51,14 +52,8 @@ export const getAiHealth = async (req, res, next) => {
       res,
       {
         status: 'mock',
-        mode: 'mock',
         timestamp: new Date().toISOString(),
-        service: 'SetuGov AI Integration',
-        aiService: {
-          status: 'mock_mode',
-          serviceUrl,
-          message: 'Backend is operating in deterministic heuristic mock mode'
-        }
+        service: 'SetuGov AI Integration'
       },
       'AI service is operating in mock mode'
     );
@@ -78,49 +73,34 @@ export const getAiHealth = async (req, res, next) => {
     const latencyMs = Date.now() - startTime;
 
     if (!response.ok) {
+      logger.warn(`[AI HEALTH] AI service returned HTTP ${response.status} (${latencyMs}ms)`);
       return errorResponse(
         res,
         'AI_SERVICE_UNHEALTHY',
-        `AI service returned HTTP ${response.status}`,
-        {
-          mode: 'live',
-          serviceUrl,
-          latencyMs,
-          httpStatus: response.status
-        },
+        'AI service is currently unavailable',
+        null,
         503
       );
     }
 
-    const aiData = await response.json();
     return successResponse(
       res,
       {
         status: 'healthy',
-        mode: 'live',
         timestamp: new Date().toISOString(),
-        service: 'SetuGov AI Integration',
-        aiService: {
-          status: 'connected',
-          serviceUrl,
-          latencyMs,
-          details: aiData
-        }
+        service: 'SetuGov AI Integration'
       },
       'AI service is connected and healthy'
     );
   } catch (error) {
     const latencyMs = Date.now() - startTime;
+    const reason = error.name === 'AbortError' ? 'Connection timed out (5s)' : error.message;
+    logger.error(`[AI HEALTH] Failed to reach AI service (${latencyMs}ms): ${reason}`);
     return errorResponse(
       res,
       'AI_SERVICE_UNAVAILABLE',
-      'Unable to connect to Python AI service',
-      {
-        mode: 'live',
-        serviceUrl,
-        latencyMs,
-        error: error.name === 'AbortError' ? 'Connection timed out (5s)' : error.message
-      },
+      'AI service is currently unavailable',
+      null,
       503
     );
   }

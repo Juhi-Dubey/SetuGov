@@ -1,7 +1,8 @@
 /**
  * Unified Secure Document Viewer and Downloader for SetuGov.
- * Handles authenticated document retrieval (JWT header + query token fallback),
+ * Handles authenticated document retrieval via Authorization header,
  * Blob URL generation, inline browser preview, and automatic download fallbacks.
+ * NOTE: JWTs are never appended to URLs — all authentication uses Authorization: Bearer.
  */
 
 export const getSecureDocumentUrl = (rawUrl) => {
@@ -21,14 +22,7 @@ export const getSecureDocumentUrl = (rawUrl) => {
     fullUrl = `${origin}${fullUrl.startsWith("/") ? "" : "/"}${fullUrl}`;
   }
 
-  const token = localStorage.getItem("token");
-  if (token && (fullUrl.includes("localhost:5000") || fullUrl.includes("/api/v1/") || fullUrl.includes("/documents") || fullUrl.includes("/uploads"))) {
-    const separator = fullUrl.includes("?") ? "&" : "?";
-    if (!fullUrl.includes("token=")) {
-      fullUrl = `${fullUrl}${separator}token=${encodeURIComponent(token)}`;
-    }
-  }
-
+  // NOTE: Do NOT append token to URL. All authenticated requests use Authorization header.
   return fullUrl;
 };
 
@@ -87,17 +81,17 @@ export const openDocumentSecurely = async (fileUrl, fileName = "document") => {
         return true;
       }
     } catch (err) {
-      console.warn("Direct blob fetch failed, trying query token fallback:", err);
+      console.warn("Direct blob fetch failed:", err);
     }
   }
 
-  // Fallback: direct window.open with query token
-  const authenticatedUrl = getSecureDocumentUrl(targetUrl);
-  const win = window.open(authenticatedUrl, "_blank", "noopener,noreferrer");
+  // Fallback: open the URL directly (without token in URL).
+  // If the server requires auth and the header couldn't be sent, the server
+  // will return 401 — which is the correct and safe behaviour.
+  const win = window.open(targetUrl, "_blank", "noopener,noreferrer");
   if (!win) {
-    // Popup was blocked, trigger link click
     const a = document.createElement("a");
-    a.href = authenticatedUrl;
+    a.href = targetUrl;
     a.target = "_blank";
     a.rel = "noopener noreferrer";
     document.body.appendChild(a);
@@ -145,9 +139,9 @@ export const downloadDocumentSecurely = async (fileUrl, fileName = "document") =
     console.warn("Direct blob download failed, falling back to direct URL:", err);
   }
 
-  const authenticatedUrl = getSecureDocumentUrl(targetUrl);
+  // Fallback: download without token in URL (server will 401 if auth fails — correct).
   const link = document.createElement("a");
-  link.href = authenticatedUrl;
+  link.href = targetUrl;
   link.download = fileName || "download";
   link.target = "_blank";
   document.body.appendChild(link);

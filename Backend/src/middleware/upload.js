@@ -45,8 +45,8 @@ const storage = multer.diskStorage({
 const fileFilter = (_req, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
   const mime = file.mimetype.toLowerCase();
-
-  if (!ALLOWED_EXTENSIONS.has(ext)) {
+  const mimeAllowed = ALLOWED_MIME_TYPES.has(mime);
+  if (!ALLOWED_EXTENSIONS.has(ext) || !mimeAllowed) {
     return cb(
       new BadRequestError(
         `Invalid file type "${ext || mime}". Supported file formats are PDF, DOC/DOCX, PPT/PPTX, PNG, JPG, and MP4/WEBM.`
@@ -70,32 +70,106 @@ export const upload = multer({
  * @param {string} filePath 
  * @returns {boolean}
  */
-export const validateFileSignature = (filePath) => {
+// export const validateFileSignature = (filePath, extension) => {
+//   try {
+//     const buffer = Buffer.alloc(12);
+//     const fd = fs.openSync(filePath, 'r');
+//     fs.readSync(fd, buffer, 0, 12, 0);
+//     fs.closeSync(fd);
+
+//     // PDF: %PDF (0x25 0x50 0x44 0x46)
+//     const isPdf = buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46;
+//     // PNG: 89 50 4E 47
+//     const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
+//     // JPEG: FF D8 FF
+//     const isJpg = buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
+//     // ZIP / OOXML (DOCX, PPTX): PK (0x50 0x4B 0x03 0x04) or empty zip (0x50 0x4B 0x05 0x06)
+//     const isZip = buffer[0] === 0x50 && buffer[1] === 0x4B && (buffer[2] === 0x03 || buffer[2] === 0x05);
+//     // Legacy MS Office (DOC, PPT): D0 CF 11 E0
+//     const isOle = buffer[0] === 0xD0 && buffer[1] === 0xCF && buffer[2] === 0x11 && buffer[3] === 0xE0;
+//     // MP4: bytes 4-7 are 'ftyp'
+//     const isMp4 = buffer[4] === 0x66 && buffer[5] === 0x74 && buffer[6] === 0x79 && buffer[7] === 0x70;
+//     // WEBM: 1A 45 DF A3
+//     const isWebm = buffer[0] === 0x1A && buffer[1] === 0x45 && buffer[2] === 0xDF && buffer[3] === 0xA3;
+//     // Data URI prefix: 'data:'
+//     const isDataUri = buffer.toString('utf8', 0, 5) === 'data:';
+
+//     return isPdf || isPng || isJpg || isZip || isOle || isMp4 || isWebm || isDataUri;
+//   } catch (err) {
+//     return false;
+//   }
+// };
+
+export const validateFileSignature = (filePath, extension) => {
   try {
     const buffer = Buffer.alloc(12);
     const fd = fs.openSync(filePath, 'r');
-    fs.readSync(fd, buffer, 0, 12, 0);
-    fs.closeSync(fd);
 
-    // PDF: %PDF (0x25 0x50 0x44 0x46)
-    const isPdf = buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46;
-    // PNG: 89 50 4E 47
-    const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
-    // JPEG: FF D8 FF
-    const isJpg = buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
-    // ZIP / OOXML (DOCX, PPTX): PK (0x50 0x4B 0x03 0x04) or empty zip (0x50 0x4B 0x05 0x06)
-    const isZip = buffer[0] === 0x50 && buffer[1] === 0x4B && (buffer[2] === 0x03 || buffer[2] === 0x05);
-    // Legacy MS Office (DOC, PPT): D0 CF 11 E0
-    const isOle = buffer[0] === 0xD0 && buffer[1] === 0xCF && buffer[2] === 0x11 && buffer[3] === 0xE0;
-    // MP4: bytes 4-7 are 'ftyp'
-    const isMp4 = buffer[4] === 0x66 && buffer[5] === 0x74 && buffer[6] === 0x79 && buffer[7] === 0x70;
-    // WEBM: 1A 45 DF A3
-    const isWebm = buffer[0] === 0x1A && buffer[1] === 0x45 && buffer[2] === 0xDF && buffer[3] === 0xA3;
-    // Data URI prefix: 'data:'
-    const isDataUri = buffer.toString('utf8', 0, 5) === 'data:';
+    try {
+      fs.readSync(fd, buffer, 0, 12, 0);
+    } finally {
+      fs.closeSync(fd);
+    }
 
-    return isPdf || isPng || isJpg || isZip || isOle || isMp4 || isWebm || isDataUri;
-  } catch (err) {
+    const ext = extension.toLowerCase();
+
+    const isPdf =
+      buffer[0] === 0x25 &&
+      buffer[1] === 0x50 &&
+      buffer[2] === 0x44 &&
+      buffer[3] === 0x46;
+
+    const isPng =
+      buffer[0] === 0x89 &&
+      buffer[1] === 0x50 &&
+      buffer[2] === 0x4e &&
+      buffer[3] === 0x47;
+
+    const isJpg =
+      buffer[0] === 0xff &&
+      buffer[1] === 0xd8 &&
+      buffer[2] === 0xff;
+
+    const isZip =
+      buffer[0] === 0x50 &&
+      buffer[1] === 0x4b &&
+      buffer[2] === 0x03 &&
+      buffer[3] === 0x04;
+
+    const isOle =
+      buffer[0] === 0xd0 &&
+      buffer[1] === 0xcf &&
+      buffer[2] === 0x11 &&
+      buffer[3] === 0xe0;
+
+    const isMp4 =
+      buffer[4] === 0x66 &&
+      buffer[5] === 0x74 &&
+      buffer[6] === 0x79 &&
+      buffer[7] === 0x70;
+
+    const isWebm =
+      buffer[0] === 0x1a &&
+      buffer[1] === 0x45 &&
+      buffer[2] === 0xdf &&
+      buffer[3] === 0xa3;
+
+    const extensionMatches = {
+      '.pdf': isPdf,
+      '.png': isPng,
+      '.jpg': isJpg,
+      '.jpeg': isJpg,
+      '.doc': isOle,
+      '.ppt': isOle,
+      '.docx': isZip,
+      '.pptx': isZip,
+      '.zip': isZip,
+      '.mp4': isMp4,
+      '.webm': isWebm
+    };
+
+    return extensionMatches[ext] === true;
+  } catch {
     return false;
   }
 };
@@ -118,7 +192,10 @@ export const uploadSingle = (fieldName = 'file') => {
       }
 
       if (req.file) {
-        const isValid = validateFileSignature(req.file.path);
+        const isValid = validateFileSignature(
+          req.file.path,
+          path.extname(req.file.originalname)
+        );
         if (!isValid) {
           storageService.deleteTempFile(req.file.path);
           return next(new BadRequestError('Uploaded file content does not match allowable format signatures (PDF, DOC/DOCX, PPT/PPTX, PNG, JPG, MP4/WEBM). Executables and disguised files are rejected.'));
