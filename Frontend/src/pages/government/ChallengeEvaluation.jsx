@@ -25,6 +25,7 @@ import AppLayout from "../../components/layout/AppLayout";
 import StatCard from "../../components/common/StatCard";
 import { getChallengeEvaluationSummary } from "../../services/challengeService";
 import { getChallengeEvaluatorPool } from "../../services/evaluatorService";
+import AIProposalAdvisoryPanel from "../../components/common/AIProposalAdvisoryPanel";
 
 const CANONICAL_CRITERIA = [
   {
@@ -521,6 +522,10 @@ function ChallengeEvaluation() {
                             exit={{ opacity: 0, height: 0 }}
                             className="border-t border-slate-100 bg-slate-50/50 p-6 dark:border-slate-800 dark:bg-slate-950/30"
                           >
+                            <div className="mb-6">
+                              <AIProposalAdvisoryPanel applicationId={app.application_id} />
+                            </div>
+
                             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">
                               Individual Evaluator Scorecards ({evaluations.length})
                             </h4>
@@ -575,6 +580,20 @@ function ChallengeEvaluation() {
                                         Cost: <b>{ev.cost_score}</b>
                                       </span>
                                     </div>
+
+                                    {/* Evaluator Change Suggestions */}
+                                    {ev.suggest_changes && (
+                                      <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300">
+                                        <p className="font-bold flex items-center gap-1.5 text-[11px] text-amber-800 dark:text-amber-300">
+                                          <AlertCircle className="h-3.5 w-3.5" /> Evaluator Recommends Changes to Proposal
+                                        </p>
+                                        {ev.change_suggestion_notes && (
+                                          <p className="mt-1 text-[11px] leading-relaxed text-amber-700 dark:text-amber-400">
+                                            {ev.change_suggestion_notes}
+                                          </p>
+                                        )}
+                                      </div>
+                                    )}
 
                                     {/* Comments */}
                                     {ev.comments && (

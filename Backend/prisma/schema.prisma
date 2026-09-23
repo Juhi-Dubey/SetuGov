@@ -63,6 +63,7 @@ model User {
   verified_startups             Startup[]                    @relation("StartupVerifier")
   department                    Department?                  @relation(fields: [department_id], references: [id])
   validations                   Validation[]                 @relation("Validator")
+  change_requested_applications Application[]                @relation("ApplicationChangeRequester")
 
   @@index([role])
   @@index([department_id])
@@ -294,15 +295,20 @@ model Application {
   timeline              String
   status                ApplicationStatus            @default(DRAFT)
   submitted_at          DateTime?
+  change_request_notes  String?
+  change_requested_at   DateTime?
+  change_requested_by   String?
   created_at            DateTime                     @default(now())
   updated_at            DateTime                     @updatedAt
   documents             ApplicationDocument[]
   proposal_analysis     ApplicationProposalAnalysis?
   challenge             Challenge                    @relation(fields: [challenge_id], references: [id], onDelete: Cascade)
   startup               Startup                      @relation(fields: [startup_id], references: [id], onDelete: Cascade)
+  change_requester      User?                        @relation("ApplicationChangeRequester", fields: [change_requested_by], references: [id])
   conflict_declarations ConflictDeclaration[]
   evaluations           Evaluation[]
   evaluator_assignments EvaluatorAssignment[]
+  archived_evaluations  ArchivedEvaluation[]
 
   @@unique([challenge_id, startup_id])
   @@index([status])
@@ -346,24 +352,49 @@ model ConflictDeclaration {
 }
 
 model Evaluation {
-  id                String      @id @default(uuid())
-  application_id    String
-  evaluator_id      String
-  technical_score   Float
-  innovation_score  Float
-  impact_score      Float
-  scalability_score Float
-  cost_score        Float
-  total_score       Float
-  comments          String?
-  is_submitted      Boolean     @default(true)
-  created_at        DateTime    @default(now())
-  updated_at        DateTime    @updatedAt
-  application       Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
-  evaluator         User        @relation("Evaluator", fields: [evaluator_id], references: [id])
+  id                      String      @id @default(uuid())
+  application_id          String
+  evaluator_id            String
+  technical_score         Float
+  innovation_score        Float
+  impact_score            Float
+  scalability_score       Float
+  cost_score              Float
+  total_score             Float
+  comments                String?
+  suggest_changes         Boolean     @default(false)
+  change_suggestion_notes String?
+  is_submitted            Boolean     @default(true)
+  created_at              DateTime    @default(now())
+  updated_at              DateTime    @updatedAt
+  application             Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  evaluator               User        @relation("Evaluator", fields: [evaluator_id], references: [id])
 
   @@unique([application_id, evaluator_id])
   @@map("evaluations")
+}
+
+model ArchivedEvaluation {
+  id                      String      @id @default(uuid())
+  application_id          String
+  evaluator_id            String
+  technical_score         Float
+  innovation_score        Float
+  impact_score            Float
+  scalability_score       Float
+  cost_score              Float
+  total_score             Float
+  comments                String?
+  suggest_changes         Boolean     @default(false)
+  change_suggestion_notes String?
+  is_submitted            Boolean     @default(true)
+  archived_at             DateTime    @default(now())
+  original_created_at     DateTime
+  original_updated_at     DateTime
+  application             Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
+
+  @@index([application_id])
+  @@map("archived_evaluations")
 }
 
 model ApplicationDocument {
@@ -966,6 +997,7 @@ enum ApplicationStatus {
   SHORTLISTED
   REJECTED
   SELECTED
+  CHANGES_REQUESTED
 }
 
 enum PilotStatus {

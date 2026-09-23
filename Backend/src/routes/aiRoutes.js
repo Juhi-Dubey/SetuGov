@@ -4,6 +4,7 @@ import {
   explainMatch,
   analyzeApplicationProposal,
   getApplicationProposalAnalysis,
+  streamAnalyzeApplicationProposal,
   analyzePilot,
   getScaleRecommendation,
   analyzeRisks,
@@ -33,10 +34,14 @@ router.post('/challenge', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), v
 router.post('/matching/explain', authenticate, authorizeRoles('GOVERNMENT', 'EVALUATOR', 'ADMIN'), validate(matchExplanationSchema), explainMatch);
 router.post('/match', authenticate, authorizeRoles('GOVERNMENT', 'EVALUATOR', 'ADMIN'), validate(matchExplanationSchema), explainMatch);
 
-// Brain 3 — AI Proposal Analysis & Evaluator Assistance (GOVERNMENT, EVALUATOR, ADMIN, STARTUP)
-router.post('/applications/:application_id/analyze', authenticate, authorizeRoles('GOVERNMENT', 'EVALUATOR', 'ADMIN'), analyzeApplicationProposal);
+// Brain 3 — AI Proposal Analysis & Evaluator Assistance
+// POST trigger restricted to EVALUATOR only (B2 RBAC hardening)
+router.post('/applications/:application_id/analyze', authenticate, authorizeRoles('EVALUATOR'), analyzeApplicationProposal);
 router.get('/applications/:application_id/analysis', authenticate, authorizeRoles('GOVERNMENT', 'EVALUATOR', 'ADMIN', 'STARTUP'), getApplicationProposalAnalysis);
-router.post('/proposals/analyze', authenticate, authorizeRoles('GOVERNMENT', 'EVALUATOR', 'ADMIN'), analyzeApplicationProposal);
+router.post('/proposals/analyze', authenticate, authorizeRoles('EVALUATOR'), analyzeApplicationProposal);
+
+// Brain 3 — SSE Streaming Analysis (EVALUATOR only, B1)
+router.post('/applications/:application_id/analyze/stream', authenticate, authorizeRoles('EVALUATOR'), streamAnalyzeApplicationProposal);
 
 // Brain 4 — AI Pilot Performance Intelligence (GOVERNMENT, EVALUATOR, ADMIN)
 router.post('/pilots/:pilot_id/analyze', authenticate, authorizeRoles('GOVERNMENT', 'EVALUATOR', 'ADMIN'), analyzePilot);

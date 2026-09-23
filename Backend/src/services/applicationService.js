@@ -244,7 +244,7 @@ export const updateApplication = async (id, data, user, ip_address = null) => {
     throw new BadRequestError('Cannot update application: This problem statement is CLOSED.');
   }
 
-  if (application.evaluations.length > 0) {
+  if (application.evaluations.length > 0 && application.status !== 'CHANGES_REQUESTED') {
     throw new BadRequestError('Cannot modify application: Independent evaluation has already commenced on this application.');
   }
 
@@ -252,8 +252,8 @@ export const updateApplication = async (id, data, user, ip_address = null) => {
     throw new ForbiddenError('You can only update your own startup application.');
   }
 
-  if (application.status !== 'DRAFT' && user.role !== 'ADMIN') {
-    throw new BadRequestError('Submitted applications cannot be modified. Only DRAFT applications can be edited.');
+  if (application.status !== 'DRAFT' && application.status !== 'CHANGES_REQUESTED' && user.role !== 'ADMIN') {
+    throw new BadRequestError('Only DRAFT or CHANGES_REQUESTED applications can be edited.');
   }
 
   // Whitelist allowable update fields (P1-6: Eliminate mass assignment)
@@ -272,8 +272,71 @@ export const updateApplication = async (id, data, user, ip_address = null) => {
     }
   }
 
-  if (updateData.status === 'SUBMITTED' && application.status === 'DRAFT') {
+  // Handle submission from DRAFT
+  if (application.status === 'DRAFT' && (data.status === 'SUBMITTED' || data.submit === true)) {
+    updateData.status = 'SUBMITTED';
     updateData.submitted_at = new Date();
+  }
+
+  // Handle resubmission from CHANGES_REQUESTED
+  const isResubmission = application.status === 'CHANGES_REQUESTED' && (data.resubmit === true || data.status === 'SUBMITTED');
+
+  if (isResubmission) {
+    // Archive existing evaluations, reset assignments, invalidate AI analysis
+    const existingEvals = await prisma.evaluation.findMany({
+      where: { application_id: id }
+    });
+
+    if (existingEvals.length > 0) {
+      // Copy to archived_evaluations
+      await prisma.archivedEvaluation.createMany({
+        data: existingEvals.map(e => ({
+          application_id: e.application_id,
+          evaluator_id: e.evaluator_id,
+          technical_score: e.technical_score,
+          innovation_score: e.innovation_score,
+          impact_score: e.impact_score,
+          scalability_score: e.scalability_score,
+          cost_score: e.cost_score,
+          total_score: e.total_score,
+          comments: e.comments,
+          suggest_changes: e.suggest_changes || false,
+          change_suggestion_notes: e.change_suggestion_notes || null,
+          is_submitted: e.is_submitted,
+          original_created_at: e.created_at,
+          original_updated_at: e.updated_at
+        }))
+      });
+
+      // Delete active evaluations so quorum resets
+      await prisma.evaluation.deleteMany({
+        where: { application_id: id }
+      });
+    }
+
+    // Reset evaluator assignments from COMPLETED back to ACCEPTED
+    await prisma.evaluatorAssignment.updateMany({
+      where: {
+        application_id: id,
+        status: 'COMPLETED'
+      },
+      data: {
+        status: 'ACCEPTED',
+        completed_at: null
+      }
+    });
+
+    // Invalidate existing AI proposal analysis
+    await prisma.applicationProposalAnalysis.deleteMany({
+      where: { application_id: id }
+    });
+
+    // Set resubmission fields
+    updateData.status = 'SUBMITTED';
+    updateData.submitted_at = new Date();
+    updateData.change_request_notes = null;
+    updateData.change_requested_at = null;
+    updateData.change_requested_by = null;
   }
 
   const updated = await prisma.application.update({
@@ -285,14 +348,26 @@ export const updateApplication = async (id, data, user, ip_address = null) => {
     }
   });
 
+  const auditAction = isResubmission ? 'APPLICATION_RESUBMITTED' : 'APPLICATION_UPDATED';
   await createAuditLog({
     user_id: user.id,
-    action: 'APPLICATION_UPDATED',
+    action: auditAction,
     entity_type: 'APPLICATION',
     entity_id: id,
     details: { changes: updateData },
     ip_address
   });
+
+  // Notify Government on resubmission
+  if (isResubmission && application.challenge.created_by) {
+    await sendNotification({
+      user_id: application.challenge.created_by,
+      title: 'Application Resubmitted',
+      message: `Startup "${application.startup.company_name}" has resubmitted their proposal for "${application.challenge.title}" after addressing requested changes.`,
+      type: 'APPLICATION_RESUBMITTED',
+      link: `/government/challenges/${application.challenge_id}/applications`
+    });
+  }
 
   return updated;
 };
@@ -366,7 +441,16 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
   validateTransition('APPLICATION', application.status, nextStatus);
 
   // If SELECTED, log selection action
-  const action = nextStatus === 'SELECTED' ? 'STARTUP_SELECTED' : `APPLICATION_${nextStatus}`;
+  const action = nextStatus === 'SELECTED' ? 'STARTUP_SELECTED'
+    : nextStatus === 'CHANGES_REQUESTED' ? 'APPLICATION_CHANGES_REQUESTED'
+    : `APPLICATION_${nextStatus}`;
+
+  // CHANGES_REQUESTED requires mandatory notes
+  if (nextStatus === 'CHANGES_REQUESTED') {
+    if (!reason || !reason.trim()) {
+      throw new BadRequestError('Change request notes are mandatory when requesting changes. Please specify what the startup needs to revise.');
+    }
+  }
 
   const updated = await prisma.$transaction(async (tx) => {
     // 1. Concurrency Control: If transitioning to SELECTED, acquire row lock on Challenge to serialize selection
@@ -415,10 +499,10 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
 
     // 4. Governance Gates for SELECTED transition
     if (nextStatus === 'SELECTED') {
-      // Challenge lifecycle gate: Challenge must be in EVALUATION stage
-      if (currentApp.challenge.status !== 'EVALUATION') {
+      // Challenge lifecycle gate: Challenge must be in EVALUATION or PILOT stage (e.g. selecting alternate startup after STOP)
+      if (currentApp.challenge.status !== 'EVALUATION' && currentApp.challenge.status !== 'PILOT') {
         throw new BadRequestError(
-          `Cannot select startup: Problem Statement is in '${currentApp.challenge.status}' stage. It must be transitioned to 'EVALUATION' stage before selecting a startup.`
+          `Cannot select startup: Problem Statement is in '${currentApp.challenge.status}' stage. It must be transitioned to 'EVALUATION' or 'PILOT' stage before selecting a startup.`
         );
       }
 
@@ -462,11 +546,20 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
     }
 
     // 5. Update application status
+    const statusUpdateData = {
+      status: nextStatus
+    };
+
+    // Store change-request metadata when requesting changes
+    if (nextStatus === 'CHANGES_REQUESTED') {
+      statusUpdateData.change_request_notes = reason ? reason.trim() : null;
+      statusUpdateData.change_requested_at = new Date();
+      statusUpdateData.change_requested_by = user.id;
+    }
+
     const res = await tx.application.update({
       where: { id },
-      data: {
-        status: nextStatus
-      },
+      data: statusUpdateData,
       include: {
         challenge: true,
         startup: true
@@ -518,6 +611,14 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
       startupId: updated.startup_id,
       challengeTitle: updated.challenge?.title,
       startupName: updated.startup?.company_name
+    });
+  } else if (nextStatus === 'CHANGES_REQUESTED' && application.startup?.user_id) {
+    await sendNotification({
+      user_id: application.startup.user_id,
+      title: 'Changes Requested on Your Application',
+      message: `The government has requested changes to your application for "${application.challenge.title}". Please review the feedback and resubmit.`,
+      type: 'APPLICATION_CHANGES_REQUESTED',
+      link: '/startup/applications'
     });
   } else if (application.startup?.user_id) {
     await sendNotification({

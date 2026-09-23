@@ -866,20 +866,28 @@ export const analyzeApplicationProposal = async (applicationId, user = null, ip_
     throw new NotFoundError(`Application with ID ${applicationId} not found.`);
   }
 
-  // Authorization check
+  // Authorization check: Only assigned evaluators or admin can trigger AI screening
   if (user) {
-    if (user.role === 'ADMIN' || user.role === 'EVALUATOR') {
+    if (user.role === 'ADMIN') {
       // Allowed
-    } else if (user.role === 'GOVERNMENT') {
-      if (user.department_id && application.challenge.department_id !== user.department_id) {
-        throw new ForbiddenError('You can only analyze applications for challenges belonging to your assigned department.');
-      }
-    } else if (user.role === 'STARTUP') {
-      if (application.startup.user_id !== user.id) {
-        throw new ForbiddenError('You can only view proposal analysis for your own startup application.');
+    } else if (user.role === 'EVALUATOR') {
+      const assignment = await prisma.evaluatorAssignment.findFirst({
+        where: {
+          application_id: applicationId,
+          evaluator_id: user.id
+        }
+      }) || await prisma.evaluatorApplication.findFirst({
+        where: {
+          challenge_id: application.challenge_id,
+          evaluator_id: user.id,
+          status: 'SELECTED'
+        }
+      });
+      if (!assignment) {
+        throw new ForbiddenError('You are not assigned to evaluate this challenge.');
       }
     } else {
-      throw new ForbiddenError('You are not authorized to access AI proposal analysis.');
+      throw new ForbiddenError('Only assigned evaluators can run AI proposal screening.');
     }
   }
 
@@ -1593,18 +1601,254 @@ export const analyzeRisks = async (input) => {
   };
 };
 
+/**
+ * B1: Stream AI Proposal Analysis in Real-Time
+ *
+ * Attempts to proxy the Python AI service's streaming endpoint.
+ * Falls back to mock streaming with structured advisory text.
+ * On completion, persists the full analysis result just like the non-streaming path.
+ */
+export const streamAnalyzeApplicationProposal = async (applicationId, user, ip_address, callbacks) => {
+  const { onChunk, onComplete, onError } = callbacks;
+
+  const application = await prisma.application.findUnique({
+    where: { id: applicationId },
+    include: {
+      challenge: { include: { department: true } },
+      startup: { include: { documents: true } },
+      documents: true
+    }
+  });
+
+  if (!application) {
+    throw new NotFoundError(`Application with ID ${applicationId} not found.`);
+  }
+
+  // Authorization check: only EVALUATOR with active assignment
+  if (user && user.role === 'EVALUATOR') {
+    const assignment = await prisma.evaluatorAssignment.findFirst({
+      where: {
+        application_id: applicationId,
+        evaluator_id: user.id,
+        status: { notIn: ['RECUSED', 'DECLINED'] }
+      }
+    });
+    if (!assignment) {
+      throw new ForbiddenError('You must be assigned to this application to run AI analysis.');
+    }
+  }
+
+  // Build payload (same as non-streaming path)
+  const verifiedDocs = (application.startup.documents || []).filter(d => d.verification_status === 'VERIFIED');
+  const solutionDocs = (application.documents || []).map(d => `${d.document_type}: ${d.original_filename} (${d.file_url})`);
+
+  const payload = {
+    challenge: {
+      title: application.challenge.title,
+      description: application.challenge.problem_description,
+      domain: application.challenge.department?.name || application.startup.domain || null,
+      technology_categories: application.challenge.required_technologies || [],
+      kpis: []
+    },
+    startup: {
+      name: application.startup.company_name,
+      description: application.startup.description,
+      technologies: application.startup.technologies || [],
+      domain: application.startup.domain || null
+    },
+    proposal: {
+      summary: application.proposal,
+      technical_approach: application.technical_approach,
+      implementation_timeline: application.timeline,
+      estimated_cost: application.estimated_cost != null ? String(application.estimated_cost) : null,
+      expected_impact: application.expected_impact,
+      solution_documents: solutionDocs
+    }
+  };
+
+  // Attempt live streaming from Python AI service
+  if (!config.AI_MOCK_MODE) {
+    try {
+      const url = `${config.AI_SERVICE_URL}/ai/proposal/stream`;
+      logger.info(`AI Stream → POST ${url}`);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout((config.AI_TIMEOUT || 300) * 1000)
+      });
+
+      if (!response.ok) {
+        throw new Error(`AI stream returned HTTP ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (!jsonStr) continue;
+
+          try {
+            const event = JSON.parse(jsonStr);
+            if (event.event === 'chunk') {
+              fullText += event.text || '';
+              onChunk(event.text || '');
+            } else if (event.event === 'complete') {
+              // Persist the completed analysis
+              const analysis = event.data;
+              await _persistStreamAnalysis(applicationId, analysis, user, ip_address);
+              onComplete(analysis);
+              return;
+            } else if (event.event === 'error') {
+              onError(event.message || 'Unknown streaming error');
+              return;
+            }
+          } catch (_) {
+            // Skip malformed SSE lines
+          }
+        }
+      }
+
+      // If we got here without a 'complete' event, report error
+      onError('Stream ended without completion event');
+      return;
+    } catch (err) {
+      logger.warn(`AI stream failed: ${err.message}. Falling back to mock stream.`);
+    }
+  }
+
+  // Mock/Fallback streaming
+  const mockChunks = [
+    `Analyzing proposal from ${application.startup.company_name}...\n\n`,
+    `Challenge: "${application.challenge.title}"\n`,
+    `Domain: ${application.startup.domain || 'General'}\n\n`,
+    `## Executive Summary\n`,
+    `The proposed solution addresses core challenge objectives using ${(application.startup.technologies || []).join(', ') || 'stated technologies'}.\n\n`,
+    `## Technical Feasibility\n`,
+    `Technical approach utilizes ${(application.startup.technologies || []).join(', ') || 'submitted architecture'}. `,
+    `Detailed architecture review recommended.\n\n`,
+    `## Strengths\n`,
+    `- Relevant domain focus in ${application.startup.domain || 'target area'}\n`,
+    `- Demonstrated tech stack\n\n`,
+    `## Risks & Considerations\n`,
+    `- Integration risk with existing department legacy systems\n`,
+    `- Timeline dependency on pilot site readiness\n\n`,
+    `Analysis complete.\n`
+  ];
+
+  for (const chunk of mockChunks) {
+    onChunk(chunk);
+    await new Promise(r => setTimeout(r, 80));
+  }
+
+  // Generate and persist the structured fallback
+  const fallbackAnalysis = {
+    executive_summary: `Preliminary AI Advisory: Proposed solution by ${application.startup.company_name} addresses core challenge objectives.`,
+    technical_approach: `Technical approach utilizes ${(application.startup.technologies || []).join(', ') || 'submitted architecture'}.`,
+    technical_depth_score: 82,
+    feasibility_score: 80,
+    innovation: `Demonstrates domain-specific innovation for ${application.startup.domain || 'target sector'}.`,
+    expected_impact: application.expected_impact || `Aimed at fulfilling desired outcomes.`,
+    scalability: `Scalability potential assessed against previous deployments.`,
+    cost_effectiveness: `Estimated budget: ${application.estimated_cost || 'N/A'}.`,
+    strengths: [
+      `Relevant domain focus in ${application.startup.domain || 'target area'}`,
+      `Demonstrated tech stack: ${(application.startup.technologies || []).slice(0, 3).join(', ')}`
+    ],
+    weaknesses: ['Detailed on-ground pilot deployment milestones require evaluator verification'],
+    risks: ['Integration risk with existing department legacy systems', 'Timeline dependency on pilot site readiness'],
+    missing_information: ['Detailed Bill of Materials (BOM) or itemized cost breakdown'],
+    questions_for_evaluator: [
+      `Does the proposed technical architecture meet the performance criteria for ${application.challenge.title}?`,
+      'Can the pilot milestones be reliably verified within the specified timeline?'
+    ],
+    ai_metadata: {
+      model: 'SetuGov-Brain3-ProposalCopilot-Advisory',
+      mode: 'streamed_fallback',
+      disclaimer: 'Advisory analysis only. Evaluators retain independent authoritative scoring authority.'
+    }
+  };
+
+  await _persistStreamAnalysis(applicationId, fallbackAnalysis, user, ip_address);
+  onComplete(fallbackAnalysis);
+};
+
+/**
+ * Internal helper to persist streaming analysis results
+ */
+const _persistStreamAnalysis = async (applicationId, analysis, user, ip_address) => {
+  await prisma.applicationProposalAnalysis.upsert({
+    where: { application_id: applicationId },
+    create: {
+      application_id: applicationId,
+      model_name: analysis.ai_metadata?.model || 'SetuGov-Brain3-ProposalCopilot',
+      executive_summary: analysis.executive_summary || 'Automated proposal evaluation completed.',
+      technical_feasibility: typeof analysis.technical_approach === 'string' ? analysis.technical_approach : (analysis.technical_feasibility || 'Evaluated.'),
+      innovation: typeof analysis.innovation === 'string' ? analysis.innovation : 'Innovation potential evaluated.',
+      expected_impact: typeof analysis.expected_impact === 'string' ? analysis.expected_impact : 'Impact projected.',
+      scalability: typeof analysis.scalability === 'string' ? analysis.scalability : 'Scalability assessed.',
+      cost_effectiveness: typeof analysis.cost_effectiveness === 'string' ? analysis.cost_effectiveness : 'Budget evaluated.',
+      strengths: Array.isArray(analysis.strengths) ? analysis.strengths.map(String) : [],
+      weaknesses: Array.isArray(analysis.weaknesses) ? analysis.weaknesses.map(String) : [],
+      risks: Array.isArray(analysis.risks) ? analysis.risks.map(r => typeof r === 'string' ? r : JSON.stringify(r)) : [],
+      missing_information: Array.isArray(analysis.missing_information) ? analysis.missing_information.map(String) : [],
+      evaluator_questions: Array.isArray(analysis.questions_for_evaluator) ? analysis.questions_for_evaluator.map(String) : [],
+      raw_analysis: analysis
+    },
+    update: {
+      model_name: analysis.ai_metadata?.model || 'SetuGov-Brain3-ProposalCopilot',
+      executive_summary: analysis.executive_summary || 'Automated proposal evaluation completed.',
+      technical_feasibility: typeof analysis.technical_approach === 'string' ? analysis.technical_approach : (analysis.technical_feasibility || 'Evaluated.'),
+      innovation: typeof analysis.innovation === 'string' ? analysis.innovation : 'Innovation potential evaluated.',
+      expected_impact: typeof analysis.expected_impact === 'string' ? analysis.expected_impact : 'Impact projected.',
+      scalability: typeof analysis.scalability === 'string' ? analysis.scalability : 'Scalability assessed.',
+      cost_effectiveness: typeof analysis.cost_effectiveness === 'string' ? analysis.cost_effectiveness : 'Budget evaluated.',
+      strengths: Array.isArray(analysis.strengths) ? analysis.strengths.map(String) : [],
+      weaknesses: Array.isArray(analysis.weaknesses) ? analysis.weaknesses.map(String) : [],
+      risks: Array.isArray(analysis.risks) ? analysis.risks.map(r => typeof r === 'string' ? r : JSON.stringify(r)) : [],
+      missing_information: Array.isArray(analysis.missing_information) ? analysis.missing_information.map(String) : [],
+      evaluator_questions: Array.isArray(analysis.questions_for_evaluator) ? analysis.questions_for_evaluator.map(String) : [],
+      raw_analysis: analysis,
+      updated_at: new Date()
+    }
+  });
+
+  if (user) {
+    await createAuditLog({
+      user_id: user.id,
+      action: 'BRAIN3_STREAM_ANALYSIS_GENERATED',
+      entity_type: 'APPLICATION',
+      entity_id: applicationId,
+      details: { model_name: analysis.ai_metadata?.model || 'unknown' },
+      ip_address
+    });
+  }
+};
+
 export default {
   generateChallenge,
   explainMatch,
   analyzeProposal,
   analyzeApplicationProposal,
+  getApplicationProposalAnalysis,
+  streamAnalyzeApplicationProposal,
   analyzePilot,
   analyzePilotById,
   getScaleRecommendation,
   analyzeRisks,
   generateDocumentDraft
 };
-
-
-
 

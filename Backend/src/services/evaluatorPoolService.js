@@ -669,6 +669,22 @@ export const closeEvaluatorRecruitment = async (challengeId, data = {}, user, ip
     }
   });
 
+  // Hard minimum: at least 2 evaluators must be shortlisted, cannot be overridden
+  const poolMembers = await prisma.challengeEvaluatorPool.findMany({
+    where: { challenge_id: challengeId },
+    select: { evaluator_id: true }
+  });
+
+  // Combine unique evaluators from shortlisted apps and pool members
+  const uniqueEvaluatorIds = new Set([
+    ...shortlisted.map(a => a.evaluator_id),
+    ...poolMembers.map(p => p.evaluator_id)
+  ]);
+
+  if (uniqueEvaluatorIds.size < 2) {
+    throw new BadRequestError('Cannot close evaluator recruitment: Problem statement requires at least 2 evaluators in the pool.');
+  }
+
   if (shortlisted.length < requiredCount && !data.force_override) {
     throw new BadRequestError(
       `Cannot close evaluator recruitment: Only ${shortlisted.length} of ${requiredCount} required evaluators have been shortlisted. Please shortlist at least ${requiredCount} evaluators before closing intake.`
@@ -858,8 +874,8 @@ export const updateChallengeEvaluatorRecruitment = async (challengeId, data, use
   const updateData = {};
   if (data.required_evaluator_count !== undefined) {
     const count = parseInt(data.required_evaluator_count, 10);
-    if (isNaN(count) || count < 1) {
-      throw new BadRequestError('required_evaluator_count must be a positive integer.');
+    if (isNaN(count) || count < 2) {
+      throw new BadRequestError('required_evaluator_count must be at least 2 evaluators.');
     }
     updateData.required_evaluator_count = count;
   }
