@@ -32,7 +32,7 @@ export const openDocumentSecurely = async (fileUrl, fileName = "document") => {
     return false;
   }
 
-  // Direct opening for data or blob URLs
+  // data: and blob: URLs are already safe to open directly (no auth needed)
   if (fileUrl.startsWith("data:") || fileUrl.startsWith("blob:")) {
     window.open(fileUrl, "_blank", "noopener,noreferrer");
     return true;
@@ -50,55 +50,42 @@ export const openDocumentSecurely = async (fileUrl, fileName = "document") => {
     targetUrl = `${origin}${targetUrl.startsWith("/") ? "" : "/"}${targetUrl}`;
   }
 
-  const isLocalBackend =
-    targetUrl.includes("localhost:5000") ||
-    targetUrl.includes("/api/v1/") ||
-    targetUrl.includes("/documents") ||
-    targetUrl.includes("/uploads");
+  // Always fetch with Authorization header — never open a protected URL directly.
+  // A plain window.open() / browser navigation cannot attach Authorization headers.
+  try {
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(targetUrl, { headers });
 
-  // If local backend, try authenticated fetch to get clean Blob URL for reliable in-browser rendering
-  if (isLocalBackend) {
-    try {
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await fetch(targetUrl, { headers });
+    if (res.ok) {
+      const blob = await res.blob();
+      const mimeType = blob.type || (fileName.endsWith(".pdf") ? "application/pdf" : "application/octet-stream");
+      const cleanBlob = new Blob([blob], { type: mimeType });
+      const blobUrl = URL.createObjectURL(cleanBlob);
 
-      if (res.ok) {
-        const blob = await res.blob();
-        const mimeType = blob.type || (fileName.endsWith(".pdf") ? "application/pdf" : "image/png");
-        const cleanBlob = new Blob([blob], { type: mimeType });
-        const blobUrl = URL.createObjectURL(cleanBlob);
-
-        const newTab = window.open(blobUrl, "_blank", "noopener,noreferrer");
-        if (!newTab) {
-          // Fallback if popup is blocked: trigger immediate download
-          const link = document.createElement("a");
-          link.href = blobUrl;
-          link.download = fileName || "document";
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-        return true;
+      const newTab = window.open(blobUrl, "_blank", "noopener,noreferrer");
+      if (!newTab) {
+        // Popup blocked — trigger download instead
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = fileName || "document";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
-    } catch (err) {
-      console.warn("Direct blob fetch failed:", err);
+      // Revoke after a short delay to allow the tab/download to start
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+      return true;
     }
-  }
 
-  // Fallback: open the URL directly (without token in URL).
-  // If the server requires auth and the header couldn't be sent, the server
-  // will return 401 — which is the correct and safe behaviour.
-  const win = window.open(targetUrl, "_blank", "noopener,noreferrer");
-  if (!win) {
-    const a = document.createElement("a");
-    a.href = targetUrl;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // Fetch succeeded but server returned an error (e.g. 401, 403, 404)
+    console.error(`Document fetch failed: HTTP ${res.status}`);
+    alert(`Unable to open document (server returned ${res.status}). Please try again or contact support.`);
+    return false;
+  } catch (err) {
+    console.error("Document fetch error:", err);
+    alert("Unable to open document due to a network error. Please check your connection and try again.");
+    return false;
   }
-  return true;
 };
 
 export const downloadDocumentSecurely = async (fileUrl, fileName = "document") => {
@@ -119,6 +106,7 @@ export const downloadDocumentSecurely = async (fileUrl, fileName = "document") =
     targetUrl = `${origin}${targetUrl.startsWith("/") ? "" : "/"}${targetUrl}`;
   }
 
+  // Always fetch with Authorization header — never navigate directly to a protected URL.
   try {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const res = await fetch(targetUrl, { headers });
@@ -135,18 +123,13 @@ export const downloadDocumentSecurely = async (fileUrl, fileName = "document") =
       setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
       return;
     }
-  } catch (err) {
-    console.warn("Direct blob download failed, falling back to direct URL:", err);
-  }
 
-  // Fallback: download without token in URL (server will 401 if auth fails — correct).
-  const link = document.createElement("a");
-  link.href = targetUrl;
-  link.download = fileName || "download";
-  link.target = "_blank";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+    console.error(`Document download failed: HTTP ${res.status}`);
+    alert(`Unable to download document (server returned ${res.status}). Please try again or contact support.`);
+  } catch (err) {
+    console.error("Document download error:", err);
+    alert("Unable to download document due to a network error. Please check your connection and try again.");
+  }
 };
 
 export default {
