@@ -1,0 +1,36 @@
+# docker-compose.prod.yml — Production overrides for SetuGov
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# This file only declares the DIFFERENCES from docker-compose.yml.
+# All services, volumes, and settings not listed here are inherited as-is.
+#
+# What changes in production:
+#   - AI service: no host port exposure (internal traffic only via Docker network)
+#   - Backend: no src bind-mount (runs built image code, not host files)
+#   - Backend: uses `prisma migrate deploy` (safe production migration runner)
+#   - Backend: starts with `npm start` (node, not nodemon)
+#   - Backend: NODE_ENV forced to production
+#   - Backend restart policy: always (survive reboots)
+
+services:
+  # AI service is only reachable inside the Docker network (http://ai:8000).
+  # No host port is published — removes the direct external exposure.
+  ai:
+    ports: []
+    expose:
+      - "8000"
+
+  backend:
+    restart: always
+    environment:
+      NODE_ENV: production
+    volumes:
+      # No src bind-mount in production — run the baked image code.
+      - uploads_data:/app/uploads
+    # prisma migrate deploy runs committed migration files safely (no schema drift).
+    # npm start runs node directly (no nodemon file-watching overhead).
+    command: >
+      sh -c "npx prisma migrate deploy &&
+             npm start"
