@@ -24,7 +24,7 @@ export const config = {
   AI_SERVICE_URL: process.env.AI_SERVICE_URL || 'http://localhost:8000',
   AI_MOCK_MODE: (() => {
     const val = process.env.AI_MOCK_MODE;
-    if (val === undefined || val === '') return true;
+    if (val === undefined || val === '') return false;
     if (val === 'true') return true;
     if (val === 'false') return false;
     throw new Error(`Invalid AI_MOCK_MODE value: "${val}". Must be "true", "false", or unset.`);

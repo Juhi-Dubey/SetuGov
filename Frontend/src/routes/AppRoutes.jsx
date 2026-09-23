@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate, useParams } from "react-router-dom";
 
+
+
 function RedirectSingularPilot() {
   const { id } = useParams();
   return <Navigate to={`/government/pilots/${id}`} replace />;
@@ -88,6 +90,10 @@ import NotFound from "../pages/NotFound";
 import AppLayout from "../components/layout/AppLayout";
 import InviteAccept from "../pages/auth/InviteAccept";
 import { useAuth } from "../context/AuthContext";
+
+import PilotDashboard from "../pages/PilotDashboard";
+import PaymentScreen from "../pages/PaymentScreen";
+
 
 function DashboardRedirect() {
   const { user, role } = useAuth();
@@ -423,6 +429,29 @@ function AppRoutes() {
       <Route
         path="/government/settings"
         element={<Navigate to="/government/dashboard" replace />}
+      />
+      {/* PilotDashboard — detailed pilot analytics view */}
+      <Route
+        path="/government/pilot-dashboard/:id"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
+              <PilotDashboard />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* PaymentScreen — payment management for a pilot */}
+      <Route
+        path="/government/pilot-payments/:id"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["GOVERNMENT", "ADMIN"]}>
+              <PaymentScreen />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/government/reports"
