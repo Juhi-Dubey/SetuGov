@@ -64,8 +64,10 @@ services:
       EMBEDDING_DIMENSION: ${EMBEDDING_DIMENSION:-768}
       EMBEDDING_REQUEST_DIMENSIONS: ${EMBEDDING_REQUEST_DIMENSIONS:-false}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    ports:
-      - "8000:8000"
+    # ports:
+    #   - "8000:8000"
+    expose:
+      - "8000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
@@ -102,8 +104,10 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     ports:
       - "5000:5000"
+    # volumes:
+    #   - ./Backend/src:/app/src
     volumes:
-      - ./Backend/src:/app/src
+      - uploads_data:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -111,13 +115,19 @@ services:
         condition: service_healthy
       ollama:
         condition: service_started
+    # command: >
+    #   sh -c "npx prisma db push &&
+    #          node prisma/seed.js &&
+    #          npm run dev"
     command: >
       sh -c "npx prisma db push &&
-             node prisma/seed.js &&
-             npm run dev"
+            node prisma/seed.js &&
+            npm start"
 
 volumes:
   pgdata:
     driver: local
   ollama_data:
+    driver: local
+  uploads_data:
     driver: local
