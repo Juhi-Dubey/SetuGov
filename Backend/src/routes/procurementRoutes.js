@@ -4,6 +4,9 @@ import {
   approveProcurement,
   handoffToGeM,
   issueContract,
+  generateContractDraft,
+  acceptContract,
+  declineContract,
   submitDelivery,
   acceptDelivery,
   completeProcurement,
@@ -32,8 +35,17 @@ router.post('/:id/approve', authenticate, authorizeRoles('GOVERNMENT'), approveP
 // Record GeM / Approved Route handoff
 router.post('/:id/gem-handoff', authenticate, authorizeRoles('GOVERNMENT'), handoffToGeM);
 
+// Generate automated contract draft (Government, Admin)
+router.get('/:id/contract-draft', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), generateContractDraft);
+
 // Record Contract / PO issuance
-router.post('/:id/contract', authenticate, authorizeRoles('GOVERNMENT'), issueContract);
+router.post('/:id/contract', authenticate, authorizeRoles('GOVERNMENT', 'ADMIN'), issueContract);
+
+// Startup accepts contract
+router.post('/:id/contract/accept', authenticate, authorizeRoles('STARTUP'), acceptContract);
+
+// Startup declines contract
+router.post('/:id/contract/decline', authenticate, authorizeRoles('STARTUP'), declineContract);
 
 // Submit Delivery Evidence (Startup or Government)
 router.post('/:id/delivery', authenticate, authorizeRoles('STARTUP', 'GOVERNMENT'), submitDelivery);

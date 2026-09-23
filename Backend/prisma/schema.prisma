@@ -54,6 +54,7 @@ model User {
   notifications                 Notification[]
   progress_updates              PilotProgressUpdate[]        @relation("ProgressUpdateAuthor")
   accepted_deliveries           ProcurementRecord[]          @relation("DeliveryAcceptor")
+  accepted_contracts            ProcurementRecord[]          @relation("ContractAcceptor")
   approved_procurements         ProcurementRecord[]          @relation("ProcurementApprover")
   initiated_procurements        ProcurementRecord[]          @relation("ProcurementInitiator")
   approved_decisions            ScaleDecision[]              @relation("DecisionApprover")
@@ -883,6 +884,10 @@ model ProcurementRecord {
   contract_issued_at        DateTime?
   contract_effective_date   DateTime?
   contract_duration_days    Int?
+  contract_accepted_at      DateTime?
+  contract_accepted_by      String?
+  contract_decline_notes    String?
+  contract_draft_content    Json?
   delivery_date             DateTime?
   delivery_scope            String?
   delivery_evidence_url     String?
@@ -896,6 +901,7 @@ model ProcurementRecord {
   payments                  Payment[]
   acceptor                  User?             @relation("DeliveryAcceptor", fields: [accepted_by], references: [id])
   approver                  User?             @relation("ProcurementApprover", fields: [approved_by], references: [id])
+  contract_acceptor         User?             @relation("ContractAcceptor", fields: [contract_accepted_by], references: [id])
   challenge                 Challenge         @relation(fields: [challenge_id], references: [id], onDelete: Cascade)
   department                Department        @relation(fields: [department_id], references: [id], onDelete: Cascade)
   initiator                 User              @relation("ProcurementInitiator", fields: [initiated_by], references: [id])
@@ -1065,6 +1071,8 @@ enum ProcurementStatus {
   APPROVED
   HANDED_OFF
   CONTRACT_ISSUED
+  CONTRACT_ACCEPTED
+  CONTRACT_DECLINED
   DELIVERY_SUBMITTED
   ACCEPTED
   COMPLETED

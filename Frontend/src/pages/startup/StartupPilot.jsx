@@ -42,6 +42,12 @@ import {
   getPilotProgressUpdates,
   createPilotProgressUpdate,
 } from "../../services/pilotService.js";
+import {
+  getProcurements,
+  acceptProcurementContract,
+  declineProcurementContract,
+  submitProcurementDelivery,
+} from "../../services/procurementService.js";
 import { openDocumentSecurely } from "../../utils/documentUtils.js";
 import PageHeader from "../../components/layout/PageHeader";
 
@@ -62,6 +68,17 @@ function StartupPilot() {
   const [updateText, setUpdateText] = useState("");
   const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false);
   const [updateError, setUpdateError] = useState("");
+
+  // Procurement & Contract acceptance (C3b)
+  const [procurement, setProcurement] = useState(null);
+  const [procurementActionLoading, setProcurementActionLoading] = useState(false);
+  const [procurementMsg, setProcurementMsg] = useState({ type: "", text: "" });
+  const [showDeclineForm, setShowDeclineForm] = useState(false);
+  const [declineNotes, setDeclineNotes] = useState("");
+  const [showDraftModal, setShowDraftModal] = useState(false);
+  const [deliveryScope, setDeliveryScope] = useState("");
+  const [deliveryEvidenceUrl, setDeliveryEvidenceUrl] = useState("");
+  const [deliveryNotes, setDeliveryNotes] = useState("");
 
   const [showEvidenceForm, setShowEvidenceForm] = useState(false);
   const [evidenceType, setEvidenceType] = useState("DEPLOYMENT_REPORT");
@@ -160,6 +177,17 @@ function StartupPilot() {
               if (issuesRes?.data?.issues) setIssuesList(issuesRes.data.issues);
               const upItems = updatesRes?.data?.updates || updatesRes?.data || [];
               if (Array.isArray(upItems)) setUpdates(upItems);
+            }
+
+            // Fetch any statutory procurement contract records for this pilot
+            try {
+              const procRes = await getProcurements({ pilot_id: selectedPilot.id });
+              const records = procRes?.data?.procurements || procRes?.data || [];
+              if (records.length > 0 && mounted) {
+                setProcurement(records[0]);
+              }
+            } catch (pErr) {
+              console.warn("Procurement fetch warning:", pErr);
             }
           } catch (err) {
             console.warn("Pilot extra fetch warning:", err);
@@ -360,6 +388,68 @@ function StartupPilot() {
       setEvidenceError(err?.message || "Failed to upload evidence file. Please try again.");
     } finally {
       setIsSubmittingEvidence(false);
+    }
+  };
+
+  // C3b: Handlers for Contract Acceptance, Decline, and Delivery Submission
+  const handleAcceptContract = async () => {
+    if (!procurement?.id) return;
+    try {
+      setProcurementActionLoading(true);
+      setProcurementMsg({ type: "", text: "" });
+      const res = await acceptProcurementContract(procurement.id);
+      const updated = res?.data?.procurement || res?.data || res;
+      setProcurement(updated);
+      setProcurementMsg({ type: "success", text: "Commercial procurement contract officially accepted! Solution delivery phase is now active." });
+    } catch (err) {
+      setProcurementMsg({ type: "error", text: err.message || "Failed to accept contract." });
+    } finally {
+      setProcurementActionLoading(false);
+    }
+  };
+
+  const handleDeclineContract = async (e) => {
+    e?.preventDefault();
+    if (!procurement?.id || !declineNotes.trim()) {
+      setProcurementMsg({ type: "error", text: "Please provide revision notes explaining why the contract is being declined." });
+      return;
+    }
+    try {
+      setProcurementActionLoading(true);
+      setProcurementMsg({ type: "", text: "" });
+      const res = await declineProcurementContract(procurement.id, { decline_notes: declineNotes.trim() });
+      const updated = res?.data?.procurement || res?.data || res;
+      setProcurement(updated);
+      setShowDeclineForm(false);
+      setProcurementMsg({ type: "success", text: "Contract decline notice submitted to government with revision request." });
+    } catch (err) {
+      setProcurementMsg({ type: "error", text: err.message || "Failed to decline contract." });
+    } finally {
+      setProcurementActionLoading(false);
+    }
+  };
+
+  const handleSubmitDelivery = async (e) => {
+    e?.preventDefault();
+    if (!procurement?.id || !deliveryScope.trim()) {
+      setProcurementMsg({ type: "error", text: "Delivery scope is required." });
+      return;
+    }
+    try {
+      setProcurementActionLoading(true);
+      setProcurementMsg({ type: "", text: "" });
+      const res = await submitProcurementDelivery(procurement.id, {
+        delivery_scope: deliveryScope.trim(),
+        delivery_evidence_url: deliveryEvidenceUrl.trim() || null,
+        delivery_notes: deliveryNotes.trim() || ""
+      });
+      const updated = res?.data?.procurement || res?.data || res;
+      setProcurement(updated);
+      setProcurementMsg({ type: "success", text: "Formal solution delivery evidence submitted for government inspection." });
+    } catch (err) {
+      setProcurementMsg({ type: "error", text: err.message || "Failed to submit delivery." });
+    } finally {
+      setProcurementActionLoading(false);
     }
   };
 
@@ -597,6 +687,282 @@ function StartupPilot() {
           </span>
         </div>
       </section>
+
+      {/* ================================================= */}
+      {/* C3b: STATUTORY PROCUREMENT & CONTRACT SECTION     */}
+      {/* ================================================= */}
+      {procurement && (
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+                <FileCheck className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                  Statutory Procurement & Commercial Contract
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  PO: {procurement.po_reference_number || "—"} | Ref: {procurement.contract_reference || "—"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                procurement.status === "CONTRACT_ACCEPTED" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300" :
+                procurement.status === "CONTRACT_DECLINED" ? "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300" :
+                procurement.status === "CONTRACT_ISSUED" ? "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300" :
+                "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              }`}>
+                {procurement.status}
+              </span>
+            </div>
+          </div>
+
+          {/* Feedback message */}
+          {procurementMsg.text && (
+            <div className={`rounded-xl p-3 text-xs flex items-center gap-2 ${
+              procurementMsg.type === "success" ? "bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300" :
+              "bg-rose-50 text-rose-800 border border-rose-200 dark:bg-rose-950/30 dark:text-rose-300"
+            }`}>
+              {procurementMsg.type === "success" ? <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" /> : <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />}
+              {procurementMsg.text}
+            </div>
+          )}
+
+          {/* 1. CONTRACT_ISSUED: Awaiting Startup Acceptance or Decline */}
+          {procurement.status === "CONTRACT_ISSUED" && (
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-4 text-xs dark:border-blue-900/40 dark:bg-blue-950/20">
+                <div className="flex items-center gap-2 font-bold text-blue-900 dark:text-blue-200 text-sm">
+                  <FileText className="h-4 w-4 text-blue-600" /> Official Commercial Contract Issued by Government
+                </div>
+                <p className="mt-1 text-slate-600 dark:text-slate-400">
+                  The government has finalized terms and issued the commercial procurement contract. Please review all terms carefully. You must formally accept this agreement before submitting solution deliverables.
+                </p>
+
+                <div className="mt-3 grid gap-3 sm:grid-cols-4 rounded-xl bg-white p-3 dark:bg-slate-900 text-xs">
+                  <div>
+                    <span className="text-slate-400">PO Reference:</span>
+                    <p className="font-mono font-bold text-slate-900 dark:text-white">{procurement.po_reference_number || "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Contract Reference:</span>
+                    <p className="font-mono font-bold text-slate-900 dark:text-white">{procurement.contract_reference || "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Contract Value:</span>
+                    <p className="font-bold text-slate-900 dark:text-white">₹{Number(procurement.final_contract_value || procurement.estimated_value || 0).toLocaleString("en-IN")}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Duration:</span>
+                    <p className="font-bold text-slate-900 dark:text-white">{procurement.contract_duration_days || 90} Days</p>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  {procurement.contract_document_url && (
+                    <button
+                      type="button"
+                      onClick={() => openDocumentSecurely(procurement.contract_document_url, "statutory_contract.pdf")}
+                      className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:underline"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" /> View Executed Contract PDF
+                    </button>
+                  )}
+                  {procurement.contract_draft_content && (
+                    <button
+                      type="button"
+                      onClick={() => setShowDraftModal(prev => !prev)}
+                      className="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:underline"
+                    >
+                      <FileText className="h-3.5 w-3.5" /> {showDraftModal ? "Hide Synthesized Clauses" : "View Synthesized Clauses"}
+                    </button>
+                  )}
+                </div>
+
+                {showDraftModal && procurement.contract_draft_content && (
+                  <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4 text-xs dark:border-slate-800 dark:bg-slate-900 space-y-2">
+                    <p className="font-bold text-slate-900 dark:text-white">Contractual Terms & Scope:</p>
+                    <p className="text-slate-600 dark:text-slate-400"><strong>Problem Statement:</strong> {procurement.contract_draft_content.scope_of_work?.challenge_title}</p>
+                    <p className="text-slate-600 dark:text-slate-400"><strong>Deliverables:</strong> {procurement.contract_draft_content.scope_of_work?.desired_outcomes}</p>
+                    <p className="text-slate-600 dark:text-slate-400"><strong>Payment Schedule:</strong> {procurement.contract_draft_content.financial_terms?.payment_schedule}</p>
+                  </div>
+                )}
+              </div>
+
+              {!showDeclineForm ? (
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    disabled={procurementActionLoading}
+                    onClick={handleAcceptContract}
+                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-600 px-5 text-xs font-semibold text-white shadow-xs hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    {procurementActionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                    Accept Contract & Proceed to Delivery
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={procurementActionLoading}
+                    onClick={() => setShowDeclineForm(true)}
+                    className="inline-flex h-10 items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 text-xs font-semibold text-rose-700 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300"
+                  >
+                    Decline Contract / Request Revisions
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleDeclineContract} className="rounded-2xl border border-rose-200 bg-rose-50/50 p-4 text-xs space-y-3 dark:border-rose-900/40 dark:bg-rose-950/20">
+                  <div className="font-bold text-rose-900 dark:text-rose-300">
+                    Request Revisions / Decline Contract
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-400">
+                    Please explain in detail why the contract terms cannot be accepted as-is (e.g. pricing, timelines, delivery scope, or IP terms). The government officer will review your notes and can revise and re-issue the contract.
+                  </p>
+                  <textarea
+                    required
+                    rows={3}
+                    value={declineNotes}
+                    onChange={(e) => setDeclineNotes(e.target.value)}
+                    placeholder="Provide specific notes on what terms or clauses need revision..."
+                    className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs outline-none focus:border-rose-500 dark:border-slate-800 dark:bg-slate-900"
+                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="submit"
+                      disabled={procurementActionLoading}
+                      className="inline-flex h-9 items-center gap-2 rounded-xl bg-rose-600 px-4 text-xs font-semibold text-white shadow-xs hover:bg-rose-700 disabled:opacity-50"
+                    >
+                      {procurementActionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <AlertCircle className="h-3.5 w-3.5" />}
+                      Submit Revision Request
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowDeclineForm(false)}
+                      className="inline-flex h-9 items-center rounded-xl px-3 text-xs font-semibold text-slate-500 hover:text-slate-700"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
+
+          {/* 2. CONTRACT_DECLINED: Waiting for government revision */}
+          {procurement.status === "CONTRACT_DECLINED" && (
+            <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-900 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-200 space-y-2">
+              <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
+                <Clock3 className="h-4 w-4 shrink-0 text-amber-600" />
+                Contract Declined — Waiting for Government Revision
+              </div>
+              <p>
+                You have requested revisions on the issued contract. The nodal officer will review your feedback and re-issue a revised contract for your acceptance.
+              </p>
+              {procurement.contract_decline_notes && (
+                <div className="rounded-lg bg-white/80 p-3 font-mono text-[11px] text-amber-950 dark:bg-slate-900/80 dark:text-amber-100 border border-amber-200 dark:border-amber-900/50">
+                  <strong>Your Revision Request:</strong> {procurement.contract_decline_notes}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 3. CONTRACT_ACCEPTED: Active Contract & Solution Delivery Form */}
+          {procurement.status === "CONTRACT_ACCEPTED" && (
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 text-xs text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+                <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-300 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Contract Formally Accepted — Delivery Phase Active
+                </div>
+                <p className="mt-1 text-slate-600 dark:text-slate-400">
+                  Contract agreement #{procurement.contract_reference || procurement.po_reference_number} is legally executed. Submit your final delivery evidence below once implementation is complete.
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmitDelivery} className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 text-xs dark:border-slate-800 dark:bg-slate-900/50 space-y-3">
+                <h3 className="font-bold text-slate-900 dark:text-white text-xs">Submit Solution Delivery Evidence</h3>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Delivery Scope Description *
+                  </label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={deliveryScope}
+                    onChange={(e) => setDeliveryScope(e.target.value)}
+                    placeholder="Describe the solution deliverables, deployment components, and completion status..."
+                    className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                  />
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Delivery Evidence / Repository / Demo URL
+                    </label>
+                    <input
+                      type="url"
+                      value={deliveryEvidenceUrl}
+                      onChange={(e) => setDeliveryEvidenceUrl(e.target.value)}
+                      placeholder="https://storage.gov.in/deliveries/final_package.zip"
+                      className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Notes for Government Inspection
+                    </label>
+                    <input
+                      type="text"
+                      value={deliveryNotes}
+                      onChange={(e) => setDeliveryNotes(e.target.value)}
+                      placeholder="e.g. Credentials, telemetry endpoints, warranty details"
+                      className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="submit"
+                    disabled={procurementActionLoading}
+                    className="inline-flex h-9 items-center gap-2 rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {procurementActionLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Rocket className="h-3.5 w-3.5" />}
+                    Submit Formal Solution Delivery
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* 4. DELIVERY_SUBMITTED */}
+          {procurement.status === "DELIVERY_SUBMITTED" && (
+            <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-4 text-xs text-blue-900 dark:border-blue-900/40 dark:bg-blue-950/20 space-y-2">
+              <div className="flex items-center gap-2 font-bold text-blue-800 dark:text-blue-300">
+                <Clock className="h-4 w-4 text-blue-600" /> Solution Delivery Submitted — Inspection in Progress
+              </div>
+              <p className="text-slate-600 dark:text-slate-400">
+                Delivered on {procurement.delivery_date ? new Date(procurement.delivery_date).toLocaleDateString("en-IN") : "Record"}. Scope: &ldquo;{procurement.delivery_scope}&rdquo;. Pending formal statutory verification by the department.
+              </p>
+            </div>
+          )}
+
+          {/* 5. ACCEPTED / COMPLETED */}
+          {["ACCEPTED", "COMPLETED"].includes(procurement.status) && (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 text-xs text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/20 space-y-2">
+              <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-300">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Delivery Formally Accepted by Government
+              </div>
+              <p className="text-slate-600 dark:text-slate-400">
+                The government has inspected and officially accepted the delivery. Remarks: &ldquo;{procurement.acceptance_remarks || "Statutory inspection verified"}&rdquo;.
+              </p>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* ================================================= */}
       {/* MAIN CONTENT                                      */}

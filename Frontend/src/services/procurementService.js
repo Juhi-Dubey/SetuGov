@@ -43,6 +43,27 @@ export const issueProcurementContract = async (id, data) => {
   });
 };
 
+export const generateContractDraft = async (id) => {
+  return apiRequest(`/procurements/${id}/contract-draft`);
+};
+
+export const acceptContract = async (id) => {
+  return apiRequest(`/procurements/${id}/contract/accept`, {
+    method: "POST",
+  });
+};
+
+export const declineContract = async (id, data) => {
+  return apiRequest(`/procurements/${id}/contract/decline`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
+export const generateProcurementContractDraft = generateContractDraft;
+export const acceptProcurementContract = acceptContract;
+export const declineProcurementContract = declineContract;
+
 export const submitProcurementDelivery = async (id, data) => {
   return apiRequest(`/procurements/${id}/delivery`, {
     method: "POST",
@@ -75,6 +96,12 @@ export default {
   approveProcurement,
   handoffToGeM,
   issueProcurementContract,
+  generateContractDraft,
+  generateProcurementContractDraft,
+  acceptContract,
+  acceptProcurementContract,
+  declineContract,
+  declineProcurementContract,
   submitProcurementDelivery,
   acceptProcurementDelivery,
   completeProcurement,

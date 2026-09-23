@@ -40,6 +40,7 @@ import {
   approveProcurement,
   handoffToGeM,
   issueProcurementContract,
+  generateContractDraft,
   submitProcurementDelivery,
   acceptProcurementDelivery,
   completeProcurement,
@@ -76,6 +77,7 @@ const STATUS_STEPS = [
   { key: "APPROVED", label: "Govt Approval", desc: "Department Sanction" },
   { key: "HANDED_OFF", label: "Route Handoff", desc: "GeM / Route Notice" },
   { key: "CONTRACT_ISSUED", label: "Contract & PO", desc: "Legal Binding" },
+  { key: "CONTRACT_ACCEPTED", label: "Contract Accepted", desc: "Startup Acceptance" },
   { key: "DELIVERY_SUBMITTED", label: "Delivery", desc: "Evidence Submitted" },
   { key: "ACCEPTED", label: "Acceptance", desc: "Formal Inspection" },
   { key: "COMPLETED", label: "Completed", desc: "Procurement Concluded" },
@@ -91,13 +93,16 @@ function getStatusStepIndex(status) {
     case "HANDED_OFF":
       return 2;
     case "CONTRACT_ISSUED":
+    case "CONTRACT_DECLINED":
       return 3;
-    case "DELIVERY_SUBMITTED":
+    case "CONTRACT_ACCEPTED":
       return 4;
-    case "ACCEPTED":
+    case "DELIVERY_SUBMITTED":
       return 5;
-    case "COMPLETED":
+    case "ACCEPTED":
       return 6;
+    case "COMPLETED":
+      return 7;
     default:
       return 0;
   }
@@ -156,6 +161,11 @@ function ChallengeContract() {
     scopeOfWork: "",
     deliverables: "",
   });
+
+  // Contract Draft (C3a)
+  const [contractDraft, setContractDraft] = useState(null);
+  const [isGeneratingDraft, setIsGeneratingDraft] = useState(false);
+  const [showDraftPreview, setShowDraftPreview] = useState(false);
 
   // Stage 5: Acceptance Review
   const [acceptanceForm, setAcceptanceForm] = useState({
@@ -381,6 +391,35 @@ function ChallengeContract() {
     }
   };
 
+  // C3a: Generate Contract Draft synthesized from Challenge, Startup & Pilot
+  const handleGenerateContractDraft = async () => {
+    if (!procurement?.id) return;
+    try {
+      setIsGeneratingDraft(true);
+      setErrorMessage("");
+      const res = await generateContractDraft(procurement.id);
+      const data = res?.data || res;
+      setContractDraft(data?.draft || null);
+      if (data?.suggested_form_values) {
+        setContractForm((prev) => ({
+          ...prev,
+          final_contract_value: String(data.suggested_form_values.final_contract_value || prev.final_contract_value),
+          contract_duration_days: data.suggested_form_values.contract_duration_days || prev.contract_duration_days,
+          contract_effective_date: data.suggested_form_values.contract_effective_date || prev.contract_effective_date,
+          contract_reference: prev.contract_reference || data.suggested_form_values.contract_reference || "",
+          scopeOfWork: data.markdown ? data.markdown.slice(0, 1500) : prev.scopeOfWork
+        }));
+      }
+      setShowDraftPreview(true);
+      setSuccessMessage("Automated commercial contract agreement draft synthesized from challenge, startup, and pilot outcomes.");
+    } catch (err) {
+      console.warn("Contract draft error:", err);
+      setErrorMessage(err?.message || "Failed to generate contract draft.");
+    } finally {
+      setIsGeneratingDraft(false);
+    }
+  };
+
   // Stage 4 Action: Issue Contract / PO
   const handleIssueContract = async (e) => {
     e.preventDefault();
@@ -397,12 +436,13 @@ function ChallengeContract() {
         final_contract_value: parseFloat(contractForm.final_contract_value) || 0,
         contract_effective_date: contractForm.contract_effective_date,
         contract_duration_days: parseInt(contractForm.contract_duration_days, 10) || 90,
+        contract_draft_content: contractDraft || procurement.contract_draft_content || undefined
       };
 
       const res = await issueProcurementContract(procurement.id, payload);
       const updated = res?.data?.procurement || res?.data || res;
       setProcurement(updated);
-      setSuccessMessage("Contract & Purchase Order recorded and officially issued.");
+      setSuccessMessage(procurement.status === "CONTRACT_DECLINED" ? "Revised contract re-issued successfully to startup." : "Contract & Purchase Order recorded and officially issued.");
       await loadProcurementData();
     } catch (err) {
       setErrorMessage(err.message || "Failed to record contract / PO issuance.");
@@ -1107,20 +1147,66 @@ function ChallengeContract() {
                     </h3>
                   </div>
 
-                  {["APPROVED", "HANDED_OFF"].includes(procurement.status) && (
-                    <button
-                      type="button"
-                      onClick={handleDraftWithBrain5}
-                      disabled={isGeneratingAI}
-                      className="inline-flex h-9 items-center gap-2 rounded-xl bg-indigo-50 px-4 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
-                    >
-                      {isGeneratingAI ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-                      Draft Terms with Brain 5
-                    </button>
+                  {["APPROVED", "HANDED_OFF", "CONTRACT_DECLINED"].includes(procurement.status) && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleGenerateContractDraft}
+                        disabled={isGeneratingDraft}
+                        className="inline-flex h-9 items-center gap-2 rounded-xl bg-blue-50 px-4 text-xs font-semibold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-300 dark:hover:bg-blue-900/50"
+                      >
+                        {isGeneratingDraft ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
+                        Generate Contract Draft
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleDraftWithBrain5}
+                        disabled={isGeneratingAI}
+                        className="inline-flex h-9 items-center gap-2 rounded-xl bg-indigo-50 px-4 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
+                      >
+                        {isGeneratingAI ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                        Draft Terms with Brain 5
+                      </button>
+                    </div>
                   )}
                 </div>
 
-                {["APPROVED", "HANDED_OFF"].includes(procurement.status) ? (
+                {/* CONTRACT_DECLINED NOTICE */}
+                {procurement.status === "CONTRACT_DECLINED" && (
+                  <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-900 dark:border-amber-800/40 dark:bg-amber-950/40 dark:text-amber-200">
+                    <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                      Contract Declined by Startup — Revision Required
+                    </div>
+                    <p className="mt-1">
+                      The startup declined the previously issued contract and requested changes before accepting. Review their notes below, revise terms, and re-issue the contract.
+                    </p>
+                    {procurement.contract_decline_notes && (
+                      <div className="mt-2 rounded-lg bg-white/80 p-3 font-mono text-[11px] text-amber-950 dark:bg-slate-900/80 dark:text-amber-100 border border-amber-200 dark:border-amber-900/50">
+                        <strong>Startup Revision Request:</strong> {procurement.contract_decline_notes}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* DRAFT PREVIEW MODAL / BANNER */}
+                {showDraftPreview && contractDraft && (
+                  <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 text-xs text-slate-800 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-slate-200 space-y-3">
+                    <div className="flex items-center justify-between font-bold text-blue-900 dark:text-blue-300">
+                      <span className="flex items-center gap-1.5"><FileCheck2 className="h-4 w-4 text-blue-600" /> Synthesized Draft: {contractDraft.contract_title}</span>
+                      <button type="button" onClick={() => setShowDraftPreview(false)} className="text-slate-400 hover:text-slate-600">Close Preview</button>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2 text-[11px]">
+                      <div><strong>Buyer:</strong> {contractDraft.parties?.buyer?.department_name} ({contractDraft.parties?.buyer?.nodal_officer})</div>
+                      <div><strong>Supplier:</strong> {contractDraft.parties?.supplier?.company_name} (Signatory: {contractDraft.parties?.supplier?.authorized_signatory})</div>
+                      <div><strong>Validation Score:</strong> {contractDraft.pilot_outcome_summary?.validation_score}/100</div>
+                      <div><strong>Scale Decision:</strong> {contractDraft.pilot_outcome_summary?.scale_decision}</div>
+                    </div>
+                  </div>
+                )}
+
+                {["APPROVED", "HANDED_OFF", "CONTRACT_DECLINED"].includes(procurement.status) ? (
                   <form onSubmit={handleIssueContract} className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
@@ -1260,6 +1346,28 @@ function ChallengeContract() {
                         </p>
                       </div>
                     </div>
+
+                    {procurement.status === "CONTRACT_ISSUED" && (
+                      <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800 dark:border-amber-900/30 dark:bg-amber-950/30 dark:text-amber-300">
+                        <Clock className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                        <div>
+                          <p className="font-semibold">Awaiting Startup Acceptance</p>
+                          <p className="mt-0.5 text-[11px]">Contract has been officially issued. The startup must review and formally accept the contract before delivery submission can begin.</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {procurement.status === "CONTRACT_ACCEPTED" && (
+                      <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-800 dark:border-emerald-900/30 dark:bg-emerald-950/30 dark:text-emerald-300">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        <div>
+                          <p className="font-semibold">Contract Officially Accepted by Startup</p>
+                          <p className="mt-0.5 text-[11px]">
+                            Startup accepted on {procurement.contract_accepted_at ? new Date(procurement.contract_accepted_at).toLocaleString("en-IN") : "Record"}. Solution delivery phase is currently active.
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     {procurement.contract_document_url && (
                       <div className="flex items-center justify-between rounded-xl border border-slate-200 p-3 text-xs dark:border-slate-800">

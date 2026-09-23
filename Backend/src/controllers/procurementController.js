@@ -45,6 +45,39 @@ export const issueContract = async (req, res, next) => {
   }
 };
 
+export const generateContractDraft = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await procurementService.generateContractDraft(id, req.user, ip_address);
+    return successResponse(res, result, 'Contract draft generated successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const acceptContract = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await procurementService.acceptContract(id, req.user, ip_address);
+    return successResponse(res, result, 'Contract accepted successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const declineContract = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const ip_address = req.ip || req.headers['x-forwarded-for'] || null;
+    const result = await procurementService.declineContract(id, req.body, req.user, ip_address);
+    return successResponse(res, result, 'Contract decline recorded successfully', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const submitDelivery = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -113,6 +146,9 @@ export default {
   approveProcurement,
   handoffToGeM,
   issueContract,
+  generateContractDraft,
+  acceptContract,
+  declineContract,
   submitDelivery,
   acceptDelivery,
   completeProcurement,
