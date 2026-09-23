@@ -61,6 +61,7 @@ import StartupMyPage from "../pages/startup/StartupMyPage";
 import EvaluatorDashboard from "../pages/evaluator/EvaluatorDashboard";
 import EvaluatorAssignments from "../pages/evaluator/EvaluatorAssignments";
 import EvaluatorChallenges from "../pages/evaluator/EvaluatorChallenges";
+import EvaluatorChallengeDetail from "../pages/evaluator/EvaluatorChallengeDetail";
 import EvaluatorMyApplications from "../pages/evaluator/EvaluatorMyApplications";
 import EvaluatorEvaluations from "../pages/evaluator/EvaluatorEvaluations";
 import EvaluationDetail from "../pages/evaluator/EvaluationDetail";
@@ -745,6 +746,18 @@ function AppRoutes() {
             <RoleRoute allowedRoles={["EVALUATOR"]}>
               <AppLayout role="evaluator">
                 <EvaluatorChallenges />
+              </AppLayout>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/evaluator/challenges/:challengeId"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["EVALUATOR"]}>
+              <AppLayout role="evaluator">
+                <EvaluatorChallengeDetail />
               </AppLayout>
             </RoleRoute>
           </ProtectedRoute>

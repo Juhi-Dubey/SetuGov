@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
   Compass,
   Search,
@@ -24,6 +25,7 @@ import {
 import Pagination from "../../components/common/Pagination";
 
 function EvaluatorChallenges() {
+  const navigate = useNavigate();
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -232,49 +234,87 @@ function EvaluatorChallenges() {
       ) : (
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
-            {paginatedChallenges.map((challenge) => (
+            {paginatedChallenges.map((challenge) => {
+              // The /evaluators/open-challenges DTO shape:
+              // id, title, problem_description, department (string), state (string),
+              // required_technologies, application_deadline, finalist_submission_deadline,
+              // my_application, is_in_pool, match_score
+              // NOTE: No "status", "domain", or "description" field in this DTO.
+
+              const deadlineRaw = challenge.application_deadline || challenge.finalist_submission_deadline;
+              const isOpen = (() => {
+                if (!deadlineRaw) return true; // no deadline = treat as open
+                const d = new Date(deadlineRaw);
+                return !isNaN(d.getTime()) && d > new Date();
+              })();
+
+              const deadlineLabel = (() => {
+                if (!deadlineRaw) return null;
+                const d = new Date(deadlineRaw);
+                return isNaN(d.getTime()) ? null : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+              })();
+
+              const hasApplied = !!challenge.my_application;
+
+              return (
               <div
                 key={challenge.id}
-                className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-indigo-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-900"
+                onClick={() => navigate(`/evaluator/challenges/${challenge.id}`)}
+                className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all cursor-pointer hover:border-indigo-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-bold text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
-                      {challenge.domain || "Technology"}
-                    </span>
-                    <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                      {challenge.status}
-                    </span>
+                    {/* Open / Closed badge */}
+                    {isOpen ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        Open
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-[10px] font-bold text-red-600 dark:bg-red-950/40 dark:text-red-300">
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                        Closed
+                      </span>
+                    )}
+                    {hasApplied && (
+                      <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+                        Applied
+                      </span>
+                    )}
                   </div>
 
-                  <h3 className="mt-3 text-base font-bold text-slate-900 dark:text-white line-clamp-2">
+                  <h3 className="mt-3 text-base font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-indigo-600">
                     {challenge.title}
                   </h3>
 
-                  <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                    <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                    <span className="truncate">
-                      {challenge.department?.name || "Government Department"}
-                      {challenge.department?.state ? ` (${challenge.department.state})` : ""}
-                    </span>
-                  </div>
+                  {/* Department name (plain string in this DTO) */}
+                  {challenge.department && (
+                    <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                      <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                      <span className="truncate">
+                        {challenge.department}
+                        {challenge.state ? ` (${challenge.state})` : ""}
+                      </span>
+                    </div>
+                  )}
 
-                  <p className="mt-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300 line-clamp-3">
-                    {challenge.description}
-                  </p>
+                  {/* Problem description excerpt */}
+                  {challenge.problem_description && (
+                    <p className="mt-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300 line-clamp-3">
+                      {challenge.problem_description}
+                    </p>
+                  )}
 
-                  {challenge.technologies && (
+                  {/* Technologies */}
+                  {challenge.required_technologies && challenge.required_technologies.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
-                      {(Array.isArray(challenge.technologies)
-                        ? challenge.technologies
-                        : String(challenge.technologies).split(",")
-                      ).slice(0, 4).map((tech, idx) => (
+                      {challenge.required_technologies.slice(0, 4).map((tech, idx) => (
                         <span
                           key={idx}
                           className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                         >
                           <Tag className="h-2.5 w-2.5 text-indigo-500" />
-                          {typeof tech === "string" ? tech.trim() : tech}
+                          {tech}
                         </span>
                       ))}
                     </div>
@@ -282,27 +322,28 @@ function EvaluatorChallenges() {
                 </div>
 
                 <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <div className="text-[11px] text-slate-400 flex items-center gap-1">
+                  {/* Deadline */}
+                  <div className="flex items-center gap-1 text-[11px] text-slate-400 dark:text-slate-500">
                     <Calendar className="h-3.5 w-3.5" />
-                    <span>
-                      Deadline:{" "}
-                      {challenge.submission_deadline
-                        ? new Date(challenge.submission_deadline).toLocaleDateString("en-IN")
-                        : "Open"}
-                    </span>
+                    {deadlineLabel ? `Deadline: ${deadlineLabel}` : "No deadline set"}
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => handleOpenApplyModal(challenge)}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenApplyModal(challenge);
+                    }}
+                    disabled={!isOpen || hasApplied}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    Apply to Evaluate
-                    <ArrowRight className="h-3.5 w-3.5" />
+                    {hasApplied ? "Applied" : "Apply to Evaluate"}
+                    {!hasApplied && <ArrowRight className="h-3.5 w-3.5" />}
                   </button>
                 </div>
               </div>
-            ))}
+            );
+          })}
           </div>
 
           {filteredChallenges.length > 0 && (
