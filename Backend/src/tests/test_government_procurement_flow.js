@@ -512,6 +512,13 @@ async function runProcurementTests() {
     assert(auditContract !== null, 'AuditLog entry created for PROCUREMENT_CONTRACT_ISSUED');
 
     // ----------------------------------------------------
+    // TEST 10b: Startup Accepts Issued Contract
+    // ----------------------------------------------------
+    console.log('\n--- TEST 10b: Startup Accepts Issued Contract ---');
+    const contractAccepted = await procurementService.acceptContract(procRecord.id, startupUser);
+    assert(contractAccepted.status === 'CONTRACT_ACCEPTED', `Status transitioned to "${contractAccepted.status}"`);
+
+    // ----------------------------------------------------
     // TEST 11: Solution Delivery Evidence Submission
     // ----------------------------------------------------
     console.log('\n--- TEST 11: Startup Delivery Submission ---');

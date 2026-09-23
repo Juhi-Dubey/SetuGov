@@ -204,7 +204,18 @@ async function main() {
       CONSTRAINT "archived_evaluations_pkey" PRIMARY KEY ("id"),
       CONSTRAINT "archived_evaluations_application_id_fkey" FOREIGN KEY ("application_id") REFERENCES "applications"("id") ON DELETE CASCADE ON UPDATE CASCADE
     );`,
-    `CREATE INDEX IF NOT EXISTS "archived_evaluations_application_id_idx" ON "archived_evaluations"("application_id");`
+    `CREATE INDEX IF NOT EXISTS "archived_evaluations_application_id_idx" ON "archived_evaluations"("application_id");`,
+
+    // 16. C3b: Add CONTRACT_ACCEPTED and CONTRACT_DECLINED to ProcurementStatus enum
+    `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'CONTRACT_ACCEPTED' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'ProcurementStatus')) THEN ALTER TYPE "ProcurementStatus" ADD VALUE 'CONTRACT_ACCEPTED'; END IF; END $$;`,
+    `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'CONTRACT_DECLINED' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'ProcurementStatus')) THEN ALTER TYPE "ProcurementStatus" ADD VALUE 'CONTRACT_DECLINED'; END IF; END $$;`,
+
+    // 17. C3: Add contract acceptance, decline, and draft fields to procurement_records
+    `ALTER TABLE "procurement_records" ADD COLUMN IF NOT EXISTS "contract_accepted_at" TIMESTAMP(3);`,
+    `ALTER TABLE "procurement_records" ADD COLUMN IF NOT EXISTS "contract_accepted_by" TEXT;`,
+    `ALTER TABLE "procurement_records" ADD COLUMN IF NOT EXISTS "contract_decline_notes" TEXT;`,
+    `ALTER TABLE "procurement_records" ADD COLUMN IF NOT EXISTS "contract_draft_content" JSONB;`,
+    `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'procurement_records_contract_accepted_by_fkey') THEN ALTER TABLE "procurement_records" ADD CONSTRAINT "procurement_records_contract_accepted_by_fkey" FOREIGN KEY ("contract_accepted_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE; END IF; END $$;`
   ];
 
   for (const sql of statements) {

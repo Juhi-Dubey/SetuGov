@@ -240,7 +240,8 @@ export const updateApplication = async (id, data, user, ip_address = null) => {
     throw new NotFoundError(`Application with ID ${id} not found.`);
   }
 
-  if (application.challenge.status === 'CLOSED') {
+  const isAdminClosedOverride = application.challenge.status === 'CLOSED' && user.role === 'ADMIN';
+  if (application.challenge.status === 'CLOSED' && !isAdminClosedOverride) {
     throw new BadRequestError('Cannot update application: This problem statement is CLOSED.');
   }
 
@@ -349,12 +350,16 @@ export const updateApplication = async (id, data, user, ip_address = null) => {
   });
 
   const auditAction = isResubmission ? 'APPLICATION_RESUBMITTED' : 'APPLICATION_UPDATED';
+  const auditDetails = { changes: updateData };
+  if (isAdminClosedOverride) {
+    auditDetails.admin_override_closed_challenge = true;
+  }
   await createAuditLog({
     user_id: user.id,
     action: auditAction,
     entity_type: 'APPLICATION',
     entity_id: id,
-    details: { changes: updateData },
+    details: auditDetails,
     ip_address
   });
 
@@ -416,8 +421,9 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
     throw new NotFoundError(`Application with ID ${id} not found.`);
   }
 
-  // Phase 14: CLOSED challenge freezes downstream operations
-  if (application.challenge.status === 'CLOSED') {
+  // Phase 14: CLOSED challenge freezes downstream operations (admin override allowed — C2)
+  const isAdminClosedOverride = application.challenge.status === 'CLOSED' && user.role === 'ADMIN';
+  if (application.challenge.status === 'CLOSED' && !isAdminClosedOverride) {
     throw new BadRequestError('Cannot update application status: Problem Statement is CLOSED.');
   }
 
@@ -566,21 +572,25 @@ export const updateApplicationStatus = async (id, nextStatus, user, ip_address =
       }
     });
 
-    // 6. Record status update audit log
+    const statusAuditDetails = {
+      previousStatus: currentApp.status,
+      newStatus: nextStatus,
+      reason,
+      override_justification: override_justification || null,
+      challenge_id: currentApp.challenge_id,
+      startup_id: currentApp.startup_id
+    };
+    if (isAdminClosedOverride) {
+      statusAuditDetails.admin_override_closed_challenge = true;
+    }
+
     await createAuditLog({
       tx,
       user_id: user.id,
       action,
       entity_type: 'APPLICATION',
       entity_id: id,
-      details: {
-        previousStatus: currentApp.status,
-        newStatus: nextStatus,
-        reason,
-        override_justification: override_justification || null,
-        challenge_id: currentApp.challenge_id,
-        startup_id: currentApp.startup_id
-      },
+      details: statusAuditDetails,
       ip_address
     });
 

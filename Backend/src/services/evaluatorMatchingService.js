@@ -1,4 +1,5 @@
 import { prisma } from '../config/prisma.js';
+import { logger } from '../utils/logger.js';
 import { NotFoundError, ForbiddenError, BadRequestError } from '../utils/errors.js';
 import { evaluateEvaluatorEligibility } from './evaluatorEligibilityService.js';
 import { createAuditLog } from './auditService.js';
@@ -98,7 +99,9 @@ export const matchEvaluatorsForChallenge = async (challengeId, user = null, ip_a
     throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
   }
 
-  if (challenge.status === 'CLOSED') {
+  // C2: Admin bypass on CLOSED challenge freeze
+  const isAdminClosedOverride = challenge.status === 'CLOSED' && user && user.role === 'ADMIN';
+  if (challenge.status === 'CLOSED' && !isAdminClosedOverride) {
     throw new BadRequestError('Cannot generate evaluator matches: Problem Statement is CLOSED.');
   }
 
@@ -185,15 +188,20 @@ export const matchEvaluatorsForChallenge = async (challengeId, user = null, ip_a
     matchResults.push(record);
   }
 
+  const auditDetails = {
+    matched_count: matchResults.length,
+    eligible_count: matchResults.filter(m => m.eligibility_state === 'ELIGIBLE').length
+  };
+  // C2: Flag admin override of closed-PS freeze in audit trail
+  if (challenge.status === 'CLOSED' && user && user.role === 'ADMIN') {
+    auditDetails.admin_override_closed_challenge = true;
+  }
   await createAuditLog({
     user_id: user ? user.id : 'SYSTEM',
     action: 'EVALUATORS_MATCHED_FOR_CHALLENGE',
     entity_type: 'CHALLENGE',
     entity_id: challengeId,
-    details: {
-      matched_count: matchResults.length,
-      eligible_count: matchResults.filter(m => m.eligibility_state === 'ELIGIBLE').length
-    },
+    details: auditDetails,
     ip_address
   });
 
@@ -282,8 +290,94 @@ export const getChallengeEvaluatorMatches = async (challengeId, user) => {
   };
 };
 
+/**
+ * C1: Score and upsert EvaluatorMatchScore for a single evaluator against all open challenges.
+ * Called fire-and-forget when an evaluator transitions to VERIFIED.
+ * Does NOT re-score any other evaluator's existing EvaluatorMatchScore rows.
+ */
+export const matchSingleEvaluatorForOpenChallenges = async (evaluatorUserId) => {
+  try {
+    const profile = await prisma.evaluatorProfile.findUnique({
+      where: { user_id: evaluatorUserId },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, role: true, is_active: true, is_verified: true }
+        }
+      }
+    });
+
+    if (!profile || profile.verification_status !== 'VERIFIED') {
+      logger.info(`matchSingleEvaluatorForOpenChallenges: evaluator ${evaluatorUserId} is not VERIFIED, skipping.`);
+      return;
+    }
+
+    const openChallenges = await prisma.challenge.findMany({
+      where: { status: { in: ['PUBLISHED', 'EVALUATION'] } },
+      include: { department: true }
+    });
+
+    if (openChallenges.length === 0) {
+      logger.info(`matchSingleEvaluatorForOpenChallenges: no open challenges to score evaluator ${evaluatorUserId} against.`);
+      return;
+    }
+
+    logger.info(`C1: Scoring evaluator ${evaluatorUserId} against ${openChallenges.length} open challenges...`);
+
+    // Count prior completed evaluations once
+    const completedCount = await prisma.evaluatorAssignment.count({
+      where: { evaluator_id: evaluatorUserId, status: 'COMPLETED' }
+    });
+
+    for (const challenge of openChallenges) {
+      try {
+        const eligibility = evaluateEvaluatorEligibility(profile, challenge);
+        const scores = calculateEvaluatorMatchScore(profile, challenge, completedCount);
+
+        await prisma.evaluatorMatchScore.upsert({
+          where: {
+            challenge_id_evaluator_id: {
+              challenge_id: challenge.id,
+              evaluator_id: evaluatorUserId
+            }
+          },
+          create: {
+            challenge_id: challenge.id,
+            evaluator_id: evaluatorUserId,
+            overall_score: scores.overall_score,
+            domain_score: scores.domain_score,
+            tech_score: scores.tech_score,
+            experience_score: scores.experience_score,
+            capability_score: scores.capability_score,
+            eligibility_state: eligibility.state,
+            eligibility_reasons: eligibility.reasons,
+            breakdown: scores
+          },
+          update: {
+            overall_score: scores.overall_score,
+            domain_score: scores.domain_score,
+            tech_score: scores.tech_score,
+            experience_score: scores.experience_score,
+            capability_score: scores.capability_score,
+            eligibility_state: eligibility.state,
+            eligibility_reasons: eligibility.reasons,
+            breakdown: scores,
+            updated_at: new Date()
+          }
+        });
+
+        logger.info(`C1: Upserted EvaluatorMatchScore for evaluator ${evaluatorUserId} ↔ challenge ${challenge.id} (score: ${scores.overall_score})`);
+      } catch (chErr) {
+        logger.warn(`C1: Failed to score evaluator ${evaluatorUserId} for challenge ${challenge.id}: ${chErr.message}`);
+      }
+    }
+  } catch (err) {
+    logger.warn(`C1: matchSingleEvaluatorForOpenChallenges failed for evaluator ${evaluatorUserId}: ${err.message}`);
+  }
+};
+
 export default {
   calculateEvaluatorMatchScore,
   matchEvaluatorsForChallenge,
-  getChallengeEvaluatorMatches
+  getChallengeEvaluatorMatches,
+  matchSingleEvaluatorForOpenChallenges
 };
