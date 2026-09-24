@@ -1019,7 +1019,8 @@ export const generateChallengeBrain1 = async (id, user, ip_address = null) => {
     challenge_id: challenge.id,
     status: 'AVAILABLE',
     success: true,
-    data: brain1Result
+    data: brain1Result,
+    ...brain1Result
   };
 };
 

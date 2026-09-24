@@ -15,10 +15,12 @@ import {
   Sun,
   Moon,
   Clock,
+  ShieldCheck,
 } from "lucide-react";
 import { submitEvaluatorApplication } from "../../services/accessRequestService";
 import { useTheme } from "../../context/ThemeContext";
 import TurnstileWidget from "../../components/common/TurnstileWidget";
+import CheckStatusModal from "../../components/common/CheckStatusModal";
 
 /**
  * Maps the human-readable Years of Experience dropdown values to the numeric
@@ -30,9 +32,14 @@ import TurnstileWidget from "../../components/common/TurnstileWidget";
  */
 const YEARS_EXPERIENCE_MAP = {
   "0-2 years": 2,
+  "0-3 years": 3,
+  "0 - 3 years": 3,
   "3-5 years": 5,
+  "3 - 5 years": 5,
   "5-10 years": 10,
+  "5 - 10 years": 10,
   "10-15 years": 15,
+  "10 - 15 years": 15,
   "15+ years": 20,
 };
 
@@ -44,6 +51,7 @@ const DOMAINS = [
   "Cybersecurity, Privacy & Blockchain",
   "Clean Energy, Water & Waste Management",
   "FinTech, GovTech & Citizen Grievance Systems",
+  "Others",
 ];
 
 /** Red asterisk for required fields — visually consistent throughout the form */
@@ -73,19 +81,21 @@ export default function EvaluatorApplyPage() {
     employment_type: "INDEPENDENT",
     organization: "",
     designation: "",
-    domain_expertise: "Artificial Intelligence & Machine Learning",
-    years_experience: "5-10 years",
+    domain_expertise: "",
+    years_experience: "",
     bio: "",
     reason: "",
     supporting_document_url: "",
   });
 
+  const [customDomain, setCustomDomain] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submittedData, setSubmittedData] = useState(null);
   const [turnstileToken, setTurnstileToken] = useState(null);
   const [resetTurnstile, setResetTurnstile] = useState(0);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
   // Synchronous guard — prevents duplicate API calls from double-clicks or
   // React Strict Mode's double-invocation of event handlers in development.
@@ -125,9 +135,14 @@ export default function EvaluatorApplyPage() {
       errs.organization = "Please enter your organization or institution name.";
     }
 
-    // Years of Experience — must be a known option so we can map it to a number.
-    // The backend uses z.coerce.number() which cannot parse range strings like
-    // "5-10 years" and would produce NaN, causing a validation failure.
+    // Domain Expertise — required
+    if (!formData.domain_expertise) {
+      errs.domain_expertise = "Please select or input your primary domain expertise.";
+    } else if (formData.domain_expertise === "Others" && !customDomain.trim()) {
+      errs.domain_expertise = "Please type your custom domain expertise.";
+    }
+
+    // Years of Experience — must be a known option
     if (!formData.years_experience || !(formData.years_experience in YEARS_EXPERIENCE_MAP)) {
       errs.years_experience = "Please select your years of professional experience.";
     }
@@ -173,14 +188,12 @@ export default function EvaluatorApplyPage() {
     setSubmitError("");
 
     try {
-      // Convert the human-readable years_experience range string (e.g. "5-10 years")
-      // to the numeric value the backend schema expects.
-      // z.coerce.number() cannot parse range strings and produces NaN, which
-      // fails Zod validation with "Invalid input: expected number, received NaN".
       const yearsNumeric = YEARS_EXPERIENCE_MAP[formData.years_experience] ?? 0;
+      const finalDomain = formData.domain_expertise === "Others" ? customDomain.trim() : formData.domain_expertise;
 
       const res = await submitEvaluatorApplication({
         ...formData,
+        domain_expertise: finalDomain,
         years_experience: yearsNumeric,
         turnstileToken,
         requested_role: "EVALUATOR",
@@ -255,6 +268,14 @@ export default function EvaluatorApplyPage() {
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
+            <button
+              type="button"
+              onClick={() => setIsStatusModalOpen(true)}
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50/80 px-3.5 text-xs font-semibold text-purple-700 shadow-sm transition hover:bg-purple-100 dark:border-purple-900/50 dark:bg-purple-950/40 dark:text-purple-300 dark:hover:bg-purple-900/60"
+            >
+              <ShieldCheck className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <span>Check Status</span>
+            </button>
             <Link
               to="/login"
               className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
@@ -309,6 +330,14 @@ export default function EvaluatorApplyPage() {
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsStatusModalOpen(true)}
+                className="inline-flex h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-purple-300 bg-purple-50 px-6 text-xs font-bold text-purple-700 shadow-sm hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300 dark:hover:bg-purple-900/50"
+              >
+                <Clock className="h-4 w-4" />
+                <span>Track Status Now</span>
+              </button>
               <Link
                 to="/"
                 className="btn-primary inline-flex h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
@@ -535,14 +564,47 @@ export default function EvaluatorApplyPage() {
                     value={formData.domain_expertise}
                     onChange={handleChange}
                     aria-required="true"
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 text-xs text-slate-900 outline-none transition focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900"
+                    aria-describedby={errors.domain_expertise ? "ev-domain-err" : undefined}
+                    aria-invalid={!!errors.domain_expertise}
+                    className={`h-10 w-full rounded-xl border bg-slate-50/50 px-3 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:focus:bg-slate-900 ${
+                      formData.domain_expertise === "" ? "text-slate-400 dark:text-slate-500" : "text-slate-900 dark:text-white"
+                    } ${
+                      errors.domain_expertise
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                        : "border-slate-200 focus:border-purple-500 focus:ring-purple-500/10 dark:border-slate-800"
+                    }`}
                   >
+                    <option value="" disabled className="bg-white text-slate-400 dark:bg-slate-900 dark:text-slate-500">
+                      Input your domain
+                    </option>
                     {DOMAINS.map((d) => (
                       <option key={d} value={d} className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">
                         {d}
                       </option>
                     ))}
                   </select>
+
+                  {formData.domain_expertise === "Others" && (
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        value={customDomain}
+                        onChange={(e) => {
+                          setCustomDomain(e.target.value);
+                          if (errors.domain_expertise) {
+                            setErrors((prev) => ({ ...prev, domain_expertise: "" }));
+                          }
+                        }}
+                        placeholder="Input your domain..."
+                        className={`h-10 w-full rounded-xl border bg-slate-50/50 px-3.5 text-xs text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900 ${
+                          errors.domain_expertise
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                            : "border-slate-200 focus:border-purple-500 focus:ring-purple-500/10 dark:border-slate-800"
+                        }`}
+                      />
+                    </div>
+                  )}
+                  <FieldError id="ev-domain-err" message={errors.domain_expertise} />
                 </div>
 
                 {/* Years of Experience */}
@@ -558,12 +620,18 @@ export default function EvaluatorApplyPage() {
                     aria-required="true"
                     aria-describedby={errors.years_experience ? "ev-years-err" : undefined}
                     aria-invalid={!!errors.years_experience}
-                    className={`h-10 w-full rounded-xl border bg-slate-50/50 px-3 text-xs text-slate-900 outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900 ${
+                    className={`h-10 w-full rounded-xl border bg-slate-50/50 px-3 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:focus:bg-slate-900 ${
+                      formData.years_experience === "" ? "text-slate-400 dark:text-slate-500" : "text-slate-900 dark:text-white"
+                    } ${
                       errors.years_experience
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
                         : "border-slate-200 focus:border-purple-500 focus:ring-purple-500/10 dark:border-slate-800"
                     }`}
                   >
+                    <option value="" disabled className="bg-white text-slate-400 dark:bg-slate-900 dark:text-slate-500">
+                      Input years of experience
+                    </option>
+                    <option value="0-3 years" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">0 - 3 years</option>
                     <option value="3-5 years" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">3 - 5 years</option>
                     <option value="5-10 years" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">5 - 10 years</option>
                     <option value="10-15 years" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">10 - 15 years</option>
@@ -673,6 +741,12 @@ export default function EvaluatorApplyPage() {
           </div>
         )}
       </main>
+
+      <CheckStatusModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        initialEmail={formData.email}
+      />
     </div>
   );
 }

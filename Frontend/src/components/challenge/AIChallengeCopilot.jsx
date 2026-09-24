@@ -123,229 +123,101 @@ function AIChallengeCopilot({ formData, onAutofill }) {
 
       setAiResult(data);
 
-      // Construct mapped form values from Backend Brain 1 response
+      // Construct mapped form values strictly from AI suggestions — NO fabricated fallbacks
       const mappedData = {
         // Step 1: Problem
         title:
           data.refined_title ||
           data.enhanced_challenge?.title ||
-          (data.problem_summary
-            ? data.problem_summary.length > 70
-              ? `${data.problem_summary.slice(0, 67)}...`
-              : data.problem_summary
-            : "") ||
-          roughPrompt.split("\n")[0].slice(0, 80),
-        department:
-          userDepartment ||
-          formData.department ||
-          data.domain ||
+          data.title ||
+          (data.problem_summary && data.problem_summary.length <= 80 ? data.problem_summary : "") ||
           "",
         location:
-          formData.location ||
           data.pilot_recommendation?.suggested_sites?.[0] ||
+          data.pilot_location ||
           "",
-        problemDescription: data.refined_problem_statement || data.problem_summary || roughPrompt,
+        problemDescription:
+          data.refined_problem_statement ||
+          data.problem_description ||
+          data.problem_summary ||
+          "",
         currentProcess:
-          data.root_cause_hypotheses && data.root_cause_hypotheses.length > 0
+          Array.isArray(data.root_cause_hypotheses) && data.root_cause_hypotheses.length > 0
             ? `Current Operational Bottlenecks:\n• ${data.root_cause_hypotheses.join("\n• ")}`
-            : "Manual registration workflows and uncoordinated service schedules causing peak-hour bottlenecks.",
+            : (data.current_process || ""),
         currentBaseline:
           data.current_baseline ||
           data.baseline ||
-          (data.suggested_kpis?.[0]?.baseline != null
-            ? `Average turnaround time is ${data.suggested_kpis[0].baseline} ${data.suggested_kpis[0].unit || "mins"} with manual processing`
-            : "Average turnaround time: 90 minutes; 100% manual operations"),
+          "",
 
         // Step 2: Outcome & KPIs
         desiredOutcome:
           data.desired_outcome ||
           data.success_definition ||
-          "Reduce average operational turnaround time by 40% with automated workflow intelligence.",
-        expectedImpact: data.expected_impact || "Digitized public workflow and reduced citizen turnaround delays.",
-        kpis:
-          data.suggested_kpis && data.suggested_kpis.length > 0
-            ? data.suggested_kpis.map((kpi, idx) => ({
-                id: crypto.randomUUID(),
-                name: kpi.name || `KPI ${idx + 1}`,
-                unit: kpi.unit || "minutes",
-                baseline:
-                  kpi.baseline != null ? String(kpi.baseline) : (idx === 0 ? "90" : "0"),
-                target:
-                  kpi.target != null ? String(kpi.target) : (idx === 0 ? "45" : "85"),
-                direction: kpi.direction || "DECREASE",
-                weight:
-                  kpi.suggested_weight != null
-                    ? String(kpi.suggested_weight)
-                    : (idx === 0 ? "40" : "30"),
-              }))
-            : [
-                {
-                  id: crypto.randomUUID(),
-                  name: "Average Service Turnaround Time",
-                  unit: "minutes",
-                  baseline: "90",
-                  target: "45",
-                  direction: "DECREASE",
-                  weight: "40",
-                },
-                {
-                  id: crypto.randomUUID(),
-                  name: "Digital Workflow Adoption Rate",
-                  unit: "%",
-                  baseline: "0",
-                  target: "85",
-                  direction: "INCREASE",
-                  weight: "35",
-                },
-                {
-                  id: crypto.randomUUID(),
-                  name: "Citizen Satisfaction Index",
-                  unit: "/5",
-                  baseline: "2.4",
-                  target: "4.5",
-                  direction: "INCREASE",
-                  weight: "25",
-                },
-              ],
+          "",
+        kpis: Array.isArray(data.suggested_kpis || data.kpis) && (data.suggested_kpis || data.kpis).length > 0
+          ? (data.suggested_kpis || data.kpis).map((kpi, idx) => ({
+              id: crypto.randomUUID(),
+              name: kpi.name || `KPI ${idx + 1}`,
+              unit: kpi.unit || "",
+              baseline: kpi.baseline != null ? String(kpi.baseline) : "",
+              target: kpi.target != null ? String(kpi.target) : "",
+              direction: kpi.direction === "INCREASE" ? "INCREASE" : "DECREASE",
+              weight: kpi.suggested_weight != null ? String(kpi.suggested_weight) : (kpi.weight != null ? String(kpi.weight) : ""),
+            }))
+          : [],
 
         // Step 3: Pilot
-        startup: formData.startup || "Open for Qualified Startup Applications",
         pilotLocation:
           data.pilot_recommendation?.suggested_sites?.[0] ||
-          formData.location ||
+          data.pilot_location ||
           "",
-        pilotStartDate:
-          formData.pilotStartDate ||
-          new Date().toISOString().split("T")[0],
-        pilotEndDate:
-          formData.pilotEndDate ||
-          new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0],
-        budget: String(
-          (() => {
-            const rawEst = data.pilot_recommendation?.estimated_budget || formData.budget || "";
-            const num = typeof rawEst === "string" ? Number(rawEst.replace(/[^0-9.]/g, "")) : Number(rawEst || 0);
-            return num > 0 ? num : (formData.budget || "2500000");
-          })()
-        ),
-        budgetMin: Number(formData.budgetMin) > 0 ? Number(formData.budgetMin) : 0,
-        budgetMax: Number(formData.budgetMax) > 0
-          ? Number(formData.budgetMax)
-          : (() => {
-              const rawEst = data.pilot_recommendation?.estimated_budget || formData.budget || "";
-              const num = typeof rawEst === "string" ? Number(rawEst.replace(/[^0-9.]/g, "")) : Number(rawEst || 0);
-              return num > 0 ? num : 2500000;
-            })(),
-        pilotDurationDays: Number(data.pilot_recommendation?.duration_days || formData.pilotDurationDays || 60),
-        milestones:
-          formData.milestones && formData.milestones.length > 0
-            ? formData.milestones
-            : [
-                {
-                  id: crypto.randomUUID(),
-                  name: "Phase 1: Architecture & Integration",
-                  description:
-                    "Deploy edge infrastructure, telemetry links, and integrate with departmental systems.",
-                  dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
-                    .toISOString()
-                    .split("T")[0],
-                  paymentPercentage: "30",
-                  status: "not_started",
-                },
-                {
-                  id: crypto.randomUUID(),
-                  name: "Phase 2: Live Pilot Deployment & Telemetry",
-                  description:
-                    "Live rollout across pilot operational sites with real-time dashboard telemetry.",
-                  dueDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000)
-                    .toISOString()
-                    .split("T")[0],
-                  paymentPercentage: "40",
-                  status: "not_started",
-                },
-                {
-                  id: crypto.randomUUID(),
-                  name: "Phase 3: Outcome Validation & Scaling Review",
-                  description:
-                    "Measure telemetry KPIs against baseline and prepare final scaling recommendation.",
-                  dueDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000)
-                    .toISOString()
-                    .split("T")[0],
-                  paymentPercentage: "30",
-                  status: "not_started",
-                },
-              ],
+        budget: (() => {
+          const rawEst = data.pilot_recommendation?.estimated_budget || data.budget;
+          if (rawEst === undefined || rawEst === null || rawEst === "") return "";
+          const num = typeof rawEst === "string" ? Number(rawEst.replace(/[^0-9.]/g, "")) : Number(rawEst);
+          return !isNaN(num) && num > 0 ? String(num) : "";
+        })(),
+        pilotDurationDays: (() => {
+          const rawDays = data.pilot_recommendation?.duration_days || data.pilot_duration_days;
+          if (rawDays === undefined || rawDays === null || rawDays === "") return "";
+          const num = parseInt(rawDays, 10);
+          return !isNaN(num) && num > 0 ? num : "";
+        })(),
+        milestones: Array.isArray(data.suggested_milestones || data.milestones) && (data.suggested_milestones || data.milestones).length > 0
+          ? (data.suggested_milestones || data.milestones).map((m, idx) => ({
+              id: crypto.randomUUID(),
+              name: m.name || `Milestone ${idx + 1}`,
+              description: m.description || "",
+              dueDate: m.dueDate || m.due_date || "",
+              paymentPercentage: m.paymentPercentage != null ? String(m.paymentPercentage) : (m.payment_percentage != null ? String(m.payment_percentage) : ""),
+              status: "not_started",
+            }))
+          : [],
 
         // Step 4: Requirements
-        requiredTechnologies:
-          data.technology_categories && data.technology_categories.length > 0
-            ? data.technology_categories.map((tech) => ({
-                id: crypto.randomUUID(),
-                name: tech,
-              }))
-            : [
-                { id: crypto.randomUUID(), name: "Artificial Intelligence & ML" },
-                { id: crypto.randomUUID(), name: "Queue Optimization Algorithms" },
-                { id: crypto.randomUUID(), name: "Cloud & Edge Deployment" },
-              ],
-        eligibilityRequirements:
-          (data.suggested_eligibility_criteria && data.suggested_eligibility_criteria.length > 0)
-            ? data.suggested_eligibility_criteria.map((el) => ({
-                id: crypto.randomUUID(),
-                name: el,
-                description: "Eligibility criterion for pilot sandbox entry.",
-                required: true,
-              }))
-            : (data.eligibility_considerations && data.eligibility_considerations.length > 0)
-            ? data.eligibility_considerations.map((el) => ({
-                id: crypto.randomUUID(),
-                name: el,
-                description: "Eligibility criterion for pilot sandbox entry.",
-                required: true,
-              }))
-            : [
-                {
-                  id: crypto.randomUUID(),
-                  name: "DPIIT-recognized Startup entity",
-                  description: "Must be certified by Startup India / DPIIT.",
-                  required: true,
-                },
-                {
-                  id: crypto.randomUUID(),
-                  name: "Proven Queue / Telemetry Deployment",
-                  description: "Demonstrated technical capability in high-load operational setups.",
-                  required: true,
-                },
-              ],
-        requiredDocuments:
-          data.suggested_documents && data.suggested_documents.length > 0
-            ? data.suggested_documents.map((doc) => ({
-                id: crypto.randomUUID(),
-                name: doc,
-                description: "Required for evaluator review and sandbox onboarding.",
-                verificationStatus: "pending",
-              }))
-            : [
-                {
-                  id: crypto.randomUUID(),
-                  name: "Technical Architecture & Security Plan",
-                  description: "Detailed system architecture and data privacy policy.",
-                  verificationStatus: "pending",
-                },
-                {
-                  id: crypto.randomUUID(),
-                  name: "Implementation Milestone Schedule",
-                  description: "Breakdown of 60-day pilot execution.",
-                  verificationStatus: "pending",
-                },
-                {
-                  id: crypto.randomUUID(),
-                  name: "Cost Breakdown & Budget Proposal",
-                  description: "Detailed itemized milestone budget.",
-                  verificationStatus: "pending",
-                },
-              ],
+        requiredTechnologies: Array.isArray(data.technology_categories || data.required_technologies) && (data.technology_categories || data.required_technologies).length > 0
+          ? (data.technology_categories || data.required_technologies).map((tech) => ({
+              id: crypto.randomUUID(),
+              name: typeof tech === "string" ? tech : (tech?.name || ""),
+            })).filter(t => t.name.trim().length > 0)
+          : [],
+        eligibilityRequirements: Array.isArray(data.suggested_eligibility_criteria || data.eligibility_requirements) && (data.suggested_eligibility_criteria || data.eligibility_requirements).length > 0
+          ? (data.suggested_eligibility_criteria || data.eligibility_requirements).map((el) => ({
+              id: crypto.randomUUID(),
+              name: typeof el === "string" ? el : (el?.name || ""),
+              description: typeof el === "object" && el.description ? el.description : "Eligibility criterion for pilot sandbox entry.",
+              required: typeof el === "object" && el.required !== undefined ? el.required : true,
+            })).filter(e => e.name.trim().length > 0)
+          : [],
+        requiredDocuments: Array.isArray(data.suggested_documents || data.required_documents) && (data.suggested_documents || data.required_documents).length > 0
+          ? (data.suggested_documents || data.required_documents).map((doc) => ({
+              id: crypto.randomUUID(),
+              name: typeof doc === "string" ? doc : (doc?.name || ""),
+              description: typeof doc === "object" && doc.description ? doc.description : "Required for evaluator review and onboarding.",
+              verificationStatus: "pending",
+            })).filter(d => d.name.trim().length > 0)
+          : [],
       };
 
       onAutofill(mappedData);

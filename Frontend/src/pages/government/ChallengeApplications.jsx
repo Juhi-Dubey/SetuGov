@@ -879,6 +879,9 @@ function ChallengeApplications() {
           state: m.startup?.state,
           why_matched: m.why_matched,
           strengths: m.strengths,
+          ai_explanation_status: m.ai_explanation_status || m.aiReasoningObj?.ai_explanation_status,
+          ai_metadata: m.ai_metadata || m.aiReasoningObj?.ai_metadata,
+          status: m.status,
           match: m,
         });
       }
@@ -1070,8 +1073,14 @@ function ChallengeApplications() {
         {item.why_matched && (
           <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-2.5 text-xs text-slate-600 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-300">
             <p className="line-clamp-2">
-              <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                Brain 2 Reasoning:
+              <span className={`font-semibold ${
+                item.ai_explanation_status === 'AI_UNAVAILABLE' || item.ai_metadata?.status === 'AI_UNAVAILABLE' || item.status === 'AI_UNAVAILABLE' || item.ai_metadata?.mode === 'mock'
+                  ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-indigo-600 dark:text-indigo-400'
+              }`}>
+                {item.ai_explanation_status === 'AI_UNAVAILABLE' || item.ai_metadata?.status === 'AI_UNAVAILABLE' || item.status === 'AI_UNAVAILABLE' || item.ai_metadata?.mode === 'mock'
+                  ? 'Deterministic Breakdown (AI Unavailable):'
+                  : 'Brain 2 Reasoning:'}
               </span>{" "}
               {item.why_matched}
             </p>
@@ -1306,16 +1315,22 @@ function ChallengeApplications() {
           </div>
         )}
 
-        {/* Brain 2 Qualitative Reasoning */}
+        {/* Qualitative Reasoning */}
         <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-xs leading-5 text-slate-600 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-300">
           <p>
-            <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-              Brain 2 Reasoning:
+            <span className={`font-semibold ${
+              match.ai_explanation_status === 'AI_UNAVAILABLE' || match.ai_metadata?.status === 'AI_UNAVAILABLE' || match.status === 'AI_UNAVAILABLE' || match.ai_metadata?.mode === 'mock'
+                ? 'text-amber-600 dark:text-amber-400'
+                : 'text-indigo-600 dark:text-indigo-400'
+            }`}>
+              {match.ai_explanation_status === 'AI_UNAVAILABLE' || match.ai_metadata?.status === 'AI_UNAVAILABLE' || match.status === 'AI_UNAVAILABLE' || match.ai_metadata?.mode === 'mock'
+                ? 'Deterministic Match Breakdown (AI Unavailable):'
+                : 'Brain 2 Reasoning:'}
             </span>{" "}
             {match.why_matched ||
               match.ai_explanation ||
               match.match_rationale ||
-              "Verified startup capability evaluation demonstrates relevant alignment with problem requirements."}
+              "Deterministic rule-based match scoring is displayed."}
           </p>
 
           {match.strengths && match.strengths.length > 0 && (

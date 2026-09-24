@@ -1,5 +1,56 @@
 import { z } from 'zod';
 
+const kpiItemSchema = z.union([
+  z.string(),
+  z.object({
+    id: z.string().optional(),
+    name: z.string().min(1, 'KPI name cannot be empty'),
+    unit: z.string().optional().default(''),
+    baseline: z.union([z.number(), z.string()]).optional(),
+    target: z.union([z.number(), z.string()]).optional(),
+    direction: z.enum(['INCREASE', 'DECREASE']).or(z.string()).optional().default('DECREASE'),
+    weight: z.union([z.number(), z.string()]).optional()
+  })
+]);
+
+const milestoneItemSchema = z.union([
+  z.string(),
+  z.object({
+    id: z.string().optional(),
+    name: z.string().optional(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    due_date: z.string().datetime({ offset: true }).or(z.string()).nullable().optional(),
+    dueDate: z.string().optional(),
+    payment_percentage: z.union([z.number(), z.string()]).optional(),
+    paymentPercentage: z.union([z.number(), z.string()]).optional(),
+    status: z.string().optional().default('not_started')
+  }).refine(m => Boolean(m.name || m.title), {
+    message: 'Milestone must have a name or title'
+  })
+]);
+
+const eligibilityItemSchema = z.union([
+  z.string(),
+  z.object({
+    id: z.string().optional(),
+    name: z.string().min(1),
+    description: z.string().optional(),
+    required: z.boolean().optional()
+  })
+]);
+
+const documentItemSchema = z.union([
+  z.string(),
+  z.object({
+    id: z.string().optional(),
+    name: z.string().min(1),
+    description: z.string().optional(),
+    verificationStatus: z.string().optional(),
+    verification_status: z.string().optional()
+  })
+]);
+
 export const createChallengeSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters').max(200),
   problem_description: z.string().min(20, 'Problem description must be at least 20 characters'),
@@ -22,10 +73,10 @@ export const createChallengeSchema = z.object({
   pilot_start_date: z.string().datetime({ offset: true }).or(z.string()).nullable().optional(),
   pilot_end_date: z.string().datetime({ offset: true }).or(z.string()).nullable().optional(),
   startup_requirements: z.string().nullable().optional(),
-  kpis: z.array(z.any()).nullable().optional(),
-  milestones: z.array(z.any()).nullable().optional(),
-  eligibility_requirements: z.array(z.any()).nullable().optional(),
-  required_documents: z.array(z.any()).nullable().optional(),
+  kpis: z.array(kpiItemSchema).nullable().optional(),
+  milestones: z.array(milestoneItemSchema).nullable().optional(),
+  eligibility_requirements: z.array(eligibilityItemSchema).nullable().optional(),
+  required_documents: z.array(documentItemSchema).nullable().optional(),
   cybersecurity_requirements: z.string().nullable().optional(),
   data_compliance: z.string().nullable().optional(),
   department_id: z.string().uuid().optional()
@@ -63,10 +114,10 @@ export const updateChallengeSchema = z.object({
   pilot_start_date: z.string().datetime({ offset: true }).or(z.string()).nullable().optional(),
   pilot_end_date: z.string().datetime({ offset: true }).or(z.string()).nullable().optional(),
   startup_requirements: z.string().nullable().optional(),
-  kpis: z.array(z.any()).nullable().optional(),
-  milestones: z.array(z.any()).nullable().optional(),
-  eligibility_requirements: z.array(z.any()).nullable().optional(),
-  required_documents: z.array(z.any()).nullable().optional(),
+  kpis: z.array(kpiItemSchema).nullable().optional(),
+  milestones: z.array(milestoneItemSchema).nullable().optional(),
+  eligibility_requirements: z.array(eligibilityItemSchema).nullable().optional(),
+  required_documents: z.array(documentItemSchema).nullable().optional(),
   cybersecurity_requirements: z.string().nullable().optional(),
   data_compliance: z.string().nullable().optional()
 });

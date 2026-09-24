@@ -1341,12 +1341,132 @@ Government of India
   }
 };
 
+/**
+ * Dispatch Admin-Issued Login Credentials upon Access Request Approval
+ * Sends assigned Login ID (email) and temporary/initial password.
+ */
+export const sendAdminIssuedCredentialsEmail = async ({
+  recipientEmail,
+  applicantName,
+  loginId,
+  temporaryPassword,
+  role,
+  portalUrl
+}) => {
+  const roleDisplay = role === 'GOVERNMENT' ? 'Government Officer' : 'Innovation Evaluator';
+  const loginUrl = portalUrl || `${config.FRONTEND_URL}/login`;
+  const subject = `[SetuGov] Access Approved — Your Login Credentials for ${roleDisplay} Account`;
+
+  const text = `
+Dear ${applicantName},
+
+Your access request for SetuGov has been approved by the Administrator.
+Your official account has been provisioned as a ${roleDisplay}.
+
+Your Login Credentials:
+- Login ID (Email): ${loginId}
+- Initial Password: ${temporaryPassword}
+- Portal Sign In: ${loginUrl}
+
+Security Notice:
+Please sign in to the platform and immediately update your password under account settings.
+Do not share these credentials with anyone.
+
+SetuGov — Government of India Innovation Procurement Platform
+`.trim();
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #1e293b; }
+    .card { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .header { background: #0f172a; padding: 28px; text-align: center; }
+    .header h1 { color: #f8fafc; font-size: 20px; margin: 0 0 6px 0; font-weight: 700; letter-spacing: -0.025em; }
+    .header p { color: #94a3b8; font-size: 13px; margin: 0; }
+    .content { padding: 32px 28px; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: #ecfdf5; color: #047857; margin-bottom: 16px; }
+    .cred-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px 20px; margin: 20px 0; }
+    .cred-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; font-size: 14px; }
+    .cred-row:last-child { border-bottom: none; }
+    .cred-label { color: #64748b; font-weight: 500; }
+    .cred-val { color: #0f172a; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-weight: 700; }
+    .btn { display: inline-block; background: #2563eb; color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; text-align: center; margin: 16px 0; }
+    .security-note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 14px; font-size: 13px; color: #92400e; margin-top: 20px; }
+    .footer { background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 18px; text-align: center; font-size: 12px; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>SetuGov National Innovation Portal</h1>
+      <p>Secure Access & Credential Provisioning</p>
+    </div>
+    <div class="content">
+      <span class="badge">&#10003; Access Approved</span>
+      <p style="font-size: 15px; margin: 0 0 14px 0;">Dear <strong>${applicantName}</strong>,</p>
+      <p style="font-size: 14px; color: #475569; line-height: 1.5; margin: 0 0 16px 0;">
+        Your application for access to SetuGov has been approved by the Administrator. Your official account has been initialized as a <strong>${roleDisplay}</strong>.
+      </p>
+
+      <div class="cred-box">
+        <div class="cred-row">
+          <span class="cred-label">Assigned Role:</span>
+          <span class="cred-val">${roleDisplay}</span>
+        </div>
+        <div class="cred-row">
+          <span class="cred-label">Login ID / Email:</span>
+          <span class="cred-val">${loginId}</span>
+        </div>
+        <div class="cred-row">
+          <span class="cred-label">Initial Password:</span>
+          <span class="cred-val">${temporaryPassword}</span>
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="${loginUrl}" class="btn">Sign In to SetuGov &rarr;</a>
+      </div>
+
+      <div class="security-note">
+        <strong>Important Security Advice:</strong>
+        <p style="margin: 4px 0 0 0;">
+          Please sign in and change your password immediately in your account settings. Never disclose these credentials to anyone.
+        </p>
+      </div>
+    </div>
+    <div class="footer">
+      SetuGov &bull; Government of India &bull; Innovation Procurement Lifecycle Platform
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+  try {
+    const result = await sendEmail({
+      to: recipientEmail,
+      subject,
+      text,
+      html
+    });
+    logger.info(`[ADMIN CREDENTIALS EMAIL] Dispatched to ${maskEmail(recipientEmail)}. Message ID: ${result?.messageId || 'unknown'}`);
+    return result;
+  } catch (error) {
+    logger.error(`[ADMIN CREDENTIALS EMAIL] Failed for ${maskEmail(recipientEmail)}: ${error.message}`);
+    throw error;
+  }
+};
+
 export default {
   sendEmail,
   sendInvitationEmail,
   sendEmailVerificationEmail,
   sendVerificationEmail,
   sendAccessRequestEmail,
+  sendAdminIssuedCredentialsEmail,
   sendStartupShortlistedEmail,
   sendStartupFinalizedEmail,
   sendEvaluatorAssignedEmail,

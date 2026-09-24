@@ -15,7 +15,8 @@ import {
   buildChallengeEmbeddingText,
   buildStartupEmbeddingText,
   persistStartupEmbedding,
-  getVerifiedStartupEmbeddings
+  getVerifiedStartupEmbeddings,
+  EXPECTED_EMBEDDING_DIMENSION
 } from './embeddingService.js';
 import { createAuditLog } from './auditService.js';
 import aiService from './aiService.js';
@@ -133,12 +134,12 @@ const _executeMatchingForChallenge = async (challenge, challengeId, user = null,
 
   // Retrieve or lazy-generate challenge embedding from AI service (dimension configurable)
   let challengeEmbedding = await getChallengeEmbedding(challenge.id);
-  if (!challengeEmbedding || challengeEmbedding.length !== 768) {
+  if (!challengeEmbedding || challengeEmbedding.length !== EXPECTED_EMBEDDING_DIMENSION) {
     try {
       const challengeEmbeddingText = buildChallengeEmbeddingText(challenge);
       challengeEmbedding = await generateEmbedding(challengeEmbeddingText);
       await persistChallengeEmbedding(challenge.id, challengeEmbedding);
-      logger.info(`Generated and persisted real 768-dim embedding for challenge ${challenge.id}`);
+      logger.info(`Generated and persisted real ${EXPECTED_EMBEDDING_DIMENSION}-dim embedding for challenge ${challenge.id}`);
     } catch (err) {
       logger.warn(`Challenge ${challenge.id} embedding generation unavailable during matching: ${err.message}`);
       challengeEmbedding = null;
@@ -161,7 +162,7 @@ const _executeMatchingForChallenge = async (challenge, challengeId, user = null,
         const emb = await generateEmbedding(startupText);
         await persistStartupEmbedding(startup.id, emb);
         startupEmbeddingMap.set(startup.id, emb);
-        logger.info(`Generated and persisted real 768-dim embedding for startup ${startup.id}`);
+        logger.info(`Generated and persisted real ${EXPECTED_EMBEDDING_DIMENSION}-dim embedding for startup ${startup.id}`);
       } catch (err) {
         logger.warn(`Startup ${startup.id} embedding generation unavailable: ${err.message}`);
       }

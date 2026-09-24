@@ -22,27 +22,8 @@ import {
 import { submitGovernmentAccessRequest } from "../../services/accessRequestService";
 import { useTheme } from "../../context/ThemeContext";
 import TurnstileWidget from "../../components/common/TurnstileWidget";
-
-const INDIAN_STATES = [
-  "Maharashtra",
-  "Karnataka",
-  "Telangana",
-  "Tamil Nadu",
-  "Gujarat",
-  "Delhi",
-  "Uttar Pradesh",
-  "Rajasthan",
-  "Madhya Pradesh",
-  "Kerala",
-  "Andhra Pradesh",
-  "West Bengal",
-  "Punjab",
-  "Haryana",
-  "Odisha",
-  "Assam",
-  "Bihar",
-  "Other State / Central UT",
-];
+import CheckStatusModal from "../../components/common/CheckStatusModal";
+import { STATES_AND_UTS } from "../../data/indiaLocations";
 
 export default function GovernmentAccessRequestPage() {
   const { isDark, toggleTheme } = useTheme();
@@ -66,6 +47,7 @@ export default function GovernmentAccessRequestPage() {
   const [submittedData, setSubmittedData] = useState(null);
   const [turnstileToken, setTurnstileToken] = useState(null);
   const [resetTurnstile, setResetTurnstile] = useState(0);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
   const validate = () => {
     const errs = {};
@@ -151,6 +133,14 @@ export default function GovernmentAccessRequestPage() {
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
+            <button
+              type="button"
+              onClick={() => setIsStatusModalOpen(true)}
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/80 px-3.5 text-xs font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
+            >
+              <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <span>Check Status</span>
+            </button>
             <Link
               to="/login"
               className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
@@ -205,6 +195,14 @@ export default function GovernmentAccessRequestPage() {
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsStatusModalOpen(true)}
+                className="inline-flex h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-blue-300 bg-blue-50 px-6 text-xs font-bold text-blue-700 shadow-sm hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300 dark:hover:bg-blue-900/50"
+              >
+                <Clock className="h-4 w-4" />
+                <span>Track Status Now</span>
+              </button>
               <Link
                 to="/"
                 className="btn-primary inline-flex h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
@@ -374,21 +372,34 @@ export default function GovernmentAccessRequestPage() {
                     State / Union Territory <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none z-10" />
                     <select
                       name="state"
                       required
                       value={formData.state}
                       onChange={handleChange}
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900"
+                      className={`h-10 w-full rounded-xl border bg-slate-50/50 pl-10 pr-4 text-xs outline-none transition focus:bg-white focus:ring-4 dark:bg-slate-950 dark:focus:bg-slate-900 ${
+                        formData.state === "" ? "text-slate-400 dark:text-slate-500" : "text-slate-900 dark:text-white"
+                      } ${
+                        errors.state
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                          : "border-slate-200 focus:border-blue-500 focus:ring-blue-500/10 dark:border-slate-800"
+                      }`}
                     >
-                      {INDIAN_STATES.map((s) => (
+                      <option value="" disabled className="bg-white text-slate-400 dark:bg-slate-900 dark:text-slate-500">
+                        Select State / Union Territory
+                      </option>
+                      {STATES_AND_UTS.map((s) => (
                         <option key={s} value={s} className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">
                           {s}
                         </option>
                       ))}
+                      <option value="Central Government / Other" className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">
+                        Central Government / Other
+                      </option>
                     </select>
                   </div>
+                  {errors.state && <p className="mt-1 text-[11px] text-red-500">{errors.state}</p>}
                 </div>
 
                 {/* Department Code */}
@@ -504,6 +515,12 @@ export default function GovernmentAccessRequestPage() {
           </div>
         )}
       </main>
+
+      <CheckStatusModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        initialEmail={formData.email}
+      />
     </div>
   );
 }

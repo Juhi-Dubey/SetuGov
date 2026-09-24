@@ -87,6 +87,32 @@ export const generateDocumentDraft = async (req, res, next) => {
  * Proxies the Python AI service streaming endpoint or falls back to mock streaming
  */
 export const streamAnalyzeApplicationProposal = async (req, res, next) => {
+  let isClientConnected = true;
+
+  req.on('close', () => {
+    isClientConnected = false;
+  });
+
+  const safeWrite = (data) => {
+    if (isClientConnected && !res.writableEnded && !res.destroyed) {
+      try {
+        res.write(data);
+      } catch (err) {
+        isClientConnected = false;
+      }
+    }
+  };
+
+  const safeEnd = () => {
+    if (!res.writableEnded && !res.destroyed) {
+      try {
+        res.end();
+      } catch (err) {
+        // ignore stream close errors
+      }
+    }
+  };
+
   try {
     const applicationId = req.params.application_id;
     if (!applicationId) {
@@ -102,23 +128,23 @@ export const streamAnalyzeApplicationProposal = async (req, res, next) => {
 
     await aiService.streamAnalyzeApplicationProposal(applicationId, req.user, req.ip, {
       onChunk: (text) => {
-        res.write(`data: ${JSON.stringify({ event: 'chunk', text })}\n\n`);
+        safeWrite(`data: ${JSON.stringify({ event: 'chunk', text })}\n\n`);
       },
       onComplete: (data) => {
-        res.write(`data: ${JSON.stringify({ event: 'complete', data })}\n\n`);
-        res.end();
+        safeWrite(`data: ${JSON.stringify({ event: 'complete', data })}\n\n`);
+        safeEnd();
       },
       onError: (message) => {
-        res.write(`data: ${JSON.stringify({ event: 'error', message })}\n\n`);
-        res.end();
+        safeWrite(`data: ${JSON.stringify({ event: 'error', message })}\n\n`);
+        safeEnd();
       }
     });
   } catch (error) {
     if (!res.headersSent) {
       next(error);
     } else {
-      res.write(`data: ${JSON.stringify({ event: 'error', message: error.message })}\n\n`);
-      res.end();
+      safeWrite(`data: ${JSON.stringify({ event: 'error', message: error.message })}\n\n`);
+      safeEnd();
     }
   }
 };

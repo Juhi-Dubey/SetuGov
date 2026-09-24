@@ -124,6 +124,7 @@ function CreateChallenge() {
                 unit: k.unit || "",
                 baseline: k.baseline !== undefined && k.baseline !== null ? String(k.baseline) : "",
                 target: k.target !== undefined && k.target !== null ? String(k.target) : "",
+                direction: k.direction || "DECREASE",
                 weight: k.weight !== undefined && k.weight !== null ? String(k.weight) : "",
               }))
             : [],
@@ -939,12 +940,81 @@ function CreateChallenge() {
   // AI COPILOT AUTOFILL
   // =========================================================
 
-  const handleAutofill = (mappedData) => {
-    setFormData((previous) => ({
-      ...previous,
-      ...mappedData,
-      department: userDepartment || previous.department || mappedData.department || "",
-    }));
+  const handleAutofill = (mappedData = {}) => {
+    setFormData((prev) => {
+      const isBlank = (val) => val === undefined || val === null || String(val).trim() === "";
+      const isArrayEmpty = (arr) => !Array.isArray(arr) || arr.length === 0;
+
+      // 1. Department is strictly user-authoritative
+      const department = userDepartment || prev.department || "";
+
+      // 2. Text fields: preserve user value if non-empty; otherwise adopt AI suggestion
+      const title = !isBlank(prev.title) ? prev.title : (mappedData.title || "");
+      const problemDescription = !isBlank(prev.problemDescription) ? prev.problemDescription : (mappedData.problemDescription || "");
+      const currentProcess = !isBlank(prev.currentProcess) ? prev.currentProcess : (mappedData.currentProcess || "");
+      const currentBaseline = !isBlank(prev.currentBaseline) ? prev.currentBaseline : (mappedData.currentBaseline || "");
+      const desiredOutcome = !isBlank(prev.desiredOutcome) ? prev.desiredOutcome : (mappedData.desiredOutcome || "");
+      const location = !isBlank(prev.location) ? prev.location : (mappedData.location || "");
+
+      // 3. Application deadline: strictly user-entered (never overwritten by AI)
+      const applicationDeadline = prev.applicationDeadline || "";
+
+      // 4. Budget: preserve user budget if positive; otherwise adopt AI suggestion if positive
+      const budget = !isBlank(prev.budget) && Number(String(prev.budget).replace(/[^0-9.]/g, "")) > 0
+        ? prev.budget
+        : (mappedData.budget || "");
+
+      // 5. Pilot dates: preserve user dates
+      const pilotStartDate = !isBlank(prev.pilotStartDate) ? prev.pilotStartDate : (mappedData.pilotStartDate || "");
+      const pilotEndDate = !isBlank(prev.pilotEndDate) ? prev.pilotEndDate : (mappedData.pilotEndDate || "");
+      const pilotLocation = !isBlank(prev.pilotLocation) ? prev.pilotLocation : (mappedData.pilotLocation || location || "");
+
+      // 6. Pilot duration: derive from dates if both valid; otherwise preserve user duration
+      let pilotDurationDays = prev.pilotDurationDays;
+      if (pilotStartDate && pilotEndDate) {
+        const diffMs = new Date(pilotEndDate).getTime() - new Date(pilotStartDate).getTime();
+        const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+        if (diffDays > 0) pilotDurationDays = diffDays;
+      }
+      if (!pilotDurationDays && mappedData.pilotDurationDays) {
+        pilotDurationDays = mappedData.pilotDurationDays;
+      }
+
+      // 7. Structured collections: preserve user lists if non-empty; otherwise adopt AI suggestions
+      const kpis = !isArrayEmpty(prev.kpis) ? prev.kpis : (mappedData.kpis || []);
+      const milestones = !isArrayEmpty(prev.milestones) ? prev.milestones : (mappedData.milestones || []);
+      const requiredTechnologies = !isArrayEmpty(prev.requiredTechnologies) ? prev.requiredTechnologies : (mappedData.requiredTechnologies || []);
+      const eligibilityRequirements = !isArrayEmpty(prev.eligibilityRequirements) ? prev.eligibilityRequirements : (mappedData.eligibilityRequirements || []);
+      const requiredDocuments = !isArrayEmpty(prev.requiredDocuments) ? prev.requiredDocuments : (mappedData.requiredDocuments || []);
+      const startup = !isBlank(prev.startup) ? prev.startup : (mappedData.startup || "");
+      const cybersecurityDocumentation = !isBlank(prev.cybersecurityDocumentation) ? prev.cybersecurityDocumentation : (mappedData.cybersecurityDocumentation || "");
+      const dataCompliance = !isBlank(prev.dataCompliance) ? prev.dataCompliance : (mappedData.dataCompliance || "");
+
+      return {
+        ...prev,
+        department,
+        title,
+        problemDescription,
+        currentProcess,
+        currentBaseline,
+        desiredOutcome,
+        location,
+        applicationDeadline,
+        budget,
+        pilotStartDate,
+        pilotEndDate,
+        pilotLocation,
+        pilotDurationDays: pilotDurationDays || "",
+        kpis,
+        milestones,
+        requiredTechnologies,
+        eligibilityRequirements,
+        requiredDocuments,
+        startup,
+        cybersecurityDocumentation,
+        dataCompliance,
+      };
+    });
     setErrors({});
   };
 

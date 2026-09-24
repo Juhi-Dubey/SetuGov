@@ -39,8 +39,15 @@ export const normalizeChallengePayload = (raw = {}) => {
     return fallback;
   };
 
-  const parseSafeDate = (val) => {
+  const parseSafeDate = (val, isEndOfDay = false) => {
     if (!val) return null;
+    if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}$/.test(val.trim())) {
+      const [year, month, day] = val.trim().split("-").map(Number);
+      const d = isEndOfDay
+        ? new Date(year, month - 1, day, 23, 59, 59, 999)
+        : new Date(year, month - 1, day, 0, 0, 0, 0);
+      return d.toISOString();
+    }
     const d = new Date(val);
     return isNaN(d.getTime()) ? null : d.toISOString();
   };
@@ -103,20 +110,20 @@ export const normalizeChallengePayload = (raw = {}) => {
     budget_min = 0;
   }
 
-  // Integer positive pilot duration
+  // Pilot duration: if valid start and end dates are present, calculate duration from them authoritatively
   let pilot_duration_days = undefined;
-  const rawDuration = raw.pilotDurationDays ?? raw.pilot_duration_days;
-  if (rawDuration !== undefined && rawDuration !== null && rawDuration !== "") {
-    const parsedDays = parseInt(rawDuration, 10);
-    if (!isNaN(parsedDays) && parsedDays > 0) pilot_duration_days = parsedDays;
+  const sDate = raw.pilotStartDate || raw.pilot_start_date;
+  const eDate = raw.pilotEndDate || raw.pilot_end_date;
+  if (sDate && eDate) {
+    const diffMs = new Date(eDate).getTime() - new Date(sDate).getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays > 0) pilot_duration_days = diffDays;
   }
   if (!pilot_duration_days) {
-    const sDate = raw.pilotStartDate || raw.pilot_start_date;
-    const eDate = raw.pilotEndDate || raw.pilot_end_date;
-    if (sDate && eDate) {
-      const diffMs = new Date(eDate).getTime() - new Date(sDate).getTime();
-      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-      if (diffDays > 0) pilot_duration_days = diffDays;
+    const rawDuration = raw.pilotDurationDays ?? raw.pilot_duration_days;
+    if (rawDuration !== undefined && rawDuration !== null && rawDuration !== "") {
+      const parsedDays = parseInt(rawDuration, 10);
+      if (!isNaN(parsedDays) && parsedDays > 0) pilot_duration_days = parsedDays;
     }
   }
 
@@ -165,23 +172,41 @@ export const normalizeChallengePayload = (raw = {}) => {
   if (cybersecurity_requirements) payload.cybersecurity_requirements = cybersecurity_requirements;
   if (data_compliance) payload.data_compliance = data_compliance;
 
-  const appDeadline = parseSafeDate(raw.application_deadline || raw.applicationDeadline || raw.deadline);
+  const appDeadline = parseSafeDate(raw.application_deadline || raw.applicationDeadline || raw.deadline, true);
   if (appDeadline) payload.application_deadline = appDeadline;
 
-  const pilotStart = parseSafeDate(raw.pilotStartDate || raw.pilot_start_date);
+  const pilotStart = parseSafeDate(raw.pilotStartDate || raw.pilot_start_date, false);
   if (pilotStart) payload.pilot_start_date = pilotStart;
 
-  const pilotEnd = parseSafeDate(raw.pilotEndDate || raw.pilot_end_date);
+  const pilotEnd = parseSafeDate(raw.pilotEndDate || raw.pilot_end_date, true);
   if (pilotEnd) payload.pilot_end_date = pilotEnd;
 
-  // KPIs
+  // KPIs - normalize direction, numeric baseline/target/weight
   if (Array.isArray(raw.kpis) && raw.kpis.length > 0) {
-    payload.kpis = raw.kpis;
+    payload.kpis = raw.kpis.map((k) => ({
+      id: k.id || undefined,
+      name: (k.name || "").trim(),
+      unit: (k.unit || "").trim(),
+      baseline: parseCleanNumber(k.baseline) ?? (typeof k.baseline === "string" ? k.baseline.trim() : 0),
+      target: parseCleanNumber(k.target) ?? (typeof k.target === "string" ? k.target.trim() : 0),
+      direction: k.direction === "INCREASE" ? "INCREASE" : "DECREASE",
+      weight: parseCleanNumber(k.weight) ?? (k.weight !== undefined && k.weight !== null ? Number(k.weight) || 0 : undefined),
+    })).filter(k => k.name.length > 0);
   }
 
-  // Milestones
+  // Milestones - normalize payment_percentage, due_date
   if (Array.isArray(raw.milestones) && raw.milestones.length > 0) {
-    payload.milestones = raw.milestones;
+    payload.milestones = raw.milestones.map((m) => {
+      const paymentPct = parseCleanNumber(m.payment_percentage ?? m.paymentPercentage);
+      return {
+        id: m.id || undefined,
+        name: (m.name || "").trim(),
+        description: (m.description || "").trim(),
+        due_date: parseSafeDate(m.due_date || m.dueDate, false),
+        payment_percentage: paymentPct !== undefined ? paymentPct : 0,
+        status: m.status || "not_started"
+      };
+    }).filter(m => m.name.length > 0);
   }
 
   // Eligibility Requirements
@@ -312,7 +337,17 @@ export const getGovernmentAnalytics = async (params = {}) => {
 };
 
 export const getGovernmentDashboard = async () => {
-  return getGovernmentAnalytics().catch(() => getChallenges());
+  try {
+    const analytics = await getGovernmentAnalytics();
+    return { isDegraded: false, ...(analytics?.data || analytics) };
+  } catch (err) {
+    const challenges = await getChallenges().catch(() => null);
+    return {
+      isDegraded: true,
+      error: err.message || "Analytics service unavailable",
+      challenges: challenges?.data?.challenges || challenges?.data || challenges || [],
+    };
+  }
 };
 
 export default {
