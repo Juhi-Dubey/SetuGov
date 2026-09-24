@@ -41,7 +41,8 @@ export default function StartupSignup() {
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [resendStatus, setResendStatus] = useState("");
   const [resendError, setResendError] = useState("");
-  const [isResending, setIsResending] = useState(false);
+  const [emailDelivered, setEmailDelivered] = useState(true);
+  const [deliveryMessage, setDeliveryMessage] = useState("");
 
   const validateForm = () => {
     const errs = {};
@@ -94,6 +95,9 @@ export default function StartupSignup() {
 
       const res = await registerUser(payload);
       setRegisteredEmail(formData.email.trim());
+      const delivered = res?.data?.email_delivered ?? res?.email_delivered ?? true;
+      setEmailDelivered(delivered);
+      setDeliveryMessage(res?.data?.message || res?.message || "");
       setIsSuccess(true);
       setResendStatus("");
       setResendError("");
@@ -228,6 +232,18 @@ export default function StartupSignup() {
                 <p className="mt-3 text-center text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   Please check your inbox and click the verification link to activate your account and continue your startup registration.
                 </p>
+
+                {!emailDelivered && (
+                  <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <div>
+                      <p className="font-bold">Email Delivery Notice</p>
+                      <p className="mt-0.5 leading-relaxed">
+                        {deliveryMessage || "Verification email could not be delivered to this address. (Note: On unverified Resend sandbox accounts, emails can only be sent to the Resend account owner's email address)."}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {resendStatus && (
                   <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-medium text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300">

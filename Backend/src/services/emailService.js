@@ -1,3 +1,4 @@
+import nodemailer from 'nodemailer';
 import { config } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
@@ -25,6 +26,16 @@ export const escapeHtml = (str) => {
  */
 
 /**
+ * Masks email address for safe logging without exposing PII
+ */
+export const maskEmail = (email) => {
+  if (!email || typeof email !== 'string' || !email.includes('@')) return email || '';
+  const [local, domain] = email.split('@');
+  const maskedLocal = local.length <= 2 ? local[0] + '*' : local[0] + '*'.repeat(Math.max(1, local.length - 2)) + local[local.length - 1];
+  return `${maskedLocal}@${domain}`;
+};
+
+/**
  * Dispatch an email via the configured provider
  * 
  * @param {object} options
@@ -32,10 +43,15 @@ export const escapeHtml = (str) => {
  * @param {string} options.subject - Email subject
  * @param {string} options.text - Plain text content
  * @param {string} options.html - HTML content
- * @returns {Promise<{ email_accepted_by_provider: boolean, provider: string, messageId?: string }>}
+ * @returns {Promise<{ email_accepted_by_provider: boolean, delivered: boolean, provider: string, messageId?: string }>}
  */
 export const sendEmail = async ({ to, subject, text, html }) => {
   const provider = (config.EMAIL_PROVIDER || 'console').toLowerCase().trim();
+  const recipient = String(to || '').trim();
+
+  if (!recipient) {
+    throw new Error('Email recipient (to) is required.');
+  }
 
   if (config.NODE_ENV === 'production' && provider === 'console') {
     throw new Error(
@@ -45,7 +61,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
 
   if (provider === 'console') {
     // Safe logging in development without leaking secrets or tokens
-    logger.info(`[EMAIL SERVICE - DEV CONSOLE] Target: ${to} | Subject: "${subject}" | Status: Accepted (Dev Mode)`);
+    logger.info(`[EMAIL SERVICE - DEV CONSOLE] Target: ${maskEmail(recipient)} | Subject: "${subject}" | Status: Accepted (Dev Mode)`);
     return {
       email_accepted_by_provider: true,
       delivered: true,
@@ -56,56 +72,81 @@ export const sendEmail = async ({ to, subject, text, html }) => {
 
   if (provider === 'resend') {
     if (!config.EMAIL_API_KEY) {
-      throw new Error('Email Delivery Error: EMAIL_API_KEY is required for Resend email provider.');
+      throw new Error(
+        'Email Delivery Error: EMAIL_API_KEY is required for Resend email provider.'
+      );
     }
 
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${config.EMAIL_API_KEY}`,
+        Authorization: `Bearer ${config.EMAIL_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         from: config.EMAIL_FROM,
-        to: [to],
+        to: [recipient],
         subject,
         text,
         html
       })
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      // Mask any sensitive API key if it inadvertently appears in provider error response
-      const safeErrorText = config.EMAIL_API_KEY
-        ? errorText.replace(new RegExp(config.EMAIL_API_KEY.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '[REDACTED]')
-        : errorText;
+    // Read the response body exactly ONCE.
+    const responseText = await response.text();
 
-      // If in development/test and Resend restricts sending to unverified domains/external recipients:
-      if (
-        config.NODE_ENV !== 'production' &&
-        response.status === 403 &&
-        (errorText.includes('testing emails to your own email address') || errorText.includes('domain is not verified'))
-      ) {
-        logger.warn(
-          `[RESEND_SANDBOX_NOTICE] Recipient ${to} or domain is restricted on unverified Resend account (${safeErrorText}). Email successfully generated and accepted in dev sandbox mode.`
-        );
-        return {
-          email_accepted_by_provider: true,
-          delivered: true,
-          provider: 'resend-dev-sandbox',
-          messageId: `resend-sandbox-${Date.now()}`
-        };
+    if (!response.ok) {
+      let errorMessage = responseText;
+
+      try {
+        const parsed = JSON.parse(responseText);
+
+        errorMessage =
+          parsed?.message ||
+          parsed?.error?.message ||
+          responseText;
+      } catch {
+        // Response was not JSON. Keep the raw text.
       }
-      throw new Error(`Resend API Error (${response.status}): ${safeErrorText}`);
+
+      const safeErrorText = config.EMAIL_API_KEY
+        ? errorMessage.replace(
+            new RegExp(
+              config.EMAIL_API_KEY.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+              'g'
+            ),
+            '[REDACTED]'
+          )
+        : errorMessage;
+
+      logger.error(
+        `[RESEND] Email delivery failed for ${recipient}: ${safeErrorText}`
+      );
+
+      throw new Error(
+        `Resend API Error (${response.status}): ${safeErrorText}`
+      );
     }
 
-    const result = await response.json();
+    let result;
+
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      throw new Error(
+        'Resend returned an invalid success response.'
+      );
+    }
+
+    logger.info(
+      `[RESEND] Email accepted by Resend. Message ID: ${result?.id || 'unknown'}`
+    );
+
     return {
       email_accepted_by_provider: true,
-      delivered: true,
+      delivered: false,
       provider: 'resend',
-      messageId: result.id
+      messageId: result?.id
     };
   }
 
@@ -148,17 +189,59 @@ export const sendEmail = async ({ to, subject, text, html }) => {
   }
 
   if (provider === 'smtp') {
-    if (!config.SMTP_HOST) {
-      throw new Error('Email Delivery Error: SMTP_HOST is required for SMTP email provider.');
+    if (!config.EMAIL_SMTP_USER || !config.EMAIL_SMTP_PASSWORD) {
+      throw new Error('Email Delivery Error: EMAIL_SMTP_USER and EMAIL_SMTP_PASSWORD are required for SMTP email provider.');
     }
 
-    logger.info(`[EMAIL SERVICE - SMTP] Target: ${to} via ${config.SMTP_HOST}:${config.SMTP_PORT}`);
-    return {
-      email_accepted_by_provider: true,
-      delivered: true,
-      provider: 'smtp',
-      messageId: `smtp-${Date.now()}`
-    };
+    const cleanPassword = typeof config.EMAIL_SMTP_PASSWORD === 'string'
+      ? config.EMAIL_SMTP_PASSWORD.replace(/\s+/g, '')
+      : config.EMAIL_SMTP_PASSWORD;
+
+    const transporter = nodemailer.createTransport({
+      host: config.EMAIL_SMTP_HOST,
+      port: Number(config.EMAIL_SMTP_PORT),
+      secure: config.EMAIL_SMTP_SECURE === true,
+      auth: {
+        user: config.EMAIL_SMTP_USER,
+        pass: cleanPassword
+      }
+    });
+
+    try {
+      const info = await transporter.sendMail({
+        from: config.EMAIL_FROM,
+        to: recipient,
+        subject,
+        text,
+        html
+      });
+
+      logger.info(
+        `[SMTP] Email accepted by Gmail SMTP\nrecipient: ${maskEmail(recipient)}\nmessageId: ${info.messageId}`
+      );
+
+      return {
+        email_accepted_by_provider: true,
+        delivered: false,
+        provider: 'smtp',
+        messageId: info.messageId
+      };
+    } catch (error) {
+      // Redact SMTP credentials from any error message
+      let safeErrorMessage = error.message || 'Unknown SMTP error';
+      if (config.EMAIL_SMTP_PASSWORD) {
+        const rawPass = config.EMAIL_SMTP_PASSWORD.trim();
+        const compactPass = rawPass.replace(/\s+/g, '');
+        if (rawPass) safeErrorMessage = safeErrorMessage.split(rawPass).join('[REDACTED]');
+        if (compactPass) safeErrorMessage = safeErrorMessage.split(compactPass).join('[REDACTED]');
+      }
+
+      logger.error(
+        `[SMTP] Email delivery failed for ${maskEmail(recipient)}: ${safeErrorMessage}${error.code ? ` (code: ${error.code})` : ''}`
+      );
+
+      throw error;
+    }
   }
 
   throw new Error(`Unsupported EMAIL_PROVIDER: "${provider}". Expected 'console', 'resend', 'sendgrid', or 'smtp'.`);
@@ -371,6 +454,9 @@ SetuGov Team
 </body>
 </html>
 `.trim();
+
+  const maskedRecipient = maskEmail(email);
+  logger.info(`[EMAIL] Attempting verification email\nrecipient: ${maskedRecipient}\nprovider: ${config.EMAIL_PROVIDER}\nfrom: ${config.EMAIL_FROM}`);
 
   return sendEmail({
     to: email,
@@ -883,11 +969,149 @@ Government of India
   return sendEmail({ to: email, subject, text, html });
 };
 
+/**
+ * Event: Access Request Email (Government Officer / Evaluator Self Application)
+ */
+export const sendAccessRequestEmail = async ({
+  role,
+  recipientEmail,
+  applicantName,
+  applicantEmail,
+  details = {}
+}) => {
+  const safeRole = role === 'GOVERNMENT' ? 'GOVERNMENT' : 'EVALUATOR';
+  const roleTitle = safeRole === 'GOVERNMENT' ? 'Government Officer' : 'Domain Technical Evaluator';
+  const safeName = escapeHtml(applicantName);
+  const safeEmail = escapeHtml(applicantEmail);
+  const safeDept = details.departmentName ? escapeHtml(details.departmentName) : null;
+  const safeState = details.state ? escapeHtml(details.state) : null;
+  const safeOrg = details.organization ? escapeHtml(details.organization) : null;
+  const safeDesignation = details.designation ? escapeHtml(details.designation) : null;
+  const subject = `SetuGov Platform — ${roleTitle} Access Request Received`;
+
+  const maskedRecipient = maskEmail(recipientEmail);
+  logger.info(`[ACCESS REQUEST EMAIL]\nrole: ${safeRole}\nrecipient: ${maskedRecipient}\nsubject: ${subject}`);
+
+  const text = `
+Dear ${applicantName},
+
+Your access request for the SetuGov National Innovation Procurement Platform has been successfully submitted and is currently pending administrative verification.
+
+Application Summary:
+Role: ${roleTitle}
+Applicant: ${applicantName}
+Email: ${applicantEmail}
+${details.departmentName ? `Department: ${details.departmentName}${details.state ? ` (${details.state})` : ''}\n` : ''}${details.organization ? `Organization: ${details.organization}\n` : ''}${details.designation ? `Designation: ${details.designation}\n` : ''}
+Next Steps:
+- The SetuGov platform administrators will review your credentials and verify institutional authorization.
+- Once approved, an official invitation setup link will be dispatched to your email address to establish your secure credentials.
+
+If you have questions regarding your application, please contact support@setugov.gov.in.
+
+SetuGov National Innovation Procurement Platform
+Government of India
+`.trim();
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1e293b; background-color: #f8fafc; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 30px auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+    .header { background: #0f172a; padding: 28px; text-align: center; color: #ffffff; }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .header p { margin: 4px 0 0 0; color: #94a3b8; font-size: 13px; }
+    .content { padding: 32px 28px; }
+    .badge { display: inline-block; padding: 4px 12px; background: #eff6ff; color: #2563eb; border-radius: 9999px; font-weight: 600; font-size: 12px; margin-bottom: 16px; border: 1px solid #dbeafe; }
+    .notice { background: #f8fafc; border-left: 4px solid #64748b; padding: 14px 16px; border-radius: 4px; font-size: 13px; color: #475569; margin: 20px 0; }
+    .footer { padding: 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>SetuGov</h1>
+      <p>National Innovation Procurement Platform</p>
+    </div>
+    <div class="content">
+      <div class="badge">Access Request Pending Review</div>
+      <p>Dear <strong>${safeName}</strong>,</p>
+      <p>Your access request for official platform credentials has been successfully registered and forwarded to the State Administrator Review Committee.</p>
+      
+      <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
+        <tr>
+          <td style="padding: 8px 0; color: #64748b; width: 140px;">Requested Role:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${escapeHtml(roleTitle)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #64748b;">Applicant Email:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${safeEmail}</td>
+        </tr>
+        ${safeDept ? `
+        <tr>
+          <td style="padding: 8px 0; color: #64748b;">Department:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${safeDept}${safeState ? ` (${safeState})` : ''}</td>
+        </tr>` : ''}
+        ${safeOrg ? `
+        <tr>
+          <td style="padding: 8px 0; color: #64748b;">Organization:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${safeOrg}</td>
+        </tr>` : ''}
+        ${safeDesignation ? `
+        <tr>
+          <td style="padding: 8px 0; color: #64748b;">Designation:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${safeDesignation}</td>
+        </tr>` : ''}
+        <tr>
+          <td style="padding: 8px 0; color: #64748b;">Current Status:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #d97706;">PENDING ADMIN REVIEW</td>
+        </tr>
+      </table>
+
+      <div class="notice">
+        <strong>What happens next?</strong>
+        <ul style="margin: 6px 0 0 0; padding-left: 18px;">
+          <li>Administrators review statutory credentials and institutional identity.</li>
+          <li>Upon approval, a cryptographically signed, single-use activation link will be dispatched to this email address.</li>
+          <li>You will then be prompted to set your password and access the platform workspace.</li>
+        </ul>
+      </div>
+
+      <p style="font-size: 12px; color: #94a3b8;">
+        If you did not submit this request, please contact support@setugov.gov.in.
+      </p>
+    </div>
+    <div class="footer">
+      SetuGov &bull; Government of India &bull; Innovation Procurement Lifecycle Platform
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+  try {
+    const result = await sendEmail({
+      to: recipientEmail,
+      subject,
+      text,
+      html
+    });
+    logger.info(`[ACCESS REQUEST EMAIL] Dispatched via ${result?.provider || 'provider'}. Message ID: ${result?.messageId || 'unknown'}`);
+    return result;
+  } catch (error) {
+    logger.error(`[ACCESS REQUEST EMAIL] Failed: ${error.message}`);
+    throw error;
+  }
+};
+
 export default {
   sendEmail,
   sendInvitationEmail,
   sendEmailVerificationEmail,
   sendVerificationEmail,
+  sendAccessRequestEmail,
   sendStartupShortlistedEmail,
   sendStartupFinalizedEmail,
   sendEvaluatorAssignedEmail,
