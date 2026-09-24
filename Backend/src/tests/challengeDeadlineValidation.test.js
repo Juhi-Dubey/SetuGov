@@ -16,6 +16,7 @@ const baseChallenge = {
   budget_max: 2000000,
   pilot_duration_days: 90,
   required_technologies: ['Computer Vision', 'IoT', 'Machine Learning'],
+  application_deadline: new Date(Date.now() + 30 * 86400000).toISOString(),
 };
 
 let passed = 0;
@@ -66,16 +67,20 @@ await test('3. Accepts challenge with future deadline (30 days ahead)', async ()
   assert(result.success, `Schema should accept future deadlines. Errors: ${result.error?.issues?.map(i => i.message).join(', ')}`);
 });
 
-await test('4. Accepts challenge with null deadline (optional)', async () => {
+await test('4. Rejects challenge with null deadline', async () => {
   const data = { ...baseChallenge, application_deadline: null };
   const result = createChallengeSchema.safeParse(data);
-  assert(result.success, `Schema should accept null deadline. Errors: ${result.error?.issues?.map(i => i.message).join(', ')}`);
+  assert(!result.success, 'Schema should reject null deadline');
+  const deadlineError = result.error.issues.find(i => i.path.includes('application_deadline'));
+  assert(deadlineError, 'Error should reference application_deadline path');
 });
 
-await test('5. Accepts challenge with omitted deadline (undefined)', async () => {
-  const data = { ...baseChallenge }; // No application_deadline
+await test('5. Rejects challenge with omitted deadline (undefined)', async () => {
+  const { application_deadline, ...data } = baseChallenge; // Omit application_deadline
   const result = createChallengeSchema.safeParse(data);
-  assert(result.success, `Schema should accept missing deadline. Errors: ${result.error?.issues?.map(i => i.message).join(', ')}`);
+  assert(!result.success, 'Schema should reject missing deadline');
+  const deadlineError = result.error.issues.find(i => i.path.includes('application_deadline'));
+  assert(deadlineError, 'Error should reference application_deadline path');
 });
 
 await test('6. Budget validation still works with deadline validation chained', async () => {

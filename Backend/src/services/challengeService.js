@@ -38,6 +38,10 @@ export const createChallenge = async (data, user, ip_address = null) => {
     throw new BadRequestError(`Department with ID ${department_id} does not exist.`);
   }
 
+  if (!data.application_deadline || (typeof data.application_deadline === 'string' && !data.application_deadline.trim())) {
+    throw new BadRequestError('Application deadline is required.');
+  }
+
   const challenge = await prisma.challenge.create({
     data: {
       department_id,
