@@ -62,6 +62,7 @@ import {
   EVALUATION_STATUS_LABELS,
   formatPublishDate,
 } from "../../utils/filterUtils.js";
+import AIProposalAdvisoryPanel from "../../components/common/AIProposalAdvisoryPanel";
 
 // Re-export canonical domain mapping helper
 export const getCanonicalDomain = normalizeDomain;
@@ -185,6 +186,16 @@ function ChallengeApplications() {
   const [overrideJustification, setOverrideJustification] = useState("");
   const [selectionLoading, setSelectionLoading] = useState(false);
   const [selectionError, setSelectionError] = useState("");
+
+  // Change Request Modal State
+  const [changeRequestModalOpen, setChangeRequestModalOpen] = useState(false);
+  const [selectedAppForChangeRequest, setSelectedAppForChangeRequest] = useState(null);
+  const [changeRequestNotes, setChangeRequestNotes] = useState("");
+  const [changeRequestLoading, setChangeRequestLoading] = useState(false);
+  const [changeRequestError, setChangeRequestError] = useState("");
+
+  // Application Detail Modal State (including AI Proposal Screening Advisory)
+  const [detailModalApp, setDetailModalApp] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -569,6 +580,40 @@ function ChallengeApplications() {
       setSelectionError(err.message || "Failed to update application status to SELECTED.");
     } finally {
       setSelectionLoading(false);
+    }
+  };
+
+  const handleOpenChangeRequestModal = (app) => {
+    setSelectedAppForChangeRequest(app);
+    setChangeRequestNotes(app.change_request_notes || "");
+    setChangeRequestError("");
+    setChangeRequestModalOpen(true);
+  };
+
+  const handleSubmitChangeRequest = async () => {
+    if (!selectedAppForChangeRequest) return;
+    if (!changeRequestNotes.trim()) {
+      setChangeRequestError("Specific notes detailing the requested changes are mandatory.");
+      return;
+    }
+    try {
+      setChangeRequestLoading(true);
+      setChangeRequestError("");
+      await updateApplicationStatus(
+        selectedAppForChangeRequest.id,
+        "CHANGES_REQUESTED",
+        changeRequestNotes.trim(),
+        ""
+      );
+      setActionMessage("Changes requested from startup successfully.");
+      setChangeRequestModalOpen(false);
+      setSelectedAppForChangeRequest(null);
+      setChangeRequestNotes("");
+      await loadData();
+    } catch (err) {
+      setChangeRequestError(err.message || "Failed to submit change request.");
+    } finally {
+      setChangeRequestLoading(false);
     }
   };
 
@@ -2118,14 +2163,24 @@ function ChallengeApplications() {
                                     ? "bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300"
                                     : app.status === "SELECTED"
                                     ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                                    : app.status === "CHANGES_REQUESTED"
+                                    ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
                                     : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                                 }`}
                               >
-                                {app.status}
+                                {app.status === "CHANGES_REQUESTED" ? "Changes Requested" : app.status}
                               </span>
                             </td>
                             <td className="px-5 py-4 text-right whitespace-nowrap align-middle">
                               <div className="inline-flex items-center justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setDetailModalApp(app)}
+                                  className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                                  title="View Proposal Details & AI Advisory"
+                                >
+                                  <Eye className="mr-1 h-3.5 w-3.5" /> View
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => handleOpenAssignModal(app)}
@@ -2140,6 +2195,14 @@ function ChallengeApplications() {
                                   className="inline-flex items-center rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-indigo-950/50 dark:text-indigo-300 transition-colors"
                                 >
                                   Shortlist
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={isClosed || app.status === "SELECTED" || app.status === "CHANGES_REQUESTED"}
+                                  onClick={() => handleOpenChangeRequestModal(app)}
+                                  className="inline-flex items-center rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100 disabled:opacity-40 disabled:cursor-not-allowed dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300 transition-colors"
+                                >
+                                  Request Changes
                                 </button>
                                 <button
                                   type="button"
@@ -2973,6 +3036,192 @@ function ChallengeApplications() {
             </div>
           );
         })()}
+
+        {/* Change Request Modal */}
+        {changeRequestModalOpen && selectedAppForChangeRequest && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-950"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+                    <AlertCircle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Request Proposal Changes
+                    </h3>
+                    <p className="text-[11px] text-slate-500">
+                      {selectedAppForChangeRequest.startup?.company_name || "Startup Applicant"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChangeRequestModalOpen(false);
+                    setSelectedAppForChangeRequest(null);
+                    setChangeRequestNotes("");
+                    setChangeRequestError("");
+                  }}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="my-4 space-y-3">
+                <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300">
+                  <p className="font-semibold mb-1">How Change Requests Work:</p>
+                  <ul className="list-disc list-inside space-y-0.5 text-[11px] text-amber-800/90 dark:text-amber-300/90">
+                    <li>The application status transitions to <strong>CHANGES_REQUESTED</strong>.</li>
+                    <li>The startup receives notification and can update their technical proposal.</li>
+                    <li>Upon resubmission, previous evaluations are archived and evaluators reassess the updated solution.</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Specific Changes Requested *
+                  </label>
+                  <textarea
+                    rows={4}
+                    required
+                    value={changeRequestNotes}
+                    onChange={(e) => setChangeRequestNotes(e.target.value)}
+                    placeholder="Specify the technical gaps, budget adjustments, or missing evidence the startup should revise..."
+                    className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs outline-none focus:border-amber-500 dark:border-slate-700 dark:bg-slate-900 text-slate-900 dark:text-white"
+                  />
+                </div>
+
+                {changeRequestError && (
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-300 flex items-start gap-2">
+                    <XCircle className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
+                    <span>{changeRequestError}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChangeRequestModalOpen(false);
+                    setSelectedAppForChangeRequest(null);
+                    setChangeRequestNotes("");
+                    setChangeRequestError("");
+                  }}
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={changeRequestLoading || !changeRequestNotes.trim()}
+                  onClick={handleSubmitChangeRequest}
+                  className="px-4 py-2 rounded-xl bg-amber-600 text-white font-semibold hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5 text-xs"
+                >
+                  {changeRequestLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Sending Request...
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="h-4 w-4" />
+                      Send Change Request
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Application Proposal Detail & AI Advisory Modal */}
+        {detailModalApp && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-3xl my-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-950 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    Proposal Details & AI Screening
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {detailModalApp.startup?.company_name || detailModalApp.startup?.name} • Application ID: {detailModalApp.id}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDetailModalApp(null)}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="my-5 space-y-5">
+                {/* Proposal content cards */}
+                <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900/80 space-y-3">
+                  <div>
+                    <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Proposal Summary</h5>
+                    <p className="mt-1 text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                      {detailModalApp.proposal || "No summary provided."}
+                    </p>
+                  </div>
+
+                  {detailModalApp.technical_approach && (
+                    <div>
+                      <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Technical Approach</h5>
+                      <p className="mt-1 text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                        {detailModalApp.technical_approach}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="grid gap-3 sm:grid-cols-3 pt-2 text-xs border-t border-slate-200/60 dark:border-slate-800">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-500">Timeline</span>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{detailModalApp.timeline || "N/A"}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-500">Estimated Cost</span>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">
+                        {detailModalApp.estimated_cost ? `₹${Number(detailModalApp.estimated_cost).toLocaleString("en-IN")}` : "N/A"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-500">Status</span>
+                      <p className="font-semibold text-indigo-600 dark:text-indigo-400">{detailModalApp.status}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Read-Only AI Proposal Advisory Panel */}
+                <AIProposalAdvisoryPanel applicationId={detailModalApp.id} />
+              </div>
+
+              <div className="flex items-center justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setDetailModalApp(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-900 text-white font-semibold hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 text-xs"
+                >
+                  Close Details
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
           </div>
         )}
       </div>

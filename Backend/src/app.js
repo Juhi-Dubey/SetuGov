@@ -136,8 +136,8 @@ export const createApp = () => {
   });
 
   // Direct uploads / documents route
-  app.use('/uploads', uploadRoutes);
-  app.use('/documents', uploadRoutes);
+  // app.use('/uploads', uploadRoutes);
+  // app.use('/documents', uploadRoutes);
 
   // Mount API v1 Routes
   app.use('/api/v1', apiRouter);

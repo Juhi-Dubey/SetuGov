@@ -54,6 +54,7 @@ model User {
   notifications                 Notification[]
   progress_updates              PilotProgressUpdate[]        @relation("ProgressUpdateAuthor")
   accepted_deliveries           ProcurementRecord[]          @relation("DeliveryAcceptor")
+  accepted_contracts            ProcurementRecord[]          @relation("ContractAcceptor")
   approved_procurements         ProcurementRecord[]          @relation("ProcurementApprover")
   initiated_procurements        ProcurementRecord[]          @relation("ProcurementInitiator")
   approved_decisions            ScaleDecision[]              @relation("DecisionApprover")
@@ -63,6 +64,7 @@ model User {
   verified_startups             Startup[]                    @relation("StartupVerifier")
   department                    Department?                  @relation(fields: [department_id], references: [id])
   validations                   Validation[]                 @relation("Validator")
+  change_requested_applications Application[]                @relation("ApplicationChangeRequester")
 
   @@index([role])
   @@index([department_id])
@@ -294,15 +296,20 @@ model Application {
   timeline              String
   status                ApplicationStatus            @default(DRAFT)
   submitted_at          DateTime?
+  change_request_notes  String?
+  change_requested_at   DateTime?
+  change_requested_by   String?
   created_at            DateTime                     @default(now())
   updated_at            DateTime                     @updatedAt
   documents             ApplicationDocument[]
   proposal_analysis     ApplicationProposalAnalysis?
   challenge             Challenge                    @relation(fields: [challenge_id], references: [id], onDelete: Cascade)
   startup               Startup                      @relation(fields: [startup_id], references: [id], onDelete: Cascade)
+  change_requester      User?                        @relation("ApplicationChangeRequester", fields: [change_requested_by], references: [id])
   conflict_declarations ConflictDeclaration[]
   evaluations           Evaluation[]
   evaluator_assignments EvaluatorAssignment[]
+  archived_evaluations  ArchivedEvaluation[]
 
   @@unique([challenge_id, startup_id])
   @@index([status])
@@ -346,24 +353,49 @@ model ConflictDeclaration {
 }
 
 model Evaluation {
-  id                String      @id @default(uuid())
-  application_id    String
-  evaluator_id      String
-  technical_score   Float
-  innovation_score  Float
-  impact_score      Float
-  scalability_score Float
-  cost_score        Float
-  total_score       Float
-  comments          String?
-  is_submitted      Boolean     @default(true)
-  created_at        DateTime    @default(now())
-  updated_at        DateTime    @updatedAt
-  application       Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
-  evaluator         User        @relation("Evaluator", fields: [evaluator_id], references: [id])
+  id                      String      @id @default(uuid())
+  application_id          String
+  evaluator_id            String
+  technical_score         Float
+  innovation_score        Float
+  impact_score            Float
+  scalability_score       Float
+  cost_score              Float
+  total_score             Float
+  comments                String?
+  suggest_changes         Boolean     @default(false)
+  change_suggestion_notes String?
+  is_submitted            Boolean     @default(true)
+  created_at              DateTime    @default(now())
+  updated_at              DateTime    @updatedAt
+  application             Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  evaluator               User        @relation("Evaluator", fields: [evaluator_id], references: [id])
 
   @@unique([application_id, evaluator_id])
   @@map("evaluations")
+}
+
+model ArchivedEvaluation {
+  id                      String      @id @default(uuid())
+  application_id          String
+  evaluator_id            String
+  technical_score         Float
+  innovation_score        Float
+  impact_score            Float
+  scalability_score       Float
+  cost_score              Float
+  total_score             Float
+  comments                String?
+  suggest_changes         Boolean     @default(false)
+  change_suggestion_notes String?
+  is_submitted            Boolean     @default(true)
+  archived_at             DateTime    @default(now())
+  original_created_at     DateTime
+  original_updated_at     DateTime
+  application             Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
+
+  @@index([application_id])
+  @@map("archived_evaluations")
 }
 
 model ApplicationDocument {
@@ -852,6 +884,10 @@ model ProcurementRecord {
   contract_issued_at        DateTime?
   contract_effective_date   DateTime?
   contract_duration_days    Int?
+  contract_accepted_at      DateTime?
+  contract_accepted_by      String?
+  contract_decline_notes    String?
+  contract_draft_content    Json?
   delivery_date             DateTime?
   delivery_scope            String?
   delivery_evidence_url     String?
@@ -865,6 +901,7 @@ model ProcurementRecord {
   payments                  Payment[]
   acceptor                  User?             @relation("DeliveryAcceptor", fields: [accepted_by], references: [id])
   approver                  User?             @relation("ProcurementApprover", fields: [approved_by], references: [id])
+  contract_acceptor         User?             @relation("ContractAcceptor", fields: [contract_accepted_by], references: [id])
   challenge                 Challenge         @relation(fields: [challenge_id], references: [id], onDelete: Cascade)
   department                Department        @relation(fields: [department_id], references: [id], onDelete: Cascade)
   initiator                 User              @relation("ProcurementInitiator", fields: [initiated_by], references: [id])
@@ -966,6 +1003,7 @@ enum ApplicationStatus {
   SHORTLISTED
   REJECTED
   SELECTED
+  CHANGES_REQUESTED
 }
 
 enum PilotStatus {
@@ -1033,6 +1071,8 @@ enum ProcurementStatus {
   APPROVED
   HANDED_OFF
   CONTRACT_ISSUED
+  CONTRACT_ACCEPTED
+  CONTRACT_DECLINED
   DELIVERY_SUBMITTED
   ACCEPTED
   COMPLETED

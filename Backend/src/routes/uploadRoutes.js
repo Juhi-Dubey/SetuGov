@@ -2,11 +2,13 @@ import { Router } from 'express';
 import { handleFileUpload, getPrivateFile } from '../controllers/uploadController.js';
 import { uploadSingle } from '../middleware/upload.js';
 import { authenticate } from '../middleware/auth.js';
+import uploadRateLimiter from '../middleware/uploadRateLimiter.js';
+
 
 const router = Router();
 
 // Upload a single document / evidence file (Max 10MB; PDF, PNG, JPG)
-router.post('/', authenticate, uploadSingle('file'), handleFileUpload);
+router.post('/', authenticate, uploadRateLimiter, uploadSingle('file'), handleFileUpload);
 
 // Retrieve private verification / supporting document (Protected: Authentication + Authorization)
 router.get('/private/:filename', authenticate, getPrivateFile);

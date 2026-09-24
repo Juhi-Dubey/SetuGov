@@ -5,6 +5,7 @@ Entry point for the AI decision-support service.
 Routes remain thin — all business logic lives in services/.
 """
 
+import json
 import logging
 import time
 import uuid
@@ -14,7 +15,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from config import get_settings
 from providers.base import AIProvider, EmbeddingDimensionError, EmbeddingProvider, InvalidAIResponseError, ProviderTimeoutError, ProviderUnavailableError
@@ -315,6 +316,27 @@ async def proposal_analysis(request: ProposalAnalysisRequest):
     request, warnings = sanitize_request(request)
     result = await _ai_service.analyze_proposal(request)
     return APIResponse(success=True, data=result.model_dump(), warnings=warnings)
+
+
+@app.post("/ai/proposal/stream")
+async def proposal_analysis_stream(request: ProposalAnalysisRequest):
+    """Stream AI proposal analysis in real time using Server-Sent Events."""
+    assert _ai_service is not None
+    request, _ = sanitize_request(request)
+
+    async def event_generator():
+        async for event in _ai_service.analyze_proposal_stream(request):
+            yield f"data: {json.dumps(event)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -9,8 +9,9 @@ be a real model's output.
 
 from __future__ import annotations
 
+import asyncio
 import json
-from typing import Any, Optional
+from typing import Any, AsyncIterator, Optional
 
 from providers.base import AIProvider, EmbeddingProvider
 
@@ -42,6 +43,18 @@ class MockProvider(AIProvider):
     ) -> dict[str, Any]:
         raw = await self.generate(prompt, system=system, response_format="json")
         return json.loads(raw)
+
+    async def generate_stream(
+        self,
+        prompt: str,
+        system: Optional[str] = None,
+    ) -> AsyncIterator[str]:
+        raw = await self.generate(prompt, system=system, response_format="json")
+        # Yield in small pieces with brief delays to simulate token streaming
+        chunk_size = 32
+        for i in range(0, len(raw), chunk_size):
+            yield raw[i : i + chunk_size]
+            await asyncio.sleep(0.01)
 
     async def close(self) -> None:
         return None

@@ -1516,6 +1516,174 @@ function ShortlistSolutionPackage({ app, onRefresh }) {
   );
 }
 
+function ChangeRequestResubmitPanel({ app, onRefresh }) {
+  const [isOpen, setIsOpen] = useState(true);
+  const [proposal, setProposal] = useState(app.proposal || "");
+  const [technicalApproach, setTechnicalApproach] = useState(app.technical_approach || "");
+  const [expectedImpact, setExpectedImpact] = useState(app.expected_impact || "");
+  const [proposedCost, setProposedCost] = useState(app.raw_cost || "");
+  const [timeline, setTimeline] = useState(app.raw_timeline || "");
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const handleResubmit = async (e) => {
+    e.preventDefault();
+    if (!proposal.trim()) {
+      setErrorMsg("Proposal summary is required.");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      setErrorMsg("");
+      setSuccessMsg("");
+      await updateApplication(app.id, {
+        proposal: proposal.trim(),
+        technical_approach: technicalApproach.trim(),
+        expected_impact: expectedImpact.trim(),
+        estimated_cost: proposedCost ? Number(proposedCost) : undefined,
+        timeline: timeline.trim(),
+        resubmit: true,
+      });
+      setSuccessMsg("Proposal resubmitted successfully! Evaluators will be notified to review the revisions.");
+      setTimeout(() => {
+        if (onRefresh) onRefresh();
+      }, 1200);
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to resubmit application.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-start gap-2.5">
+          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-xs font-bold text-amber-900 dark:text-amber-200">
+              Department Feedback — Changes Requested
+            </h4>
+            <p className="mt-1 text-xs text-amber-800 dark:text-amber-300 leading-relaxed font-medium">
+              {app.change_request_notes || "Please review and revise your proposal per the department's requirements."}
+            </p>
+            {app.change_requested_at && (
+              <p className="mt-1 text-[10px] text-amber-600 dark:text-amber-400">
+                Requested on {new Date(app.change_requested_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="inline-flex items-center gap-1 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-amber-700 transition shrink-0"
+        >
+          {isOpen ? "Close Revision Form" : "Revise & Resubmit"}
+        </button>
+      </div>
+
+      {isOpen && (
+        <form onSubmit={handleResubmit} className="mt-4 pt-4 border-t border-amber-200/80 dark:border-amber-900/40 space-y-3">
+          <p className="text-[11px] text-slate-600 dark:text-slate-400 italic">
+            Note: Resubmitting will reset the evaluator review rounds for this application and update the proposal for fresh assessment.
+          </p>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              Revised Proposal Summary *
+            </label>
+            <textarea
+              rows={3}
+              required
+              value={proposal}
+              onChange={(e) => setProposal(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              Revised Technical Approach
+            </label>
+            <textarea
+              rows={3}
+              value={technicalApproach}
+              onChange={(e) => setTechnicalApproach(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+            />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Estimated Cost (₹)
+              </label>
+              <input
+                type="number"
+                value={proposedCost}
+                onChange={(e) => setProposedCost(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Timeline (e.g. 6 Months)
+              </label>
+              <input
+                type="text"
+                value={timeline}
+                onChange={(e) => setTimeline(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Expected Impact
+              </label>
+              <input
+                type="text"
+                value={expectedImpact}
+                onChange={(e) => setExpectedImpact(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+              />
+            </div>
+          </div>
+
+          {errorMsg && (
+            <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">{errorMsg}</p>
+          )}
+          {successMsg && (
+            <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{successMsg}</p>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              {submitting ? "Resubmitting..." : "Submit Revised Proposal"}
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
 function MyApplicationsListView({ user, navigate }) {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1545,6 +1713,10 @@ function MyApplicationsListView({ user, navigate }) {
             ? `₹${Number(app.proposed_budget).toLocaleString("en-IN")}`
             : (app.estimated_cost ? `₹${Number(app.estimated_cost).toLocaleString("en-IN")}` : "Not specified"),
           status: app.status || "SUBMITTED",
+          change_request_notes: app.change_request_notes || null,
+          change_requested_at: app.change_requested_at || null,
+          raw_cost: app.proposed_budget || app.estimated_cost || "",
+          raw_timeline: app.timeline || "",
           created_at: app.created_at || new Date().toISOString(),
           submitted_at: app.submitted_at || null,
           stage:
@@ -1553,9 +1725,11 @@ function MyApplicationsListView({ user, navigate }) {
               ? "Pilot Phase Active"
               : app.status === "SHORTLISTED"
                 ? "Finalist Solution Package"
-                : app.status === "DRAFT"
-                  ? "Draft In Progress"
-                  : "Under Department Review"),
+                : app.status === "CHANGES_REQUESTED"
+                  ? "Action Required: Revisions Requested"
+                  : app.status === "DRAFT"
+                    ? "Draft In Progress"
+                    : "Under Department Review"),
         }));
         setApplications(mapped);
       } else {
@@ -1600,6 +1774,7 @@ function MyApplicationsListView({ user, navigate }) {
       total: applications.length,
       selected: applications.filter((a) => a.status === "SELECTED").length,
       shortlisted: applications.filter((a) => a.status === "SHORTLISTED" || a.status === "UNDER_REVIEW").length,
+      changes_requested: applications.filter((a) => a.status === "CHANGES_REQUESTED").length,
       submitted: applications.filter((a) => a.status === "SUBMITTED").length,
     };
   }, [applications]);
@@ -1617,6 +1792,13 @@ function MyApplicationsListView({ user, navigate }) {
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-600/20 dark:bg-indigo-500/10 dark:text-indigo-400 dark:ring-indigo-500/20">
           <Sparkles className="h-3.5 w-3.5" /> Shortlisted / In Review
+        </span>
+      );
+    }
+    if (s === "CHANGES_REQUESTED") {
+      return (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-600/20 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20">
+          <AlertTriangle className="h-3.5 w-3.5" /> Changes Requested
         </span>
       );
     }
@@ -1782,10 +1964,10 @@ function MyApplicationsListView({ user, navigate }) {
                     </h3>
 
                     <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900/80">
-                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-300">
                         Proposed Solution Summary:
                       </p>
-                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-500 leading-relaxed">
                         {app.proposal}
                       </p>
                       {app.technical_approach && (
@@ -1809,6 +1991,11 @@ function MyApplicationsListView({ user, navigate }) {
                     {/* Finalist Solution Package Upload & Finalization UI */}
                     {app.status === "SHORTLISTED" && (
                       <ShortlistSolutionPackage app={app} onRefresh={load} />
+                    )}
+
+                    {/* Change Request & Resubmission UI */}
+                    {app.status === "CHANGES_REQUESTED" && (
+                      <ChangeRequestResubmitPanel app={app} onRefresh={load} />
                     )}
                   </div>
 

@@ -24,6 +24,7 @@ services:
   # -------------------------------------------------------------
   # 2. Ollama Local LLM Runtime
   # Canonical Model: llama3.2:3b
+  # Run with: docker compose --profile local-llm up
   # -------------------------------------------------------------
   ollama:
     image: ollama/ollama:0.5.7
@@ -42,6 +43,7 @@ services:
 
   # -------------------------------------------------------------
   # 3. SetuGov Python AI Decision-Support Service (Brain 1-5)
+  # Exposed on host port 8000 for direct dev access / curl testing.
   # -------------------------------------------------------------
   ai:
     build:
@@ -74,6 +76,7 @@ services:
 
   # -------------------------------------------------------------
   # 4. SetuGov Express.js REST API Backend
+  # Hot-reloads on src changes via nodemon + bind-mount.
   # -------------------------------------------------------------
   backend:
     build:
@@ -103,21 +106,26 @@ services:
     ports:
       - "5000:5000"
     volumes:
+      # Hot-reload: changes to src/ are reflected inside the container immediately.
       - ./Backend/src:/app/src
+      # Persist uploaded files across container restarts.
+      - uploads_data:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
       ai:
         condition: service_healthy
-      ollama:
-        condition: service_started
+    # prisma db push syncs the schema without requiring migration files —
+    # fast and safe for local development iteration.
     command: >
       sh -c "npx prisma db push &&
-             node prisma/seed.js &&
-             npm run dev"
+            node prisma/seed.js &&
+            npm run dev"
 
 volumes:
   pgdata:
     driver: local
   ollama_data:
+    driver: local
+  uploads_data:
     driver: local

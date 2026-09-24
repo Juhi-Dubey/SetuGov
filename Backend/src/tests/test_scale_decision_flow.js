@@ -102,7 +102,7 @@ async function runScaleDecisionTests() {
         required_technologies: ['Robotics', 'AI'],
         department_id: deptA.id,
         created_by: userA.id,
-        status: 'PUBLISHED',
+        status: 'EVALUATION',
       },
     });
 
@@ -121,7 +121,7 @@ async function runScaleDecisionTests() {
         required_technologies: ['IoT', 'Sensors'],
         department_id: deptA.id,
         created_by: userA.id,
-        status: 'PUBLISHED',
+        status: 'EVALUATION',
       },
     });
 
@@ -140,7 +140,7 @@ async function runScaleDecisionTests() {
         required_technologies: ['Drones'],
         department_id: deptA.id,
         created_by: userA.id,
-        status: 'PUBLISHED',
+        status: 'EVALUATION',
       },
     });
 
@@ -236,6 +236,49 @@ async function runScaleDecisionTests() {
       data: { status: 'VALIDATION', overall_score: 41.0 }
     });
 
+    // Create required validation records for scale decision eligibility
+    await prisma.validation.create({
+      data: {
+        pilot_id: pilotScale.id,
+        validator_id: userA.id,
+        performance_score: 95.0,
+        kpi_achievement_score: 94.0,
+        evidence_quality_score: 96.0,
+        technical_stability_score: 95.0,
+        user_satisfaction_score: 93.0,
+        comments: 'Outstanding pilot performance exceeding all KPIs.',
+        status: 'VALIDATED'
+      }
+    });
+
+    await prisma.validation.create({
+      data: {
+        pilot_id: pilotExtend.id,
+        validator_id: userA.id,
+        performance_score: 75.0,
+        kpi_achievement_score: 72.0,
+        evidence_quality_score: 76.0,
+        technical_stability_score: 74.0,
+        user_satisfaction_score: 75.0,
+        comments: 'Promising pilot needing milestone extension.',
+        status: 'VALIDATED'
+      }
+    });
+
+    await prisma.validation.create({
+      data: {
+        pilot_id: pilotStop.id,
+        validator_id: userA.id,
+        performance_score: 40.0,
+        kpi_achievement_score: 35.0,
+        evidence_quality_score: 42.0,
+        technical_stability_score: 40.0,
+        user_satisfaction_score: 38.0,
+        comments: 'Critical safety margins failed.',
+        status: 'NOT_VALIDATED'
+      }
+    });
+
     console.log('[Setup Complete]\n');
 
     // ----------------------------------------------------
@@ -305,7 +348,10 @@ async function runScaleDecisionTests() {
     assert(updatedPilotStop.status === 'STOPPED', 'Pilot status transitioned to canonical STOPPED');
 
     const updatedChallengeC = await prisma.challenge.findUnique({ where: { id: challengeC.id } });
-    assert(updatedChallengeC.status === 'COMPLETED', 'Challenge status transitioned to COMPLETED upon terminal STOP');
+    assert(updatedChallengeC.status === 'PILOT', 'Challenge status remains PILOT upon STOP to allow selecting another startup');
+
+    const updatedAppC = await prisma.application.findUnique({ where: { id: appC.id } });
+    assert(updatedAppC.status === 'REJECTED', 'Failed application transitioned from SELECTED to REJECTED upon STOP');
 
     // ----------------------------------------------------
     // TEST 4 & 5: Refresh / Re-query from PostgreSQL
@@ -414,6 +460,10 @@ async function runScaleDecisionTests() {
   } finally {
     console.log('\n[Cleanup] Removing test entities...');
     try {
+      const pIds = [pilotScale?.id, pilotExtend?.id, pilotStop?.id].filter(Boolean);
+      if (pIds.length > 0) {
+        await prisma.validation.deleteMany({ where: { pilot_id: { in: pIds } } });
+      }
       if (pilotScale?.id) {
         await prisma.scaleDecision.deleteMany({ where: { pilot_id: pilotScale.id } });
         await prisma.auditLog.deleteMany({ where: { entity_id: pilotScale.id } });

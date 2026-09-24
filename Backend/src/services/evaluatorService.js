@@ -4,6 +4,8 @@ import { createAuditLog } from './auditService.js';
 import { sendNotification, notifyEvaluatorAssigned } from './notificationService.js';
 import { createGovernmentNomination } from './accessRequestService.js';
 import { evaluateEligibility } from '../utils/eligibility.js';
+import { logger } from '../utils/logger.js';
+import { matchSingleEvaluatorForOpenChallenges } from './evaluatorMatchingService.js';
 
 /**
  * List evaluators with optional filtering by domain, verification status, and search query.
@@ -318,8 +320,14 @@ export const verifyEvaluator = async (profileId, data, adminUser, ip_address = n
     title: `Evaluator Registry: ${data.verification_status}`,
     message: `Your evaluator credentials have been reviewed and marked as ${data.verification_status}.`,
     type: 'EVALUATOR_VERIFIED',
-    link: '/evaluator/dashboard'
   });
+
+  // C1: Fire-and-forget matching for newly verified evaluator against open challenges
+  if (data.verification_status === 'VERIFIED') {
+    matchSingleEvaluatorForOpenChallenges(profile.user_id).catch(err => {
+      logger.warn(`C1: Background matchSingleEvaluatorForOpenChallenges failed for evaluator ${profile.user_id}: ${err.message}`);
+    });
+  }
 
   return updatedProfile;
 };

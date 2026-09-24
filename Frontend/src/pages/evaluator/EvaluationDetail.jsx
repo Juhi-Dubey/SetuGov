@@ -23,7 +23,11 @@ import {
   declareConflictOfInterest,
   getConflictDeclaration,
 } from "../../services/evaluationService";
-import { analyzeApplicationWithAI } from "../../services/aiService";
+import {
+  analyzeApplicationWithAI,
+  streamAnalyzeApplicationWithAI,
+  getApplicationProposalAnalysis,
+} from "../../services/aiService";
 
 function EvaluationDetail() {
   const navigate = useNavigate();
@@ -44,6 +48,8 @@ function EvaluationDetail() {
   });
 
   const [comments, setComments] = useState("");
+  const [suggestChanges, setSuggestChanges] = useState(false);
+  const [changeSuggestionNotes, setChangeSuggestionNotes] = useState("");
   const [submissionState, setSubmissionState] = useState("Draft");
   const [conflictDeclaration, setConflictDeclaration] = useState(null);
   const [conflictReason, setConflictReason] = useState("");
@@ -150,6 +156,8 @@ function EvaluationDetail() {
               costEffectiveness: myEval.cost_score ?? "",
             });
             if (myEval.comments) setComments(myEval.comments);
+            if (myEval.suggest_changes) setSuggestChanges(true);
+            if (myEval.change_suggestion_notes) setChangeSuggestionNotes(myEval.change_suggestion_notes);
             setSubmissionState(myEval.is_submitted ? "Submitted" : "Draft");
           } else if (raw.scores) {
             setScores({
@@ -160,6 +168,8 @@ function EvaluationDetail() {
               costEffectiveness: raw.scores.costEffectiveness ?? raw.scores.cost_score ?? "",
             });
             if (raw.comments) setComments(raw.comments);
+            if (raw.suggest_changes) setSuggestChanges(true);
+            if (raw.change_suggestion_notes) setChangeSuggestionNotes(raw.change_suggestion_notes);
             if (raw.status) setSubmissionState(raw.status);
           }
         }
@@ -282,6 +292,8 @@ function EvaluationDetail() {
       const evaluationData = {
         scores,
         comments,
+        suggest_changes: suggestChanges,
+        change_suggestion_notes: suggestChanges ? changeSuggestionNotes.trim() : null,
         totalScore,
         status: "Draft",
       };
@@ -343,6 +355,8 @@ function EvaluationDetail() {
       const evaluationData = {
         scores,
         comments,
+        suggest_changes: suggestChanges,
+        change_suggestion_notes: suggestChanges ? changeSuggestionNotes.trim() : null,
         totalScore,
         status: "Submitted",
       };
@@ -548,7 +562,7 @@ function EvaluationDetail() {
                     Evaluation Form
                   </h2>
 
-                  <p className="mt-1 text-[11px] leading-5 text-slate-400">
+                  <p className="mt-1 text-[12px] leading-5 text-slate-500">
                     Score each criterion from
                     0 to 100. Weighted scores
                     contribute to the final
@@ -721,6 +735,31 @@ function EvaluationDetail() {
                 placeholder="Add your assessment comments..."
                 className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
               />
+
+              {/* Evaluator Change Suggestions */}
+              <div className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/60 p-3.5 dark:border-amber-900/30 dark:bg-amber-950/20">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-amber-900 dark:text-amber-200">
+                  <input
+                    type="checkbox"
+                    checked={suggestChanges}
+                    onChange={(e) => setSuggestChanges(e.target.checked)}
+                    className="h-4 w-4 rounded text-amber-600 focus:ring-amber-500"
+                  />
+                  <span>Recommend Requesting Changes from Startup</span>
+                </label>
+                <p className="mt-1 text-[11px] text-amber-700/90 dark:text-amber-300/90">
+                  If the proposal is promising but requires revisions before pilot consideration, check this option and provide feedback.
+                </p>
+                {suggestChanges && (
+                  <textarea
+                    rows={3}
+                    value={changeSuggestionNotes}
+                    onChange={(e) => setChangeSuggestionNotes(e.target.value)}
+                    placeholder="Detail the technical revisions, budget adjustments, or clarifications the startup should address..."
+                    className="mt-2 w-full rounded-xl border border-amber-200 bg-white p-2.5 text-xs text-slate-900 dark:border-amber-900/50 dark:bg-slate-900 dark:text-white"
+                  />
+                )}
+              </div>
             </div>
 
             {/* Actions */}
@@ -787,7 +826,7 @@ function ProposalPanel({
           </div>
 
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
               Startup Proposal
             </p>
 
@@ -897,26 +936,70 @@ function ProposalField({
 
 function AIScreening({ evaluation }) {
   const [analyzing, setAnalyzing] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
   const [analysisResult, setAnalysisResult] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    if (evaluation?.id) {
+      getApplicationProposalAnalysis(evaluation.id)
+        .then((res) => {
+          if (!mounted) return;
+          const data = res?.data || res;
+          if (data?.id || data?.executive_summary) {
+            setAnalysisResult(data);
+          }
+        })
+        .catch(() => {});
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [evaluation?.id]);
 
   const handleRunBrain3 = async () => {
     if (!evaluation?.id) return;
     try {
       setAnalyzing(true);
-      const res = await analyzeApplicationWithAI(evaluation.id);
-      setAnalysisResult(res?.data || res);
+      setIsStreaming(true);
+      setStreamingText("");
+      setAnalysisResult(null);
+
+      await streamAnalyzeApplicationWithAI(evaluation.id, {
+        onChunk: (chunk) => {
+          setStreamingText((prev) => prev + chunk);
+        },
+        onComplete: (data) => {
+          setIsStreaming(false);
+          setAnalyzing(false);
+          setAnalysisResult(data);
+        },
+        onError: (errMsg) => {
+          setIsStreaming(false);
+          setAnalyzing(false);
+          setAnalysisResult({
+            _ai_unavailable: true,
+            _error_message: errMsg || "AI Proposal Analysis is currently unavailable. Please evaluate using the candidate's submitted documentation.",
+            strengths: [],
+            weaknesses: [],
+            concerns: [],
+            questions_for_evaluator: [],
+          });
+        }
+      });
     } catch (err) {
-      console.warn("Brain 3 analysis unavailable:", err);
+      console.warn("Brain 3 streaming analysis failed:", err);
+      setIsStreaming(false);
+      setAnalyzing(false);
       setAnalysisResult({
         _ai_unavailable: true,
-        _error_message: "AI Proposal Analysis is currently unavailable. Please evaluate using the candidate's submitted documentation.",
+        _error_message: err.message || "AI Proposal Analysis is currently unavailable. Please evaluate using the candidate's submitted documentation.",
         strengths: [],
         weaknesses: [],
         concerns: [],
         questions_for_evaluator: [],
       });
-    } finally {
-      setAnalyzing(false);
     }
   };
 
@@ -932,7 +1015,7 @@ function AIScreening({ evaluation }) {
     analysisResult?.concerns ||
     evaluation?.aiScreening?.concerns || [];
 
-  const questions = analysisResult?.questions_for_evaluator || analysisResult?.recommended_questions_for_evaluator || [];
+  const questions = analysisResult?.questions_for_evaluator || analysisResult?.evaluator_questions || analysisResult?.recommended_questions_for_evaluator || [];
 
   return (
     <section className="overflow-hidden rounded-3xl border border-indigo-100 bg-white shadow-sm dark:border-indigo-500/20 dark:bg-slate-950">
@@ -953,7 +1036,7 @@ function AIScreening({ evaluation }) {
             </div>
 
             <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
-              Technical feasibility, innovation, and risk analysis to assist official evaluator scoring.
+              Real-time streaming technical feasibility, innovation, and risk analysis to assist evaluator scoring.
             </p>
           </div>
         </div>
@@ -962,12 +1045,34 @@ function AIScreening({ evaluation }) {
           type="button"
           onClick={handleRunBrain3}
           disabled={analyzing}
-          className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60"
+          className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-60 transition"
         >
           <Sparkles className="h-3.5 w-3.5" />
-          {analyzing ? "Analyzing..." : "Run AI Analysis"}
+          {isStreaming ? "Streaming Live..." : analyzing ? "Analyzing..." : analysisResult ? "Re-Run AI Screening" : "Run AI Analysis"}
         </button>
       </div>
+
+      {/* Real-time Streaming Output Box */}
+      {isStreaming && (
+        <div className="border-b border-indigo-100 bg-slate-950 p-5 font-mono text-xs dark:border-slate-800">
+          <div className="flex items-center justify-between mb-3 text-indigo-400">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+              </span>
+              <span className="font-semibold text-[11px] uppercase tracking-wider text-indigo-300">
+                Brain 3 Streaming Proposal Analysis in Real Time
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-500">Server-Sent Events</span>
+          </div>
+          <div className="max-h-60 overflow-y-auto whitespace-pre-wrap leading-relaxed rounded-xl bg-slate-900/90 p-4 border border-slate-800 text-slate-200">
+            {streamingText || "Connecting to AI inference provider..."}
+            <span className="inline-block h-3.5 w-1.5 ml-1 bg-indigo-400 animate-pulse" />
+          </div>
+        </div>
+      )}
 
       {aiUnavailable && (
         <div className="mx-5 mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800/50 dark:bg-amber-950/30">

@@ -82,11 +82,27 @@ export const accessRequestRateLimiter = rateLimit({
   }
 });
 
+export const pilotFeedbackRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: shouldSkipRateLimit,
+  message: {
+    success: false,
+    error: {
+      code: 'FEEDBACK_RATE_LIMIT_EXCEEDED',
+      message: 'Too many feedback submissions. Please try again later.'
+    }
+  }
+});
+
 export default {
   authRateLimiter,
   invitationRateLimiter,
   apiRateLimiter,
   aiRateLimiter,
-  accessRequestRateLimiter
+  accessRequestRateLimiter,
+  pilotFeedbackRateLimiter,
 };
 

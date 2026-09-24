@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any, AsyncIterator, Optional
 
 import httpx
 
@@ -150,6 +150,64 @@ class APICompatibleProvider(AIProvider):
     ) -> dict[str, Any]:
         raw = await self.generate(prompt, system=system, response_format="json")
         return safe_parse_json(raw)
+
+    async def generate_stream(
+        self,
+        prompt: str,
+        system: Optional[str] = None,
+    ) -> AsyncIterator[str]:
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+
+        payload: dict[str, Any] = {
+            "model": self.model,
+            "messages": messages,
+            "stream": True,
+        }
+
+        logger.info(
+            "API-compatible stream request — model=%s, prompt_len=%d",
+            self.model,
+            len(prompt),
+        )
+
+        try:
+            async with self._client.stream(
+                "POST", "/chat/completions", json=payload, headers=self._headers()
+            ) as response:
+                response.raise_for_status()
+                async for line in response.aiter_lines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    if line.startswith("data: "):
+                        data_str = line[6:].strip()
+                        if data_str == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(data_str)
+                            delta = chunk.get("choices", [{}])[0].get("delta", {})
+                            content = delta.get("content", "")
+                            if content:
+                                yield content
+                        except (json.JSONDecodeError, KeyError, IndexError):
+                            continue
+        except httpx.ConnectError as exc:
+            raise ProviderUnavailableError(
+                f"Cannot connect to AI provider at {self.base_url}: {exc}"
+            ) from exc
+        except httpx.TimeoutException as exc:
+            raise ProviderTimeoutError(
+                f"AI provider request timed out after {self.timeout}s: {exc}"
+            ) from exc
+        except httpx.HTTPStatusError as exc:
+            raise ProviderUnavailableError(
+                f"AI provider returned HTTP {exc.response.status_code}: {exc}"
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise ProviderUnavailableError(f"AI provider HTTP error: {exc}") from exc
 
 
 class APICompatibleEmbeddingProvider(EmbeddingProvider):

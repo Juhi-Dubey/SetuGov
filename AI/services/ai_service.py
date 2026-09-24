@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Optional
+from typing import Any, AsyncIterator, Optional
 
 from pydantic import ValidationError
 
@@ -58,7 +58,7 @@ from prompts.risk_analysis import build_risk_analysis_prompt
 from services.confidence import ConfidenceAssessor
 from services.decision_engine import DecisionEngine
 from services.input_sanitizer import sanitize_user_input
-from providers.base import AIProvider, InvalidAIResponseError
+from providers.base import AIProvider, InvalidAIResponseError, safe_parse_json
 from services.parsers.challenge_parser import parse_challenge_response
 from services.parsers.comparator_parser import parse_comparator_response
 from services.parsers.document_parser import parse_document_response
@@ -1401,6 +1401,44 @@ class AIService:
                 request.available_documents or []
             )
         return response
+
+    async def analyze_proposal_stream(
+        self, request: ProposalAnalysisRequest
+    ) -> AsyncIterator[dict[str, Any]]:
+        """
+        Stream LLM output chunks for proposal analysis, and yield final parsed response event.
+        Yields:
+        {"event": "chunk", "text": "..."}
+        ...
+        {"event": "complete", "data": {...}}
+        or in case of fatal error:
+        {"event": "error", "message": "..."}
+        """
+        logger.info(
+            "Brain 3 (stream) — analyzing proposal from '%s'", request.startup.name
+        )
+        system_prompt, user_prompt = build_proposal_prompt(request)
+        full_text = ""
+        try:
+            async for chunk in self._ai.generate_stream(prompt=user_prompt, system=system_prompt):
+                full_text += chunk
+                yield {"event": "chunk", "text": chunk}
+
+            # Attempt to parse accumulated output as JSON
+            try:
+                raw = safe_parse_json(full_text)
+            except Exception:
+                raw = {"executive_summary": full_text.strip() or "Analysis completed."}
+
+            response = parse_proposal_response(raw, request=request)
+            if not response.evidence_quality:
+                response.evidence_quality = ConfidenceAssessor.assess_evidence_quality(
+                    request.available_documents or []
+                )
+            yield {"event": "complete", "data": response.model_dump()}
+        except Exception as exc:
+            logger.error("Error during proposal streaming: %s", exc)
+            yield {"event": "error", "message": str(exc)}
 
     # ══════════════════════════════════════════════════════════════════
     # Brain 4 — Pilot Intelligence

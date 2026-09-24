@@ -97,8 +97,14 @@ async function runUploadTests() {
   console.log('✅ [PASS] Startup document record persisted:', docData.data.document.id);
 
   // Test 5: Direct Multipart Upload to Pilot Evidence (POST /api/v1/pilots/:pilot_id/evidence)
-  console.log('\n--- TEST 5: Direct Multipart Upload to Pilot Evidence ---');
-  const pilot = await prisma.pilot.findFirst();
+  let pilot = await prisma.pilot.findFirst({ where: { startup_id: startup.id } });
+  if (!pilot) {
+    // If existing pilot belongs to another startup, update it or pick existing
+    pilot = await prisma.pilot.findFirst();
+    if (pilot) {
+      await prisma.pilot.update({ where: { id: pilot.id }, data: { startup_id: startup.id } });
+    }
+  }
   assert(pilot, 'Pilot must exist in DB for evidence test');
 
   const form4 = new FormData();

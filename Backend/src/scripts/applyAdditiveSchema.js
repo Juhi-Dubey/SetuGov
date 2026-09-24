@@ -168,7 +168,54 @@ async function main() {
       CONSTRAINT "challenge_eligibility_reviews_challenge_id_fkey" FOREIGN KEY ("challenge_id") REFERENCES "challenges"("id") ON DELETE CASCADE ON UPDATE CASCADE,
       CONSTRAINT "challenge_eligibility_reviews_reviewed_by_fkey" FOREIGN KEY ("reviewed_by") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE
     );`,
-    `CREATE INDEX IF NOT EXISTS "challenge_eligibility_reviews_challenge_id_idx" ON "challenge_eligibility_reviews"("challenge_id");`
+    `CREATE INDEX IF NOT EXISTS "challenge_eligibility_reviews_challenge_id_idx" ON "challenge_eligibility_reviews"("challenge_id");`,
+
+    // 12. A1: Add CHANGES_REQUESTED to ApplicationStatus enum
+    `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'CHANGES_REQUESTED' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'ApplicationStatus')) THEN ALTER TYPE "ApplicationStatus" ADD VALUE 'CHANGES_REQUESTED'; END IF; END $$;`,
+
+    // 13. A1: Add change-request tracking fields to applications
+    `ALTER TABLE "applications" ADD COLUMN IF NOT EXISTS "change_request_notes" TEXT;`,
+    `ALTER TABLE "applications" ADD COLUMN IF NOT EXISTS "change_requested_at" TIMESTAMP(3);`,
+    `ALTER TABLE "applications" ADD COLUMN IF NOT EXISTS "change_requested_by" TEXT;`,
+    `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'applications_change_requested_by_fkey') THEN ALTER TABLE "applications" ADD CONSTRAINT "applications_change_requested_by_fkey" FOREIGN KEY ("change_requested_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE; END IF; END $$;`,
+
+    // 14. A1: Add evaluator change-suggestion fields to evaluations
+    `ALTER TABLE "evaluations" ADD COLUMN IF NOT EXISTS "suggest_changes" BOOLEAN NOT NULL DEFAULT false;`,
+    `ALTER TABLE "evaluations" ADD COLUMN IF NOT EXISTS "change_suggestion_notes" TEXT;`,
+
+    // 15. A1: Create archived_evaluations table for evaluation history across resubmissions
+    `CREATE TABLE IF NOT EXISTS "archived_evaluations" (
+      "id" TEXT NOT NULL,
+      "application_id" TEXT NOT NULL,
+      "evaluator_id" TEXT NOT NULL,
+      "technical_score" DOUBLE PRECISION NOT NULL,
+      "innovation_score" DOUBLE PRECISION NOT NULL,
+      "impact_score" DOUBLE PRECISION NOT NULL,
+      "scalability_score" DOUBLE PRECISION NOT NULL,
+      "cost_score" DOUBLE PRECISION NOT NULL,
+      "total_score" DOUBLE PRECISION NOT NULL,
+      "comments" TEXT,
+      "suggest_changes" BOOLEAN NOT NULL DEFAULT false,
+      "change_suggestion_notes" TEXT,
+      "is_submitted" BOOLEAN NOT NULL DEFAULT true,
+      "archived_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "original_created_at" TIMESTAMP(3) NOT NULL,
+      "original_updated_at" TIMESTAMP(3) NOT NULL,
+      CONSTRAINT "archived_evaluations_pkey" PRIMARY KEY ("id"),
+      CONSTRAINT "archived_evaluations_application_id_fkey" FOREIGN KEY ("application_id") REFERENCES "applications"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    );`,
+    `CREATE INDEX IF NOT EXISTS "archived_evaluations_application_id_idx" ON "archived_evaluations"("application_id");`,
+
+    // 16. C3b: Add CONTRACT_ACCEPTED and CONTRACT_DECLINED to ProcurementStatus enum
+    `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'CONTRACT_ACCEPTED' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'ProcurementStatus')) THEN ALTER TYPE "ProcurementStatus" ADD VALUE 'CONTRACT_ACCEPTED'; END IF; END $$;`,
+    `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumlabel = 'CONTRACT_DECLINED' AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'ProcurementStatus')) THEN ALTER TYPE "ProcurementStatus" ADD VALUE 'CONTRACT_DECLINED'; END IF; END $$;`,
+
+    // 17. C3: Add contract acceptance, decline, and draft fields to procurement_records
+    `ALTER TABLE "procurement_records" ADD COLUMN IF NOT EXISTS "contract_accepted_at" TIMESTAMP(3);`,
+    `ALTER TABLE "procurement_records" ADD COLUMN IF NOT EXISTS "contract_accepted_by" TEXT;`,
+    `ALTER TABLE "procurement_records" ADD COLUMN IF NOT EXISTS "contract_decline_notes" TEXT;`,
+    `ALTER TABLE "procurement_records" ADD COLUMN IF NOT EXISTS "contract_draft_content" JSONB;`,
+    `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'procurement_records_contract_accepted_by_fkey') THEN ALTER TABLE "procurement_records" ADD CONSTRAINT "procurement_records_contract_accepted_by_fkey" FOREIGN KEY ("contract_accepted_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE; END IF; END $$;`
   ];
 
   for (const sql of statements) {

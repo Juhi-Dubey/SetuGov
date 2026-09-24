@@ -7,6 +7,8 @@ import { sendInvitationEmail } from './emailService.js';
 import { config } from '../config/env.js';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
+import { logger } from '../utils/logger.js';
+import { matchSingleStartupForOpenChallenges } from './matchingService.js';
 
 export const getDashboardOverview = async () => {
   const [
@@ -1074,6 +1076,13 @@ export const reviewStartupVerification = async (id, { action, notes, rejection_r
     type: 'VERIFICATION',
     link: `/startup/profile`
   });
+
+  // C1: Fire-and-forget matching for newly verified startup against open challenges
+  if (action === 'APPROVE') {
+    matchSingleStartupForOpenChallenges(id).catch(err => {
+      logger.warn(`C1: Background matchSingleStartupForOpenChallenges failed for startup ${id}: ${err.message}`);
+    });
+  }
 
   return updatedStartup;
 };

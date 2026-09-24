@@ -79,6 +79,15 @@ export const evaluateApplicationDecision = async (applicationId, user = null, po
       }
     } else if (user.role === 'EVALUATOR') {
       // Evaluator can inspect decision criteria for assigned challenges
+      const assignment = await prisma.evaluatorAssignment.findFirst({
+        where: {
+          evaluator_id: user.id,
+          challeneg_id: challenge.id
+        }
+      });
+      if (!assignment) {
+        throw new ForbiddenError("You are not authorized to view decision details for this challenge. You must be an assigned evaluator.");
+      }
     } else if (user.role === 'STARTUP') {
       // Startups can only view decision outcome if it belongs to their startup
       if (startup.user_id !== user.id) {

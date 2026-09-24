@@ -302,14 +302,14 @@ export default function EvaluatorMyPage() {
 
           <div className="space-y-3">
             <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Organization</span>
+              <span className="text-[13px] font-bold text-slate-700 dark:text-slate-400">Organization</span>
               <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-white">
                 {profile?.organization || "Not specified"}
               </p>
             </div>
 
             <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Designation / Role</span>
+              <span className="text-[13px] font-bold text-slate-700 dark:text-slate-400">Designation / Role</span>
               <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-white">
                 {profile?.designation || user?.designation || "Not specified"}
               </p>
@@ -317,13 +317,13 @@ export default function EvaluatorMyPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Employment Type</span>
+                <span className="text-[13px] font-bold text-slate-700 dark:text-slate-400">Employment Type</span>
                 <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-white">
                   {profile?.employment_type || "Not specified"}
                 </p>
               </div>
               <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Experience</span>
+                <span className="text-[13px] font-bold text-slate-700 dark:text-slate-400">Experience</span>
                 <p className="mt-1 text-xs font-semibold text-slate-900 dark:text-white">
                   {profile?.years_experience != null ? `${profile.years_experience} Years` : "Not specified"}
                 </p>
@@ -331,7 +331,7 @@ export default function EvaluatorMyPage() {
             </div>
 
             <div className="rounded-2xl bg-slate-50 p-3.5 dark:bg-slate-900">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Professional Bio</span>
+              <span className="text-[13px] font-bold text-slate-700 dark:text-slate-400">Professional Bio</span>
               <p className="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                 {profile?.bio || "No professional biography recorded yet."}
               </p>
@@ -346,7 +346,7 @@ export default function EvaluatorMyPage() {
           </h3>
 
           <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <span className="text-[13px] font-bold text-slate-600 dark:text-slate-400">
               Empaneled Domains & Technologies
             </span>
             {domainList.length > 0 ? (
@@ -368,7 +368,7 @@ export default function EvaluatorMyPage() {
           </div>
 
           <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <span className="text-[13px] font-bold text-slate-700 dark:text-slate-400">
               Evaluation Track Record
             </span>
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">

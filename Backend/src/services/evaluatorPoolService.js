@@ -69,7 +69,8 @@ export const applyToEvaluateChallenge = async (challengeId, data, user, ip_addre
     throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
   }
 
-  if (challenge.status === 'CLOSED') {
+  const isAdminClosedOverride = challenge.status === 'CLOSED' && user.role === 'ADMIN';
+  if (challenge.status === 'CLOSED' && !isAdminClosedOverride) {
     throw new BadRequestError('Cannot apply: This Problem Statement is CLOSED.');
   }
 
@@ -77,7 +78,7 @@ export const applyToEvaluateChallenge = async (challengeId, data, user, ip_addre
     throw new BadRequestError('Cannot apply: Evaluator recruitment for this Problem Statement is CLOSED.');
   }
 
-  if (challenge.status !== 'PUBLISHED' && challenge.status !== 'EVALUATION') {
+  if (challenge.status !== 'PUBLISHED' && challenge.status !== 'EVALUATION' && !isAdminClosedOverride) {
     throw new BadRequestError(`Cannot apply to challenge in '${challenge.status}' status. Only PUBLISHED and EVALUATION challenges accept evaluator applications.`);
   }
 
@@ -131,7 +132,8 @@ export const applyToEvaluateChallenge = async (challengeId, data, user, ip_addre
       details: {
         challenge_id: challengeId,
         evaluator_name: user.name,
-        is_reapplication: true
+        is_reapplication: true,
+        ...(isAdminClosedOverride ? { admin_override_closed_challenge: true } : {})
       },
       ip_address
     });
@@ -170,7 +172,8 @@ export const applyToEvaluateChallenge = async (challengeId, data, user, ip_addre
     entity_id: application.id,
     details: {
       challenge_id: challengeId,
-      evaluator_name: user.name
+      evaluator_name: user.name,
+      ...(isAdminClosedOverride ? { admin_override_closed_challenge: true } : {})
     },
     ip_address
   });
@@ -426,7 +429,8 @@ export const addToEvaluatorPool = async (challengeId, data, user, ip_address = n
     throw new NotFoundError(`Challenge with ID ${challengeId} not found.`);
   }
 
-  if (challenge.status === 'CLOSED') {
+  const isAdminClosedOverride = challenge.status === 'CLOSED' && user.role === 'ADMIN';
+  if (challenge.status === 'CLOSED' && !isAdminClosedOverride) {
     throw new BadRequestError('Cannot add evaluators: Problem Statement is CLOSED.');
   }
 
@@ -505,7 +509,8 @@ export const addToEvaluatorPool = async (challengeId, data, user, ip_address = n
     details: {
       challenge_id: challengeId,
       evaluator_id,
-      source
+      source,
+      ...(isAdminClosedOverride ? { admin_override_closed_challenge: true } : {})
     },
     ip_address
   });
@@ -668,6 +673,22 @@ export const closeEvaluatorRecruitment = async (challengeId, data = {}, user, ip
       }
     }
   });
+
+  // Hard minimum: at least 2 evaluators must be shortlisted, cannot be overridden
+  const poolMembers = await prisma.challengeEvaluatorPool.findMany({
+    where: { challenge_id: challengeId },
+    select: { evaluator_id: true }
+  });
+
+  // Combine unique evaluators from shortlisted apps and pool members
+  const uniqueEvaluatorIds = new Set([
+    ...shortlisted.map(a => a.evaluator_id),
+    ...poolMembers.map(p => p.evaluator_id)
+  ]);
+
+  if (uniqueEvaluatorIds.size < 2) {
+    throw new BadRequestError('Cannot close evaluator recruitment: Problem statement requires at least 2 evaluators in the pool.');
+  }
 
   if (shortlisted.length < requiredCount && !data.force_override) {
     throw new BadRequestError(
@@ -858,8 +879,8 @@ export const updateChallengeEvaluatorRecruitment = async (challengeId, data, use
   const updateData = {};
   if (data.required_evaluator_count !== undefined) {
     const count = parseInt(data.required_evaluator_count, 10);
-    if (isNaN(count) || count < 1) {
-      throw new BadRequestError('required_evaluator_count must be a positive integer.');
+    if (isNaN(count) || count < 2) {
+      throw new BadRequestError('required_evaluator_count must be at least 2 evaluators.');
     }
     updateData.required_evaluator_count = count;
   }

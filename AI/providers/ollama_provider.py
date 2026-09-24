@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any, AsyncIterator, Optional
 
 import httpx
 
@@ -131,6 +131,53 @@ class OllamaNativeProvider(AIProvider):
     ) -> dict[str, Any]:
         raw = await self.generate(prompt, system=system, response_format="json")
         return safe_parse_json(raw)
+
+    async def generate_stream(
+        self,
+        prompt: str,
+        system: Optional[str] = None,
+    ) -> AsyncIterator[str]:
+        payload: dict[str, Any] = {
+            "model": self.model,
+            "prompt": prompt,
+            "stream": True,
+        }
+        if system:
+            payload["system"] = system
+
+        logger.info(
+            "Ollama-native stream request — model=%s, prompt_len=%d",
+            self.model,
+            len(prompt),
+        )
+
+        try:
+            async with self._client.stream("POST", "/api/generate", json=payload) as response:
+                response.raise_for_status()
+                async for line in response.aiter_lines():
+                    if not line.strip():
+                        continue
+                    try:
+                        chunk = json.loads(line)
+                        text = chunk.get("response", "")
+                        if text:
+                            yield text
+                    except (json.JSONDecodeError, ValueError):
+                        continue
+        except httpx.ConnectError as exc:
+            raise ProviderUnavailableError(
+                f"Cannot connect to Ollama at {self.base_url}: {exc}"
+            ) from exc
+        except httpx.TimeoutException as exc:
+            raise ProviderTimeoutError(
+                f"Ollama stream timed out after {self.timeout}s: {exc}"
+            ) from exc
+        except httpx.HTTPStatusError as exc:
+            raise ProviderUnavailableError(
+                f"Ollama returned HTTP {exc.response.status_code}: {exc}"
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise ProviderUnavailableError(f"Ollama HTTP error: {exc}") from exc
 
 
 class OllamaEmbeddingProvider(EmbeddingProvider):

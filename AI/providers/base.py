@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any, AsyncIterator, Optional
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -118,6 +118,16 @@ class AIProvider(ABC):
     ) -> dict[str, Any]:
         """Generate and parse a JSON response."""
         raise NotImplementedError
+
+    @abstractmethod
+    async def generate_stream(
+        self,
+        prompt: str,
+        system: Optional[str] = None,
+    ) -> AsyncIterator[str]:
+        """Stream generated text chunks incrementally."""
+        raise NotImplementedError
+        yield ""  # generator signature helper
 
     @abstractmethod
     async def close(self) -> None:

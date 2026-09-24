@@ -89,12 +89,48 @@ export const createScaleDecision = async (pilotId, data, user, ip_address = null
       }
     });
 
-    await tx.challenge.update({
-      where: { id: pilot.challenge_id },
-      data: {
-        status: targetPilotStatus === 'SCALED' || targetPilotStatus === 'STOPPED' ? 'COMPLETED' : pilot.challenge.status
+    // Only transition challenge to COMPLETED when SCALED.
+    // On STOP, keep challenge in PILOT so another startup can be selected.
+    if (targetPilotStatus === 'SCALED') {
+      await tx.challenge.update({
+        where: { id: pilot.challenge_id },
+        data: { status: 'COMPLETED' }
+      });
+    }
+    // On STOP: do NOT transition challenge to COMPLETED — leave it in PILOT
+
+    // When a pilot is STOPPED, reject the associated SELECTED application
+    // so government can select a different startup
+    if (targetPilotStatus === 'STOPPED') {
+      const selectedApp = await tx.application.findFirst({
+        where: {
+          challenge_id: pilot.challenge_id,
+          startup_id: pilot.startup_id,
+          status: 'SELECTED'
+        }
+      });
+
+      if (selectedApp) {
+        await tx.application.update({
+          where: { id: selectedApp.id },
+          data: { status: 'REJECTED' }
+        });
+
+        await createAuditLog({
+          tx,
+          user_id: user.id,
+          action: 'APPLICATION_REJECTED',
+          entity_type: 'APPLICATION',
+          entity_id: selectedApp.id,
+          details: {
+            reason: `Pilot stopped with decision: STOP. Reasoning: ${data.reasoning}`,
+            pilot_id: pilotId,
+            challenge_id: pilot.challenge_id
+          },
+          ip_address
+        });
       }
-    });
+    }
 
     await createAuditLog({
       tx,

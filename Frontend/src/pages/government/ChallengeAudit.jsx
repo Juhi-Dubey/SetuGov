@@ -67,40 +67,40 @@ const ACTION_MAP = {
 
 const ACTION_COLORS = {
   blue: {
-    icon: "bg-blue-50 text-blue-600 border-blue-200",
-    line: "bg-blue-200",
-    card: "border-blue-100 hover:border-blue-300",
-    badge: "bg-blue-50 text-blue-700",
+    icon: "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/60 dark:text-blue-400 dark:border-blue-800",
+    line: "bg-blue-200 dark:bg-blue-800",
+    card: "border-blue-100 hover:border-blue-300 dark:border-blue-900 dark:hover:border-blue-700",
+    badge: "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
   },
   slate: {
-    icon: "bg-slate-100 text-slate-600 border-slate-200",
-    line: "bg-slate-300",
-    card: "border-slate-200 hover:border-slate-300",
-    badge: "bg-slate-100 text-slate-600",
+    icon: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+    line: "bg-slate-300 dark:bg-slate-700",
+    card: "border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600",
+    badge: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
   },
   emerald: {
-    icon: "bg-emerald-50 text-emerald-600 border-emerald-200",
-    line: "bg-emerald-200",
-    card: "border-emerald-100 hover:border-emerald-300",
-    badge: "bg-emerald-50 text-emerald-700",
+    icon: "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800",
+    line: "bg-emerald-200 dark:bg-emerald-800",
+    card: "border-emerald-100 hover:border-emerald-300 dark:border-emerald-900 dark:hover:border-emerald-700",
+    badge: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300",
   },
   amber: {
-    icon: "bg-amber-50 text-amber-600 border-amber-200",
-    line: "bg-amber-200",
-    card: "border-amber-100 hover:border-amber-300",
-    badge: "bg-amber-50 text-amber-700",
+    icon: "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800",
+    line: "bg-amber-200 dark:bg-amber-800",
+    card: "border-amber-100 hover:border-amber-300 dark:border-amber-900 dark:hover:border-amber-700",
+    badge: "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300",
   },
   indigo: {
-    icon: "bg-indigo-50 text-indigo-600 border-indigo-200",
-    line: "bg-indigo-200",
-    card: "border-indigo-100 hover:border-indigo-300",
-    badge: "bg-indigo-50 text-indigo-700",
+    icon: "bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-400 dark:border-indigo-800",
+    line: "bg-indigo-200 dark:bg-indigo-800",
+    card: "border-indigo-100 hover:border-indigo-300 dark:border-indigo-900 dark:hover:border-indigo-700",
+    badge: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300",
   },
   purple: {
-    icon: "bg-purple-50 text-purple-600 border-purple-200",
-    line: "bg-purple-200",
-    card: "border-purple-100 hover:border-purple-300",
-    badge: "bg-purple-50 text-purple-700",
+    icon: "bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-950/60 dark:text-purple-400 dark:border-purple-800",
+    line: "bg-purple-200 dark:bg-purple-800",
+    card: "border-purple-100 hover:border-purple-300 dark:border-purple-900 dark:hover:border-purple-700",
+    badge: "bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300",
   },
 };
 
@@ -577,7 +577,7 @@ function ChallengeAudit() {
           </div>
 
           {/* Content Area */}
-          <div className="bg-slate-50/70 p-6">
+          <div className="bg-slate-50/70 p-6 dark:bg-slate-950">
             {loading ? (
               <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 py-12">
                 <RefreshCw className="h-7 w-7 animate-spin text-slate-400" />
@@ -764,20 +764,20 @@ function ChallengeAudit() {
 
                       {/* Colored timeline icon */}
                       <div
-                        className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 bg-white shadow-sm ${colors.icon}`}
+                        className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 bg-white shadow-sm dark:bg-slate-900 ${colors.icon}`}
                       >
                         <CheckCircle2 className="h-5 w-5" />
                       </div>
 
                       {/* Event Card */}
                       <div
-                        className={`group min-w-0 flex-1 rounded-xl border bg-white p-4 shadow-sm transition-all hover:shadow-md ${colors.card}`}
+                        className={`group min-w-0 flex-1 rounded-xl border bg-white p-4 shadow-sm transition-all hover:shadow-md dark:bg-slate-900 dark:shadow-none dark:hover:shadow-none ${colors.card}`}
                       >
                         {/* Header */}
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="text-sm font-bold text-slate-900">
+                              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                                 {actionInfo.label}
                               </h3>
 
@@ -789,8 +789,8 @@ function ChallengeAudit() {
                             </div>
 
                             {/* Resource */}
-                            <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-600">
-                              <span className="font-semibold text-slate-700">
+                            <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                              <span className="font-semibold text-slate-700 dark:text-slate-300">
                                 {primaryResource.type}:
                               </span>
 
@@ -804,7 +804,7 @@ function ChallengeAudit() {
                           <button
                             type="button"
                             onClick={() => setSelectedLog(log)}
-                            className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-50 hover:text-indigo-700"
+                            className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-50 hover:text-indigo-700 dark:text-indigo-400 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-300"
                           >
                             <Info className="h-3.5 w-3.5" />
                             Technical Details
@@ -818,13 +818,13 @@ function ChallengeAudit() {
                             {summaryTags.map((tag, tIdx) => (
                               <span
                                 key={tIdx}
-                                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs"
+                                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs dark:border-slate-700 dark:bg-slate-800"
                               >
-                                <span className="font-medium text-slate-500">
+                                <span className="font-medium text-slate-500 dark:text-slate-400">
                                   {tag.label}:
                                 </span>
 
-                                <span className="font-semibold text-slate-800">
+                                <span className="font-semibold text-slate-800 dark:text-slate-100">
                                   {tag.value}
                                 </span>
                               </span>
@@ -833,10 +833,10 @@ function ChallengeAudit() {
                         )}
 
                         {/* Footer */}
-                        <div className="mt-3.5 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-3 text-xs">
+                        <div className="mt-3.5 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-3 text-xs dark:border-slate-700/60">
                           {/* Actor */}
-                          <span className="inline-flex items-center gap-1.5 font-medium text-slate-600">
-                            <User className="h-3.5 w-3.5 text-slate-400" />
+                          <span className="inline-flex items-center gap-1.5 font-medium text-slate-600 dark:text-slate-300">
+                            <User className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
 
                             {actorName}
 
@@ -848,14 +848,14 @@ function ChallengeAudit() {
                           </span>
 
                           {/* Timestamp */}
-                          <span className="inline-flex items-center gap-1.5 text-slate-500">
-                            <Clock3 className="h-3.5 w-3.5 text-slate-400" />
+                          <span className="inline-flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                            <Clock3 className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                             {eventTime}
                           </span>
 
                           {/* IP */}
                           {log.ip_address && (
-                            <span className="font-mono text-xs text-slate-400">
+                            <span className="font-mono text-xs text-slate-400 dark:text-slate-500">
                               IP: {log.ip_address}
                             </span>
                           )}
@@ -896,7 +896,7 @@ function ChallengeAudit() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+                  className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
                 >
                   <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
                     <div className="flex items-center gap-2.5">
