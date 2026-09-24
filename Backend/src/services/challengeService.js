@@ -181,7 +181,10 @@ export const getChallenges = async (query = {}, user = null) => {
           select: {
             id: true,
             name: true,
-            state: true
+            state: true,
+            contact_email: true,
+            official_website: true,
+            department_code: true
           }
         },
         creator: {
@@ -222,7 +225,11 @@ export const getChallengeById = async (id, user = null) => {
           id: true,
           name: true,
           state: true,
-          contact_email: true
+          contact_email: true,
+          official_website: true,
+          department_code: true,
+          nodal_officer_name: true,
+          nodal_officer_designation: true
         }
       },
       creator: {

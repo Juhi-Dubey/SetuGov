@@ -18,9 +18,10 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getChallenges } from "../../services/challengeService";
+import { getChallenges, getChallengeById } from "../../services/challengeService";
 import { formatPublishDate } from "../../utils/filterUtils";
 import Pagination from "../../components/common/Pagination";
+import StartupChallengeDetailModal from "../../components/challenge/StartupChallengeDetailModal";
 
 const categories = [
   "All Categories",
@@ -55,9 +56,11 @@ function StartupChallenges() {
             : null;
           const isExpired = c.application_deadline && new Date(c.application_deadline) < new Date();
           return {
+            ...c,
             id: c.id,
             title: c.title,
             department: c.department?.name || "Government Department",
+            departmentObj: c.department,
             category: c.sector || c.category || "GovTech",
             description: c.problem_description || "",
             budget: c.budget_max ? `₹${Number(c.budget_max).toLocaleString("en-IN")}` : (c.budget_min ? `₹${Number(c.budget_min).toLocaleString("en-IN")}` : "Not specified"),
@@ -89,6 +92,39 @@ function StartupChallenges() {
       const match = challengesList.find((c) => String(c.id) === String(id));
       if (match) {
         setSelectedChallenge(match);
+      } else {
+        getChallengeById(id)
+          .then((res) => {
+            const ch = res?.data?.challenge || res?.challenge;
+            if (ch) {
+              const daysLeft = ch.application_deadline
+                ? Math.max(0, Math.ceil((new Date(ch.application_deadline) - new Date()) / (1000 * 60 * 60 * 24)))
+                : null;
+              const isExpired = ch.application_deadline && new Date(ch.application_deadline) < new Date();
+              setSelectedChallenge({
+                ...ch,
+                id: ch.id,
+                title: ch.title,
+                department: ch.department?.name || "Government Department",
+                departmentObj: ch.department,
+                category: ch.sector || ch.category || "GovTech",
+                description: ch.problem_description || "",
+                budget: ch.budget_max ? `₹${Number(ch.budget_max).toLocaleString("en-IN")}` : (ch.budget_min ? `₹${Number(ch.budget_min).toLocaleString("en-IN")}` : "Not specified"),
+                deadline: ch.application_deadline
+                  ? new Date(ch.application_deadline).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                  : "Open Rolling",
+                deadlineRaw: ch.application_deadline,
+                publishedDate: formatPublishDate(ch),
+                isExpired,
+                applicants: ch._count?.applications || (Array.isArray(ch.applications) ? ch.applications.length : 0),
+                status: isExpired ? "Closed" : ch.status === "PUBLISHED" ? "Open" : ch.status,
+                daysLeft: daysLeft ?? 30,
+              });
+            }
+          })
+          .catch((err) => {
+            console.error("Failed to load challenge by id from URL:", err);
+          });
       }
     }
   }, [id, challengesList]);
@@ -156,6 +192,9 @@ function StartupChallenges() {
 
   const handleViewChallenge = (challenge) => {
     setSelectedChallenge(challenge);
+    if (challenge?.id) {
+      navigate(`/startup/challenges/${challenge.id}`);
+    }
   };
 
   const handleApply = (challengeId) => {
@@ -357,11 +396,16 @@ function StartupChallenges() {
       )}
 
       {selectedChallenge && (
-        <ChallengeDetailModal
+        <StartupChallengeDetailModal
           challenge={selectedChallenge}
-          onClose={() => setSelectedChallenge(null)}
-          onApply={() => {
-            const cid = selectedChallenge.id;
+          onClose={() => {
+            setSelectedChallenge(null);
+            if (id) {
+              navigate("/startup/challenges", { replace: true });
+            }
+          }}
+          onApply={(challengeId) => {
+            const cid = challengeId || selectedChallenge.id;
             setSelectedChallenge(null);
             handleApply(cid);
           }}
@@ -610,131 +654,6 @@ function EmptyState({
 function extractBudget(value) {
   return Number(
     String(value).replace(/[^\d.]/g, "")
-  );
-}
-
-/* ===================================================== */
-/* CHALLENGE DETAIL MODAL                                */
-/* ===================================================== */
-
-function ChallengeDetailModal({
-  challenge,
-  onClose,
-  onApply,
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-950 sm:p-8"
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-              <Building2 className="h-6 w-6" />
-            </div>
-
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                {challenge.department}
-              </p>
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-900 dark:text-slate-400">
-                  {challenge.category}
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-900 dark:text-slate-300">
-                  <CalendarDays className="h-3 w-3 text-indigo-500" />
-                  Published: {challenge.publishedDate}
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  {challenge.status}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <h2 className="mt-6 text-xl font-bold text-slate-900 dark:text-white">
-          {challenge.title}
-        </h2>
-
-        <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
-          {challenge.description}
-        </p>
-
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <InfoBox
-            icon={IndianRupee}
-            label="Estimated Budget"
-            value={challenge.budget}
-          />
-          <InfoBox
-            icon={CalendarDays}
-            label="Deadline"
-            value={challenge.deadline}
-          />
-          <InfoBox
-            icon={Users}
-            label="Applicants"
-            value={`${challenge.applicants} startups`}
-          />
-          <InfoBox
-            icon={Clock3}
-            label="Time Left"
-            value={`${challenge.daysLeft} days`}
-          />
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
-          <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-            Eligibility & Key Criteria
-          </h3>
-          <ul className="mt-2 space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
-            <li className="flex items-center gap-2">
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-              DPIIT recognized startups or incorporated entities in India
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-              Valid GST and tax compliance documentation
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
-              Working prototype or deployed pilot capability
-            </li>
-          </ul>
-        </div>
-
-        <div className="mt-8 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl px-5 py-3 text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900"
-          >
-            Close
-          </button>
-
-          <button
-            type="button"
-            onClick={onApply}
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-xs font-bold text-white transition-all hover:bg-blue-700 shadow-sm"
-          >
-            Apply for this Challenge
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
-      </motion.div>
-    </div>
   );
 }
 

@@ -942,7 +942,7 @@ function StartupPilot() {
           {procurement.status === "DELIVERY_SUBMITTED" && (
             <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-4 text-xs text-blue-900 dark:border-blue-900/40 dark:bg-blue-950/20 space-y-2">
               <div className="flex items-center gap-2 font-bold text-blue-800 dark:text-blue-300">
-                <Clock className="h-4 w-4 text-blue-600" /> Solution Delivery Submitted — Inspection in Progress
+                <Clock3 className="h-4 w-4 text-blue-600" /> Solution Delivery Submitted — Inspection in Progress
               </div>
               <p className="text-slate-600 dark:text-slate-400">
                 Delivered on {procurement.delivery_date ? new Date(procurement.delivery_date).toLocaleDateString("en-IN") : "Record"}. Scope: &ldquo;{procurement.delivery_scope}&rdquo;. Pending formal statutory verification by the department.
