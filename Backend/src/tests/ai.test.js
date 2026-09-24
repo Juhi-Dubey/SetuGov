@@ -169,6 +169,7 @@ const runAITestSuite = async () => {
     // 2. Service Layer Unit Tests (Mock / Fallback Mode)
     // ══════════════════════════════════════════════════════════════
     logger.info('\n─── 2. Service Layer Unit Tests ───');
+    config.AI_MOCK_MODE = true;
 
     // 2.1 Challenge Copilot Service
     const copilotResult = await generateChallenge({

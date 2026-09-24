@@ -268,6 +268,7 @@ export const explainMatch = async (input) => {
     if (externalResult && externalResult.success && externalResult.data) {
       const data = externalResult.data;
       return {
+        status: 'SUCCESS',
         ...data,
         why_matched: data.why_matched || data.explanation || 'Startup demonstrates relevant operational capabilities for the challenge.',
         explanation: data.explanation || data.why_matched || 'Startup demonstrates relevant operational capabilities for the challenge.',
@@ -275,14 +276,14 @@ export const explainMatch = async (input) => {
         key_strengths: data.key_strengths || data.strengths || [],
         concerns: data.concerns || data.recommended_considerations || [],
         recommended_considerations: data.recommended_considerations || data.concerns || [],
-        ai_metadata: { mode: 'live' }
+        ai_metadata: { mode: 'live', status: 'SUCCESS' }
       };
     }
   } catch (err) {
     logger.warn(`Brain 2 match explanation live call failed: ${err.message}. Using deterministic fallback explanation.`);
   }
 
-  // Mock / Fallback deterministic explanation matching Brain 2 contract
+  // Fallback deterministic explanation matching Brain 2 contract with explicit AI_UNAVAILABLE status
   const techCategories = challenge.technology_categories || [];
   const startupTechs = startup.technologies || [];
   const overlap = techCategories.filter(tc =>
@@ -350,16 +351,19 @@ export const explainMatch = async (input) => {
   }
 
   return {
+    status: 'AI_UNAVAILABLE',
     score,
     why_matched: whyMatched,
+    explanation: 'AI explanation is currently unavailable. Deterministic rule-based match scoring is displayed.',
     strengths,
     concerns,
     missing_information: missingInfo,
     deployment_considerations: deploymentConsiderations,
     ai_metadata: {
-      model: 'SetuGov-Match-Copilot-Mock',
+      model: 'SetuGov-Match-Deterministic-Fallback',
       mode: 'mock',
-      notice: 'AI explanation is an advisory input. Deterministic scoring remains authoritative.'
+      status: 'AI_UNAVAILABLE',
+      notice: 'AI explanation unavailable. Deterministic match result shown.'
     }
   };
 };

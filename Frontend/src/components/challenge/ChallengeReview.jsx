@@ -22,6 +22,7 @@ function ChallengeReview({
     currentProcess,
     currentBaseline,
     location,
+    applicationDeadline,
     desiredOutcome,
     kpis = [],
     startup,
@@ -75,7 +76,7 @@ function ChallengeReview({
             large
           />
 
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-3">
             <ReviewItem
               label="Department"
               value={department}
@@ -86,6 +87,14 @@ function ChallengeReview({
               value={location}
               icon={
                 <MapPin className="h-3.5 w-3.5" />
+              }
+            />
+
+            <ReviewItem
+              label="Application Deadline"
+              value={applicationDeadline || "Not specified"}
+              icon={
+                <Timer className="h-3.5 w-3.5" />
               }
             />
           </div>
@@ -148,7 +157,7 @@ function ChallengeReview({
                     {kpi.name || "Unnamed KPI"}
                   </p>
 
-                  <div className="mt-4 grid grid-cols-3 gap-2">
+                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <Metric
                       label="Baseline"
                       value={
@@ -160,6 +169,13 @@ function ChallengeReview({
                       label="Target"
                       value={
                         kpi.target || "—"
+                      }
+                    />
+
+                    <Metric
+                      label="Direction"
+                      value={
+                        kpi.direction || "DECREASE"
                       }
                     />
 
@@ -274,11 +290,11 @@ function ChallengeReview({
                         </p>
                       )}
 
-                      {milestone.paymentPercentage && (
+                      {(milestone.paymentPercentage || milestone.payment_percentage) && (
                         <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-300">
                           Payment:{" "}
                           {
-                            milestone.paymentPercentage
+                            milestone.paymentPercentage || milestone.payment_percentage
                           }
                           %
                         </p>
