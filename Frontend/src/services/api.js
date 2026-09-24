@@ -2,6 +2,14 @@ export const API_BASE_URL =
   (typeof import.meta !== "undefined" && import.meta?.env?.VITE_API_BASE_URL) ||
   "/api/v1";
 
+// In non-production environments, attach the rate-limit bypass header so that
+// local development and testing do not exhaust the in-memory rate-limit window.
+// The backend's shouldSkipRateLimit() already recognises this header and only
+// honours it when NODE_ENV !== 'production', so this is safe to include here.
+const IS_DEV =
+  typeof import.meta !== "undefined" &&
+  import.meta?.env?.MODE !== "production";
+
 export const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem("token");
   const isFormData = options.body instanceof FormData;
@@ -9,6 +17,7 @@ export const apiRequest = async (endpoint, options = {}) => {
   const headers = {
     ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(IS_DEV ? { "x-bypass-rate-limit": "test-bypass" } : {}),
     ...(options.headers || {}),
   };
 
