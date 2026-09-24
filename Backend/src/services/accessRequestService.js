@@ -4,7 +4,13 @@ import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError, ConflictError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
-import { sendInvitationEmail, sendAccessRequestEmail } from './emailService.js';
+import {
+  sendInvitationEmail,
+  sendAccessRequestEmail,
+  sendAccessRequestUnderReviewEmail,
+  sendAccessRequestRejectedEmail
+} from './emailService.js';
+import { logger } from '../utils/logger.js';
 import { config } from '../config/env.js';
 
 /**
@@ -600,6 +606,23 @@ export const reviewAccessRequest = async (id, adminUser, ip_address = null) => {
     ip_address
   });
 
+  // Post-commit: send UNDER_REVIEW email to applicant
+  try {
+    const emailResult = await sendAccessRequestUnderReviewEmail({
+      recipientEmail: request.email,
+      applicantName: request.name,
+      role: request.requested_role
+    });
+
+    logger.info(
+      `[ACCESS REQUEST UNDER REVIEW EMAIL] Sent via ${emailResult?.provider || 'provider'}. Message ID: ${emailResult?.messageId || 'unknown'}`
+    );
+  } catch (emailErr) {
+    logger.error(
+      `[ACCESS REQUEST UNDER REVIEW EMAIL] Failed: ${emailErr.message}`
+    );
+  }
+
   return updated;
 };
 
@@ -948,7 +971,7 @@ export const rejectAccessRequest = async (id, data, adminUser, ip_address = null
     throw new BadRequestError('A specific rejection reason is required.');
   }
 
-  return await prisma.$transaction(async (tx) => {
+  const { updated, request } = await prisma.$transaction(async (tx) => {
     const request = await tx.accessRequest.findUnique({ where: { id } });
     if (!request) {
       throw new NotFoundError(`Access request with ID ${id} not found.`);
@@ -999,11 +1022,31 @@ export const rejectAccessRequest = async (id, data, adminUser, ip_address = null
       });
     }
 
-    return updated;
+    return { updated, request };
   }, {
     maxWait: 10000,
     timeout: 15000
   });
+
+  // Post-commit: send REJECTED email to applicant
+  try {
+    const emailResult = await sendAccessRequestRejectedEmail({
+      recipientEmail: request.email,
+      applicantName: request.name,
+      role: request.requested_role,
+      rejectionReason: rejection_reason.trim()
+    });
+
+    logger.info(
+      `[ACCESS REQUEST REJECTED EMAIL] Sent via ${emailResult?.provider || 'provider'}. Message ID: ${emailResult?.messageId || 'unknown'}`
+    );
+  } catch (emailErr) {
+    logger.error(
+      `[ACCESS REQUEST REJECTED EMAIL] Failed: ${emailErr.message}`
+    );
+  }
+
+  return updated;
 };
 
 /**

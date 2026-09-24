@@ -1106,6 +1106,241 @@ Government of India
   }
 };
 
+/**
+ * Event: Access Request Marked UNDER_REVIEW (Government Officer / Evaluator)
+ */
+export const sendAccessRequestUnderReviewEmail = async ({
+  recipientEmail,
+  applicantName,
+  role
+}) => {
+  const safeRole = role === 'GOVERNMENT' ? 'GOVERNMENT' : 'EVALUATOR';
+  const roleTitle = safeRole === 'GOVERNMENT' ? 'Government Officer' : 'Domain Technical Evaluator';
+  const safeName = escapeHtml(applicantName || 'Applicant');
+  const safeEmail = escapeHtml(recipientEmail);
+  const subject = 'SetuGov Platform — Access Request Under Review';
+
+  const text = `
+Dear ${applicantName || 'Applicant'},
+
+Your ${roleTitle} access request has been received and is currently UNDER REVIEW by the platform administration committee.
+
+Application Summary:
+Role: ${roleTitle}
+Applicant: ${applicantName || 'Applicant'}
+Email: ${recipientEmail}
+Status: UNDER REVIEW
+
+What happens next:
+- The administrator is actively reviewing the submitted information and credentials.
+- You will receive another email notification when a final decision is made on your request.
+
+If you have questions regarding your application, please contact support@setugov.gov.in.
+
+SetuGov National Innovation Procurement Platform
+Government of India
+  `.trim();
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1e293b; background-color: #f8fafc; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 30px auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+    .header { background: #0f172a; padding: 28px; text-align: center; color: #ffffff; }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .header p { margin: 4px 0 0 0; color: #94a3b8; font-size: 13px; }
+    .content { padding: 32px 28px; }
+    .badge { display: inline-block; padding: 4px 12px; background: #fef3c7; color: #b45309; border-radius: 9999px; font-weight: 600; font-size: 12px; margin-bottom: 16px; border: 1px solid #fde68a; }
+    .notice { background: #f8fafc; border-left: 4px solid #3b82f6; padding: 14px 16px; border-radius: 4px; font-size: 13px; color: #475569; margin: 20px 0; }
+    .footer { padding: 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>SetuGov</h1>
+      <p>National Innovation Procurement Platform</p>
+    </div>
+    <div class="content">
+      <div class="badge">Status: Under Active Review</div>
+      <p>Dear <strong>${safeName}</strong>,</p>
+      <p>Your <strong>${escapeHtml(roleTitle)}</strong> access request has been received and is currently <strong>UNDER REVIEW</strong> by the platform administration committee.</p>
+      
+      <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
+        <tr>
+          <td style="padding: 8px 0; color: #64748b; width: 140px;">Requested Role:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${escapeHtml(roleTitle)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #64748b;">Applicant Email:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${safeEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #64748b;">Current Status:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #2563eb;">UNDER REVIEW</td>
+        </tr>
+      </table>
+
+      <div class="notice">
+        <strong>What happens next?</strong>
+        <ul style="margin: 6px 0 0 0; padding-left: 18px;">
+          <li>The administrator is actively reviewing the submitted information and credentials.</li>
+          <li>You will receive another email notification when a final decision is made on your request.</li>
+          <li>No further action is required from you at this time.</li>
+        </ul>
+      </div>
+
+      <p style="font-size: 12px; color: #94a3b8;">
+        If you have questions regarding your application, please contact support@setugov.gov.in.
+      </p>
+    </div>
+    <div class="footer">
+      SetuGov &bull; Government of India &bull; Innovation Procurement Lifecycle Platform
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const masked = maskEmail(recipientEmail);
+
+  try {
+    const result = await sendEmail({
+      to: recipientEmail,
+      subject,
+      text,
+      html
+    });
+
+    logger.info(
+      `[ACCESS REQUEST UNDER REVIEW EMAIL]\nrole: ${safeRole}\nrecipient: ${masked}\nmessageId: ${result?.messageId || 'unknown'}`
+    );
+
+    return result;
+  } catch (error) {
+    logger.error(`[ACCESS REQUEST UNDER REVIEW EMAIL] Failed: ${error.message}`);
+    throw error;
+  }
+};
+
+/**
+ * Event: Access Request Rejected (Government Officer / Evaluator)
+ */
+export const sendAccessRequestRejectedEmail = async ({
+  recipientEmail,
+  applicantName,
+  role,
+  rejectionReason
+}) => {
+  const safeRole = role === 'GOVERNMENT' ? 'GOVERNMENT' : 'EVALUATOR';
+  const roleTitle = safeRole === 'GOVERNMENT' ? 'Government Officer' : 'Domain Technical Evaluator';
+  const safeName = escapeHtml(applicantName || 'Applicant');
+  const safeEmail = escapeHtml(recipientEmail);
+  const safeReason = escapeHtml(rejectionReason || 'Requirements criteria not met.');
+  const subject = 'SetuGov Platform — Access Request Rejected';
+
+  const text = `
+Dear ${applicantName || 'Applicant'},
+
+Thank you for your submission to SetuGov. Following thorough review, we regret to inform you that your ${roleTitle} access request was rejected and could not be approved at this time.
+
+Decision Summary:
+Requested Role: ${roleTitle}
+Applicant: ${applicantName || 'Applicant'}
+Email: ${recipientEmail}
+Review Decision: REJECTED / NOT APPROVED
+Reason for Rejection: ${rejectionReason || 'Requirements criteria not met.'}
+
+If you have questions or require further clarification regarding this determination, you may reach out to platform support at support@setugov.gov.in.
+
+SetuGov National Innovation Procurement Platform
+Government of India
+  `.trim();
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1e293b; background-color: #f8fafc; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 30px auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+    .header { background: #0f172a; padding: 28px; text-align: center; color: #ffffff; }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .header p { margin: 4px 0 0 0; color: #94a3b8; font-size: 13px; }
+    .content { padding: 32px 28px; }
+    .badge { display: inline-block; padding: 4px 12px; background: #fef2f2; color: #dc2626; border-radius: 9999px; font-weight: 600; font-size: 12px; margin-bottom: 16px; border: 1px solid #fecaca; }
+    .reason-box { background: #fff1f2; border-left: 4px solid #e11d48; padding: 14px 16px; border-radius: 4px; font-size: 13px; color: #881337; margin: 20px 0; }
+    .footer { padding: 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>SetuGov</h1>
+      <p>National Innovation Procurement Platform</p>
+    </div>
+    <div class="content">
+      <div class="badge">Status: Access Request Rejected</div>
+      <p>Dear <strong>${safeName}</strong>,</p>
+      <p>Thank you for your interest in SetuGov. Following review by the platform administration, your access request for a <strong>${escapeHtml(roleTitle)}</strong> account could not be approved at this time.</p>
+      
+      <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
+        <tr>
+          <td style="padding: 8px 0; color: #64748b; width: 140px;">Requested Role:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${escapeHtml(roleTitle)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #64748b;">Applicant Email:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${safeEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #64748b;">Review Decision:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #dc2626;">REJECTED</td>
+        </tr>
+      </table>
+
+      <div class="reason-box">
+        <strong>Reason for Rejection:</strong>
+        <p style="margin: 6px 0 0 0;">${safeReason}</p>
+      </div>
+
+      <p style="font-size: 13px; color: #475569;">
+        If you have questions or require further clarification regarding this decision, you may reach out to platform support at <a href="mailto:support@setugov.gov.in" style="color: #2563eb;">support@setugov.gov.in</a>.
+      </p>
+    </div>
+    <div class="footer">
+      SetuGov &bull; Government of India &bull; Innovation Procurement Lifecycle Platform
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const masked = maskEmail(recipientEmail);
+
+  try {
+    const result = await sendEmail({
+      to: recipientEmail,
+      subject,
+      text,
+      html
+    });
+
+    logger.info(
+      `[ACCESS REQUEST REJECTED EMAIL]\nrole: ${safeRole}\nrecipient: ${masked}\nmessageId: ${result?.messageId || 'unknown'}`
+    );
+
+    return result;
+  } catch (error) {
+    logger.error(`[ACCESS REQUEST REJECTED EMAIL] Failed: ${error.message}`);
+    throw error;
+  }
+};
+
 export default {
   sendEmail,
   sendInvitationEmail,
@@ -1119,5 +1354,7 @@ export default {
   sendPilotStartedEmail,
   sendPilotCompletedEmail,
   sendPilotOutcomeEmail,
-  sendScaleDecisionEmail
+  sendScaleDecisionEmail,
+  sendAccessRequestUnderReviewEmail,
+  sendAccessRequestRejectedEmail
 };
