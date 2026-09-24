@@ -745,7 +745,7 @@ function TemplateModal({
 
           <div>
             <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300">
-              Description
+              Description <span className="text-red-500">*</span>
             </label>
 
             <textarea
@@ -821,7 +821,7 @@ function FormField({
   return (
     <div>
       <label className="text-[10px] font-bold text-slate-600 dark:text-slate-300">
-        {label}
+        {label} {required && <span className="text-red-500">*</span>}
       </label>
 
       <input

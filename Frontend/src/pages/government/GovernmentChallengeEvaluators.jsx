@@ -825,7 +825,7 @@ export default function GovernmentChallengeEvaluators() {
               <form onSubmit={handleSaveRequiredCount} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Number of Required Evaluators
+                    Number of Required Evaluators <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"

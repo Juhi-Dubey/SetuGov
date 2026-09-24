@@ -810,7 +810,7 @@ function ChallengeContract() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Estimated Procurement Value (₹) *
+                        Estimated Procurement Value (₹) <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <IndianRupee className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
@@ -827,7 +827,7 @@ function ChallengeContract() {
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                        Statutory Justification / Statement of Case *
+                        Statutory Justification / Statement of Case <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -1019,7 +1019,7 @@ function ChallengeContract() {
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          GeM / Route Sanction Number *
+                          GeM / Route Sanction Number <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -1211,7 +1211,7 @@ function ChallengeContract() {
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          Purchase Order (PO) Reference Number *
+                          Purchase Order (PO) Reference Number <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -1225,7 +1225,7 @@ function ChallengeContract() {
 
                       <div>
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          Contract Agreement Reference *
+                          Contract Agreement Reference <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -1241,7 +1241,7 @@ function ChallengeContract() {
                     <div className="grid gap-4 sm:grid-cols-3">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          Final Contract Value (₹) *
+                          Final Contract Value (₹) <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
@@ -1255,7 +1255,7 @@ function ChallengeContract() {
 
                       <div>
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          Effective Date *
+                          Effective Date <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="date"
@@ -1268,7 +1268,7 @@ function ChallengeContract() {
 
                       <div>
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          Duration (Days) *
+                          Duration (Days) <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
@@ -1458,7 +1458,7 @@ function ChallengeContract() {
                     <form onSubmit={handleAcceptDelivery} className="space-y-4">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                          Statutory Acceptance Inspection Decision *
+                          Statutory Acceptance Inspection Decision <span className="text-red-500">*</span>
                         </label>
                         <div className="grid gap-3 sm:grid-cols-3">
                           {ACCEPTANCE_status.map((a) => (
@@ -1492,7 +1492,7 @@ function ChallengeContract() {
 
                       <div>
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          Inspection Remarks & Acceptance Certification *
+                          Inspection Remarks & Acceptance Certification <span className="text-red-500">*</span>
                         </label>
                         <textarea
                           rows={2}
@@ -1600,7 +1600,7 @@ function ChallengeContract() {
                     <div className="grid gap-4 sm:grid-cols-3">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                          Payment Amount (₹) *
+                          Payment Amount (₹) <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"

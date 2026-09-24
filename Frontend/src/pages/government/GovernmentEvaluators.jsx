@@ -337,7 +337,7 @@ function GovernmentEvaluators() {
                   )}
 
                   <div>
-                    <label className="block font-medium mb-1">Evaluator Full Name *</label>
+                    <label className="block font-medium mb-1">Evaluator Full Name <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       required
@@ -350,7 +350,7 @@ function GovernmentEvaluators() {
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block font-medium mb-1">Email Address *</label>
+                      <label className="block font-medium mb-1">Email Address <span className="text-red-500">*</span></label>
                       <input
                         type="email"
                         required
@@ -397,7 +397,7 @@ function GovernmentEvaluators() {
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block font-medium mb-1">Domain Expertise *</label>
+                      <label className="block font-medium mb-1">Domain Expertise <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         required
@@ -421,7 +421,7 @@ function GovernmentEvaluators() {
                   </div>
 
                   <div>
-                    <label className="block font-medium mb-1">Reason for Nomination *</label>
+                    <label className="block font-medium mb-1">Reason for Nomination <span className="text-red-500">*</span></label>
                     <textarea
                       rows={2}
                       required

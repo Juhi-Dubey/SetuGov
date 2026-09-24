@@ -503,7 +503,7 @@ function Login() {
                   htmlFor="email"
                   className="mb-1.5 block text-sm font-medium"
                 >
-                  Email address
+                  Email address <span className="text-red-500">*</span>
                 </label>
 
                 <div className="relative">
@@ -513,6 +513,7 @@ function Login() {
                     id="email"
                     name="email"
                     type="email"
+                    required
                     autoComplete="email"
                     value={formData.email}
                     onChange={handleChange}
@@ -538,7 +539,7 @@ function Login() {
                   htmlFor="password"
                   className="mb-1.5 block text-sm font-medium"
                 >
-                  Password
+                  Password <span className="text-red-500">*</span>
                 </label>
 
                 <div className="relative">
@@ -548,6 +549,7 @@ function Login() {
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
+                    required
                     autoComplete="current-password"
                     value={formData.password}
                     onChange={handleChange}

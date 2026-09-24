@@ -764,7 +764,7 @@ function ChallengeDecision() {
                   <div className="flex items-center justify-between">
                     <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300">
                       <MessageSquare className="h-3.5 w-3.5 text-slate-400" />
-                      Official Decision Reasoning & Empirical Justification *
+                      Official Decision Reasoning & Empirical Justification <span className="text-red-500">*</span>
                     </label>
                     <span className="text-[11px] text-slate-400">
                       {reasoning.trim().length} characters (min 10)

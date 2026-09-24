@@ -275,12 +275,13 @@ export default function InviteAccept() {
               {/* Password */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300">
-                  New Password (min. 12 characters) *
+                  New Password (min. 12 characters) <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <LockKeyhole className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
                     type={showPassword ? "text" : "password"}
+                    required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="At least 12 characters"
@@ -299,12 +300,13 @@ export default function InviteAccept() {
               {/* Confirm Password */}
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Confirm New Password *
+                  Confirm New Password <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <LockKeyhole className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
                     type={showPassword ? "text" : "password"}
+                    required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Re-enter your password"

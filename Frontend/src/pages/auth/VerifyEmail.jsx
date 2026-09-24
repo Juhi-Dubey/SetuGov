@@ -158,7 +158,7 @@ export default function VerifyEmail() {
 
             <form onSubmit={handleResend} className="mt-6 border-t border-slate-100 pt-5 dark:border-slate-800 text-left">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Enter your email address to resend link:
+                Enter your email address to resend link <span className="text-red-500">*</span>:
               </label>
               <div className="relative mb-3">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />

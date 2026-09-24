@@ -1640,7 +1640,7 @@ function ChallengePilot() {
                     <h4 className="text-sm font-bold text-slate-900 dark:text-white">Record Pilot Incident / Blocker</h4>
                     <div className="mt-4 grid gap-4 sm:grid-cols-3">
                       <div className="sm:col-span-2">
-                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Issue Title *</label>
+                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Issue Title <span className="text-red-500">*</span></label>
                         <input
                           type="text"
                           value={newIssue.title}
@@ -1906,7 +1906,7 @@ function ChallengePilot() {
 
                       <div className="grid gap-4 sm:grid-cols-3">
                         <div>
-                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Decision Outcome *</label>
+                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Decision Outcome <span className="text-red-500">*</span></label>
                           <select
                             value={govDecision.decision}
                             onChange={(e) => setGovDecision({ ...govDecision, decision: e.target.value })}
@@ -1922,7 +1922,7 @@ function ChallengePilot() {
                         </div>
 
                         <div>
-                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Scaling Scope *</label>
+                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Scaling Scope <span className="text-red-500">*</span></label>
                           <input
                             type="text"
                             placeholder="e.g. 5 Municipal Administrative Zones"
@@ -1935,7 +1935,7 @@ function ChallengePilot() {
                         </div>
 
                         <div>
-                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Allocated Budget (₹) *</label>
+                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Allocated Budget (₹) <span className="text-red-500">*</span></label>
                           <input
                             type="number"
                             placeholder="e.g. 5000000"
@@ -1949,7 +1949,7 @@ function ChallengePilot() {
                       </div>
 
                       <div className="mt-4">
-                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Official Justification *</label>
+                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Official Justification <span className="text-red-500">*</span></label>
                         <textarea
                           rows={3}
                           value={govDecision.justification}
@@ -2013,7 +2013,7 @@ function ChallengePilot() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Pilot Site Location *</label>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Pilot Site Location <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       value={createForm.location}
@@ -2026,7 +2026,7 @@ function ChallengePilot() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Start Date *</label>
+                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Start Date <span className="text-red-500">*</span></label>
                       <input
                         type="date"
                         value={createForm.start_date}
@@ -2036,7 +2036,7 @@ function ChallengePilot() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">End Date *</label>
+                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">End Date <span className="text-red-500">*</span></label>
                       <input
                         type="date"
                         value={createForm.end_date}
@@ -2048,7 +2048,7 @@ function ChallengePilot() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Pilot Budget (₹) *</label>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Pilot Budget (₹) <span className="text-red-500">*</span></label>
                     <input
                       type="number"
                       value={createForm.budget}
@@ -2112,7 +2112,7 @@ function ChallengePilot() {
 
                 <div className="mt-4">
                   <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Override Justification *
+                    Override Justification <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     rows={3}

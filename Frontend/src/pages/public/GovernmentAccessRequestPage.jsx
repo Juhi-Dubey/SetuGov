@@ -257,7 +257,7 @@ export default function GovernmentAccessRequestPage() {
                 {/* Full Name */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Officer Full Name *
+                    Officer Full Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -281,7 +281,7 @@ export default function GovernmentAccessRequestPage() {
                 {/* Official Email */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Official Email (.gov.in / .nic.in / state domain) *
+                    Official Email (.gov.in / .nic.in / state domain) <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -323,7 +323,7 @@ export default function GovernmentAccessRequestPage() {
                 {/* Designation */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Designation / Title *
+                    Designation / Title <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -347,7 +347,7 @@ export default function GovernmentAccessRequestPage() {
                 {/* Department Name */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Department / Ministry Name *
+                    Department / Ministry Name <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -371,12 +371,13 @@ export default function GovernmentAccessRequestPage() {
                 {/* State */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    State / Union Territory *
+                    State / Union Territory <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <select
                       name="state"
+                      required
                       value={formData.state}
                       onChange={handleChange}
                       className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 text-xs text-slate-900 outline-none transition focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-900"
@@ -427,7 +428,7 @@ export default function GovernmentAccessRequestPage() {
               {/* Reason for Access */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Reason for Official Access / Innovation Procurement Scope *
+                  Reason for Official Access / Innovation Procurement Scope <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   rows={3}

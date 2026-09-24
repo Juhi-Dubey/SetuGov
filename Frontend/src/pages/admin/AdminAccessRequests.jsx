@@ -559,10 +559,11 @@ function AdminAccessRequests() {
               {showRejectInput && (
                 <div className="rounded-xl border border-red-200 bg-red-50/50 p-3 space-y-2 dark:border-red-900/30 dark:bg-red-950/20">
                   <label className="block font-semibold text-red-800 dark:text-red-300">
-                    Reason for Rejection *
+                    Reason for Rejection <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     rows={2}
+                    required
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
                     placeholder="State reason for rejecting this access request..."

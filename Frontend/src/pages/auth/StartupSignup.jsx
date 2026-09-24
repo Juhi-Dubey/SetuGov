@@ -290,7 +290,7 @@ export default function StartupSignup() {
                   {/* Full Name */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Authorized Signatory Full Name *
+                      Authorized Signatory Full Name <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -314,7 +314,7 @@ export default function StartupSignup() {
                   {/* Email Address */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Official / Founder Email Address *
+                      Official / Founder Email Address <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -356,7 +356,7 @@ export default function StartupSignup() {
                   {/* Password */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Account Password (min. 12 characters) *
+                      Account Password (min. 12 characters) <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <LockKeyhole className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -387,7 +387,7 @@ export default function StartupSignup() {
                   {/* Confirm Password */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Confirm Password *
+                      Confirm Password <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <LockKeyhole className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />

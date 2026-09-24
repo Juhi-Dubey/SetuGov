@@ -442,7 +442,7 @@ function EvaluatorPilotDetail() {
                 <div key={item.key} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <label className="font-semibold text-slate-800 dark:text-slate-200">
-                      {item.label}
+                      {item.label} <span className="text-red-500">*</span>
                     </label>
                     <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
                       Weight: {item.weight}%
@@ -455,6 +455,7 @@ function EvaluatorPilotDetail() {
                     type="number"
                     min="0"
                     max="100"
+                    required
                     disabled={isAlreadySubmitted || submitting}
                     value={scores[item.key]}
                     onChange={(e) => handleScoreChange(item.key, e.target.value)}

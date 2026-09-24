@@ -885,7 +885,7 @@ function StartupPilot() {
                 <h3 className="font-bold text-slate-900 dark:text-white text-xs">Submit Solution Delivery Evidence</h3>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Delivery Scope Description *
+                    Delivery Scope Description <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     required
@@ -1421,7 +1421,7 @@ function StartupPilot() {
             </div>
 
             <div className="mt-3">
-              <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Feedback Comments</label>
+              <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Feedback Comments <span className="text-red-500">*</span></label>
               <textarea
                 value={feedbackComment}
                 onChange={(e) => setFeedbackComment(e.target.value)}
@@ -1527,7 +1527,7 @@ function StartupPilot() {
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2">
-                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Issue Title *</label>
+                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Issue Title <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   value={issueTitle}
