@@ -10,7 +10,7 @@ export const createChallengeSchema = z.object({
   budget_max: z.number().positive('Budget max must be positive'),
   pilot_duration_days: z.number().int().positive('Pilot duration must be positive days'),
   required_technologies: z.array(z.string()).min(1, 'At least one required technology must be specified'),
-  application_deadline: z.string().datetime({ offset: true }).or(z.string()).nullable().optional(),
+  application_deadline: z.string({ required_error: 'Application deadline is required', invalid_type_error: 'Application deadline is required' }).min(1, 'Application deadline is required'),
   data_classification: z.string().optional(),
   data_access_requirements: z.string().nullable().optional(),
   data_retention_period: z.string().nullable().optional(),
@@ -33,7 +33,7 @@ export const createChallengeSchema = z.object({
   message: 'Budget max must be greater than or equal to budget min',
   path: ['budget_max']
 }).refine(data => {
-  if (!data.application_deadline) return true; // Nullable/optional deadlines are allowed
+  if (!data.application_deadline) return false;
   const deadline = new Date(data.application_deadline);
   return !isNaN(deadline.getTime()) && deadline > new Date();
 }, {

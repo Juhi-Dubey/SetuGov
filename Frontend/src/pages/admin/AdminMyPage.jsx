@@ -477,7 +477,7 @@ export default function AdminMyPage() {
               <form onSubmit={handleSaveProfile} className="mt-5 space-y-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                    Administrator Name *
+                    Administrator Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"

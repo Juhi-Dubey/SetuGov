@@ -1218,7 +1218,7 @@ function CriterionCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-            {criterion.title}
+            {criterion.title} <span className="text-red-500">*</span>
           </h3>
 
           <p className="mt-1 text-[10px] leading-4 text-slate-400">

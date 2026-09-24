@@ -2783,7 +2783,7 @@ function ChallengeApplications() {
               <form onSubmit={handleAssignEvaluatorSubmit} className="space-y-4 text-xs">
                 <div>
                   <label className="block font-medium mb-1.5 text-slate-700 dark:text-slate-300">
-                    Select Evaluator from Final Pool *
+                    Select Evaluator from Final Pool <span className="text-red-500">*</span>
                   </label>
                   {challengePool.length === 0 ? (
                     <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:border-amber-900/30 dark:text-amber-300">
@@ -2976,7 +2976,7 @@ function ChallengeApplications() {
 
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                        Override Justification * (min 10 characters)
+                        Override Justification <span className="text-red-500">*</span> (min 10 characters)
                       </label>
                       <textarea
                         rows={3}
@@ -3086,7 +3086,7 @@ function ChallengeApplications() {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Specific Changes Requested *
+                    Specific Changes Requested <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     rows={4}

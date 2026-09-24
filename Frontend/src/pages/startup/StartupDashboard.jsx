@@ -143,7 +143,7 @@ function StartupDashboard() {
             <button
               type="button"
               onClick={() => navigate("/startup/challenges")}
-              className="inline-flex h-9.5 items-center gap-2 rounded-xl bg-blue-600 px-4 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
+              className="inline-flex h-9.5 w-48 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
             >
               Browse Challenges
               <ArrowRight className="h-4 w-4" />
@@ -151,7 +151,7 @@ function StartupDashboard() {
             <button
               type="button"
               onClick={() => navigate("/startup/pilot")}
-              className="inline-flex h-9.5 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white"
+              className="inline-flex h-9.5 w-48 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white"
             >
               <Rocket className="h-4 w-4 text-slate-500 dark:text-slate-400" />
               Pilot Sandboxes

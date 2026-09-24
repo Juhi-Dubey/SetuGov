@@ -885,7 +885,7 @@ function StartupPilot() {
                 <h3 className="font-bold text-slate-900 dark:text-white text-xs">Submit Solution Delivery Evidence</h3>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Delivery Scope Description *
+                    Delivery Scope Description <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     required
@@ -942,7 +942,7 @@ function StartupPilot() {
           {procurement.status === "DELIVERY_SUBMITTED" && (
             <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-4 text-xs text-blue-900 dark:border-blue-900/40 dark:bg-blue-950/20 space-y-2">
               <div className="flex items-center gap-2 font-bold text-blue-800 dark:text-blue-300">
-                <Clock className="h-4 w-4 text-blue-600" /> Solution Delivery Submitted — Inspection in Progress
+                <Clock3 className="h-4 w-4 text-blue-600" /> Solution Delivery Submitted — Inspection in Progress
               </div>
               <p className="text-slate-600 dark:text-slate-400">
                 Delivered on {procurement.delivery_date ? new Date(procurement.delivery_date).toLocaleDateString("en-IN") : "Record"}. Scope: &ldquo;{procurement.delivery_scope}&rdquo;. Pending formal statutory verification by the department.
@@ -1421,7 +1421,7 @@ function StartupPilot() {
             </div>
 
             <div className="mt-3">
-              <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Feedback Comments</label>
+              <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Feedback Comments <span className="text-red-500">*</span></label>
               <textarea
                 value={feedbackComment}
                 onChange={(e) => setFeedbackComment(e.target.value)}
@@ -1527,7 +1527,7 @@ function StartupPilot() {
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2">
-                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Issue Title *</label>
+                <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Issue Title <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   value={issueTitle}
