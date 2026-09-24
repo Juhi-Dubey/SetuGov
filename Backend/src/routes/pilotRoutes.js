@@ -51,7 +51,7 @@ import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
 import { uploadSingle, getFileUrl } from '../middleware/upload.js';
-import { createPilotSchema, updatePilotSchema, createProgressUpdateSchema } from '../schemas/pilotSchemas.js';
+import { createPilotSchema, updatePilotSchema, createProgressUpdateSchema, createPilotFeedbackSchema } from '../schemas/pilotSchemas.js';
 import { createKpiSchema, createMeasurementSchema } from '../schemas/kpiSchemas.js';
 import { createMilestoneSchema } from '../schemas/milestoneSchemas.js';
 import { createEvidenceSchema } from '../schemas/evidenceSchemas.js';
@@ -59,6 +59,9 @@ import { createRiskSchema } from '../schemas/riskSchemas.js';
 import { createValidationSchema } from '../schemas/validationSchemas.js';
 import { createPaymentSchema } from '../schemas/paymentSchemas.js';
 import { createScaleDecisionSchema } from '../schemas/scaleDecisionSchemas.js';
+import { pilotFeedbackRateLimiter } from '../middleware/rateLimiter.js';
+
+
 
 const router = Router();
 
@@ -99,7 +102,7 @@ router.get('/:pilot_id/compliance', authenticate, getComplianceChecklist);
 router.patch('/:pilot_id/compliance/:item_id', authenticate, authorizeRoles('GOVERNMENT', 'EVALUATOR'), updateComplianceItem);
 
 // Beneficiary / Citizen Feedback
-router.post('/:pilot_id/feedback', addPilotFeedback); // Open or authenticated
+router.post('/:pilot_id/feedback',  pilotFeedbackRateLimiter, validate(createPilotFeedbackSchema), addPilotFeedback); // Open or authenticated
 router.get('/:pilot_id/feedback', authenticate, getPilotFeedbacks);
 
 // KPIs (GOVERNMENT only)

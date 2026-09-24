@@ -317,6 +317,10 @@ function CreateChallenge() {
       newErrors.location = "Location is required.";
     }
 
+    if (!formData.applicationDeadline || !formData.applicationDeadline.trim()) {
+      newErrors.applicationDeadline = "Application Deadline is required";
+    }
+
     if (!formData.problemDescription.trim()) {
       newErrors.problemDescription =
         "Problem description is required.";
@@ -610,12 +614,13 @@ function CreateChallenge() {
   // =========================================================
 
   const handleAddKPI = () => {
+    const newKpiId = crypto.randomUUID();
     setFormData((previous) => ({
       ...previous,
       kpis: [
         ...previous.kpis,
         {
-          id: crypto.randomUUID(),
+          id: newKpiId,
           name: "",
           unit: "",
           baseline: "",
@@ -624,6 +629,29 @@ function CreateChallenge() {
         },
       ],
     }));
+
+    setTimeout(() => {
+      const kpiRow = document.querySelector(`[data-kpi-id="${newKpiId}"]`);
+      const firstInput =
+        document.getElementById(`kpi_${newKpiId}_name`) ||
+        (kpiRow && kpiRow.querySelector("input, textarea, select"));
+
+      if (kpiRow) {
+        kpiRow.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (firstInput) {
+        firstInput.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      if (firstInput) {
+        setTimeout(() => {
+          try {
+            firstInput.focus({ preventScroll: true });
+          } catch {
+            firstInput.focus();
+          }
+        }, 120);
+      }
+    }, 50);
   };
 
   const handleKPIChange = (
@@ -642,6 +670,12 @@ function CreateChallenge() {
           : kpi
       ),
     }));
+
+    setErrors((previous) => ({
+      ...previous,
+      [`kpi_${id}_${field}`]: "",
+      kpis: "",
+    }));
   };
 
   const handleRemoveKPI = (id) => {
@@ -658,12 +692,13 @@ function CreateChallenge() {
   // =========================================================
 
   const handleAddMilestone = () => {
+    const newMilestoneId = crypto.randomUUID();
     setFormData((previous) => ({
       ...previous,
       milestones: [
         ...previous.milestones,
         {
-          id: crypto.randomUUID(),
+          id: newMilestoneId,
           name: "",
           description: "",
           dueDate: "",
@@ -672,6 +707,34 @@ function CreateChallenge() {
         },
       ],
     }));
+
+    setErrors((previous) => ({
+      ...previous,
+      milestones: "",
+    }));
+
+    setTimeout(() => {
+      const mRow = document.querySelector(`[data-milestone-id="${newMilestoneId}"]`);
+      const firstInput =
+        document.getElementById(`milestone_${newMilestoneId}_name`) ||
+        (mRow && mRow.querySelector("input, textarea, select"));
+
+      if (mRow) {
+        mRow.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (firstInput) {
+        firstInput.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      if (firstInput) {
+        setTimeout(() => {
+          try {
+            firstInput.focus({ preventScroll: true });
+          } catch {
+            firstInput.focus();
+          }
+        }, 120);
+      }
+    }, 50);
   };
 
   const handleMilestoneChange = (
@@ -690,6 +753,12 @@ function CreateChallenge() {
               }
             : milestone
       ),
+    }));
+
+    setErrors((previous) => ({
+      ...previous,
+      [`milestone_${id}_${field}`]: "",
+      milestones: "",
     }));
   };
 
@@ -719,6 +788,11 @@ function CreateChallenge() {
         },
       ],
     }));
+
+    setErrors((previous) => ({
+      ...previous,
+      requiredTechnologies: "",
+    }));
   };
 
   const handleTechnologyChange = (
@@ -737,6 +811,11 @@ function CreateChallenge() {
                 }
               : technology
         ),
+    }));
+
+    setErrors((previous) => ({
+      ...previous,
+      requiredTechnologies: "",
     }));
   };
 
@@ -787,6 +866,11 @@ function CreateChallenge() {
                 }
               : requirement
         ),
+    }));
+
+    setErrors((previous) => ({
+      ...previous,
+      eligibilityRequirements: "",
     }));
   };
 

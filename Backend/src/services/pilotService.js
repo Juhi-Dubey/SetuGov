@@ -835,15 +835,37 @@ export const addPilotFeedback = async (pilotId, data, user = null, ip_address = 
     throw new NotFoundError(`Pilot with ID ${pilotId} not found.`);
   }
 
-  const { citizen_name, beneficiary_type = 'CITIZEN', rating, comments, comment, respondent_role, stakeholder_type } = data;
-  const rawComment = (comments || comment || '').trim() || 'Beneficiary feedback recorded';
+  // const { citizen_name, beneficiary_type = 'CITIZEN', rating, comments, comment, respondent_role, stakeholder_type } = data;
+  // const rawComment = (comments || comment || '').trim() || 'Beneficiary feedback recorded';
+
+  // const feedback = await prisma.pilotFeedback.create({
+  //   data: {
+  //     pilot_id: pilotId,
+  //     citizen_name: (citizen_name || respondent_role || 'Beneficiary / Citizen').trim(),
+  //     beneficiary_type: beneficiary_type || stakeholder_type || 'CITIZEN',
+  //     rating: Math.max(1, Math.min(5, parseInt(rating, 10) || 5)),
+  //     comments: rawComment,
+  //     feedback_date: new Date()
+  //   }
+  // });
+
+  const {
+    citizen_name,
+    beneficiary_type = 'CITIZEN',
+    rating,
+    comments,
+    respondent_role
+  } = data;
+
+  const rawComment = comments.trim();
 
   const feedback = await prisma.pilotFeedback.create({
     data: {
       pilot_id: pilotId,
-      citizen_name: (citizen_name || respondent_role || 'Beneficiary / Citizen').trim(),
-      beneficiary_type: beneficiary_type || stakeholder_type || 'CITIZEN',
-      rating: Math.max(1, Math.min(5, parseInt(rating, 10) || 5)),
+      citizen_name:
+        (citizen_name || respondent_role || 'Beneficiary / Citizen').trim(),
+      beneficiary_type,
+      rating,
       comments: rawComment,
       feedback_date: new Date()
     }

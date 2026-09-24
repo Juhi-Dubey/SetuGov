@@ -283,8 +283,8 @@ function Login() {
         EVALUATOR: "/evaluator/dashboard",
       }[role] || "/role-selection";
 
-    console.log(`[AUTH DEBUG] dashboard redirect role: ${role}`);
-    console.log(`[AUTH DEBUG] dashboard redirect path: ${defaultDashboard}`);
+    // console.log(`[AUTH DEBUG] dashboard redirect role: ${role}`);
+    // console.log(`[AUTH DEBUG] dashboard redirect path: ${defaultDashboard}`);
 
     // Validate that fromPath is strictly allowed for the authenticated role
     if (fromPath && fromPath !== "/login" && fromPath !== "/") {

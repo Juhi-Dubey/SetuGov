@@ -95,7 +95,7 @@ router.use('/audit-logs', auditLogRoutes);
 router.use('/admin', adminRoutes);
 router.use('/ai', aiRoutes);
 router.use('/upload', uploadRoutes);
-router.use('/uploads', uploadRoutes);
-router.use('/documents', uploadRoutes);
+// router.use('/uploads', uploadRoutes);
+// router.use('/documents', uploadRoutes);
 
 export default router;

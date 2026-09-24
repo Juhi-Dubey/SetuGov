@@ -1157,28 +1157,194 @@ export const verifyStartup = async (startupId, data, user, ip_address = null) =>
   );
 };
 
+// const resolveStartupRecord = async (startupId, user) => {
+//   if (!startupId || startupId === 'my' || startupId === 'me' || startupId === 'undefined' || startupId === 'null') {
+//     if (user && user.role === 'STARTUP') {
+//       const startup = await prisma.startup.findFirst({ where: { user_id: user.id } });
+//       if (!startup) {
+//         throw new NotFoundError('No registered startup profile found for this user account.');
+//       }
+//       return startup;
+//     }
+//     throw new BadRequestError('A valid startup ID must be provided.');
+//   }
+
+//   const startup = await prisma.startup.findUnique({ where: { id: startupId } });
+//   if (!startup) {
+//     throw new NotFoundError(`Startup with ID ${startupId} not found.`);
+//   }
+
+//   if (user && user.role === 'STARTUP' && startup.user_id !== user.id) {
+//     throw new ForbiddenError('You can only view your own startup records.');
+//   }
+
+//   return startup;
+// };
+
 const resolveStartupRecord = async (startupId, user) => {
-  if (!startupId || startupId === 'my' || startupId === 'me' || startupId === 'undefined' || startupId === 'null') {
+  if (
+    !startupId ||
+    startupId === 'my' ||
+    startupId === 'me' ||
+    startupId === 'undefined' ||
+    startupId === 'null'
+  ) {
     if (user && user.role === 'STARTUP') {
-      const startup = await prisma.startup.findFirst({ where: { user_id: user.id } });
+      const startup = await prisma.startup.findFirst({
+        where: { user_id: user.id }
+      });
+
       if (!startup) {
-        throw new NotFoundError('No registered startup profile found for this user account.');
+        throw new NotFoundError(
+          'No registered startup profile found for this user account.'
+        );
       }
+
       return startup;
     }
+
     throw new BadRequestError('A valid startup ID must be provided.');
   }
 
-  const startup = await prisma.startup.findUnique({ where: { id: startupId } });
+  const startup = await prisma.startup.findUnique({
+    where: { id: startupId }
+  });
+
   if (!startup) {
     throw new NotFoundError(`Startup with ID ${startupId} not found.`);
   }
 
-  if (user && user.role === 'STARTUP' && startup.user_id !== user.id) {
-    throw new ForbiddenError('You can only view your own startup records.');
+  // ---------------------------------------------------------
+  // ADMIN: global access
+  // ---------------------------------------------------------
+  if (user?.role === 'ADMIN') {
+    return startup;
   }
 
-  return startup;
+  // ---------------------------------------------------------
+  // STARTUP: own startup only
+  // ---------------------------------------------------------
+  if (user?.role === 'STARTUP') {
+    if (startup.user_id !== user.id) {
+      throw new ForbiddenError(
+        'You can only view your own startup records.'
+      );
+    }
+
+    return startup;
+  }
+
+  // ---------------------------------------------------------
+  // GOVERNMENT:
+  // Only access startup if it is connected to a challenge/pilot
+  // belonging to the government's department.
+  // ---------------------------------------------------------
+  if (user?.role === 'GOVERNMENT') {
+    if (!user.department_id) {
+      throw new ForbiddenError(
+        'Government user is not assigned to a department.'
+      );
+    }
+
+    const departmentAccess = await prisma.startup.findFirst({
+      where: {
+        id: startup.id,
+        OR: [
+          {
+            applications: {
+              some: {
+                challenge: {
+                  department_id: user.department_id
+                }
+              }
+            }
+          },
+          {
+            pilots: {
+              some: {
+                challenge: {
+                  department_id: user.department_id
+                }
+              }
+            }
+          }
+        ]
+      },
+      select: { id: true }
+    });
+
+    if (!departmentAccess) {
+      throw new ForbiddenError(
+        'You do not have permission to access this startup.'
+      );
+    }
+
+    return startup;
+  }
+
+  // ---------------------------------------------------------
+  // EVALUATOR:
+  // Only access startup if evaluator has an assignment for
+  // one of that startup's applications and has not recused.
+  // ---------------------------------------------------------
+  if (user?.role === 'EVALUATOR') {
+    const evaluatorProfile = await prisma.evaluatorProfile.findUnique({
+      where: { user_id: user.id },
+      select: {
+        verification_status: true
+      }
+    });
+
+    if (!evaluatorProfile || evaluatorProfile.verification_status !== 'VERIFIED') {
+      throw new ForbiddenError(
+        'Evaluator must be officially VERIFIED to access startup records.'
+      );
+    }
+
+    const assignment = await prisma.evaluatorAssignment.findFirst({
+      where: {
+        evaluator_id: user.id,
+        status: {
+          in: ['PENDING', 'ACCEPTED', 'COMPLETED']
+        },
+        application: {
+          startup_id: startup.id
+        }
+      },
+      include: {
+        application: {
+          include: {
+            conflict_declarations: {
+              where: {
+                evaluator_id: user.id
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!assignment) {
+      throw new ForbiddenError(
+        'You do not have an evaluation assignment for this startup.'
+      );
+    }
+
+    const conflict =
+      assignment.application?.conflict_declarations?.[0];
+
+    if (conflict?.has_conflict || conflict?.is_recused) {
+      throw new ForbiddenError(
+        'You have recused yourself from this startup and cannot access its records.'
+      );
+    }
+
+    return startup;
+  }
+
+  throw new ForbiddenError(
+    'You do not have permission to access this startup.'
+  );
 };
 
 export const getStartupApplications = async (startupId, user = null) => {
