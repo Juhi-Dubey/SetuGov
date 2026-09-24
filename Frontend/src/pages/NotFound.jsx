@@ -44,8 +44,8 @@ function NotFound() {
     }[normalizedRole] || "/login";
 
   useEffect(() => {
-    console.log(`[AUTH DEBUG] dashboard redirect role: ${normalizedRole || "NONE"}`);
-    console.log(`[AUTH DEBUG] dashboard redirect path: ${dashboardUrl}`);
+    // console.log(`[AUTH DEBUG] dashboard redirect role: ${normalizedRole || "NONE"}`);
+    // console.log(`[AUTH DEBUG] dashboard redirect path: ${dashboardUrl}`);
   }, [normalizedRole, dashboardUrl]);
 
   return (

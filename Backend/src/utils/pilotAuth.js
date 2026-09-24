@@ -96,7 +96,7 @@ export const verifyPilotAccess = async (pilotId, user, action = 'READ') => {
         application: {
           challenge_id: pilot.challenge_id
         },
-        status: { in: ['ACCEPTED', 'COMPLETED', 'PENDING'] }
+        status: { in: ['ACCEPTED', 'COMPLETED'] }
       },
       include: {
         application: {

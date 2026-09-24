@@ -32,11 +32,15 @@ export const getHealth = async (req, res, next) => {
 
     return successResponse(res, healthData, 'System is healthy and operational');
   } catch (error) {
+    logger.error(
+      `[HEALTH] Database health check failed: ${error.message}`
+    );
+
     return errorResponse(
       res,
       'SERVICE_UNHEALTHY',
       'Database or underlying service connectivity failed',
-      { details: error.message },
+      null,
       503
     );
   }

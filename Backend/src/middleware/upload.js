@@ -29,7 +29,7 @@ const ALLOWED_MIME_TYPES = new Set([
   'application/octet-stream'
 ]);
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
