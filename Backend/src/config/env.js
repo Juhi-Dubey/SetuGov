@@ -5,8 +5,19 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from backend root
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+import fs from 'fs';
+
+// Load .env from backend root (reliably resolved relative to this module)
+const backendEnvPath = path.resolve(__dirname, '../../.env');
+if (fs.existsSync(backendEnvPath)) {
+  dotenv.config({ path: backendEnvPath });
+}
+
+// Also check process.cwd() .env if different
+const cwdEnvPath = path.resolve(process.cwd(), '.env');
+if (cwdEnvPath !== backendEnvPath && fs.existsSync(cwdEnvPath)) {
+  dotenv.config({ path: cwdEnvPath, override: true });
+}
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 const jwtSecret = process.env.JWT_SECRET || (nodeEnv === 'development' || nodeEnv === 'test' ? 'setugov_super_secret_jwt_key_2026' : undefined);
@@ -47,10 +58,18 @@ export const config = {
   EMAIL_PROVIDER: process.env.EMAIL_PROVIDER || 'console',
   EMAIL_FROM: process.env.EMAIL_FROM || 'noreply@setugov.gov.in',
   EMAIL_API_KEY: process.env.EMAIL_API_KEY || '',
-  SMTP_HOST: process.env.SMTP_HOST || '',
-  SMTP_PORT: parseInt(process.env.SMTP_PORT || '587', 10),
-  SMTP_USER: process.env.SMTP_USER || '',
-  SMTP_PASS: process.env.SMTP_PASS || '',
+  ADMIN_NOTIFICATION_EMAIL: process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ADMIN_EMAIL || '',
+  EMAIL_SMTP_HOST: process.env.EMAIL_SMTP_HOST || process.env.SMTP_HOST || 'smtp.gmail.com',
+  EMAIL_SMTP_PORT: parseInt(process.env.EMAIL_SMTP_PORT || process.env.SMTP_PORT || '465', 10),
+  EMAIL_SMTP_SECURE: process.env.EMAIL_SMTP_SECURE !== undefined
+    ? process.env.EMAIL_SMTP_SECURE === 'true'
+    : (process.env.SMTP_SECURE === 'true' || parseInt(process.env.EMAIL_SMTP_PORT || process.env.SMTP_PORT || '465', 10) === 465),
+  EMAIL_SMTP_USER: process.env.EMAIL_SMTP_USER || process.env.SMTP_USER || '',
+  EMAIL_SMTP_PASSWORD: process.env.EMAIL_SMTP_PASSWORD || process.env.SMTP_PASS || '',
+  SMTP_HOST: process.env.EMAIL_SMTP_HOST || process.env.SMTP_HOST || '',
+  SMTP_PORT: parseInt(process.env.EMAIL_SMTP_PORT || process.env.SMTP_PORT || '465', 10),
+  SMTP_USER: process.env.EMAIL_SMTP_USER || process.env.SMTP_USER || '',
+  SMTP_PASS: process.env.EMAIL_SMTP_PASSWORD || process.env.SMTP_PASS || '',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
   INVITATION_EXPIRY_HOURS: parseInt(process.env.INVITATION_EXPIRY_HOURS || '48', 10)
 };

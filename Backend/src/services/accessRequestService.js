@@ -4,7 +4,7 @@ import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError, ConflictError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
-import { sendInvitationEmail } from './emailService.js';
+import { sendInvitationEmail, sendAccessRequestEmail } from './emailService.js';
 import { config } from '../config/env.js';
 
 /**
@@ -110,6 +110,42 @@ export const createEvaluatorSelfApplication = async (data, ip_address = null) =>
       type: 'ACCESS_REQUEST_CREATED',
       link: '/admin/access-requests'
     });
+  }
+
+  // ─── POST-COMMIT: Dispatch Evaluator Access Request Email ──────────────────
+  try {
+    await sendAccessRequestEmail({
+      role: 'EVALUATOR',
+      recipientEmail: normalizedEmail,
+      applicantName: name.trim(),
+      applicantEmail: normalizedEmail,
+      details: {
+        organization: orgName,
+        designation: designation ? designation.trim() : 'Innovation Evaluator',
+        domainExpertise: expertiseArray.join(', ')
+      }
+    });
+  } catch (emailErr) {
+    console.warn(`[ACCESS REQUEST EMAIL] Delivery failed for ${normalizedEmail}: ${emailErr.message}`);
+  }
+
+  // Also dispatch Admin notification if ADMIN_NOTIFICATION_EMAIL is configured and different from applicant
+  if (config.ADMIN_NOTIFICATION_EMAIL && config.ADMIN_NOTIFICATION_EMAIL.toLowerCase().trim() !== normalizedEmail) {
+    try {
+      await sendAccessRequestEmail({
+        role: 'EVALUATOR',
+        recipientEmail: config.ADMIN_NOTIFICATION_EMAIL.trim(),
+        applicantName: name.trim(),
+        applicantEmail: normalizedEmail,
+        details: {
+          organization: orgName,
+          designation: designation ? designation.trim() : 'Innovation Evaluator',
+          domainExpertise: expertiseArray.join(', ')
+        }
+      });
+    } catch (adminEmailErr) {
+      console.warn(`[ACCESS REQUEST EMAIL] Admin notification failed: ${adminEmailErr.message}`);
+    }
   }
 
   return accessRequest;
@@ -244,6 +280,44 @@ export const createGovernmentAccessRequest = async (data, ip_address = null) => 
       type: 'ACCESS_REQUEST_CREATED',
       link: '/admin/access-requests'
     });
+  }
+
+  // ─── POST-COMMIT: Dispatch Government Access Request Email ─────────────────
+  try {
+    await sendAccessRequestEmail({
+      role: 'GOVERNMENT',
+      recipientEmail: normalizedEmail,
+      applicantName: name.trim(),
+      applicantEmail: normalizedEmail,
+      details: {
+        departmentName: department_name.trim(),
+        state: state.trim(),
+        designation: designation ? designation.trim() : 'Department Nodal Officer',
+        organization: organization ? organization.trim() : department_name.trim()
+      }
+    });
+  } catch (emailErr) {
+    console.warn(`[ACCESS REQUEST EMAIL] Delivery failed for ${normalizedEmail}: ${emailErr.message}`);
+  }
+
+  // Also dispatch Admin notification if ADMIN_NOTIFICATION_EMAIL is configured and different from applicant
+  if (config.ADMIN_NOTIFICATION_EMAIL && config.ADMIN_NOTIFICATION_EMAIL.toLowerCase().trim() !== normalizedEmail) {
+    try {
+      await sendAccessRequestEmail({
+        role: 'GOVERNMENT',
+        recipientEmail: config.ADMIN_NOTIFICATION_EMAIL.trim(),
+        applicantName: name.trim(),
+        applicantEmail: normalizedEmail,
+        details: {
+          departmentName: department_name.trim(),
+          state: state.trim(),
+          designation: designation ? designation.trim() : 'Department Nodal Officer',
+          organization: organization ? organization.trim() : department_name.trim()
+        }
+      });
+    } catch (adminEmailErr) {
+      console.warn(`[ACCESS REQUEST EMAIL] Admin notification failed: ${adminEmailErr.message}`);
+    }
   }
 
   return accessRequest;

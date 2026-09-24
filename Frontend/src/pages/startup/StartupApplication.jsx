@@ -1593,7 +1593,7 @@ function ChangeRequestResubmitPanel({ app, onRefresh }) {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Revised Proposal Summary *
+              Revised Proposal Summary <span className="text-red-500">*</span>
             </label>
             <textarea
               rows={3}

@@ -58,6 +58,7 @@ function ChallengeForm({
             type="date"
             value={formData.applicationDeadline || ""}
             onChange={onChange}
+            required
             helperText="Proposals will close on this date."
             error={errors.applicationDeadline}
           />

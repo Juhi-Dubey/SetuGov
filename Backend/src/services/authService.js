@@ -19,6 +19,7 @@ export const register = async ({
   company_name = null,
   ip_address = null
 }) => {
+  logger.info('[AUTH] User registration started');
   const normalizedEmail = email.trim().toLowerCase();
 
   // Password length enforcement (min 12 characters)
@@ -103,6 +104,7 @@ export const register = async ({
   // Dispatch real email verification
   let emailDelivered = false;
   try {
+    logger.info('[EMAIL] Verification email requested');
     await sendEmailVerificationEmail({
       email: user.email,
       name: user.name,
@@ -257,15 +259,18 @@ export const resendVerificationEmail = async ({ email, ip_address = null }) => {
   });
 
   let emailAccepted = true;
+  let emailFailureReason = null;
   try {
+    logger.info('[EMAIL] Verification email requested');
     await sendEmailVerificationEmail({
       email: user.email,
       name: user.name,
       rawToken: rawVerificationToken
     });
   } catch (emailErr) {
-    logger.warn(`[AUTH] Resend verification email provider warning for ${user.email}: ${emailErr.message}`);
+    logger.error(`[AUTH] Verification email delivery failed for ${user.email}: ${emailErr.message}`);
     emailAccepted = false;
+    emailFailureReason = emailErr.message;
   }
 
   await createAuditLog({
@@ -273,9 +278,13 @@ export const resendVerificationEmail = async ({ email, ip_address = null }) => {
     action: 'EMAIL_VERIFICATION_RESENT',
     entity_type: 'USER',
     entity_id: user.id,
-    details: { email: user.email },
+    details: { email: user.email, email_accepted: emailAccepted },
     ip_address
   });
+
+  if (!emailAccepted) {
+    throw new BadRequestError(`Failed to dispatch verification email: ${emailFailureReason || 'Email service error'}`);
+  }
 
   return {
     success: true,
