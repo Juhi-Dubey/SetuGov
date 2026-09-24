@@ -126,8 +126,7 @@ export const createEvaluatorSelfApplication = async (data, ip_address = null) =>
       }
     });
   } catch (emailErr) {
-    console.error(`[ACCESS REQUEST EMAIL] Delivery failed for ${normalizedEmail}: ${emailErr.message}`);
-    throw emailErr;
+    console.warn(`[ACCESS REQUEST EMAIL] Delivery failed for ${normalizedEmail}: ${emailErr.message}`);
   }
 
   // Also dispatch Admin notification if ADMIN_NOTIFICATION_EMAIL is configured and different from applicant
@@ -298,8 +297,7 @@ export const createGovernmentAccessRequest = async (data, ip_address = null) => 
       }
     });
   } catch (emailErr) {
-    console.error(`[ACCESS REQUEST EMAIL] Delivery failed for ${normalizedEmail}: ${emailErr.message}`);
-    throw emailErr;
+    console.warn(`[ACCESS REQUEST EMAIL] Delivery failed for ${normalizedEmail}: ${emailErr.message}`);
   }
 
   // Also dispatch Admin notification if ADMIN_NOTIFICATION_EMAIL is configured and different from applicant
