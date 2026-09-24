@@ -141,6 +141,16 @@ export const revokeInvitation = async (req, res, next) => {
   }
 };
 
+export const checkAccessRequestStatus = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const result = await accessRequestService.checkAccessRequestStatus(email);
+    return successResponse(res, result, 'Access request status retrieved successfully.', 200);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   createEvaluatorSelfApplication,
   createGovernmentAccessRequest,
@@ -151,5 +161,6 @@ export default {
   approveAccessRequest,
   rejectAccessRequest,
   resendInvitation,
-  revokeInvitation
+  revokeInvitation,
+  checkAccessRequestStatus
 };

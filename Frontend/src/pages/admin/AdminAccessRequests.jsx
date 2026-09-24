@@ -17,7 +17,8 @@ import {
   UserPlus,
   RefreshCw,
   Copy,
-  Check
+  Check,
+  KeyRound
 } from "lucide-react";
 import {
   getAccessRequests,
@@ -49,8 +50,22 @@ function AdminAccessRequests() {
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
+  // Approval Credential Issuance State
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [approvePassword, setApprovePassword] = useState("");
+  const [sendCredentialsEmail, setSendCredentialsEmail] = useState(true);
+
   // Approval Success State
   const [approvalResult, setApprovalResult] = useState(null);
+
+  const generateRandomPassword = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
+    let pwd = "";
+    for (let i = 0; i < 12; i++) {
+      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setApprovePassword(pwd);
+  };
 
   useEffect(() => {
     fetchRequests();
@@ -122,6 +137,31 @@ function AdminAccessRequests() {
       const resultData = res?.data || res;
       setApprovalResult(resultData);
       setActionMessage("Access request approved and user account provisioned successfully!");
+      fetchRequests();
+      if (selectedRequest && selectedRequest.id === id) {
+        setSelectedRequest((prev) => ({ ...prev, status: "APPROVED" }));
+      }
+    } catch (err) {
+      setActionMessage(err.message || "Failed to approve access request.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleApproveWithCredentials = async (id) => {
+    try {
+      setActionLoading(true);
+      setActionMessage("");
+      const payload = {
+        temporary_password: approvePassword.trim() || undefined,
+        send_credentials_email: sendCredentialsEmail
+      };
+      const res = await approveAccessRequest(id, payload);
+      const resultData = res?.data || res;
+      setApprovalResult(resultData);
+      setActionMessage(`Access request approved! Login credentials provisioned and emailed to ${selectedRequest?.email || "applicant"}.`);
+      setShowApproveModal(false);
+      setApprovePassword("");
       fetchRequests();
       if (selectedRequest && selectedRequest.id === id) {
         setSelectedRequest((prev) => ({ ...prev, status: "APPROVED" }));
@@ -588,6 +628,75 @@ function AdminAccessRequests() {
                   </div>
                 </div>
               )}
+              {/* Credential Issuance Panel */}
+              {showApproveModal && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3 dark:border-emerald-900/40 dark:bg-emerald-950/30">
+                  <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
+                    <KeyRound className="h-4 w-4" />
+                    <span className="font-semibold text-xs uppercase tracking-wider">
+                      Issue Credentials for {selectedRequest.requested_role}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 text-xs">
+                    <span className="text-slate-500 font-medium">Assigned Login ID (Email):</span>
+                    <div className="p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono font-bold text-blue-600 dark:text-blue-400">
+                      {selectedRequest.email}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                        Initial / Temporary Password <span className="text-red-500">*</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={generateRandomPassword}
+                        className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        Generate Secure Password
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={approvePassword}
+                      onChange={(e) => setApprovePassword(e.target.value)}
+                      placeholder="Minimum 8 characters (or click Generate)"
+                      className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-xs font-mono outline-none"
+                    />
+                  </div>
+
+                  <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={sendCredentialsEmail}
+                      onChange={(e) => setSendCredentialsEmail(e.target.checked)}
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>Email Login ID and Password directly to applicant upon approval</span>
+                  </label>
+
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowApproveModal(false)}
+                      className="px-3 py-1 rounded bg-slate-200 text-slate-700 text-xs font-medium dark:bg-slate-800 dark:text-slate-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={actionLoading || !approvePassword.trim() || approvePassword.trim().length < 8}
+                      onClick={() => handleApproveWithCredentials(selectedRequest.id)}
+                      className="px-4 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50"
+                    >
+                      {actionLoading ? "Provisioning..." : "Confirm Approval & Send Access"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Actions Footer */}
@@ -608,13 +717,17 @@ function AdminAccessRequests() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setSelectedRequest(null)}
+                  onClick={() => {
+                    setSelectedRequest(null);
+                    setShowApproveModal(false);
+                    setShowRejectInput(false);
+                  }}
                   className="px-3.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
                 >
                   Close
                 </button>
 
-                {selectedRequest.status !== "APPROVED" && selectedRequest.status !== "REJECTED" && !showRejectInput && (
+                {selectedRequest.status !== "APPROVED" && selectedRequest.status !== "REJECTED" && !showRejectInput && !showApproveModal && (
                   <>
                     <button
                       type="button"
@@ -627,10 +740,14 @@ function AdminAccessRequests() {
                     <button
                       type="button"
                       disabled={actionLoading}
-                      onClick={() => handleApprove(selectedRequest.id)}
-                      className="px-4 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50"
+                      onClick={() => {
+                        setShowApproveModal(true);
+                        if (!approvePassword) generateRandomPassword();
+                      }}
+                      className="px-4 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1.5"
                     >
-                      {actionLoading ? "Provisioning..." : "Approve & Verify Account"}
+                      <KeyRound className="h-3.5 w-3.5" />
+                      Approve &amp; Issue Credentials
                     </button>
                   </>
                 )}

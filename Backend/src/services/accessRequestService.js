@@ -4,7 +4,7 @@ import { prisma } from '../config/prisma.js';
 import { NotFoundError, ForbiddenError, BadRequestError, ConflictError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
-import { sendInvitationEmail, sendAccessRequestEmail } from './emailService.js';
+import { sendInvitationEmail, sendAccessRequestEmail, sendAdminIssuedCredentialsEmail } from './emailService.js';
 import { config } from '../config/env.js';
 
 /**
@@ -630,8 +630,9 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
 
   // bcrypt with cost 12 can take 200-400 ms. Running it inside a 5s Prisma
   // transaction would consume a large fraction of the budget; run it here.
-  const unguessablePlaceholder = crypto.randomBytes(32).toString('hex');
-  const tempPasswordHash = await bcrypt.hash(unguessablePlaceholder, 12);
+  const hasAdminPassword = Boolean(data.temporary_password && data.temporary_password.trim());
+  const passwordToHash = hasAdminPassword ? data.temporary_password.trim() : crypto.randomBytes(32).toString('hex');
+  const tempPasswordHash = await bcrypt.hash(passwordToHash, 12);
 
   // ─── TRANSACTION: fast DB writes only ─────────────────────────────────────
 
@@ -713,8 +714,23 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
       }
       stepStart = Date.now();
 
-      // Create or update User in UNACTIVATED state
+      // Create or update User
       let user;
+      const userStatusData = hasAdminPassword ? {
+        password_hash: tempPasswordHash,
+        invitation_token_hash: null,
+        invitation_expires_at: null,
+        invitation_accepted_at: new Date(),
+        is_active: true,
+        is_verified: true
+      } : {
+        invitation_token_hash,
+        invitation_expires_at,
+        invitation_accepted_at: null,
+        is_active: false,
+        is_verified: false
+      };
+
       if (existingUser) {
         user = await tx.user.update({
           where: { id: existingUser.id },
@@ -722,11 +738,7 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
             department_id: request.requested_role === 'GOVERNMENT' ? targetDepartmentId : null,
             designation: request.designation || existingUser.designation,
             phone: request.phone || existingUser.phone,
-            invitation_token_hash,
-            invitation_expires_at,
-            invitation_accepted_at: null,
-            is_active: false,
-            is_verified: false
+            ...userStatusData
           }
         });
         console.info(`[APPROVE] user.update: ${Date.now() - stepStart}ms`);
@@ -740,18 +752,14 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
             department_id: request.requested_role === 'GOVERNMENT' ? targetDepartmentId : null,
             designation: request.designation,
             phone: request.phone,
-            invitation_token_hash,
-            invitation_expires_at,
-            invitation_accepted_at: null,
-            is_active: false,
-            is_verified: false
+            ...userStatusData
           }
         });
         console.info(`[APPROVE] user.create: ${Date.now() - stepStart}ms`);
       }
       stepStart = Date.now();
 
-      // If Evaluator, prepare unverified EvaluatorProfile
+      // If Evaluator, prepare EvaluatorProfile
       if (request.requested_role === 'EVALUATOR') {
         const evalUpsertStart = Date.now();
         await tx.evaluatorProfile.upsert({
@@ -764,9 +772,9 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
             domain_expertise: request.domain_expertise,
             years_experience: request.years_experience,
             bio: request.bio,
-            verification_status: 'PENDING',
+            verification_status: hasAdminPassword ? 'VERIFIED' : 'PENDING',
             verified_by: adminUser.id,
-            verified_at: null
+            verified_at: hasAdminPassword ? new Date() : null
           },
           update: {
             organization: request.organization || 'Independent Evaluator',
@@ -775,9 +783,9 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
             domain_expertise: request.domain_expertise,
             years_experience: request.years_experience,
             bio: request.bio,
-            verification_status: 'PENDING',
+            verification_status: hasAdminPassword ? 'VERIFIED' : 'PENDING',
             verified_by: adminUser.id,
-            verified_at: null
+            verified_at: hasAdminPassword ? new Date() : null
           }
         });
         console.info(`[APPROVE] evaluatorProfile.upsert: ${Date.now() - evalUpsertStart}ms`);
@@ -842,7 +850,10 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
         normalizedEmail,
         departmentName: request.department_name || (request.department ? request.department.name : null),
         requestedRole: request.requested_role,
-        isGov
+        isGov,
+        hasAdminPassword,
+        temporaryPassword: data.temporary_password,
+        sendCredentialsEmail: data.send_credentials_email !== false
       };
     }, {
       // Generous maxWait (10s) and timeout (15s) for Neon connection pool acquisition and DB writes
@@ -868,26 +879,40 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
     `[APPROVE] DB transaction committed in ${dbElapsedMs}ms for access_request=${id} role=${txResult.requestedRole}`
   );
 
-  // ─── POST-COMMIT: send invitation email ────────────────────────────────────
+  // ─── POST-COMMIT: send invitation / credentials email ───────────────────────
   // Email is intentionally outside the transaction. A slow or failing provider
   // will NOT roll back the approved account. If delivery fails the Admin can
   // use the resend-invitation endpoint.
   let emailResult = { email_accepted_by_provider: false, provider: null };
   try {
-    emailResult = await sendInvitationEmail({
-      email: txResult.normalizedEmail,
-      name: txResult.updatedRequest.name || txResult.user.name,
-      role: txResult.requestedRole,
-      rawToken: rawInvitationToken,
-      departmentName: txResult.departmentName
-    });
-    console.info(
-      `[APPROVE] Invitation email dispatched to ${txResult.normalizedEmail} via provider=${emailResult?.provider || 'unknown'}`
-    );
+    if (txResult.hasAdminPassword && txResult.sendCredentialsEmail) {
+      emailResult = await sendAdminIssuedCredentialsEmail({
+        recipientEmail: txResult.normalizedEmail,
+        applicantName: txResult.updatedRequest.name || txResult.user.name,
+        loginId: txResult.normalizedEmail,
+        temporaryPassword: txResult.temporaryPassword,
+        role: txResult.requestedRole,
+        portalUrl: `${config.FRONTEND_URL}/login`
+      });
+      console.info(
+        `[APPROVE] Admin-issued credentials email dispatched to ${txResult.normalizedEmail} via provider=${emailResult?.provider || 'unknown'}`
+      );
+    } else {
+      emailResult = await sendInvitationEmail({
+        email: txResult.normalizedEmail,
+        name: txResult.updatedRequest.name || txResult.user.name,
+        role: txResult.requestedRole,
+        rawToken: rawInvitationToken,
+        departmentName: txResult.departmentName
+      });
+      console.info(
+        `[APPROVE] Invitation email dispatched to ${txResult.normalizedEmail} via provider=${emailResult?.provider || 'unknown'}`
+      );
+    }
   } catch (emailErr) {
     // Log the failure but do NOT throw — the account is already approved in DB.
     console.error(
-      `[APPROVE] Invitation email delivery FAILED for ${txResult.normalizedEmail}: ${emailErr?.message || emailErr}. ` +
+      `[APPROVE] Invitation/credentials email delivery FAILED for ${txResult.normalizedEmail}: ${emailErr?.message || emailErr}. ` +
       'Admin can resend via the resend-invitation endpoint.'
     );
     // Record the delivery failure asynchronously (best-effort, non-blocking)
@@ -1185,6 +1210,75 @@ export const revokeInvitation = async (id, adminUser, ip_address = null) => {
   });
 };
 
+/**
+ * Public status lookup for applicants (Government & Evaluators)
+ * Validates against DB records and returns safe, sanitized status.
+ */
+export const checkAccessRequestStatus = async (email) => {
+  if (!email || typeof email !== 'string') {
+    throw new BadRequestError('Email address is required.');
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  // Find latest access request for this email
+  const accessRequest = await prisma.accessRequest.findFirst({
+    where: { email: normalizedEmail },
+    orderBy: { created_at: 'desc' },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      requested_role: true,
+      request_source: true,
+      department_name: true,
+      organization: true,
+      status: true,
+      rejection_reason: true,
+      created_at: true,
+      reviewed_at: true
+    }
+  });
+
+  if (!accessRequest) {
+    return {
+      found: false,
+      message: 'No access request found for this email address.'
+    };
+  }
+
+  // Check if account is created and active in User table
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+    select: {
+      id: true,
+      is_active: true,
+      is_verified: true,
+      role: true,
+      invitation_accepted_at: true
+    }
+  });
+
+  const can_login = Boolean(user && user.is_active && user.is_verified);
+
+  return {
+    found: true,
+    data: {
+      name: accessRequest.name,
+      email: accessRequest.email,
+      requested_role: accessRequest.requested_role,
+      status: accessRequest.status,
+      department_name: accessRequest.department_name,
+      organization: accessRequest.organization,
+      submitted_at: accessRequest.created_at,
+      reviewed_at: accessRequest.reviewed_at,
+      rejection_reason: accessRequest.status === 'REJECTED' ? accessRequest.rejection_reason : null,
+      can_login,
+      user_role: user?.role || accessRequest.requested_role
+    }
+  };
+};
+
 export default {
   createEvaluatorSelfApplication,
   createGovernmentAccessRequest,
@@ -1195,6 +1289,7 @@ export default {
   approveAccessRequest,
   rejectAccessRequest,
   resendInvitation,
-  revokeInvitation
+  revokeInvitation,
+  checkAccessRequestStatus
 };
 
