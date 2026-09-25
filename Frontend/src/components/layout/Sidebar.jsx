@@ -220,12 +220,10 @@ function Sidebar({ role = "government", isOpen, onClose }) {
         {/* Brand */}
         <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-700 text-white shadow-xs dark:bg-blue-600 dark:text-white">
-              <Building2 className="h-4 w-4" />
-            </div>
+            <img src="/setugov-logo.png" alt="SetuGov Logo" className="h-8 w-8 shrink-0 object-contain rounded-lg" />
 
             <div className="min-w-0">
-              <span className="block text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+              <span className="block text-sm font-bold tracking-tight text-[#185FA5] dark:text-[#85B7EB] setugov-logo-text">
                 SetuGov
               </span>
 

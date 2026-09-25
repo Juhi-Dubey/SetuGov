@@ -356,12 +356,10 @@ function Login() {
               transition={{ duration: 0.5 }}
             >
               <Link to="/" className="flex items-center gap-3 w-fit">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm backdrop-blur dark:bg-white/10 dark:text-white">
-                  <Building2 className="h-5 w-5" />
-                </div>
+                <img src="/setugov-logo.png" alt="SetuGov Logo" className="h-10 w-10 object-contain rounded-xl" />
 
                 <div>
-                  <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                  <h1 className="text-lg font-bold tracking-tight text-[#185FA5] dark:text-[#85B7EB] setugov-logo-text">
                     SetuGov
                   </h1>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -455,12 +453,10 @@ function Login() {
             {/* Mobile Logo */}
             <div className="mb-6 flex items-center justify-center gap-3 lg:hidden">
               <Link to="/" className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-                  <Building2 className="h-5 w-5" />
-                </div>
+                <img src="/setugov-logo.png" alt="SetuGov Logo" className="h-9 w-9 object-contain rounded-lg" />
 
                 <div>
-                  <h1 className="text-lg font-bold">SetuGov</h1>
+                  <h1 className="text-lg font-bold text-[#185FA5] dark:text-[#85B7EB] setugov-logo-text">SetuGov</h1>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     Innovation Procurement OS
                   </p>
