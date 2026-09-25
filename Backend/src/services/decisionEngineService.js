@@ -82,7 +82,11 @@ export const evaluateApplicationDecision = async (applicationId, user = null, po
       const assignment = await prisma.evaluatorAssignment.findFirst({
         where: {
           evaluator_id: user.id,
-          challeneg_id: challenge.id
+          // challenge_id: challenge.id
+          application_id: application.id,
+          status: {
+            in: ['PENDING', 'ACCEPTED', 'COMPLETED']
+          }
         }
       });
       if (!assignment) {

@@ -37,6 +37,7 @@ export default function StartupSignup() {
   const [errors, setErrors] = useState({});
   const [authError, setAuthError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [resendStatus, setResendStatus] = useState("");
