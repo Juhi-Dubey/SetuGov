@@ -164,3 +164,13 @@ button {
 :where(.dark, .dark *) .table-dense td {
   color: #e2e8f0;
 }
+
+/* ─── SetuGov Theme-Aware Logo Text ───────────────────────── */
+.setugov-logo-text,
+.logo-text {
+  color: #185FA5;
+}
+:where(.dark, .dark *) .setugov-logo-text,
+:where(.dark, .dark *) .logo-text {
+  color: #85B7EB;
+}

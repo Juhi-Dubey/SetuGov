@@ -96,11 +96,9 @@ export default function VerifyEmail() {
         className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="flex items-center justify-center gap-2.5 mb-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-            <Building2 className="h-5 w-5" />
-          </div>
+          <img src="/setugov-logo.png" alt="SetuGov Logo" className="h-10 w-10 object-contain rounded-xl" />
           <div>
-            <h1 className="text-base font-bold dark:text-white">SetuGov</h1>
+            <h1 className="text-base font-bold text-[#185FA5] dark:text-[#85B7EB] setugov-logo-text">SetuGov</h1>
             <p className="text-[11px] text-slate-500">Innovation Procurement OS</p>
           </div>
         </div>

@@ -135,11 +135,9 @@ export default function StartupSignup() {
           <div className="relative z-10 flex w-full flex-col justify-between p-8 xl:p-10">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5">
-              <div className="flex h-9.5 w-9.5 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm dark:bg-white dark:text-slate-900">
-                <Building2 className="h-5 w-5" />
-              </div>
+              <img src="/setugov-logo.png" alt="SetuGov Logo" className="h-10 w-10 object-contain rounded-xl" />
               <div>
-                <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                <h1 className="text-lg font-bold tracking-tight text-[#185FA5] dark:text-[#85B7EB] setugov-logo-text">
                   SetuGov
                 </h1>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">

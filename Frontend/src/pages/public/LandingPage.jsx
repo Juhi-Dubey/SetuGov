@@ -152,12 +152,10 @@ export default function LandingPage() {
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo & Platform Title */}
           <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900">
-              <Building2 className="h-6 w-6" />
-            </div>
+            <img src="/setugov-logo.png" alt="SetuGov Logo" className="h-11 w-11 object-contain rounded-xl" />
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                <span className="text-xl font-bold tracking-tight text-[#185FA5] dark:text-[#85B7EB] setugov-logo-text">
                   SetuGov
                 </span>
                 <span className="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-800 dark:bg-blue-950/80 dark:text-blue-300">
@@ -637,11 +635,9 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-                <Building2 className="h-5 w-5" />
-              </div>
+              <img src="/setugov-logo.png" alt="SetuGov Logo" className="h-9 w-9 object-contain rounded-xl" />
               <div>
-                <p className="text-sm font-bold text-slate-900 dark:text-white">SetuGov Platform</p>
+                <p className="text-sm font-bold text-[#185FA5] dark:text-[#85B7EB] setugov-logo-text">SetuGov Platform</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">State Innovation Procurement Operating System</p>
               </div>
             </div>

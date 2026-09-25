@@ -247,11 +247,9 @@ export default function EvaluatorApplyPage() {
       <header className="border-b border-slate-200/80 bg-white/80 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/80">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900">
-              <Building2 className="h-6 w-6" />
-            </div>
+            <img src="/setugov-logo.png" alt="SetuGov Logo" className="h-11 w-11 object-contain rounded-xl" />
             <div>
-              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+              <span className="text-xl font-bold tracking-tight text-[#185FA5] dark:text-[#85B7EB] setugov-logo-text">
                 SetuGov
               </span>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
