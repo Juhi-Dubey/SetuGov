@@ -73,9 +73,7 @@ export const createGovernmentNominationSchema = z.object({
 
 export const approveAccessRequestSchema = z.object({
   department_id: z.string().uuid('Invalid department ID').optional().nullable().or(z.literal('')),
-  notes: z.string().trim().max(1000).optional().nullable().or(z.literal('')),
-  temporary_password: z.string().min(8, 'Temporary password must be at least 8 characters long').max(128).optional().nullable().or(z.literal('')),
-  send_credentials_email: z.boolean().optional().default(true)
+  notes: z.string().trim().max(1000).optional().nullable().or(z.literal(''))
 }).strict();
 
 export const rejectAccessRequestSchema = z.object({
@@ -84,16 +82,11 @@ export const rejectAccessRequestSchema = z.object({
     .max(1000, 'Rejection reason cannot exceed 1000 characters')
 }).strict();
 
-export const checkAccessRequestStatusSchema = z.object({
-  email: z.string().trim().email('Valid email address is required').max(255)
-}).strict();
-
 export default {
   createGovernmentAccessRequestSchema,
   createEvaluatorSelfApplicationSchema,
   createGovernmentNominationSchema,
   approveAccessRequestSchema,
-  rejectAccessRequestSchema,
-  checkAccessRequestStatusSchema
+  rejectAccessRequestSchema
 };
 

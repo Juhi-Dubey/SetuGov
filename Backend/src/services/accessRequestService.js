@@ -9,10 +9,45 @@ import {
   sendAccessRequestEmail,
   sendAccessRequestUnderReviewEmail,
   sendAccessRequestRejectedEmail,
-  sendAdminIssuedCredentialsEmail
+  sendAdminIssuedCredentialsEmail,
+  sendAccessRequestSubmittedEmail
 } from './emailService.js';
 import { logger } from '../utils/logger.js';
 import { config } from '../config/env.js';
+
+/**
+ * Resolves the configured administrator email for access request notifications.
+ * Priority: config.ADMIN_NOTIFICATION_EMAIL -> process.env.ADMIN_NOTIFICATION_EMAIL -> process.env.ADMIN_EMAIL -> process.env.EMAIL_SMTP_USER -> DB active admin
+ */
+export const resolveAdminNotificationEmail = async () => {
+  const configured = (
+    config.ADMIN_NOTIFICATION_EMAIL ||
+    process.env.ADMIN_NOTIFICATION_EMAIL ||
+    process.env.ADMIN_EMAIL ||
+    config.EMAIL_SMTP_USER ||
+    process.env.EMAIL_SMTP_USER ||
+    process.env.SMTP_USER ||
+    ''
+  ).trim();
+
+  if (configured) {
+    return configured;
+  }
+
+  try {
+    const adminUser = await prisma.user.findFirst({
+      where: { role: 'ADMIN', is_active: true },
+      select: { email: true }
+    });
+    if (adminUser?.email) {
+      return adminUser.email.trim();
+    }
+  } catch (err) {
+    logger.warn(`[ACCESS REQUEST] Failed to query admin user from database: ${err?.message}`);
+  }
+
+  return null;
+};
 
 /**
  * Evaluator independently submits access request (Employed or Independent/Freelance)
@@ -136,23 +171,46 @@ export const createEvaluatorSelfApplication = async (data, ip_address = null) =>
     console.warn(`[ACCESS REQUEST EMAIL] Delivery failed for ${normalizedEmail}: ${emailErr.message}`);
   }
 
-  // Also dispatch Admin notification if ADMIN_NOTIFICATION_EMAIL is configured and different from applicant
-  if (config.ADMIN_NOTIFICATION_EMAIL && config.ADMIN_NOTIFICATION_EMAIL.toLowerCase().trim() !== normalizedEmail) {
+  // ─── POST-COMMIT: Dispatch Admin Notification Email ────────────────────────
+  const adminEmail = await resolveAdminNotificationEmail();
+  if (adminEmail) {
+    logger.info({
+      requestId: accessRequest.id,
+      recipient: adminEmail,
+      role: accessRequest.requested_role
+    }, 'Sending access request notification email');
+
     try {
-      await sendAccessRequestEmail({
-        role: 'EVALUATOR',
-        recipientEmail: config.ADMIN_NOTIFICATION_EMAIL.trim(),
+      await sendAccessRequestSubmittedEmail({
+        adminEmail,
         applicantName: name.trim(),
         applicantEmail: normalizedEmail,
+        role: 'EVALUATOR',
+        departmentName: orgName,
+        requestId: accessRequest.id,
         details: {
           organization: orgName,
           designation: designation ? designation.trim() : 'Innovation Evaluator',
           domainExpertise: expertiseArray.join(', ')
         }
       });
-    } catch (adminEmailErr) {
-      console.warn(`[ACCESS REQUEST EMAIL] Admin notification failed: ${adminEmailErr.message}`);
+      logger.info({
+        requestId: accessRequest.id,
+        recipient: adminEmail,
+        role: accessRequest.requested_role
+      }, 'Access request notification email sent successfully to admin');
+    } catch (err) {
+      logger.error({
+        err: err?.message || err,
+        requestId: accessRequest.id,
+        recipient: adminEmail
+      }, 'Failed to send access request notification email');
     }
+  } else {
+    logger.warn({
+      requestId: accessRequest.id,
+      role: accessRequest.requested_role
+    }, 'No admin notification email configured or found in database; skipped admin notification email');
   }
 
   return accessRequest;
@@ -307,14 +365,23 @@ export const createGovernmentAccessRequest = async (data, ip_address = null) => 
     console.warn(`[ACCESS REQUEST EMAIL] Delivery failed for ${normalizedEmail}: ${emailErr.message}`);
   }
 
-  // Also dispatch Admin notification if ADMIN_NOTIFICATION_EMAIL is configured and different from applicant
-  if (config.ADMIN_NOTIFICATION_EMAIL && config.ADMIN_NOTIFICATION_EMAIL.toLowerCase().trim() !== normalizedEmail) {
+  // ─── POST-COMMIT: Dispatch Admin Notification Email ────────────────────────
+  const adminEmail = await resolveAdminNotificationEmail();
+  if (adminEmail) {
+    logger.info({
+      requestId: accessRequest.id,
+      recipient: adminEmail,
+      role: accessRequest.requested_role
+    }, 'Sending access request notification email');
+
     try {
-      await sendAccessRequestEmail({
-        role: 'GOVERNMENT',
-        recipientEmail: config.ADMIN_NOTIFICATION_EMAIL.trim(),
+      await sendAccessRequestSubmittedEmail({
+        adminEmail,
         applicantName: name.trim(),
         applicantEmail: normalizedEmail,
+        role: 'GOVERNMENT',
+        departmentName: department_name.trim(),
+        requestId: accessRequest.id,
         details: {
           departmentName: department_name.trim(),
           state: state.trim(),
@@ -322,9 +389,23 @@ export const createGovernmentAccessRequest = async (data, ip_address = null) => 
           organization: organization ? organization.trim() : department_name.trim()
         }
       });
-    } catch (adminEmailErr) {
-      console.warn(`[ACCESS REQUEST EMAIL] Admin notification failed: ${adminEmailErr.message}`);
+      logger.info({
+        requestId: accessRequest.id,
+        recipient: adminEmail,
+        role: accessRequest.requested_role
+      }, 'Access request notification email sent successfully to admin');
+    } catch (err) {
+      logger.error({
+        err: err?.message || err,
+        requestId: accessRequest.id,
+        recipient: adminEmail
+      }, 'Failed to send access request notification email');
     }
+  } else {
+    logger.warn({
+      requestId: accessRequest.id,
+      role: accessRequest.requested_role
+    }, 'No admin notification email configured or found in database; skipped admin notification email');
   }
 
   return accessRequest;
@@ -578,51 +659,108 @@ export const reviewAccessRequest = async (id, adminUser, ip_address = null) => {
     throw new ForbiddenError('Only Administrators can review access requests.');
   }
 
-  const request = await prisma.accessRequest.findUnique({ where: { id } });
-  if (!request) {
-    throw new NotFoundError(`Access request with ID ${id} not found.`);
-  }
-
-  const updated = await prisma.accessRequest.update({
-    where: { id },
-    data: {
-      status: 'UNDER_REVIEW',
-      reviewed_by: adminUser.id,
-      reviewed_at: new Date()
+  const { updated, request } = await prisma.$transaction(async (tx) => {
+    const request = await tx.accessRequest.findUnique({
+      where: { id },
+      include: { department: true }
+    });
+    if (!request) {
+      throw new NotFoundError(`Access request with ID ${id} not found.`);
     }
-  });
 
-  const auditAction = request.requested_role === 'GOVERNMENT'
-    ? 'GOVERNMENT_ACCESS_REQUEST_REVIEWED'
-    : 'EVALUATOR_ACCESS_REQUEST_REVIEWED';
+    if (request.status === 'APPROVED') {
+      throw new BadRequestError('Cannot mark an access request as under review after it has already been approved.');
+    }
 
-  await createAuditLog({
-    user_id: adminUser.id,
-    action: auditAction,
-    entity_type: 'ACCESS_REQUEST',
-    entity_id: id,
-    details: { applicant_email: request.email, requested_role: request.requested_role },
-    ip_address
+    if (request.status === 'REJECTED') {
+      throw new BadRequestError('Cannot mark an access request as under review after it has already been rejected.');
+    }
+
+    if (request.status === 'UNDER_REVIEW') {
+      return { updated: request, request };
+    }
+
+    const updated = await tx.accessRequest.update({
+      where: { id },
+      data: {
+        status: 'UNDER_REVIEW',
+        reviewed_by: adminUser.id,
+        reviewed_at: new Date()
+      },
+      include: { department: true }
+    });
+
+    const auditAction = request.requested_role === 'GOVERNMENT'
+      ? 'GOVERNMENT_ACCESS_REQUEST_REVIEWED'
+      : 'EVALUATOR_ACCESS_REQUEST_REVIEWED';
+
+    await createAuditLog({
+      tx,
+      user_id: adminUser.id,
+      action: auditAction,
+      entity_type: 'ACCESS_REQUEST',
+      entity_id: id,
+      details: { applicant_email: request.email, requested_role: request.requested_role },
+      ip_address
+    });
+
+    return { updated, request: updated };
+  }, {
+    maxWait: 10000,
+    timeout: 15000
   });
 
   // Post-commit: send UNDER_REVIEW email to applicant
+  const applicantEmail = (request.email || '').trim().toLowerCase();
+  const departmentName = (request.department_name || request.department?.name || request.organization || '').trim() || null;
+  let emailDelivery = { sent: false, provider: null, messageId: null, error: null };
+
   try {
+    logger.info({
+      requestId: request.id,
+      recipient: applicantEmail,
+      role: request.requested_role,
+      status: 'UNDER_REVIEW'
+    }, 'Sending access request under-review email');
+
     const emailResult = await sendAccessRequestUnderReviewEmail({
-      recipientEmail: request.email,
+      recipientEmail: applicantEmail,
       applicantName: request.name,
-      role: request.requested_role
+      role: request.requested_role,
+      departmentName,
+      requestId: request.id
     });
 
-    logger.info(
-      `[ACCESS REQUEST UNDER REVIEW EMAIL] Sent via ${emailResult?.provider || 'provider'}. Message ID: ${emailResult?.messageId || 'unknown'}`
-    );
-  } catch (emailErr) {
-    logger.error(
-      `[ACCESS REQUEST UNDER REVIEW EMAIL] Failed: ${emailErr.message}`
-    );
+    emailDelivery = {
+      sent: true,
+      provider: emailResult?.provider || 'smtp',
+      messageId: emailResult?.messageId || 'unknown'
+    };
+
+    logger.info({
+      requestId: request.id,
+      recipient: applicantEmail,
+      messageId: emailResult?.messageId || 'unknown',
+      provider: emailResult?.provider || 'provider'
+    }, 'Access request under-review email sent successfully');
+  } catch (error) {
+    emailDelivery = {
+      sent: false,
+      error: error?.message || String(error)
+    };
+
+    logger.error({
+      requestId: request.id,
+      recipient: applicantEmail,
+      role: request.requested_role,
+      error: error?.message || error
+    }, 'Failed to send access request email');
   }
 
-  return updated;
+  return {
+    ...updated,
+    email_delivery: emailDelivery
+  };
 };
 
 /**
@@ -909,6 +1047,16 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
   // use the resend-invitation endpoint.
   let emailResult = { email_accepted_by_provider: false, provider: null };
   try {
+    logger.info(
+      {
+        requestId: id,
+        recipient: txResult.normalizedEmail,
+        role: txResult.requestedRole,
+        status: 'APPROVED'
+      },
+      'Sending access request approval email'
+    );
+
     if (txResult.hasAdminPassword && txResult.sendCredentialsEmail) {
       emailResult = await sendAdminIssuedCredentialsEmail({
         recipientEmail: txResult.normalizedEmail,
@@ -935,6 +1083,15 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
     }
   } catch (emailErr) {
     // Log the failure but do NOT throw — the account is already approved in DB.
+    logger.error(
+      {
+        requestId: id,
+        recipient: txResult.normalizedEmail,
+        role: txResult.requestedRole,
+        error: emailErr?.message || emailErr
+      },
+      'Failed to send access request email'
+    );
     console.error(
       `[APPROVE] Invitation/credentials email delivery FAILED for ${txResult.normalizedEmail}: ${emailErr?.message || emailErr}. ` +
       'Admin can resend via the resend-invitation endpoint.'
@@ -978,6 +1135,12 @@ export const approveAccessRequest = async (id, data = {}, adminUser, ip_address 
       ...(emailResult.delivery_failed && {
         email_delivery_warning: 'Invitation email could not be delivered. The account has been approved. Use resend-invitation to retry.'
       })
+    },
+    email_delivery: {
+      sent: Boolean(emailResult.email_accepted_by_provider),
+      provider: emailResult.provider,
+      messageId: emailResult.messageId,
+      error: emailResult.delivery_failed ? 'Invitation email delivery failed' : null
     }
   };
 };
@@ -990,13 +1153,16 @@ export const rejectAccessRequest = async (id, data, adminUser, ip_address = null
     throw new ForbiddenError('Only Administrators can reject access requests.');
   }
 
-  const { rejection_reason } = data;
+  const rejection_reason = (typeof data === 'string' ? data : data?.rejection_reason) || '';
   if (!rejection_reason || !rejection_reason.trim()) {
     throw new BadRequestError('A specific rejection reason is required.');
   }
 
   const { updated, request } = await prisma.$transaction(async (tx) => {
-    const request = await tx.accessRequest.findUnique({ where: { id } });
+    const request = await tx.accessRequest.findUnique({
+      where: { id },
+      include: { department: true }
+    });
     if (!request) {
       throw new NotFoundError(`Access request with ID ${id} not found.`);
     }
@@ -1016,7 +1182,8 @@ export const rejectAccessRequest = async (id, data, adminUser, ip_address = null
         rejection_reason: rejection_reason.trim(),
         reviewed_by: adminUser.id,
         reviewed_at: new Date()
-      }
+      },
+      include: { department: true }
     });
 
     const isGov = request.requested_role === 'GOVERNMENT';
@@ -1053,24 +1220,57 @@ export const rejectAccessRequest = async (id, data, adminUser, ip_address = null
   });
 
   // Post-commit: send REJECTED email to applicant
+  const applicantEmail = (request.email || '').trim().toLowerCase();
+  const departmentName = (request.department_name || request.department?.name || request.organization || '').trim() || null;
+  let emailDelivery = { sent: false, provider: null, messageId: null, error: null };
+
   try {
+    logger.info({
+      requestId: request.id,
+      recipient: applicantEmail,
+      role: request.requested_role,
+      status: 'REJECTED'
+    }, 'Sending access request rejection email');
+
     const emailResult = await sendAccessRequestRejectedEmail({
-      recipientEmail: request.email,
+      recipientEmail: applicantEmail,
       applicantName: request.name,
       role: request.requested_role,
+      departmentName,
+      requestId: request.id,
       rejectionReason: rejection_reason.trim()
     });
 
-    logger.info(
-      `[ACCESS REQUEST REJECTED EMAIL] Sent via ${emailResult?.provider || 'provider'}. Message ID: ${emailResult?.messageId || 'unknown'}`
-    );
-  } catch (emailErr) {
-    logger.error(
-      `[ACCESS REQUEST REJECTED EMAIL] Failed: ${emailErr.message}`
-    );
+    emailDelivery = {
+      sent: true,
+      provider: emailResult?.provider || 'smtp',
+      messageId: emailResult?.messageId || 'unknown'
+    };
+
+    logger.info({
+      requestId: request.id,
+      recipient: applicantEmail,
+      messageId: emailResult?.messageId || 'unknown',
+      provider: emailResult?.provider || 'provider'
+    }, 'Access request rejection email sent successfully');
+  } catch (error) {
+    emailDelivery = {
+      sent: false,
+      error: error?.message || String(error)
+    };
+
+    logger.error({
+      requestId: request.id,
+      recipient: applicantEmail,
+      role: request.requested_role,
+      error: error?.message || error
+    }, 'Failed to send access request email');
   }
 
-  return updated;
+  return {
+    ...updated,
+    email_delivery: emailDelivery
+  };
 };
 
 /**
@@ -1334,6 +1534,7 @@ export default {
   rejectAccessRequest,
   resendInvitation,
   revokeInvitation,
-  checkAccessRequestStatus
+  checkAccessRequestStatus,
+  resolveAdminNotificationEmail
 };
 

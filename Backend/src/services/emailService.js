@@ -204,7 +204,10 @@ export const sendEmail = async ({ to, subject, text, html }) => {
       auth: {
         user: config.EMAIL_SMTP_USER,
         pass: cleanPassword
-      }
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000
     });
 
     try {
@@ -1107,18 +1110,176 @@ Government of India
 };
 
 /**
+ * Event: Admin Notification of New Access Request (Government Officer / Evaluator)
+ * Dispatched to configured Admin recipient when a new access request is submitted.
+ */
+export const sendAccessRequestSubmittedEmail = async ({
+  adminEmail,
+  applicantName,
+  applicantEmail,
+  role,
+  departmentName,
+  requestId,
+  details = {}
+}) => {
+  const safeRole = role === 'GOVERNMENT' ? 'GOVERNMENT' : 'EVALUATOR';
+  const roleTitle = safeRole === 'GOVERNMENT' ? 'Government Officer' : 'Domain Technical Evaluator';
+  const safeAdminEmail = escapeHtml(adminEmail);
+  const safeApplicantName = escapeHtml(applicantName || 'Applicant');
+  const safeApplicantEmail = escapeHtml(applicantEmail || 'Not Provided');
+  const safeDept = departmentName ? escapeHtml(departmentName) : (details.organization ? escapeHtml(details.organization) : 'N/A');
+  const safeRequestId = requestId ? escapeHtml(String(requestId)) : 'N/A';
+  const safeState = details.state ? escapeHtml(details.state) : null;
+  const safeDesignation = details.designation ? escapeHtml(details.designation) : null;
+  const safeOrg = details.organization ? escapeHtml(details.organization) : null;
+  const safeExpertise = details.domainExpertise ? escapeHtml(details.domainExpertise) : null;
+
+  const reviewUrl = `${config.FRONTEND_URL}/admin/access-requests`;
+  const subject = `[SetuGov Action Required] New Access Request Received — ${applicantName || 'Applicant'} (${roleTitle})`;
+
+  const maskedAdmin = maskEmail(adminEmail);
+  logger.info(`[ADMIN ACCESS REQUEST NOTIFICATION]\nrole: ${safeRole}\nrecipient: ${maskedAdmin}\nrequestId: ${requestId || 'N/A'}`);
+
+  const text = `
+New Access Request Received
+
+A new official access request has been submitted on SetuGov and requires administrative verification.
+
+Request Summary:
+- Request ID: ${requestId || 'N/A'}
+- Requested Role: ${roleTitle} (${safeRole})
+- Applicant Name: ${applicantName || 'Applicant'}
+- Applicant Email: ${applicantEmail}
+- Department: ${departmentName || details.organization || 'N/A'}${details.state ? `\n- State: ${details.state}` : ''}${details.designation ? `\n- Designation: ${details.designation}` : ''}${details.organization ? `\n- Organization: ${details.organization}` : ''}${details.domainExpertise ? `\n- Domain Expertise: ${details.domainExpertise}` : ''}
+- Status: PENDING REVIEW
+
+Review this request in the Admin Console:
+${reviewUrl}
+
+SetuGov National Innovation Procurement Platform
+Government of India
+`.trim();
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1e293b; background-color: #f8fafc; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 30px auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+    .header { background: #0f172a; padding: 28px; text-align: center; color: #ffffff; }
+    .header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .header p { margin: 4px 0 0 0; color: #94a3b8; font-size: 13px; }
+    .content { padding: 32px 28px; }
+    .badge { display: inline-block; padding: 4px 12px; background: #eff6ff; color: #1d4ed8; border-radius: 9999px; font-weight: 600; font-size: 12px; margin-bottom: 16px; border: 1px solid #bfdbfe; }
+    .info-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    .info-table td { padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+    .info-table td.label { color: #64748b; width: 140px; font-weight: 500; }
+    .info-table td.val { color: #0f172a; font-weight: 600; }
+    .btn { display: inline-block; background: #2563eb; color: #ffffff !important; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; text-align: center; margin: 20px 0 10px 0; }
+    .footer { padding: 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>SetuGov</h1>
+      <p>National Innovation Procurement Platform</p>
+    </div>
+    <div class="content">
+      <div class="badge">New Access Request Received</div>
+      <p style="font-size: 15px; margin-top: 0; color: #0f172a;">A new access request has been submitted and is awaiting administrative verification.</p>
+      
+      <table class="info-table">
+        <tr>
+          <td class="label">Request ID:</td>
+          <td class="val" style="font-family: ui-monospace, monospace; font-size: 13px;">${safeRequestId}</td>
+        </tr>
+        <tr>
+          <td class="label">Requested Role:</td>
+          <td class="val"><span style="display: inline-block; background: ${safeRole === 'GOVERNMENT' ? '#f0fdf4' : '#faf5ff'}; color: ${safeRole === 'GOVERNMENT' ? '#15803d' : '#7e22ce'}; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 700;">${escapeHtml(roleTitle)} (${safeRole})</span></td>
+        </tr>
+        <tr>
+          <td class="label">Applicant Name:</td>
+          <td class="val">${safeApplicantName}</td>
+        </tr>
+        <tr>
+          <td class="label">Applicant Email:</td>
+          <td class="val"><a href="mailto:${safeApplicantEmail}" style="color: #2563eb; text-decoration: none;">${safeApplicantEmail}</a></td>
+        </tr>
+        <tr>
+          <td class="label">Department:</td>
+          <td class="val">${safeDept}${safeState ? ` (${safeState})` : ''}</td>
+        </tr>
+        ${safeDesignation ? `
+        <tr>
+          <td class="label">Designation:</td>
+          <td class="val">${safeDesignation}</td>
+        </tr>` : ''}
+        ${safeOrg && safeOrg !== safeDept ? `
+        <tr>
+          <td class="label">Organization:</td>
+          <td class="val">${safeOrg}</td>
+        </tr>` : ''}
+        ${safeExpertise ? `
+        <tr>
+          <td class="label">Domain Expertise:</td>
+          <td class="val">${safeExpertise}</td>
+        </tr>` : ''}
+        <tr>
+          <td class="label">Status:</td>
+          <td class="val" style="color: #d97706;">PENDING REVIEW</td>
+        </tr>
+      </table>
+
+      <div style="text-align: center;">
+        <a href="${reviewUrl}" class="btn">Review Access Request &rarr;</a>
+        <p style="font-size: 12px; color: #94a3b8; margin: 4px 0 0 0;">
+          Direct link: <a href="${reviewUrl}" style="color: #2563eb;">${reviewUrl}</a>
+        </p>
+      </div>
+    </div>
+    <div class="footer">
+      SetuGov &bull; Government of India &bull; Innovation Procurement Lifecycle Platform
+    </div>
+  </div>
+</body>
+</html>
+`.trim();
+
+  try {
+    const result = await sendEmail({
+      to: adminEmail,
+      subject,
+      text,
+      html
+    });
+    logger.info(`[ADMIN ACCESS REQUEST NOTIFICATION] Dispatched via ${result?.provider || 'provider'}. Message ID: ${result?.messageId || 'unknown'}`);
+    return result;
+  } catch (error) {
+    logger.error(`[ADMIN ACCESS REQUEST NOTIFICATION] Failed: ${error.message}`);
+    throw error;
+  }
+};
+
+/**
  * Event: Access Request Marked UNDER_REVIEW (Government Officer / Evaluator)
  */
 export const sendAccessRequestUnderReviewEmail = async ({
   recipientEmail,
   applicantName,
-  role
+  role,
+  departmentName = null,
+  requestId = null
 }) => {
   const safeRole = role === 'GOVERNMENT' ? 'GOVERNMENT' : 'EVALUATOR';
   const roleTitle = safeRole === 'GOVERNMENT' ? 'Government Officer' : 'Domain Technical Evaluator';
   const safeName = escapeHtml(applicantName || 'Applicant');
   const safeEmail = escapeHtml(recipientEmail);
-  const subject = 'SetuGov Platform — Access Request Under Review';
+  const safeDept = departmentName ? escapeHtml(departmentName) : null;
+  const safeRequestId = requestId ? escapeHtml(requestId) : null;
+  const subject = 'SetuGov Platform — Your Access Request Is Under Review';
 
   const text = `
 Dear ${applicantName || 'Applicant'},
@@ -1126,14 +1287,15 @@ Dear ${applicantName || 'Applicant'},
 Your ${roleTitle} access request has been received and is currently UNDER REVIEW by the platform administration committee.
 
 Application Summary:
-Role: ${roleTitle}
+${requestId ? `Reference ID: ${requestId}\n` : ''}Role: ${roleTitle}
 Applicant: ${applicantName || 'Applicant'}
 Email: ${recipientEmail}
-Status: UNDER REVIEW
+${departmentName ? `Department / Organization: ${departmentName}\n` : ''}Current Status: UNDER REVIEW
 
 What happens next:
 - The administrator is actively reviewing the submitted information and credentials.
 - You will receive another email notification when a final decision is made on your request.
+- No further action is required from you at this time.
 
 If you have questions regarding your application, please contact support@setugov.gov.in.
 
@@ -1170,6 +1332,10 @@ Government of India
       <p>Your <strong>${escapeHtml(roleTitle)}</strong> access request has been received and is currently <strong>UNDER REVIEW</strong> by the platform administration committee.</p>
       
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
+        ${safeRequestId ? `<tr>
+          <td style="padding: 8px 0; color: #64748b; width: 140px;">Reference ID:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a; font-family: monospace;">${safeRequestId}</td>
+        </tr>` : ''}
         <tr>
           <td style="padding: 8px 0; color: #64748b; width: 140px;">Requested Role:</td>
           <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${escapeHtml(roleTitle)}</td>
@@ -1178,6 +1344,10 @@ Government of India
           <td style="padding: 8px 0; color: #64748b;">Applicant Email:</td>
           <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${safeEmail}</td>
         </tr>
+        ${safeDept ? `<tr>
+          <td style="padding: 8px 0; color: #64748b;">Department / Org:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${safeDept}</td>
+        </tr>` : ''}
         <tr>
           <td style="padding: 8px 0; color: #64748b;">Current Status:</td>
           <td style="padding: 8px 0; font-weight: 600; color: #2563eb;">UNDER REVIEW</td>
@@ -1233,25 +1403,29 @@ export const sendAccessRequestRejectedEmail = async ({
   recipientEmail,
   applicantName,
   role,
-  rejectionReason
+  departmentName = null,
+  requestId = null,
+  rejectionReason = null
 }) => {
   const safeRole = role === 'GOVERNMENT' ? 'GOVERNMENT' : 'EVALUATOR';
   const roleTitle = safeRole === 'GOVERNMENT' ? 'Government Officer' : 'Domain Technical Evaluator';
   const safeName = escapeHtml(applicantName || 'Applicant');
   const safeEmail = escapeHtml(recipientEmail);
+  const safeDept = departmentName ? escapeHtml(departmentName) : null;
+  const safeRequestId = requestId ? escapeHtml(requestId) : null;
   const safeReason = escapeHtml(rejectionReason || 'Requirements criteria not met.');
-  const subject = 'SetuGov Platform — Access Request Rejected';
+  const subject = 'SetuGov Platform — Access Request Status Update';
 
   const text = `
 Dear ${applicantName || 'Applicant'},
 
-Thank you for your submission to SetuGov. Following thorough review, we regret to inform you that your ${roleTitle} access request was rejected and could not be approved at this time.
+Thank you for your submission to SetuGov. Following thorough review, we regret to inform you that your ${roleTitle} access request was not approved and has been rejected at this time.
 
 Decision Summary:
-Requested Role: ${roleTitle}
+${requestId ? `Reference ID: ${requestId}\n` : ''}Requested Role: ${roleTitle}
 Applicant: ${applicantName || 'Applicant'}
 Email: ${recipientEmail}
-Review Decision: REJECTED / NOT APPROVED
+${departmentName ? `Department / Organization: ${departmentName}\n` : ''}Current Status: REJECTED
 Reason for Rejection: ${rejectionReason || 'Requirements criteria not met.'}
 
 If you have questions or require further clarification regarding this determination, you may reach out to platform support at support@setugov.gov.in.
@@ -1289,6 +1463,10 @@ Government of India
       <p>Thank you for your interest in SetuGov. Following review by the platform administration, your access request for a <strong>${escapeHtml(roleTitle)}</strong> account could not be approved at this time.</p>
       
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">
+        ${safeRequestId ? `<tr>
+          <td style="padding: 8px 0; color: #64748b; width: 140px;">Reference ID:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a; font-family: monospace;">${safeRequestId}</td>
+        </tr>` : ''}
         <tr>
           <td style="padding: 8px 0; color: #64748b; width: 140px;">Requested Role:</td>
           <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${escapeHtml(roleTitle)}</td>
@@ -1297,8 +1475,12 @@ Government of India
           <td style="padding: 8px 0; color: #64748b;">Applicant Email:</td>
           <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${safeEmail}</td>
         </tr>
+        ${safeDept ? `<tr>
+          <td style="padding: 8px 0; color: #64748b;">Department / Org:</td>
+          <td style="padding: 8px 0; font-weight: 600; color: #0f172a;">${safeDept}</td>
+        </tr>` : ''}
         <tr>
-          <td style="padding: 8px 0; color: #64748b;">Review Decision:</td>
+          <td style="padding: 8px 0; color: #64748b;">Current Status:</td>
           <td style="padding: 8px 0; font-weight: 600; color: #dc2626;">REJECTED</td>
         </tr>
       </table>
@@ -1476,5 +1658,6 @@ export default {
   sendPilotOutcomeEmail,
   sendScaleDecisionEmail,
   sendAccessRequestUnderReviewEmail,
-  sendAccessRequestRejectedEmail
+  sendAccessRequestRejectedEmail,
+  sendAccessRequestSubmittedEmail
 };

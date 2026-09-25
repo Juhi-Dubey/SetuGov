@@ -50,13 +50,6 @@ export const rejectAccessRequest = async (id, rejection_reason) => {
   });
 };
 
-export const checkAccessRequestStatus = async (email) => {
-  return apiRequest('/access-requests/check-status', {
-    method: 'POST',
-    body: JSON.stringify({ email })
-  });
-};
-
 export default {
   submitEvaluatorApplication,
   submitGovernmentAccessRequest,
@@ -65,6 +58,5 @@ export default {
   getAccessRequestById,
   reviewAccessRequest,
   approveAccessRequest,
-  rejectAccessRequest,
-  checkAccessRequestStatus
+  rejectAccessRequest
 };

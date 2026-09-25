@@ -15,12 +15,10 @@ import {
   Sun,
   Moon,
   Clock,
-  ShieldCheck,
 } from "lucide-react";
 import { submitEvaluatorApplication } from "../../services/accessRequestService";
 import { useTheme } from "../../context/ThemeContext";
 import TurnstileWidget from "../../components/common/TurnstileWidget";
-import CheckStatusModal from "../../components/common/CheckStatusModal";
 
 /**
  * Maps the human-readable Years of Experience dropdown values to the numeric
@@ -95,7 +93,6 @@ export default function EvaluatorApplyPage() {
   const [submittedData, setSubmittedData] = useState(null);
   const [turnstileToken, setTurnstileToken] = useState(null);
   const [resetTurnstile, setResetTurnstile] = useState(0);
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
   // Synchronous guard — prevents duplicate API calls from double-clicks or
   // React Strict Mode's double-invocation of event handlers in development.
@@ -268,14 +265,6 @@ export default function EvaluatorApplyPage() {
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <button
-              type="button"
-              onClick={() => setIsStatusModalOpen(true)}
-              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50/80 px-3.5 text-xs font-semibold text-purple-700 shadow-sm transition hover:bg-purple-100 dark:border-purple-900/50 dark:bg-purple-950/40 dark:text-purple-300 dark:hover:bg-purple-900/60"
-            >
-              <ShieldCheck className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-              <span>Check Status</span>
-            </button>
             <Link
               to="/login"
               className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
@@ -330,14 +319,6 @@ export default function EvaluatorApplyPage() {
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => setIsStatusModalOpen(true)}
-                className="inline-flex h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-purple-300 bg-purple-50 px-6 text-xs font-bold text-purple-700 shadow-sm hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300 dark:hover:bg-purple-900/50"
-              >
-                <Clock className="h-4 w-4" />
-                <span>Track Status Now</span>
-              </button>
               <Link
                 to="/"
                 className="btn-primary inline-flex h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
@@ -741,12 +722,6 @@ export default function EvaluatorApplyPage() {
           </div>
         )}
       </main>
-
-      <CheckStatusModal
-        isOpen={isStatusModalOpen}
-        onClose={() => setIsStatusModalOpen(false)}
-        initialEmail={formData.email}
-      />
     </div>
   );
 }

@@ -46,6 +46,71 @@ async function runEmailServiceTests() {
     console.log('✅ sendAccessRequestEmail rejects empty recipient');
   }
 
+  // Test 6: sendAccessRequestSubmittedEmail validation
+  console.log('\n--- TEST 6: sendAccessRequestSubmittedEmail validation ---');
+  const { sendAccessRequestSubmittedEmail } = await import('../services/emailService.js');
+  assert(typeof sendAccessRequestSubmittedEmail === 'function', 'sendAccessRequestSubmittedEmail must be a function');
+  try {
+    await sendAccessRequestSubmittedEmail({
+      adminEmail: '',
+      applicantName: 'Test Official',
+      applicantEmail: 'official@dept.gov.in',
+      role: 'GOVERNMENT',
+      departmentName: 'Ministry of Electronics',
+      requestId: 'test-req-123'
+    });
+    assert.fail('Should fail on empty admin recipient');
+  } catch (err) {
+    assert(err.message.includes('recipient (to) is required'));
+    console.log('✅ sendAccessRequestSubmittedEmail rejects empty adminEmail recipient');
+  }
+
+  // Test 7: resolveAdminNotificationEmail resolution
+  console.log('\n--- TEST 7: resolveAdminNotificationEmail resolution ---');
+  const { resolveAdminNotificationEmail } = await import('../services/accessRequestService.js');
+  assert(typeof resolveAdminNotificationEmail === 'function', 'resolveAdminNotificationEmail must be a function');
+  const adminEmail = await resolveAdminNotificationEmail();
+  assert(adminEmail, 'resolveAdminNotificationEmail must return a valid non-empty email string');
+  assert(adminEmail.includes('@'), 'Admin email must be a valid email format');
+  console.log(`✅ resolveAdminNotificationEmail resolved to: ${adminEmail}`);
+
+  // Test 8: sendAccessRequestUnderReviewEmail validation
+  console.log('\n--- TEST 8: sendAccessRequestUnderReviewEmail validation ---');
+  const { sendAccessRequestUnderReviewEmail } = await import('../services/emailService.js');
+  assert(typeof sendAccessRequestUnderReviewEmail === 'function', 'sendAccessRequestUnderReviewEmail must be a function');
+  try {
+    await sendAccessRequestUnderReviewEmail({
+      recipientEmail: '',
+      applicantName: 'Gov Applicant',
+      role: 'GOVERNMENT',
+      departmentName: 'Dept of Science',
+      requestId: 'req-001'
+    });
+    assert.fail('Should fail on empty recipient');
+  } catch (err) {
+    assert(err.message.includes('recipient (to) is required'));
+    console.log('✅ sendAccessRequestUnderReviewEmail rejects empty recipient');
+  }
+
+  // Test 9: sendAccessRequestRejectedEmail validation
+  console.log('\n--- TEST 9: sendAccessRequestRejectedEmail validation ---');
+  const { sendAccessRequestRejectedEmail } = await import('../services/emailService.js');
+  assert(typeof sendAccessRequestRejectedEmail === 'function', 'sendAccessRequestRejectedEmail must be a function');
+  try {
+    await sendAccessRequestRejectedEmail({
+      recipientEmail: '',
+      applicantName: 'Eval Applicant',
+      role: 'EVALUATOR',
+      departmentName: 'AI Committee',
+      requestId: 'req-002',
+      rejectionReason: 'Does not meet experience requirements'
+    });
+    assert.fail('Should fail on empty recipient');
+  } catch (err) {
+    assert(err.message.includes('recipient (to) is required'));
+    console.log('✅ sendAccessRequestRejectedEmail rejects empty recipient');
+  }
+
   console.log('\n=== ALL EMAIL SERVICE UNIT TESTS PASSED ===\n');
 }
 

@@ -17,8 +17,7 @@ import {
   UserPlus,
   RefreshCw,
   Copy,
-  Check,
-  KeyRound
+  Check
 } from "lucide-react";
 import {
   getAccessRequests,
@@ -50,22 +49,8 @@ function AdminAccessRequests() {
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  // Approval Credential Issuance State
-  const [showApproveModal, setShowApproveModal] = useState(false);
-  const [approvePassword, setApprovePassword] = useState("");
-  const [sendCredentialsEmail, setSendCredentialsEmail] = useState(true);
-
   // Approval Success State
   const [approvalResult, setApprovalResult] = useState(null);
-
-  const generateRandomPassword = () => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
-    let pwd = "";
-    for (let i = 0; i < 12; i++) {
-      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setApprovePassword(pwd);
-  };
 
   useEffect(() => {
     fetchRequests();
@@ -116,8 +101,13 @@ function AdminAccessRequests() {
     try {
       setActionLoading(true);
       setActionMessage("");
-      await reviewAccessRequest(id);
-      setActionMessage("Request status marked as UNDER_REVIEW.");
+      const res = await reviewAccessRequest(id);
+      const delivery = res?.data?.email_delivery || res?.email_delivery;
+      if (delivery && delivery.sent === false) {
+        setActionMessage("Request status marked as UNDER_REVIEW (Note: notification email delivery failed).");
+      } else {
+        setActionMessage("Request status marked as UNDER_REVIEW and notification email sent to applicant.");
+      }
       fetchRequests();
       if (selectedRequest && selectedRequest.id === id) {
         setSelectedRequest((prev) => ({ ...prev, status: "UNDER_REVIEW" }));
@@ -136,32 +126,12 @@ function AdminAccessRequests() {
       const res = await approveAccessRequest(id);
       const resultData = res?.data || res;
       setApprovalResult(resultData);
-      setActionMessage("Access request approved and user account provisioned successfully!");
-      fetchRequests();
-      if (selectedRequest && selectedRequest.id === id) {
-        setSelectedRequest((prev) => ({ ...prev, status: "APPROVED" }));
+      const delivery = resultData?.email_delivery || resultData?.invitation?.email_delivery;
+      if (resultData?.invitation?.email_delivery_warning || (delivery && delivery.sent === false)) {
+        setActionMessage("Access request approved, but invitation email could not be delivered. Use resend invite to retry.");
+      } else {
+        setActionMessage("Access request approved and secure invitation email sent to applicant!");
       }
-    } catch (err) {
-      setActionMessage(err.message || "Failed to approve access request.");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleApproveWithCredentials = async (id) => {
-    try {
-      setActionLoading(true);
-      setActionMessage("");
-      const payload = {
-        temporary_password: approvePassword.trim() || undefined,
-        send_credentials_email: sendCredentialsEmail
-      };
-      const res = await approveAccessRequest(id, payload);
-      const resultData = res?.data || res;
-      setApprovalResult(resultData);
-      setActionMessage(`Access request approved! Login credentials provisioned and emailed to ${selectedRequest?.email || "applicant"}.`);
-      setShowApproveModal(false);
-      setApprovePassword("");
       fetchRequests();
       if (selectedRequest && selectedRequest.id === id) {
         setSelectedRequest((prev) => ({ ...prev, status: "APPROVED" }));
@@ -181,8 +151,13 @@ function AdminAccessRequests() {
     try {
       setActionLoading(true);
       setActionMessage("");
-      await rejectAccessRequest(id, rejectionReason.trim());
-      setActionMessage("Access request has been rejected.");
+      const res = await rejectAccessRequest(id, rejectionReason.trim());
+      const delivery = res?.data?.email_delivery || res?.email_delivery;
+      if (delivery && delivery.sent === false) {
+        setActionMessage("Access request has been rejected (Note: status update email delivery failed).");
+      } else {
+        setActionMessage("Access request has been rejected and status update email sent to applicant.");
+      }
       setShowRejectInput(false);
       setRejectionReason("");
       fetchRequests();
@@ -457,13 +432,33 @@ function AdminAccessRequests() {
 
             {/* If approved, show secure invitation email confirmation */}
             {approvalResult && approvalResult.invitation && (
-              <div className="my-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs dark:border-emerald-900/40 dark:bg-emerald-950/40">
-                <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-200 mb-1">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  Invitation Dispatched via Secure Email
+              <div className={`my-4 rounded-xl border p-4 text-xs ${
+                approvalResult.invitation.email_delivery_warning || (approvalResult.email_delivery && !approvalResult.email_delivery.sent)
+                  ? "border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/40"
+                  : "border-emerald-200 bg-emerald-50 dark:border-emerald-900/40 dark:bg-emerald-950/40"
+              }`}>
+                <div className={`flex items-center gap-2 font-bold mb-1 ${
+                  approvalResult.invitation.email_delivery_warning || (approvalResult.email_delivery && !approvalResult.email_delivery.sent)
+                    ? "text-amber-800 dark:text-amber-200"
+                    : "text-emerald-800 dark:text-emerald-200"
+                }`}>
+                  {approvalResult.invitation.email_delivery_warning || (approvalResult.email_delivery && !approvalResult.email_delivery.sent) ? (
+                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  )}
+                  {approvalResult.invitation.email_delivery_warning || (approvalResult.email_delivery && !approvalResult.email_delivery.sent)
+                    ? "Account Approved — Email Delivery Warning"
+                    : "Invitation Dispatched via Secure Email"}
                 </div>
-                <p className="text-emerald-700 dark:text-emerald-300">
-                  The request has been approved for <strong>{selectedRequest.requested_role}</strong> access. A secure, single-use invitation email has been sent to <strong>{selectedRequest.email}</strong> (valid for 48 hours). The privileged account will activate once the applicant accepts the email invitation and establishes their credentials.
+                <p className={
+                  approvalResult.invitation.email_delivery_warning || (approvalResult.email_delivery && !approvalResult.email_delivery.sent)
+                    ? "text-amber-700 dark:text-amber-300"
+                    : "text-emerald-700 dark:text-emerald-300"
+                }>
+                  {approvalResult.invitation.email_delivery_warning || (approvalResult.email_delivery && !approvalResult.email_delivery.sent)
+                    ? (approvalResult.invitation.email_delivery_warning || "Invitation email could not be delivered. The account has been approved. Use resend-invitation to retry.")
+                    : `The request has been approved for ${selectedRequest.requested_role} access. A secure, single-use invitation email has been sent to ${selectedRequest.email} (valid for 48 hours). The privileged account will activate once the applicant accepts the email invitation and establishes their credentials.`}
                 </p>
               </div>
             )}
@@ -628,75 +623,6 @@ function AdminAccessRequests() {
                   </div>
                 </div>
               )}
-              {/* Credential Issuance Panel */}
-              {showApproveModal && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-3 dark:border-emerald-900/40 dark:bg-emerald-950/30">
-                  <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
-                    <KeyRound className="h-4 w-4" />
-                    <span className="font-semibold text-xs uppercase tracking-wider">
-                      Issue Credentials for {selectedRequest.requested_role}
-                    </span>
-                  </div>
-
-                  <div className="space-y-1 text-xs">
-                    <span className="text-slate-500 font-medium">Assigned Login ID (Email):</span>
-                    <div className="p-2 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-mono font-bold text-blue-600 dark:text-blue-400">
-                      {selectedRequest.email}
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Initial / Temporary Password <span className="text-red-500">*</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={generateRandomPassword}
-                        className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                      >
-                        <RefreshCw className="h-3 w-3" />
-                        Generate Secure Password
-                      </button>
-                    </div>
-                    <input
-                      type="text"
-                      value={approvePassword}
-                      onChange={(e) => setApprovePassword(e.target.value)}
-                      placeholder="Minimum 8 characters (or click Generate)"
-                      className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 text-xs font-mono outline-none"
-                    />
-                  </div>
-
-                  <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={sendCredentialsEmail}
-                      onChange={(e) => setSendCredentialsEmail(e.target.checked)}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span>Email Login ID and Password directly to applicant upon approval</span>
-                  </label>
-
-                  <div className="flex justify-end gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setShowApproveModal(false)}
-                      className="px-3 py-1 rounded bg-slate-200 text-slate-700 text-xs font-medium dark:bg-slate-800 dark:text-slate-300"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      disabled={actionLoading || !approvePassword.trim() || approvePassword.trim().length < 8}
-                      onClick={() => handleApproveWithCredentials(selectedRequest.id)}
-                      className="px-4 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50"
-                    >
-                      {actionLoading ? "Provisioning..." : "Confirm Approval & Send Access"}
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Actions Footer */}
@@ -717,17 +643,13 @@ function AdminAccessRequests() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedRequest(null);
-                    setShowApproveModal(false);
-                    setShowRejectInput(false);
-                  }}
+                  onClick={() => setSelectedRequest(null)}
                   className="px-3.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
                 >
                   Close
                 </button>
 
-                {selectedRequest.status !== "APPROVED" && selectedRequest.status !== "REJECTED" && !showRejectInput && !showApproveModal && (
+                {selectedRequest.status !== "APPROVED" && selectedRequest.status !== "REJECTED" && !showRejectInput && (
                   <>
                     <button
                       type="button"
@@ -740,14 +662,10 @@ function AdminAccessRequests() {
                     <button
                       type="button"
                       disabled={actionLoading}
-                      onClick={() => {
-                        setShowApproveModal(true);
-                        if (!approvePassword) generateRandomPassword();
-                      }}
-                      className="px-4 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1.5"
+                      onClick={() => handleApprove(selectedRequest.id)}
+                      className="px-4 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50"
                     >
-                      <KeyRound className="h-3.5 w-3.5" />
-                      Approve &amp; Issue Credentials
+                      {actionLoading ? "Provisioning..." : "Approve & Verify Account"}
                     </button>
                   </>
                 )}

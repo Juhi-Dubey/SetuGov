@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import CheckStatusModal from "../../components/common/CheckStatusModal";
 
 const demoAccounts = [
   // Canonical Main Accounts
@@ -244,16 +243,6 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showDemoAccounts, setShowDemoAccounts] = useState(false);
   const [demoRoleFilter, setDemoRoleFilter] = useState("ALL");
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (location.state?.prefilledEmail) {
-      setFormData((prev) => ({
-        ...prev,
-        email: location.state.prefilledEmail
-      }));
-    }
-  }, [location.state]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -631,21 +620,6 @@ function Login() {
               </Link>
             </div>
 
-            {/* Government / Evaluator Access Request Status Tracker Card */}
-            <div className="mt-3.5 rounded-xl border border-blue-200/80 bg-blue-50/60 p-3.5 text-center dark:border-blue-900/60 dark:bg-blue-950/30">
-              <p className="text-xs text-slate-700 dark:text-slate-300">
-                Applied as a <strong>Government Officer</strong> or <strong>Evaluator</strong>?
-              </p>
-              <button
-                type="button"
-                onClick={() => setIsStatusModalOpen(true)}
-                className="mt-1.5 inline-flex items-center justify-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Check Approval &amp; Credentials Status <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
             {/* Demo Fast-Fill (Collapsible Developer/Testing Mechanism) */}
             <div className="mt-6 border-t border-slate-200/80 pt-4 dark:border-slate-800/80">
               <button
@@ -735,12 +709,6 @@ function Login() {
           </motion.div>
         </div>
       </div>
-
-      <CheckStatusModal
-        isOpen={isStatusModalOpen}
-        onClose={() => setIsStatusModalOpen(false)}
-        initialEmail={formData.email}
-      />
     </div>
   );
 }

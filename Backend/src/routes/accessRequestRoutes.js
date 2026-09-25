@@ -9,8 +9,7 @@ import {
   approveAccessRequest,
   rejectAccessRequest,
   resendInvitation,
-  revokeInvitation,
-  checkAccessRequestStatus
+  revokeInvitation
 } from '../controllers/accessRequestController.js';
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/rbac.js';
@@ -20,16 +19,12 @@ import {
   createEvaluatorSelfApplicationSchema,
   createGovernmentNominationSchema,
   approveAccessRequestSchema,
-  rejectAccessRequestSchema,
-  checkAccessRequestStatusSchema
+  rejectAccessRequestSchema
 } from '../schemas/accessRequestSchemas.js';
 import { authRateLimiter, accessRequestRateLimiter } from '../middleware/rateLimiter.js';
 import { requireTurnstile } from '../services/turnstileService.js';
 
 const router = Router();
-
-// Public: Check Access Request Status
-router.post('/check-status', accessRequestRateLimiter, validate(checkAccessRequestStatusSchema), checkAccessRequestStatus);
 
 // Public: Self-Application as Evaluator
 router.post('/evaluator', accessRequestRateLimiter, validate(createEvaluatorSelfApplicationSchema), requireTurnstile('evaluator_self_application'), createEvaluatorSelfApplication);

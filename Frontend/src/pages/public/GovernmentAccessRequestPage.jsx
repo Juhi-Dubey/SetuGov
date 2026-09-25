@@ -22,7 +22,6 @@ import {
 import { submitGovernmentAccessRequest } from "../../services/accessRequestService";
 import { useTheme } from "../../context/ThemeContext";
 import TurnstileWidget from "../../components/common/TurnstileWidget";
-import CheckStatusModal from "../../components/common/CheckStatusModal";
 import { STATES_AND_UTS } from "../../data/indiaLocations";
 
 export default function GovernmentAccessRequestPage() {
@@ -47,7 +46,6 @@ export default function GovernmentAccessRequestPage() {
   const [submittedData, setSubmittedData] = useState(null);
   const [turnstileToken, setTurnstileToken] = useState(null);
   const [resetTurnstile, setResetTurnstile] = useState(0);
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
   const validate = () => {
     const errs = {};
@@ -133,14 +131,6 @@ export default function GovernmentAccessRequestPage() {
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <button
-              type="button"
-              onClick={() => setIsStatusModalOpen(true)}
-              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/80 px-3.5 text-xs font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
-            >
-              <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              <span>Check Status</span>
-            </button>
             <Link
               to="/login"
               className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
@@ -195,14 +185,6 @@ export default function GovernmentAccessRequestPage() {
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => setIsStatusModalOpen(true)}
-                className="inline-flex h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-blue-300 bg-blue-50 px-6 text-xs font-bold text-blue-700 shadow-sm hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300 dark:hover:bg-blue-900/50"
-              >
-                <Clock className="h-4 w-4" />
-                <span>Track Status Now</span>
-              </button>
               <Link
                 to="/"
                 className="btn-primary inline-flex h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-500"
@@ -515,12 +497,6 @@ export default function GovernmentAccessRequestPage() {
           </div>
         )}
       </main>
-
-      <CheckStatusModal
-        isOpen={isStatusModalOpen}
-        onClose={() => setIsStatusModalOpen(false)}
-        initialEmail={formData.email}
-      />
     </div>
   );
 }

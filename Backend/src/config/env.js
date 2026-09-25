@@ -58,7 +58,13 @@ export const config = {
   EMAIL_PROVIDER: process.env.EMAIL_PROVIDER || 'console',
   EMAIL_FROM: process.env.EMAIL_FROM || 'noreply@setugov.gov.in',
   EMAIL_API_KEY: process.env.EMAIL_API_KEY || '',
-  ADMIN_NOTIFICATION_EMAIL: process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ADMIN_EMAIL || '',
+  ADMIN_NOTIFICATION_EMAIL: (
+    process.env.ADMIN_NOTIFICATION_EMAIL ||
+    process.env.ADMIN_EMAIL ||
+    process.env.EMAIL_SMTP_USER ||
+    process.env.SMTP_USER ||
+    ''
+  ).trim(),
   EMAIL_SMTP_HOST: process.env.EMAIL_SMTP_HOST || process.env.SMTP_HOST || 'smtp.gmail.com',
   EMAIL_SMTP_PORT: parseInt(process.env.EMAIL_SMTP_PORT || process.env.SMTP_PORT || '465', 10),
   EMAIL_SMTP_SECURE: process.env.EMAIL_SMTP_SECURE !== undefined
