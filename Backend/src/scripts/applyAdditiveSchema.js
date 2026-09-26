@@ -215,7 +215,20 @@ async function main() {
     `ALTER TABLE "procurement_records" ADD COLUMN IF NOT EXISTS "contract_accepted_by" TEXT;`,
     `ALTER TABLE "procurement_records" ADD COLUMN IF NOT EXISTS "contract_decline_notes" TEXT;`,
     `ALTER TABLE "procurement_records" ADD COLUMN IF NOT EXISTS "contract_draft_content" JSONB;`,
-    `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'procurement_records_contract_accepted_by_fkey') THEN ALTER TABLE "procurement_records" ADD CONSTRAINT "procurement_records_contract_accepted_by_fkey" FOREIGN KEY ("contract_accepted_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE; END IF; END $$;`
+    `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'procurement_records_contract_accepted_by_fkey') THEN ALTER TABLE "procurement_records" ADD CONSTRAINT "procurement_records_contract_accepted_by_fkey" FOREIGN KEY ("contract_accepted_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE; END IF; END $$;`,
+
+    // 18. Separate "applied at" from "finalist solution finalized at" — finalizeSolutionSubmission
+    // previously reused submitted_at, which createApplication also sets at apply-time, causing the
+    // SHORTLISTED-only document lock to trip prematurely. solution_submitted_at is the correct,
+    // unambiguous field for that lock going forward.
+    `ALTER TABLE "applications" ADD COLUMN IF NOT EXISTS "solution_submitted_at" TIMESTAMP(3);`,
+
+    // 19. Document text extraction — lets AI proposal/pilot analysis read actual document content
+    // instead of only filenames/URLs. extraction_status: 'OK' | 'NO_TEXT_LAYER' | 'UNSUPPORTED_TYPE' | 'FAILED' | 'PENDING'.
+    `ALTER TABLE "application_documents" ADD COLUMN IF NOT EXISTS "extracted_text" TEXT;`,
+    `ALTER TABLE "application_documents" ADD COLUMN IF NOT EXISTS "extraction_status" TEXT DEFAULT 'PENDING';`,
+    `ALTER TABLE "evidence" ADD COLUMN IF NOT EXISTS "extracted_text" TEXT;`,
+    `ALTER TABLE "evidence" ADD COLUMN IF NOT EXISTS "extraction_status" TEXT DEFAULT 'PENDING';`
   ];
 
   for (const sql of statements) {

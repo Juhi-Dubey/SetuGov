@@ -1,10 +1,12 @@
 import path from 'path';
+import fs from 'fs';
 import { prisma } from '../config/prisma.js';
 import { BadRequestError, NotFoundError, ForbiddenError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
 import { sendNotification } from './notificationService.js';
 import { getFileUrl } from '../middleware/upload.js';
 import storageService from './storageService.js';
+import { extractTextFromBuffer } from '../utils/textExtraction.js';
 
 /**
  * Upload a solution document for a shortlisted finalist application
@@ -84,7 +86,7 @@ export const uploadSolutionDocument = async (applicationId, file, data = {}, use
   }
 
   // 6. Proposal Locking: Block modification if submission is finalized or evaluations have commenced
-  if (application.submitted_at) {
+  if (application.solution_submitted_at) {
     throw new BadRequestError('Cannot modify solution package: Submission has already been finalized.');
   }
 
@@ -111,6 +113,25 @@ export const uploadSolutionDocument = async (applicationId, file, data = {}, use
     }
   }
 
+  // 6b. Extract text content so downstream AI analysis (Brain 3) can actually
+  // read the document instead of only seeing its filename/URL. Best-effort:
+  // never blocks the upload if extraction fails or the format is unsupported.
+  let extracted_text = null;
+  let extraction_status = 'PENDING';
+  try {
+    const filePathOnDisk = file.path || (fileKey ? path.join(storageService.getLocalStorageDir(), fileKey) : null);
+    if (filePathOnDisk && fs.existsSync(filePathOnDisk)) {
+      const buffer = fs.readFileSync(filePathOnDisk);
+      const result = await extractTextFromBuffer(buffer, mimeType, originalname);
+      extracted_text = result.text;
+      extraction_status = result.status;
+    } else {
+      extraction_status = 'FAILED';
+    }
+  } catch (extractErr) {
+    extraction_status = 'FAILED';
+  }
+
   // 7. Persist ApplicationDocument record
   let document;
   try {
@@ -124,7 +145,9 @@ export const uploadSolutionDocument = async (applicationId, file, data = {}, use
         file_size: fileSize,
         mime_type: mimeType,
         document_type: documentType,
-        description
+        description,
+        extracted_text,
+        extraction_status
       }
     });
   } catch (dbErr) {
@@ -226,7 +249,7 @@ export const deleteSolutionDocument = async (applicationId, documentId, user, ip
     throw new ForbiddenError('Unauthorized: Only the startup owning this application can delete its documents.');
   }
 
-  if (application.submitted_at) {
+  if (application.solution_submitted_at) {
     throw new BadRequestError('Cannot delete document: Submission has already been finalized.');
   }
 
@@ -275,9 +298,23 @@ export const deleteSolutionDocument = async (applicationId, documentId, user, ip
 };
 
 /**
- * Finalize finalist solution submission (locks submission and notifies government)
+ * Submit the actual solution (proposal text + technical approach, etc.) and
+ * finalize the finalist submission, locking it and notifying government.
+ *
+ * This is the ONLY place solution content can be written into an Application
+ * once it has moved past DRAFT — it requires SHORTLISTED status, so a
+ * startup can never have its solution evaluated before government has
+ * actually shortlisted it from the discovery list.
+ *
+ * @param {string} applicationId
+ * @param {object} user
+ * @param {string|null} ip_address
+ * @param {object} [data] - Optional solution content: proposal,
+ *   technical_approach, expected_impact, estimated_cost, timeline.
+ *   Omitted fields are left as previously stored (e.g. if a caller only
+ *   wants to finalize after uploading documents separately).
  */
-export const finalizeSolutionSubmission = async (applicationId, user, ip_address = null) => {
+export const finalizeSolutionSubmission = async (applicationId, user, ip_address = null, data = {}) => {
   const application = await prisma.application.findUnique({
     where: { id: applicationId },
     include: {
@@ -304,14 +341,41 @@ export const finalizeSolutionSubmission = async (applicationId, user, ip_address
     throw new BadRequestError(`Only SHORTLISTED finalist applications can finalize a solution package.`);
   }
 
+  if (application.solution_submitted_at) {
+    throw new BadRequestError('Cannot finalize submission: Submission has already been finalized.');
+  }
+
   if (application.challenge.finalist_submission_deadline && new Date() > new Date(application.challenge.finalist_submission_deadline)) {
     throw new BadRequestError('Cannot finalize submission: The deadline has passed.');
+  }
+
+  // Merge in any solution text provided now, falling back to whatever is
+  // already stored (e.g. saved via an earlier draft-style call, if the
+  // frontend adds one) — but always require the essentials to be non-empty
+  // by the time the package is actually locked.
+  const proposal = data.proposal !== undefined ? String(data.proposal).trim() : application.proposal;
+  const technical_approach = data.technical_approach !== undefined ? String(data.technical_approach).trim() : application.technical_approach;
+  const expected_impact = data.expected_impact !== undefined ? String(data.expected_impact).trim() : application.expected_impact;
+  const estimated_cost = data.estimated_cost !== undefined ? Number(data.estimated_cost) : Number(application.estimated_cost);
+  const timeline = data.timeline !== undefined ? String(data.timeline).trim() : application.timeline;
+
+  if (!proposal || !technical_approach) {
+    throw new BadRequestError('Cannot finalize submission: proposal and technical_approach are required before finalizing.');
+  }
+
+  if (application.documents.length === 0) {
+    throw new BadRequestError('Cannot finalize submission: at least one solution document must be uploaded first.');
   }
 
   const updated = await prisma.application.update({
     where: { id: applicationId },
     data: {
-      submitted_at: new Date()
+      proposal,
+      technical_approach,
+      expected_impact,
+      estimated_cost,
+      timeline,
+      solution_submitted_at: new Date()
     }
   });
 

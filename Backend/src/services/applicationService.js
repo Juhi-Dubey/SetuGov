@@ -71,12 +71,19 @@ export const createApplication = async (challengeIdParam, data, user, ip_address
 
   const initialStatus = data.status || 'SUBMITTED';
 
-  // Normalize fields between UI form conventions and database schema
-  const proposal = (data.proposal || data.proposal_summary || data.problemUnderstanding || '').trim();
-  const technical_approach = (data.technical_approach || data.proposedSolution || '').trim();
-  const expected_impact = (data.expected_impact || data.expectedImpact || '').trim();
-  const estimated_cost = Number(data.estimated_cost ?? data.proposed_budget ?? data.proposedBudget ?? 0);
-  const timeline = String(data.timeline || data.proposed_timeline_days || data.proposedTimeline || '30 days').trim();
+  // NOTE: Applying only registers interest and puts the startup in the
+  // discovery/matching pool. The actual solution (proposal, technical
+  // approach, cost, timeline, documents) is deliberately NOT accepted here,
+  // even if the request body contains it — it is captured later via
+  // finalizeSolutionSubmission(), which is gated on the application already
+  // being SHORTLISTED by government and within the finalist submission
+  // window. Accepting it here would let any applicant's solution be
+  // evaluated before government ever shortlisted them.
+  const proposal = '';
+  const technical_approach = '';
+  const expected_impact = '';
+  const estimated_cost = 0;
+  const timeline = '';
 
   // 4. Create Application
   let application;
@@ -136,8 +143,8 @@ export const createApplication = async (challengeIdParam, data, user, ip_address
   // Notify the startup user
   await sendNotification({
     user_id: user.id,
-    title: 'Proposal Submitted',
-    message: `Your application for challenge "${challenge.title}" was submitted successfully.`,
+    title: 'Application Registered',
+    message: `Your interest in challenge "${challenge.title}" was registered. If shortlisted, you'll be able to submit your solution.`,
     type: 'APPLICATION_SUBMITTED',
     link: '/startup/applications'
   });

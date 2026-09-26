@@ -48,7 +48,8 @@ export const finalizeSubmission = async (req, res, next) => {
     const application = await applicationDocumentService.finalizeSolutionSubmission(
       req.params.application_id,
       req.user,
-      req.ip
+      req.ip,
+      req.body
     );
     return successResponse(res, application, 'Finalist solution package submitted and finalized successfully');
   } catch (error) {

@@ -296,6 +296,7 @@ model Application {
   timeline              String
   status                ApplicationStatus            @default(DRAFT)
   submitted_at          DateTime?
+  solution_submitted_at DateTime?
   change_request_notes  String?
   change_requested_at   DateTime?
   change_requested_by   String?
@@ -409,6 +410,8 @@ model ApplicationDocument {
   mime_type         String
   document_type     String      @default("PROPOSAL_DOC")
   description       String?
+  extracted_text    String?     @db.Text
+  extraction_status String?     @default("PENDING")
   created_at        DateTime    @default(now())
   updated_at        DateTime    @updatedAt
   application       Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
@@ -606,6 +609,8 @@ model Evidence {
   date                DateTime  @default(now())
   source              String
   verification_status String    @default("PENDING")
+  extracted_text      String?   @db.Text
+  extraction_status   String?   @default("PENDING")
   uploaded_by         String
   created_at          DateTime  @default(now())
   kpi                 PilotKpi? @relation(fields: [kpi_id], references: [id])

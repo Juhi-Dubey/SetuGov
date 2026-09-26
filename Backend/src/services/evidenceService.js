@@ -1,8 +1,11 @@
+import fs from 'fs';
+import path from 'path';
 import { prisma } from '../config/prisma.js';
 import { NotFoundError, BadRequestError } from '../utils/errors.js';
 import { verifyPilotAccess } from '../utils/pilotAuth.js';
 import { createAuditLog } from './auditService.js';
 import storageService from './storageService.js';
+import { extractTextFromBuffer } from '../utils/textExtraction.js';
 
 export const createEvidence = async (pilotId, data, user, ip_address = null) => {
   // P0-3: Verify user has EVIDENCE_MANAGE access to this pilot
@@ -15,6 +18,30 @@ export const createEvidence = async (pilotId, data, user, ip_address = null) => 
   // Verify physical document existence in storage and sanitize reference
   const verified = await storageService.verifyDocumentFile(data.file_url);
 
+  // Extract text content so AI pilot analysis (Brain 4) can read the actual
+  // evidence document instead of only its description/source metadata.
+  // Best-effort: never blocks the upload.
+  let extracted_text = null;
+  let extraction_status = 'PENDING';
+  try {
+    if (verified.key) {
+      const filePathOnDisk = path.join(storageService.getLocalStorageDir(), verified.key);
+      if (fs.existsSync(filePathOnDisk)) {
+        const buffer = fs.readFileSync(filePathOnDisk);
+        const mimeType = verified.metadata?.mimeType || '';
+        const result = await extractTextFromBuffer(buffer, mimeType, verified.key);
+        extracted_text = result.text;
+        extraction_status = result.status;
+      } else {
+        extraction_status = 'FAILED';
+      }
+    } else {
+      extraction_status = 'UNSUPPORTED_TYPE';
+    }
+  } catch (extractErr) {
+    extraction_status = 'FAILED';
+  }
+
   let evidence;
   try {
     evidence = await prisma.evidence.create({
@@ -26,6 +53,8 @@ export const createEvidence = async (pilotId, data, user, ip_address = null) => 
         date: data.date ? new Date(data.date) : new Date(),
         source: data.source.trim(),
         verification_status: 'PENDING',
+        extracted_text,
+        extraction_status,
         uploaded_by: user.id
       },
       include: {
