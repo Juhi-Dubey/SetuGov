@@ -4,6 +4,50 @@ import { logger } from '../utils/logger.js';
 import { AppError, NotFoundError, ForbiddenError } from '../utils/errors.js';
 import { createAuditLog } from './auditService.js';
 
+// Per-document character budget when folding extracted text into an AI
+// payload, so a handful of documents stay within a reasonable prompt size.
+const AI_PAYLOAD_DOC_EXCERPT_CHARS = 2000;
+
+/**
+ * Build the evidence object sent to pilot AI analysis (Brain 4), including
+ * actual extracted document content where available, instead of only
+ * description/source metadata.
+ */
+const buildEvidenceSummary = (e) => ({
+  description: e.description,
+  source: e.source || null,
+  verified: e.verification_status === 'VERIFIED',
+  content_excerpt: e.extraction_status === 'OK' && e.extracted_text
+    ? e.extracted_text.slice(0, AI_PAYLOAD_DOC_EXCERPT_CHARS)
+    : null,
+  content_status: e.extraction_status || 'PENDING'
+});
+
+/**
+ * Build a readable per-document summary for AI payloads that includes the
+ * document's actual extracted content (not just its filename/URL), so
+ * proposal/pilot analysis reasons about what documents actually say.
+ * Falls back to an explicit note when a document has no readable text
+ * (e.g. a scanned PDF, or an unsupported format) rather than silently
+ * sending nothing.
+ */
+const buildSolutionDocumentSummaries = (documents = []) => {
+  return documents.map((d) => {
+    const header = `${d.document_type}: ${d.original_filename}`;
+    if (d.extraction_status === 'OK' && d.extracted_text) {
+      const excerpt = d.extracted_text.slice(0, AI_PAYLOAD_DOC_EXCERPT_CHARS);
+      return `${header}\n---\n${excerpt}`;
+    }
+    if (d.extraction_status === 'NO_TEXT_LAYER') {
+      return `${header} [scanned/image document — no extractable text, not reviewed by AI]`;
+    }
+    if (d.extraction_status === 'UNSUPPORTED_TYPE') {
+      return `${header} [file format not supported for text extraction, not reviewed by AI]`;
+    }
+    return `${header} [document content unavailable to AI, not reviewed]`;
+  });
+};
+
 /**
  * Helper to execute HTTP request to Python AI service.
  * Returns the parsed JSON body on success, or null on failure (for mock fallback).
@@ -674,11 +718,7 @@ export const analyzePilotById = async (pilotId, user) => {
     mitigation: r.mitigation || null
   }));
 
-  const evidence = (pilot.evidence || []).map(e => ({
-    description: e.description,
-    source: e.source || null,
-    verified: e.verification_status === 'VERIFIED'
-  }));
+  const evidence = (pilot.evidence || []).map(buildEvidenceSummary);
 
   const latestValidation = pilot.validations && pilot.validations.length > 0 ? pilot.validations[0] : null;
 
@@ -897,7 +937,7 @@ export const analyzeApplicationProposal = async (applicationId, user = null, ip_
 
   // Map to Brain 3 request payload
   const verifiedDocs = (application.startup.documents || []).filter(d => d.verification_status === 'VERIFIED');
-  const solutionDocs = (application.documents || []).map(d => `${d.document_type}: ${d.original_filename} (${d.file_url})`);
+  const solutionDocs = buildSolutionDocumentSummaries(application.documents);
   const allDocs = (application.startup.documents || []).map(d => d.document_type).concat(solutionDocs);
 
   const payload = {
@@ -1436,11 +1476,7 @@ export const getScaleRecommendation = async (pilotIdOrInput, user) => {
         severity: (r.severity || 'LOW').toUpperCase(),
         mitigation: r.mitigation || null
       })),
-      evidence: (pilot.evidence || []).map(e => ({
-        description: e.description,
-        source: e.source || null,
-        verified: e.verification_status === 'VERIFIED'
-      })),
+      evidence: (pilot.evidence || []).map(buildEvidenceSummary),
       validation_status: latestValidation ? (latestValidation.status === 'VALIDATED' || latestValidation.status === 'COMPLETED' ? 'completed' : 'partial') : 'pending',
       technical_stability: latestValidation?.technical_stability_score ? Number(latestValidation.technical_stability_score) : null,
       user_feedback_score: latestValidation?.user_satisfaction_score ? Number(latestValidation.user_satisfaction_score) : null
@@ -1644,7 +1680,7 @@ export const streamAnalyzeApplicationProposal = async (applicationId, user, ip_a
 
   // Build payload (same as non-streaming path)
   const verifiedDocs = (application.startup.documents || []).filter(d => d.verification_status === 'VERIFIED');
-  const solutionDocs = (application.documents || []).map(d => `${d.document_type}: ${d.original_filename} (${d.file_url})`);
+  const solutionDocs = buildSolutionDocumentSummaries(application.documents);
 
   const payload = {
     challenge: {
