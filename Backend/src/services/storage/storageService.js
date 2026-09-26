@@ -8,7 +8,7 @@ let activeProvider = new LocalStorageProvider();
 
 /**
  * Configure or swap the active storage provider (e.g. for testing or future S3 adapter)
- * @param {import('./BaseStorageProvider').BaseStorageProvider} provider
+ * @param {import('./BaseStorageProvider.js').BaseStorageProvider} provider
  */
 export const setStorageProvider = (provider) => {
   if (!provider) {
@@ -19,7 +19,7 @@ export const setStorageProvider = (provider) => {
 
 /**
  * Get the currently active storage provider
- * @returns {import('./BaseStorageProvider').BaseStorageProvider}
+ * @returns {import('./BaseStorageProvider.js').BaseStorageProvider}
  */
 export const getStorageProvider = () => {
   return activeProvider;

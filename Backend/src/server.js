@@ -7,7 +7,7 @@ import { warmPrismaConnection } from './utils/warmup.js';
 const app = createApp();
 const PORT = config.PORT;
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   logger.info(`================================================`);
   logger.info(`🚀 SetuGov Backend Server running on port ${PORT}`);
   logger.info(`📡 API Base URL: http://localhost:${PORT}/api/v1`);
