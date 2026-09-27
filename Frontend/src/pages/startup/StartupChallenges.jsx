@@ -539,7 +539,7 @@ function ChallengeCard({
             e.stopPropagation();
             onView(challenge);
           }}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-[10px] font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-[10px] font-bold text-slate-600 transition-colors hover:bg-[#4f39f6] hover:text-white hover:border-[#4f39f6] dark:border-slate-800 dark:text-slate-300 dark:hover:bg-[#4f39f6] dark:hover:text-white dark:hover:border-[#4f39f6]"
         >
           View Details
           <ExternalLink className="h-3.5 w-3.5" />

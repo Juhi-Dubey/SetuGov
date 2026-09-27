@@ -1004,7 +1004,7 @@ function ChallengePilot() {
             <button
               type="button"
               onClick={() => navigate("/government/challenges")}
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#4f39f6] transition"
             >
               View Challenges
               <ArrowRight className="h-4 w-4" />

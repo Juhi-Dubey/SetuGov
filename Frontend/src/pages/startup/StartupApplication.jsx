@@ -1947,7 +1947,7 @@ function MyApplicationsListView({ user, navigate }) {
                       <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
                         <Building2 className="h-3.5 w-3.5" /> {app.department} • {app.state}
                       </span>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-xl bg-indigo-50 text-indigo-600">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#6C8EB1]">
                         <CalendarDays className="h-3.5 w-3.5" />{" "}
                         {app.submitted_at
                           ? `Submitted ${new Date(app.submitted_at).toLocaleDateString("en-IN", {
@@ -2002,7 +2002,7 @@ function MyApplicationsListView({ user, navigate }) {
                   <div className="flex shrink-0 flex-row gap-2 lg:flex-col lg:items-end">
                     <button
                       onClick={() => navigate(`/startup/challenges/${app.challenge_id}`, { state: { returnTo: '/startup/applications' } })}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-850"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-[#4f39f6] hover:text-white hover:border-[#4f39f6] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-[#4f39f6] dark:hover:text-white dark:hover:border-[#4f39f6]"
                     >
                       <ExternalLink className="h-3.5 w-3.5" /> View Challenge
                     </button>
