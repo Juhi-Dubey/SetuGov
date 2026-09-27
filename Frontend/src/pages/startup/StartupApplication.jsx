@@ -2001,7 +2001,7 @@ function MyApplicationsListView({ user, navigate }) {
 
                   <div className="flex shrink-0 flex-row gap-2 lg:flex-col lg:items-end">
                     <button
-                      onClick={() => navigate(`/startup/challenges`)}
+                      onClick={() => navigate(`/startup/challenges/${app.challenge_id}`, { state: { returnTo: '/startup/applications' } })}
                       className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-850"
                     >
                       <ExternalLink className="h-3.5 w-3.5" /> View Challenge

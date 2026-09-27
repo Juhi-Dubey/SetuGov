@@ -17,7 +17,7 @@ import {
   AlertTriangle,
   ExternalLink,
 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { getChallenges, getChallengeById } from "../../services/challengeService";
 import { formatPublishDate } from "../../utils/filterUtils";
 import Pagination from "../../components/common/Pagination";
@@ -34,6 +34,7 @@ const categories = [
 
 function StartupChallenges() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
 
   const [challengesList, setChallengesList] = useState([]);
@@ -401,7 +402,12 @@ function StartupChallenges() {
           onClose={() => {
             setSelectedChallenge(null);
             if (id) {
-              navigate("/startup/challenges", { replace: true });
+              // location.state is set by the View Challenge button in
+              // StartupApplication. For any other navigation path (sidebar,
+              // handleViewChallenge) location.state is null, so we fall back
+              // to staying on the Challenges listing.
+              const dest = location.state?.returnTo || "/startup/challenges";
+              navigate(dest, { replace: true });
             }
           }}
           onApply={(challengeId) => {
