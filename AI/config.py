@@ -15,8 +15,11 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        case_sensitive=False,
+        case_sensitive=False,  
+        extra="ignore",
     )
+    # Internal API key for service-to-service communication
+    internal_api_key: str | None = None
 
     # AI provider configuration — fully generic, no vendor assumed.
     # ai_provider selects the ADAPTER, never a vendor: "mock" (default,
