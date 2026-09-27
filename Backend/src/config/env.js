@@ -143,6 +143,7 @@ export const config = {
   CORS_ORIGIN: process.env.CORS_ORIGIN || '',
   EMAIL_PROVIDER: process.env.EMAIL_PROVIDER || 'console',
   EMAIL_FROM: process.env.EMAIL_FROM || 'noreply@setugov.gov.in',
+  EMAIL_FROM_NAME: process.env.EMAIL_FROM_NAME || 'SetuGov',
   EMAIL_API_KEY: process.env.EMAIL_API_KEY || '',
   ADMIN_NOTIFICATION_EMAIL: (
     process.env.ADMIN_NOTIFICATION_EMAIL ||

@@ -188,6 +188,73 @@ export const sendEmail = async ({ to, subject, text, html }) => {
     };
   }
 
+  if (provider === 'brevo') {
+    if (!config.EMAIL_API_KEY) {
+      throw new Error(
+        'Email Delivery Error: EMAIL_API_KEY is required for Brevo email provider.'
+      );
+    }
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'api-key': config.EMAIL_API_KEY,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: {
+          name: config.EMAIL_FROM_NAME || 'SetuGov',
+          email: config.EMAIL_FROM
+        },
+        to: [
+          {
+            email: recipient
+          }
+        ],
+        subject,
+        textContent: text,
+        htmlContent: html
+      })
+    });
+
+    const responseText = await response.text();
+
+    if (!response.ok) {
+      let errorMessage = responseText;
+
+      try {
+        const parsed = JSON.parse(responseText);
+        errorMessage = parsed?.message || parsed?.code || responseText;
+      } catch {
+        // Keep raw response.
+      }
+
+      throw new Error(
+        `Brevo API Error (${response.status}): ${errorMessage}`
+      );
+    }
+
+    let result;
+
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      throw new Error('Brevo returned an invalid success response.');
+    }
+
+    logger.info(
+      `[BREVO] Email accepted by Brevo. Message ID: ${result?.messageId || 'unknown'}`
+    );
+
+    return {
+      email_accepted_by_provider: true,
+      delivered: false,
+      provider: 'brevo',
+      messageId: result?.messageId
+    };
+  }
+
   if (provider === 'smtp') {
     if (!config.EMAIL_SMTP_USER || !config.EMAIL_SMTP_PASSWORD) {
       throw new Error('Email Delivery Error: EMAIL_SMTP_USER and EMAIL_SMTP_PASSWORD are required for SMTP email provider.');
