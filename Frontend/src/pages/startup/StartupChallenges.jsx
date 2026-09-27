@@ -414,9 +414,11 @@ function StartupChallenges() {
           challenge={selectedChallenge}
           onClose={() => {
             setSelectedChallenge(null);
-            if (id) {
-              const dest = location.state?.returnTo || "/startup/challenges";
-              navigate(dest, { replace: true });
+
+            if (location.state?.returnTo === "/startup/applications") {
+              navigate("/startup/applications", { replace: true });
+            } else {
+              navigate("/startup/challenges", { replace: true });
             }
           }}
           onApply={(challengeId) => {
