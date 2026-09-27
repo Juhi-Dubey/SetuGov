@@ -1947,7 +1947,7 @@ function MyApplicationsListView({ user, navigate }) {
                       <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
                         <Building2 className="h-3.5 w-3.5" /> {app.department} • {app.state}
                       </span>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-xl bg-indigo-50 text-indigo-600">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#6C8EB1]">
                         <CalendarDays className="h-3.5 w-3.5" />{" "}
                         {app.submitted_at
                           ? `Submitted ${new Date(app.submitted_at).toLocaleDateString("en-IN", {
