@@ -17,7 +17,7 @@ import {
   AlertTriangle,
   ExternalLink,
 } from "lucide-react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getChallenges, getChallengeById } from "../../services/challengeService";
 import { formatPublishDate } from "../../utils/filterUtils";
 import Pagination from "../../components/common/Pagination";
@@ -34,8 +34,9 @@ const categories = [
 
 function StartupChallenges() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const fromApplications = searchParams.get("from") === "applications";
 
   const [challengesList, setChallengesList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -127,6 +128,8 @@ function StartupChallenges() {
             console.error("Failed to load challenge by id from URL:", err);
           });
       }
+    } else {
+      setSelectedChallenge(null);
     }
   }, [id, challengesList]);
 
@@ -401,13 +404,10 @@ function StartupChallenges() {
           challenge={selectedChallenge}
           onClose={() => {
             setSelectedChallenge(null);
-            if (id) {
-              // location.state is set by the View Challenge button in
-              // StartupApplication. For any other navigation path (sidebar,
-              // handleViewChallenge) location.state is null, so we fall back
-              // to staying on the Challenges listing.
-              const dest = location.state?.returnTo || "/startup/challenges";
-              navigate(dest, { replace: true });
+            if (fromApplications) {
+              navigate("/startup/applications", { replace: true });
+            } else {
+              navigate("/startup/challenges", { replace: true });
             }
           }}
           onApply={(challengeId) => {
