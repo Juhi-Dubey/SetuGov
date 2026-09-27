@@ -25,6 +25,7 @@ COPY config.py main.py ./
 COPY schemas/ ./schemas/
 COPY services/ ./services/
 COPY prompts/ ./prompts/
+COPY providers/ ./providers/
 
 # Set ownership to non-root user
 RUN chown -R appuser:appgroup /app

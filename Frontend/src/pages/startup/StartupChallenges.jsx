@@ -17,7 +17,7 @@ import {
   AlertTriangle,
   ExternalLink,
 } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { getChallenges, getChallengeById } from "../../services/challengeService";
 import { formatPublishDate } from "../../utils/filterUtils";
 import Pagination from "../../components/common/Pagination";
@@ -34,6 +34,7 @@ const categories = [
 
 function StartupChallenges() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams();
 
   const [challengesList, setChallengesList] = useState([]);
@@ -88,45 +89,58 @@ function StartupChallenges() {
   }, []);
 
   useEffect(() => {
-    if (id) {
-      const match = challengesList.find((c) => String(c.id) === String(id));
-      if (match) {
-        setSelectedChallenge(match);
-      } else {
-        getChallengeById(id)
-          .then((res) => {
-            const ch = res?.data?.challenge || res?.challenge;
-            if (ch) {
-              const daysLeft = ch.application_deadline
-                ? Math.max(0, Math.ceil((new Date(ch.application_deadline) - new Date()) / (1000 * 60 * 60 * 24)))
-                : null;
-              const isExpired = ch.application_deadline && new Date(ch.application_deadline) < new Date();
-              setSelectedChallenge({
-                ...ch,
-                id: ch.id,
-                title: ch.title,
-                department: ch.department?.name || "Government Department",
-                departmentObj: ch.department,
-                category: ch.sector || ch.category || "GovTech",
-                description: ch.problem_description || "",
-                budget: ch.budget_max ? `₹${Number(ch.budget_max).toLocaleString("en-IN")}` : (ch.budget_min ? `₹${Number(ch.budget_min).toLocaleString("en-IN")}` : "Not specified"),
-                deadline: ch.application_deadline
-                  ? new Date(ch.application_deadline).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
-                  : "Open Rolling",
-                deadlineRaw: ch.application_deadline,
-                publishedDate: formatPublishDate(ch),
-                isExpired,
-                applicants: ch._count?.applications || (Array.isArray(ch.applications) ? ch.applications.length : 0),
-                status: isExpired ? "Closed" : ch.status === "PUBLISHED" ? "Open" : ch.status,
-                daysLeft: daysLeft ?? 30,
-              });
-            }
-          })
-          .catch((err) => {
-            console.error("Failed to load challenge by id from URL:", err);
-          });
-      }
+    if (!id) {
+      setSelectedChallenge(null);
+      return;
     }
+
+    // Clear stale challenge data if the id does not match the currently displayed challenge
+    setSelectedChallenge((prev) => (prev && String(prev.id) === String(id) ? prev : null));
+
+    let isMounted = true;
+    const match = challengesList.find((c) => String(c.id) === String(id));
+    if (match) {
+      setSelectedChallenge(match);
+    } else {
+      getChallengeById(id)
+        .then((res) => {
+          if (!isMounted) return;
+          const ch = res?.data?.challenge || res?.challenge;
+          if (ch) {
+            const daysLeft = ch.application_deadline
+              ? Math.max(0, Math.ceil((new Date(ch.application_deadline) - new Date()) / (1000 * 60 * 60 * 24)))
+              : null;
+            const isExpired = ch.application_deadline && new Date(ch.application_deadline) < new Date();
+            setSelectedChallenge({
+              ...ch,
+              id: ch.id,
+              title: ch.title,
+              department: ch.department?.name || "Government Department",
+              departmentObj: ch.department,
+              category: ch.sector || ch.category || "GovTech",
+              description: ch.problem_description || "",
+              budget: ch.budget_max ? `₹${Number(ch.budget_max).toLocaleString("en-IN")}` : (ch.budget_min ? `₹${Number(ch.budget_min).toLocaleString("en-IN")}` : "Not specified"),
+              deadline: ch.application_deadline
+                ? new Date(ch.application_deadline).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+                : "Open Rolling",
+              deadlineRaw: ch.application_deadline,
+              publishedDate: formatPublishDate(ch),
+              isExpired,
+              applicants: ch._count?.applications || (Array.isArray(ch.applications) ? ch.applications.length : 0),
+              status: isExpired ? "Closed" : ch.status === "PUBLISHED" ? "Open" : ch.status,
+              daysLeft: daysLeft ?? 30,
+            });
+          }
+        })
+        .catch((err) => {
+          if (!isMounted) return;
+          console.error("Failed to load challenge by id from URL:", err);
+        });
+    }
+
+    return () => {
+      isMounted = false;
+    };
   }, [id, challengesList]);
 
   const filteredChallenges = useMemo(() => {
@@ -400,7 +414,10 @@ function StartupChallenges() {
           challenge={selectedChallenge}
           onClose={() => {
             setSelectedChallenge(null);
-            if (id) {
+
+            if (location.state?.returnTo === "/startup/applications") {
+              navigate("/startup/applications", { replace: true });
+            } else {
               navigate("/startup/challenges", { replace: true });
             }
           }}
@@ -533,7 +550,7 @@ function ChallengeCard({
             e.stopPropagation();
             onView(challenge);
           }}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-[10px] font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 text-[10px] font-bold text-slate-600 transition-colors hover:bg-[#4f39f6] hover:text-white hover:border-[#4f39f6] dark:border-slate-800 dark:text-slate-300 dark:hover:bg-[#4f39f6] dark:hover:text-white dark:hover:border-[#4f39f6]"
         >
           View Details
           <ExternalLink className="h-3.5 w-3.5" />
