@@ -250,7 +250,7 @@ function EvaluatorChallengeDetail() {
           <button
             type="button"
             onClick={load}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-500"
+            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-[#4f39f6] transition-colors"
           >
             <RefreshCw className="h-3.5 w-3.5" />
             Retry

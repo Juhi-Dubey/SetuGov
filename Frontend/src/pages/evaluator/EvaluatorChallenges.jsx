@@ -163,7 +163,7 @@ function EvaluatorChallenges() {
 
         <button
           onClick={fetchChallenges}
-          className="inline-flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+          className="inline-flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-[#4f39f6] hover:text-white hover:border-[#4f39f6] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-[#4f39f6] dark:hover:text-white dark:hover:border-[#4f39f6]"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
           Refresh Challenges
