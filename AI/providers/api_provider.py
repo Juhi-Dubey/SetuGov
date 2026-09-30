@@ -14,6 +14,7 @@ and ``model`` are all supplied via configuration.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from typing import Any, AsyncIterator, Optional
@@ -74,6 +75,11 @@ class APICompatibleProvider(AIProvider):
             headers["Authorization"] = f"Bearer {self.api_key}"
         return headers
 
+    # Maximum number of attempts for transient failures (empty / unparseable
+    # responses) that are common with free-tier or rate-limited LLM APIs.
+    _MAX_RETRIES: int = 3
+    _RETRY_BACKOFF_BASE: float = 1.5  # seconds; doubles each attempt
+
     async def generate(
         self,
         prompt: str,
@@ -98,58 +104,114 @@ class APICompatibleProvider(AIProvider):
             response_format,
         )
 
-        try:
-            response = await self._client.post(
-                "/chat/completions", json=payload, headers=self._headers()
+        last_exc: Exception | None = None
+
+        for attempt in range(1, self._MAX_RETRIES + 1):
+            try:
+                response = await self._client.post(
+                    "/chat/completions", json=payload, headers=self._headers()
+                )
+                response.raise_for_status()
+            except httpx.ConnectError as exc:
+                raise ProviderUnavailableError(
+                    f"Cannot connect to AI provider at {self.base_url}: {exc}"
+                ) from exc
+            except httpx.TimeoutException as exc:
+                raise ProviderTimeoutError(
+                    f"AI provider request timed out after {self.timeout}s: {exc}"
+                ) from exc
+            except httpx.HTTPStatusError as exc:
+                raise ProviderUnavailableError(
+                    f"AI provider returned HTTP {exc.response.status_code}: {exc}"
+                ) from exc
+            except httpx.HTTPError as exc:
+                raise ProviderUnavailableError(f"AI provider HTTP error: {exc}") from exc
+
+            try:
+                body = response.json()
+            except (json.JSONDecodeError, ValueError) as exc:
+                last_exc = InvalidAIResponseError(
+                    f"AI provider response is not valid JSON: {exc}"
+                )
+                if attempt < self._MAX_RETRIES:
+                    delay = self._RETRY_BACKOFF_BASE * (2 ** (attempt - 1))
+                    logger.warning(
+                        "Attempt %d/%d — response body not valid JSON, "
+                        "retrying in %.1fs",
+                        attempt, self._MAX_RETRIES, delay,
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                raise last_exc from exc
+
+            try:
+                raw_text = body["choices"][0]["message"]["content"]
+            except (KeyError, IndexError, TypeError) as exc:
+                last_exc = InvalidAIResponseError(
+                    "AI provider response did not match the expected "
+                    "chat-completions shape."
+                )
+                if attempt < self._MAX_RETRIES:
+                    delay = self._RETRY_BACKOFF_BASE * (2 ** (attempt - 1))
+                    logger.warning(
+                        "Attempt %d/%d — malformed response shape, "
+                        "retrying in %.1fs",
+                        attempt, self._MAX_RETRIES, delay,
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                raise last_exc from exc
+
+            if not raw_text:
+                last_exc = InvalidAIResponseError(
+                    "AI provider returned an empty response."
+                )
+                if attempt < self._MAX_RETRIES:
+                    delay = self._RETRY_BACKOFF_BASE * (2 ** (attempt - 1))
+                    logger.warning(
+                        "Attempt %d/%d — empty response, retrying in %.1fs",
+                        attempt, self._MAX_RETRIES, delay,
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                raise last_exc
+
+            logger.info(
+                "API-compatible response — model=%s, response_len=%d",
+                self.model,
+                len(raw_text),
             )
-            response.raise_for_status()
-        except httpx.ConnectError as exc:
-            raise ProviderUnavailableError(
-                f"Cannot connect to AI provider at {self.base_url}: {exc}"
-            ) from exc
-        except httpx.TimeoutException as exc:
-            raise ProviderTimeoutError(
-                f"AI provider request timed out after {self.timeout}s: {exc}"
-            ) from exc
-        except httpx.HTTPStatusError as exc:
-            raise ProviderUnavailableError(
-                f"AI provider returned HTTP {exc.response.status_code}: {exc}"
-            ) from exc
-        except httpx.HTTPError as exc:
-            raise ProviderUnavailableError(f"AI provider HTTP error: {exc}") from exc
+            return raw_text
 
-        try:
-            body = response.json()
-        except (json.JSONDecodeError, ValueError) as exc:
-            raise InvalidAIResponseError(
-                f"AI provider response is not valid JSON: {exc}"
-            ) from exc
-
-        try:
-            raw_text = body["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, TypeError) as exc:
-            raise InvalidAIResponseError(
-                "AI provider response did not match the expected "
-                "chat-completions shape."
-            ) from exc
-
-        if not raw_text:
-            raise InvalidAIResponseError("AI provider returned an empty response.")
-
-        logger.info(
-            "API-compatible response — model=%s, response_len=%d",
-            self.model,
-            len(raw_text),
-        )
-        return raw_text
+        # Should be unreachable, but satisfy type-checkers.
+        raise last_exc or InvalidAIResponseError("All retry attempts exhausted.")  # pragma: no cover
 
     async def generate_json(
         self,
         prompt: str,
         system: Optional[str] = None,
     ) -> dict[str, Any]:
-        raw = await self.generate(prompt, system=system, response_format="json")
-        return safe_parse_json(raw)
+        """Generate a JSON response, retrying on parse failures."""
+        last_exc: Exception | None = None
+
+        for attempt in range(1, self._MAX_RETRIES + 1):
+            raw = await self.generate(prompt, system=system, response_format="json")
+            try:
+                return safe_parse_json(raw)
+            except InvalidAIResponseError as exc:
+                last_exc = exc
+                if attempt < self._MAX_RETRIES:
+                    delay = self._RETRY_BACKOFF_BASE * (2 ** (attempt - 1))
+                    logger.warning(
+                        "Attempt %d/%d — JSON parse failed (%s), "
+                        "retrying in %.1fs",
+                        attempt, self._MAX_RETRIES, exc, delay,
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+                raise
+
+        raise last_exc or InvalidAIResponseError("All retry attempts exhausted.")  # pragma: no cover
 
     async def generate_stream(
         self,
