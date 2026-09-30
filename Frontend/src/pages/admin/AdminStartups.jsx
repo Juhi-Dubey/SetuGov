@@ -344,7 +344,7 @@ export default function AdminStartups() {
                       <button
                         type="button"
                         onClick={() => handleOpenDossier(s.id)}
-                        className="inline-flex items-center gap-1 rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-400"
+                        className="inline-flex items-center gap-1 rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-600 hover:text-white dark:bg-indigo-950/60 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white transition-colors"
                       >
                         <Eye className="h-3.5 w-3.5" />
                         Inspect Dossier
@@ -440,7 +440,7 @@ export default function AdminStartups() {
                           type="button"
                           disabled={submittingAction}
                           onClick={() => handleStatusTransition("START_REVIEW")}
-                          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/60 dark:text-amber-400"
+                          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-500 hover:text-white hover:border-amber-500 dark:border-amber-900/60 dark:bg-amber-950/60 dark:text-amber-400 dark:hover:bg-amber-500 dark:hover:text-white dark:hover:border-amber-500 transition-colors"
                         >
                           Mark Under Review
                         </button>
@@ -451,7 +451,7 @@ export default function AdminStartups() {
                           type="button"
                           disabled={submittingAction}
                           onClick={() => handleStatusTransition("APPROVE", { notes: "Verified by administrator against uploaded statutory documents." })}
-                          className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 shadow-sm"
+                          className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 shadow-sm transition-colors"
                         >
                           Approve Verification (Grant Eligibility)
                         </button>
@@ -461,7 +461,7 @@ export default function AdminStartups() {
                         type="button"
                         disabled={submittingAction}
                         onClick={() => setActionModal({ type: "CORRECTION", notes: "" })}
-                        className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-100 dark:border-amber-900 dark:bg-amber-950/60 dark:text-amber-400"
+                        className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-500 hover:text-white hover:border-amber-500 dark:border-amber-900/60 dark:bg-amber-950/60 dark:text-amber-400 dark:hover:bg-amber-500 dark:hover:text-white dark:hover:border-amber-500 transition-colors"
                       >
                         Request Corrections
                       </button>
@@ -470,7 +470,7 @@ export default function AdminStartups() {
                         type="button"
                         disabled={submittingAction}
                         onClick={() => setActionModal({ type: "REJECT", notes: "" })}
-                        className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-400"
+                        className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-600 hover:text-white hover:border-rose-600 dark:border-rose-900/60 dark:bg-rose-950/60 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white dark:hover:border-rose-600 transition-colors"
                       >
                         Reject Verification
                       </button>
@@ -681,7 +681,7 @@ export default function AdminStartups() {
                                 <button
                                   type="button"
                                   onClick={() => openDocumentSecurely(doc.document_url, doc.file_name || "document.pdf")}
-                                  className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-400"
+                                  className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600 hover:bg-indigo-600 hover:text-white dark:bg-indigo-950/60 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white transition-colors"
                                 >
                                   <ExternalLink className="h-3 w-3" />
                                   View
@@ -692,7 +692,7 @@ export default function AdminStartups() {
                                 <button
                                   type="button"
                                   onClick={() => handleDocumentVerification(doc.id, "VERIFIED")}
-                                  className="rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-indigo-700"
+                                  className="rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors"
                                 >
                                   Approve
                                 </button>
@@ -707,7 +707,7 @@ export default function AdminStartups() {
                                       handleDocumentVerification(doc.id, "REJECTED", reason);
                                     }
                                   }}
-                                  className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/60 dark:text-rose-400"
+                                  className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-600 hover:text-white hover:border-rose-600 dark:border-rose-900/60 dark:bg-rose-950/60 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white dark:hover:border-rose-600 transition-colors"
                                 >
                                   Reject
                                 </button>

@@ -236,7 +236,7 @@ function AdminEvaluators() {
                         <button
                           disabled={actionLoading}
                           onClick={() => handleStatusChange(profile.id, "REJECTED")}
-                          className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-300"
+                          className="rounded-lg border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 hover:bg-red-600 hover:text-white hover:border-red-600 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600 transition-colors"
                         >
                           Revoke
                         </button>

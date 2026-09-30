@@ -367,7 +367,7 @@ function AdminAccessRequests() {
                           setShowRejectInput(false);
                           setActionMessage("");
                         }}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200"
+                        className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 dark:border-indigo-900/60 dark:bg-indigo-950/60 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white dark:hover:border-indigo-600 transition-colors"
                       >
                         <Eye className="h-3.5 w-3.5" />
                         Review
@@ -633,7 +633,7 @@ function AdminAccessRequests() {
                     type="button"
                     disabled={actionLoading}
                     onClick={() => handleReview(selectedRequest.id)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
+                    className="px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 text-xs font-semibold hover:bg-amber-500 hover:text-white hover:border-amber-500 dark:border-amber-900/60 dark:bg-amber-950/60 dark:text-amber-400 dark:hover:bg-amber-500 dark:hover:text-white dark:hover:border-amber-500 transition-colors"
                   >
                     Mark Under Review
                   </button>
@@ -644,7 +644,7 @@ function AdminAccessRequests() {
                 <button
                   type="button"
                   onClick={() => setSelectedRequest(null)}
-                  className="px-3.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
+                  className="px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-xs font-medium hover:bg-slate-700 hover:text-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white transition-colors"
                 >
                   Close
                 </button>
@@ -654,7 +654,7 @@ function AdminAccessRequests() {
                     <button
                       type="button"
                       onClick={() => setShowRejectInput(true)}
-                      className="px-3.5 py-1.5 rounded-lg bg-red-50 text-red-700 text-xs font-semibold hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300"
+                      className="px-3.5 py-1.5 rounded-lg border border-red-200 bg-red-50 text-red-700 text-xs font-semibold hover:bg-red-600 hover:text-white hover:border-red-600 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-600 dark:hover:text-white dark:hover:border-red-600 transition-colors"
                     >
                       Reject
                     </button>
