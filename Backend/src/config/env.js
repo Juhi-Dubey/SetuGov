@@ -163,7 +163,8 @@ export const config = {
   SMTP_PORT: parseInt(process.env.EMAIL_SMTP_PORT || process.env.SMTP_PORT || '465', 10),
   SMTP_USER: process.env.EMAIL_SMTP_USER || process.env.SMTP_USER || '',
   SMTP_PASS: process.env.EMAIL_SMTP_PASSWORD || process.env.SMTP_PASS || '',
-  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+  // FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
+     FRONTEND_URL: (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, ''),
   INVITATION_EXPIRY_HOURS: parseInt(process.env.INVITATION_EXPIRY_HOURS || '48', 10)
 };
 
